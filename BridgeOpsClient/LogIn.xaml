@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         ResizeMode="NoResize"
-        Title="Log In" Height="270" Width="222">
+        Title="Log In" Height="270" Width="222" WindowStartupLocation="CenterScreen">
     <Grid>
         <Label Content="Username" Height="30" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,32,0,0"/>
         <TextBox x:Name="txtUsername" HorizontalAlignment="Center" Margin="0,67,0,0" TextWrapping="Wrap"

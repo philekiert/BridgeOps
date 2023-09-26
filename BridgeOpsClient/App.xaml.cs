@@ -20,6 +20,8 @@ namespace BridgeOpsClient
         public static SendReceive sr = new SendReceive();
         public static SessionDetails sd = new SessionDetails();
 
+        
+
         private void ApplicationExit(object sender, EventArgs e)
         {
             LogOut();

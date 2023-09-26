@@ -50,7 +50,6 @@ namespace BridgeOpsClient
                                     "administrator.");
                 else
                     MessageBox.Show("Could not connect to Agent.");
-
             }
         }
     }

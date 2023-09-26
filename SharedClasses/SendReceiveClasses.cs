@@ -6,10 +6,12 @@ using System.Net.NetworkInformation;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace SendReceiveClasses
 {
@@ -81,10 +83,22 @@ namespace SendReceiveClasses
         public string ReadString(NetworkStream stream)
         {
             byte[] lengthBytes = new byte[4];
-            stream.Read(lengthBytes);
+            int bytesRead = 0;
+            while (bytesRead < 4)
+            {
+                bytesRead += stream.Read(lengthBytes, bytesRead, 4 - bytesRead);
+                if (bytesRead < 4)
+                    Thread.Sleep(10);
+            }
             int length = BitConverter.ToInt32(lengthBytes);
             byte[] bString = new byte[length];
-            stream.Read(bString);
+            bytesRead = 0;
+            while (bytesRead < length)
+            {
+                bytesRead += stream.Read(bString, bytesRead, length - bytesRead);
+                if (bytesRead < length)
+                    Thread.Sleep(10);
+            }
             return unicodeEncoding.GetString(bString);
         }
 
@@ -380,7 +394,7 @@ namespace SendReceiveClasses
         public int capacity;
 
         public Resource(string sessionID, int resourceID, string name,
-                        DateTime availableFrom, DateTime availableTo,int capacity)
+                        DateTime availableFrom, DateTime availableTo, int capacity)
         {
             this.sessionID = sessionID;
             this.resourceID = resourceID;
