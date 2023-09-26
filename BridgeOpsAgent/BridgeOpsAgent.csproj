@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>BridgeOpsAgent</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedClasses\DatabaseVariables.cs" Link="DatabaseVariables.cs" />
+    <Compile Include="..\SharedClasses\Glo.cs" Link="Glo.cs" />
+    <Compile Include="..\SharedClasses\SendReceiveClasses.cs" Link="SendReceiveClasses.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Data.SqlClient">
+      <HintPath>..\..\..\..\.nuget\packages\microsoft.data.sqlclient\5.1.0\ref\net6.0\Microsoft.Data.SqlClient.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

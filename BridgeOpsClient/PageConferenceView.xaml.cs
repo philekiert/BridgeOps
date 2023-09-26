@@ -1,0 +1,294 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Threading;
+
+namespace BridgeOpsClient
+{
+    /// <summary>
+    /// Interaction logic for PageConferenceView.xaml
+    /// </summary>
+    public partial class PageConferenceView : Page
+    {
+        DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);
+
+        public static int resourceCount = 1;
+        float smoothZoomSpeed = 1.6f;
+
+        public PageConferenceView()
+        {
+            InitializeComponent();
+
+            tmrRender.Tick += TimerUpdate;
+            tmrRender.Interval = new TimeSpan(10000);
+            tmrRender.Start();
+        }
+
+        void RedrawGrid()
+        {
+            schView.InvalidateVisual();
+        }
+
+        //   E V E N T   H A N D L E R S
+
+        private void btnTimeZoomOut_Click(object sender, RoutedEventArgs e)
+        {
+            schView.zoomTime -= schView.zoomTimeSensitivity;
+            if (schView.zoomTime != schView.zoomTimeMinimum)
+            {
+                if (schView.zoomTime < schView.zoomTimeMinimum) schView.zoomTime = schView.zoomTimeMinimum;
+                if (!schView.smoothZoom) schView.zoomTimeCurrent = schView.zoomTime;
+                RedrawGrid();
+            }
+        }
+
+        private void btnTimeZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            schView.zoomTime += schView.zoomTimeSensitivity;
+            if (schView.zoomTime != schView.zoomTimeMaximum)
+            {
+                if (schView.zoomTime > schView.zoomTimeMaximum) schView.zoomTime = schView.zoomTimeMaximum;
+                if (!schView.smoothZoom) schView.zoomTimeCurrent = schView.zoomTime;
+                RedrawGrid();
+            }
+        }
+
+        private void btnResourceZoomOut_Click(object sender, RoutedEventArgs e)
+        {
+            schView.zoomResource -= schView.zoomResourceSensitivity;
+            if (schView.zoomResource != schView.zoomResourceMinimum)
+            {
+                if (schView.zoomResource < schView.zoomResourceMinimum) schView.zoomResource = schView.zoomResourceMinimum;
+                if (!schView.smoothZoom) schView.zoomResourceCurrent = schView.zoomResource;
+                RedrawGrid();
+            }
+        }
+
+        private void btnResourceZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            if (schView.zoomResource != schView.zoomResourceMaximum)
+            {
+                schView.zoomResource += schView.zoomResourceSensitivity;
+                if (!schView.smoothZoom) schView.zoomResourceCurrent = schView.zoomResource;
+                RedrawGrid();
+            }
+        }
+
+        void WindowResized(object sender, SizeChangedEventArgs e)
+        {
+            RedrawGrid();
+        }
+
+        long lastFrame = 0;
+        void TimerUpdate(object? sender, EventArgs e)
+        {
+            // Smooth zoom (prefer 60Hz).
+            float deltaTime = (float)((double)(Environment.TickCount - lastFrame) / 60f);
+            bool changed = false;
+            if (schView.zoomTimeCurrent != schView.zoomTime && schView.smoothZoom)
+            {
+                MathC.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime, smoothZoomSpeed * deltaTime, 1.2f);
+                changed = true;
+            }
+            if (schView.zoomResourceCurrent != schView.zoomResource && schView.smoothZoom)
+            {
+                MathC.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
+                                                            smoothZoomSpeed * deltaTime, 1.2f);
+                changed = true;
+            }
+
+            // Follow the current time.
+            // TODO: Make sure this is only executed with some sort of setting to switch on following the current time.
+            /* The condition here basically makes it so we can have each vertical line snap to the nearest pixel,
+               without some lines moving out of sync with others. This is due to the gaps between lines being doubles
+               rather than ints, so without this measure, each time it's redrawn due to the time changing, it wants to
+               move a fraction of a pixel, causing some lines to be truncated to a different pixel than before, but not
+               others. */
+            float displayZoom = schView.DisplayZoom();
+            if ((int)schView.TimeToX(schView.scheduleTime, displayZoom) !=
+                (int)schView.TimeToX(DateTime.Now, displayZoom))
+                changed = true;
+
+            if (changed)
+                RedrawGrid();
+            lastFrame = Environment.TickCount64;
+        }
+    }
+
+    public class ScheduleView : Canvas
+    {
+        public bool smoothZoom = true;
+        public int zoomTime = 10; // How many pixels an hour can be reduced to.
+        public float zoomTimeCurrent = 10f; // Used for smooth Lerp()ing.
+        public int zoomTimeMinimum = 10;
+        public int zoomTimeMaximum = 200;
+        public int zoomTimeSensitivity = 10;
+        public int zoomResource = 80;
+        public float zoomResourceCurrent = 80f; // Used for smooth Lerp()ing.
+        public int zoomResourceMinimum = 20;
+        public int zoomResourceMaximum = 200;
+        public int zoomResourceSensitivity = 20;
+        public float scrollResource = 0f;
+
+        float minShade = .2f;
+
+        const long ticks5Min = 3_000_000_000;
+        const long ticks15Min = 9_000_000_000;
+        const long ticks1Hour = 36_000_000_000;
+        const long ticks1Day = 864_000_000_000;
+
+        public DateTime scheduleTime = DateTime.Now;
+
+        protected override void OnRender(DrawingContext dc)
+        {
+            scheduleTime = DateTime.Now;
+
+            // Reduce zoom sensitivity the further out you get.
+            float zoomTimeDisplay = DisplayZoom();
+            float zoomResourceDisplay = zoomResourceCurrent;
+
+            // Prepare shades and brushes.
+
+            float shadeFive = (zoomTimeDisplay - 70f) / 30f;
+            MathC.Clamp(ref shadeFive, 0f, 1f);
+            shadeFive *= 255f;
+            float shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
+            MathC.Clamp(ref shadeQuarter, 0f, 1f);
+            shadeQuarter *= 255f;
+            float shadeHour = zoomTimeDisplay / 40f;
+            MathC.Clamp(ref shadeHour, .45f, 1f);
+            shadeHour *= 255f;
+
+            Brush brsScheduleLineFive = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeFive,
+                                                                                                230, 230, 230));
+            Brush brsScheduleLineQuarter = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeQuarter,
+                                                                                                   210, 210, 210));
+            Brush brsScheduleLineHour = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeHour,
+                                                                                                180, 180, 180));
+            Brush brsScheduleLineDay = new SolidColorBrush(System.Windows.Media.Color.FromRgb(120, 120, 120));
+
+            brsScheduleLineFive.Freeze();
+            brsScheduleLineQuarter.Freeze();
+            brsScheduleLineHour.Freeze();
+            brsScheduleLineDay.Freeze();
+
+            Pen penScheduleLineFive = new Pen(brsScheduleLineFive, 1);
+            Pen penScheduleLineQuarter = new Pen(brsScheduleLineQuarter, 1);
+            Pen penScheduleLineHour = new Pen(brsScheduleLineHour, 1);
+            Pen penScheduleLineDay = new Pen(brsScheduleLineDay, 1);
+
+            double maxLineHeight = PageConferenceView.resourceCount * zoomResourceDisplay + .5f;
+            if (maxLineHeight > ActualHeight)
+                maxLineHeight = ActualHeight;
+            int maxLines = PageConferenceView.resourceCount + 1;
+
+
+            // Time
+
+            double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
+            double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
+            int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
+            int viewHalfDays = (int)(viewHalfHours / 24);
+
+            TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+
+            DateTime start = scheduleTime - half;
+            DateTime end = scheduleTime + half;
+
+            long incrementTicks;
+            double incrementX;
+            if (shadeFive < minShade)
+                if (shadeQuarter < minShade)
+                    if (shadeHour < minShade)
+                    {
+                        incrementX = zoomTimeDisplay / 24d;
+                        incrementTicks = ticks1Day;
+                    }
+                    else
+                    {
+                        incrementX = zoomTimeDisplay;
+                        incrementTicks = ticks1Hour;
+                    }
+                else
+                {
+                    incrementX = zoomTimeDisplay / 4d;
+                    incrementTicks = ticks15Min;
+                }
+            else
+            {
+                incrementX = zoomTimeDisplay / 12d;
+                incrementTicks = ticks5Min;
+            }
+
+            // Get the start time, rounded down to the nearest increment.
+            DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
+
+            // Cast this to (int) if you want it dead on the pixel.
+            double x = TimeToX(t, zoomTimeDisplay) + .5f;
+
+            while (t < end)
+            {
+                double xInt = (int)x + .5d; // Snap to nearest pixel.
+                if (x > 0d && x < ActualWidth)
+                {
+                    if (t.Ticks % ticks1Day == 0)
+                        dc.DrawLine(penScheduleLineDay, new System.Windows.Point(xInt, .5f),
+                                                         new System.Windows.Point(xInt, maxLineHeight));
+                    else if (t.Ticks % ticks1Hour == 0)
+                        dc.DrawLine(penScheduleLineHour, new System.Windows.Point(xInt, .5f),
+                                                            new System.Windows.Point(xInt, maxLineHeight));
+                    else if (t.Ticks % ticks15Min == 0)
+                        dc.DrawLine(penScheduleLineQuarter, new System.Windows.Point(xInt, .5f),
+                                                         new System.Windows.Point(xInt, maxLineHeight));
+                    else // has to be 5 minutes
+                        dc.DrawLine(penScheduleLineFive, new System.Windows.Point(xInt, .5f),
+                                                        new System.Windows.Point(xInt, maxLineHeight));
+                }
+
+                t = t.AddTicks(incrementTicks);
+                x += incrementX;
+            }
+
+
+            // Resources (drawn last as these lines want to overlay the time lines).
+            for (float y = 0; y < maxLineHeight; y += zoomResourceDisplay)
+                dc.DrawLine(penScheduleLineDay, new System.Windows.Point(.5f, y + .5f),
+                                                new System.Windows.Point(ActualWidth, y + .5f));
+        }
+
+
+        //   H E L P E R   F U N C T I O N S
+
+        // Make zoom feel more sensitive when zoomed in, and less sensitive when zoomed out.
+        public float DisplayZoom()
+        {
+            float zoomTimeDisplay = (zoomTimeCurrent - zoomTimeMinimum) / (zoomTimeMaximum - zoomTimeMinimum);
+            zoomTimeDisplay = (1f - MathF.Cos(zoomTimeDisplay * MathF.PI * .5f));
+            zoomTimeDisplay *= zoomTimeMaximum - zoomTimeMinimum;
+            zoomTimeDisplay += zoomTimeMinimum;
+
+            return zoomTimeDisplay;
+        }
+
+        // Get the X coordinate on the cnvConferenceView from DateTime.
+        public double TimeToX(DateTime dt, float zoomTimeDisplay)
+        {
+            double canvasMid = ActualWidth * .5d;
+            long relativeTicks = dt.Ticks - scheduleTime.Ticks;
+            double relativePixels = ((double)relativeTicks / (double)ticks1Hour) * zoomTimeDisplay;
+
+            return canvasMid + relativePixels;
+        }
+    }
+}

@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>BridgeOpsConsole</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedClasses\DatabaseVariables.cs" Link="DatabaseVariables.cs" />
+    <Compile Include="..\SharedClasses\Glo.cs" Link="Glo.cs" />
+    <Compile Include="..\SharedClasses\SendReceiveClasses.cs" Link="SendReceiveClasses.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Data.SqlClient">
+      <HintPath>References\Microsoft.Data.SqlClient.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Config Files\type-overrides.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
