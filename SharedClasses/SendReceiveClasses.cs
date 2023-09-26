@@ -2,15 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace SendReceiveClasses
@@ -84,7 +79,8 @@ namespace SendReceiveClasses
         {
             byte[] lengthBytes = new byte[4];
             int bytesRead = 0;
-            while (bytesRead < 4)
+            // Allow at least 2 seconds to receive stream.
+            for (int attempts = 0; attempts < 200 && bytesRead < 4; ++attempts)
             {
                 bytesRead += stream.Read(lengthBytes, bytesRead, 4 - bytesRead);
                 if (bytesRead < 4)
@@ -93,7 +89,7 @@ namespace SendReceiveClasses
             int length = BitConverter.ToInt32(lengthBytes);
             byte[] bString = new byte[length];
             bytesRead = 0;
-            while (bytesRead < length)
+            for (int attempts = 0; attempts < 200 && bytesRead < length; ++attempts)
             {
                 bytesRead += stream.Read(bString, bytesRead, length - bytesRead);
                 if (bytesRead < length)

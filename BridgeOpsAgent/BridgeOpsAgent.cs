@@ -192,6 +192,8 @@ internal class BridgeOpsAgent
             // Do not accept any 
             autoResetEvent.WaitOne();
             autoResetEvent.Reset();
+
+            Thread.Sleep(10);
         }
     }
     private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
