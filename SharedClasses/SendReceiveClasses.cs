@@ -97,7 +97,7 @@ namespace SendReceiveClasses
             }
             return unicodeEncoding.GetString(bString);
         }
-
+            
         public NamedPipeServerStream NewServerNamedPipe(string pipeName) // Inbound to server.
         {
             // timeout not supported on this type of stream.
@@ -158,13 +158,11 @@ namespace SendReceiveClasses
 
     struct LoginRequest
     {
-        public string ip;
         public string username;
         public string password;
 
-        public LoginRequest(string ip, string username, string password)
+        public LoginRequest(string username, string password)
         {
-            this.ip = ip;
             this.username = username;
             this.password = password;
         }

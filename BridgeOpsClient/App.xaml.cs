@@ -29,7 +29,7 @@ namespace BridgeOpsClient
 
         public static string LogIn(string username, string password)
         {
-            LoginRequest loginReq = new LoginRequest("localhost", username, password);
+            LoginRequest loginReq = new LoginRequest(username, password);
             string send = sr.Serialise(loginReq);
 
             NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);

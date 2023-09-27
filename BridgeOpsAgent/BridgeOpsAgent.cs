@@ -216,7 +216,7 @@ internal class BridgeOpsAgent
                 if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
                     ClientPullColumnRecord(stream);
                 else if (fncByte == Glo.CLIENT_LOGIN)
-                    ClientLogin(stream, sqlConnect, true);
+                    ClientLogin(stream, sqlConnect, (IPEndPoint?)client.Client.RemoteEndPoint);
                 else if (fncByte == Glo.CLIENT_LOGOUT)
                     ClientSessionLogout(stream);
                 else if (fncByte == Glo.CLIENT_NEW_ORGANISATION ||
@@ -292,12 +292,19 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static async void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, bool local)
+    private static async void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
     {
 
         string credentials = sr.ReadString(stream);
         LoginRequest loginReq = sr.Deserialise<LoginRequest>(credentials);
         Random rnd = new Random();
+
+        if (ep == null)
+        {
+            sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_IP_UNKNOWN);
+            return;
+        }
+        string ipStr = ep.Address.ToString();
 
         try
         {
@@ -314,7 +321,7 @@ internal class BridgeOpsAgent
                 {
                     if (userAlreadyLoggedIn != "" && cs.Value.username == loginReq.username)
                         userAlreadyLoggedIn = cs.Key;
-                    if (ipAlreadyConnected != "" && cs.Value.ip == loginReq.ip)
+                    if (ipAlreadyConnected != "" && cs.Value.ip == ipStr)
                         ipAlreadyConnected = cs.Key;
 
                     if (userAlreadyLoggedIn != "" && ipAlreadyConnected != "")
@@ -345,10 +352,7 @@ internal class BridgeOpsAgent
                 }
                 while (clientSessions.ContainsKey(key));
 
-                if (local)
-                {
-                    clientSessions.Add(key, new ClientSession(loginReq.username, "localhost"));
-                }
+                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr));
 
                 sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
             }
