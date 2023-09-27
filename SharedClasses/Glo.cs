@@ -37,8 +37,8 @@ public static class Glo
     // Operational
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
-    public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in";
-    public const string CLIENT_LOGIN_REJECT_IP_DUPLICATE = "IP already connected";
+    public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent
+    public const string CLIENT_LOGIN_REJECT_IP_DUPLICATE = "IP already connected"; // Currently unused by agent
 
     public const string CLIENT_LOGOUT_ACCEPT = "Safe travels";
 

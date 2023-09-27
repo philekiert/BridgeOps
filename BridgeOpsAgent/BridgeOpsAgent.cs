@@ -206,12 +206,13 @@ internal class BridgeOpsAgent
         {
             TcpListener listener = (TcpListener)result.AsyncState;
             TcpClient client = listener.EndAcceptTcpClient(result);
+
             NetworkStream stream = client.GetStream();
             autoResetEvent.Set();
 
             try
             {
-                int fncByte = client.GetStream().ReadByte();
+                int fncByte = stream.ReadByte();
                 if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
                     ClientPullColumnRecord(stream);
                 else if (fncByte == Glo.CLIENT_LOGIN)
@@ -303,23 +304,21 @@ internal class BridgeOpsAgent
             Task taskSqlConnect = sqlConnect.OpenAsync();
 
             // Prepare variables if else block below.
-            bool userAlreadyLoggedIn = false;
-            bool ipAlreadyConnected = false;
+            string userAlreadyLoggedIn = "";
+            string ipAlreadyConnected = "";
 
+            // Identify any duplicate IPs and users for removal from open sessions if login is successful.
             lock (clientSessions)
             {
                 foreach (KeyValuePair<string, ClientSession> cs in clientSessions)
                 {
-                    if (cs.Value.username == loginReq.username)
-                    {
-                        userAlreadyLoggedIn = true;
+                    if (userAlreadyLoggedIn != "" && cs.Value.username == loginReq.username)
+                        userAlreadyLoggedIn = cs.Key;
+                    if (ipAlreadyConnected != "" && cs.Value.ip == loginReq.ip)
+                        ipAlreadyConnected = cs.Key;
+
+                    if (userAlreadyLoggedIn != "" && ipAlreadyConnected != "")
                         break;
-                    }
-                    else if (cs.Value.ip == loginReq.ip)
-                    {
-                        ipAlreadyConnected = true;
-                        break;
-                    }
                 }
             }
 
@@ -328,12 +327,14 @@ internal class BridgeOpsAgent
                                                    "Password = HASHBYTES('SHA2_512', '{1}'));",
                                                    loginReq.username, loginReq.password), sqlConnect);
 
-            if (userAlreadyLoggedIn)
-                sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_DUPLICATE);
-            else if (ipAlreadyConnected)
-                sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_IP_DUPLICATE);
-            else if (sqlCommand.ExecuteScalar() != null)
+            if (sqlCommand.ExecuteScalar() != null)
             {
+                // Assuming login was successful, kick out any sessions with clashing IPs or usernames.
+                if (userAlreadyLoggedIn != "")
+                    clientSessions.Remove(userAlreadyLoggedIn);
+                if (ipAlreadyConnected != "" && ipAlreadyConnected != userAlreadyLoggedIn)
+                    clientSessions.Remove(ipAlreadyConnected);
+
                 // Generate a random unique session ID.
                 string key;
                 do
