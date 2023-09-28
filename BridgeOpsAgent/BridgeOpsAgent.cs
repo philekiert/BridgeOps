@@ -319,9 +319,9 @@ internal class BridgeOpsAgent
             {
                 foreach (KeyValuePair<string, ClientSession> cs in clientSessions)
                 {
-                    if (userAlreadyLoggedIn != "" && cs.Value.username == loginReq.username)
+                    if (userAlreadyLoggedIn == "" && cs.Value.username == loginReq.username)
                         userAlreadyLoggedIn = cs.Key;
-                    if (ipAlreadyConnected != "" && cs.Value.ip == ipStr)
+                    if (ipAlreadyConnected == "" && cs.Value.ip == ipStr)
                         ipAlreadyConnected = cs.Key;
 
                     if (userAlreadyLoggedIn != "" && ipAlreadyConnected != "")

@@ -4,16 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
+        xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="NewContact" Height="450" Width="492">
+        Title="NewContact" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="1" HorizontalAlignment="Left" Margin="31,82,0,0" TextWrapping="Wrap" VerticalAlignment="Top"
-                 Width="365" Height="125"/>
-        <Label Grid.Row="1" Content="Notes" HorizontalAlignment="Left" Margin="31,56,0,0" VerticalAlignment="Top"
+        <custom:DataInputTable x:Name="ditContact" />
+        <Label Grid.Row="1" Content="Notes" HorizontalAlignment="Left" Margin="10,10,10,10" VerticalAlignment="Top"
                Height="26"/>
+        <TextBox Grid.Row="2" HorizontalAlignment="Center" Margin="10,10,10,10" TextWrapping="Wrap" VerticalAlignment="Top"
+                 Width="472" Height="179"/>
     </Grid>
 </Window>

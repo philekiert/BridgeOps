@@ -165,8 +165,8 @@ public class ConsoleController
         AddCommand("start", ValType.None, menu, StartAgent,
                    "Start the BridgeOps agent responsible for carrying out requests from the client application.");
         AddCommand("stop", ValType.None, menu, StopAgent,
-                   "Stop the BridgeOps agent. " +
-                   "Clients will no longer be able to communicate with the server application.");
+                   "Stop the BridgeOps agent. Clients will no longer be able to communicate with the server " +
+                   "application, and all users will be logged out.");
         AddCommand("status", ValType.None, menu, CheckAgent,
                    "Check to see if agent is running.");
         AddCommand("logout", ValType.String, menu, LogoutUser,

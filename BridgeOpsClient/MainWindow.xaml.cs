@@ -41,18 +41,27 @@ namespace BridgeOpsClient
         private void menuDatabaseNewContact_Click(object sender, RoutedEventArgs e)
         {
             NewContact newContact = new NewContact();
+            newContact.ditContact.Initialise(ColumnRecord.contact);
             newContact.Show();
         }
 
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)
         {
-            LogIn logIn = new LogIn();
-            logIn.Show();
+            if (App.IsLoggedIn)
+                MessageBox.Show("Already logged in as " + App.sd.username + ".");
+            else
+            {
+                LogIn logIn = new LogIn();  
+                logIn.Show();
+            }
         }
 
         private void menuUserLogOut_Click(object sender, RoutedEventArgs e)
         {
-            App.LogOut();
+            if (App.IsLoggedIn)
+                App.LogOut();
+            else
+                MessageBox.Show("Not logged in.");
         }
     }
 }

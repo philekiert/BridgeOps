@@ -5,9 +5,11 @@ using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using SendReceiveClasses;
 
@@ -19,8 +21,6 @@ namespace BridgeOpsClient
 
         public static SendReceive sr = new SendReceive();
         public static SessionDetails sd = new SessionDetails();
-
-        
 
         private void ApplicationExit(object sender, EventArgs e)
         {
@@ -62,16 +62,17 @@ namespace BridgeOpsClient
 
         public static bool LogOut()
         {
-            if (sd.sessionID != "")
+            if (IsLoggedIn)
             {
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 if (stream != null)
                 {
                     stream.WriteByte(Glo.CLIENT_LOGOUT);
-                    sr.WriteAndFlush(stream, sr.Serialise(
-                                                            new LogoutRequest(sd.sessionID,
-                                                            sd.username)));
+                    sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
+                                                          sd.username)));
                     sr.ReadString(stream); // Empty the pipe.
+
+                    sd = new SessionDetails();
 
                     return true;
                 }
@@ -111,18 +112,18 @@ namespace BridgeOpsClient
         public IPEndPoint ServerEP { get { return new IPEndPoint(serverIP, portInbound); } }
     }
 
-    static class ColumnRecord
+    public static class ColumnRecord
     {
         // Add to this as development continues.
-        struct Column
+        public struct Column
         {
             // column name is stored as the key in Dictionary
             public string type;
-            public string restriction; // Only for character strings
+            public int restriction; // Only for character strings
             public string[] allowed; // Allowed values, only ever present in user-added columns
             public string friendlyName;
 
-            public Column(string type, string restriction, string[] allowed, string friendlyName)
+            public Column(string type, int restriction, string[] allowed, string friendlyName)
             {
                 this.type = type;
                 this.restriction = restriction;
@@ -131,14 +132,22 @@ namespace BridgeOpsClient
             }
         }
 
-        static Dictionary<string, Column> organisation = new Dictionary<string, Column>();
-        static Dictionary<string, Column> contact = new Dictionary<string, Column>();
-        static Dictionary<string, Column> asset = new Dictionary<string, Column>();
-        static Dictionary<string, Column> conferenceType = new Dictionary<string, Column>();
-        static Dictionary<string, Column> conference = new Dictionary<string, Column>();
-        static Dictionary<string, Column> conferenceRecurrence = new Dictionary<string, Column>();
-        static Dictionary<string, Column> resource = new Dictionary<string, Column>();
-        static Dictionary<string, Column> login = new Dictionary<string, Column>();
+        public static string GetPrintName(KeyValuePair<string, Column> col)
+        {
+            if (col.Value.friendlyName != "")
+                return col.Value.friendlyName.Replace('_', ' ');
+            else
+                return col.Key.Replace('_', ' ');
+        }
+
+        public static Dictionary<string, Column> organisation = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> contact = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> asset = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> conferenceType = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> conference = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> conferenceRecurrence = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> resource = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> login = new Dictionary<string, Column>();
 
         public static void Initialise(string columns)
         {
@@ -170,10 +179,22 @@ namespace BridgeOpsClient
                         allowedArr = allowed.Split("[A]");
                     }
 
-                    int r;
-                    Column col = new Column(int.TryParse(restriction, out r) ? "Text" : restriction,
-                                            restriction, allowedArr, "");
+                    // Type and restriction will be corrected in a sec.
+                    string type = restriction;
+                    int max = 0;
 
+                    // If type is text, change type name and set max length.
+                    int r;
+                    if (int.TryParse(restriction, out r))
+                    {
+                        type = "Text";
+                        max = r;
+                    }
+
+                    Column col = new Column(type, max, allowedArr, "");
+
+
+                    // Add column to the relevant Dictionary, using the column name as the key.
                     if (table == "Organisation")
                         organisation.Add(column, col);
                     else if (table == "Contact")
@@ -195,7 +216,7 @@ namespace BridgeOpsClient
                 for (; n < lines.Length; ++n) // Won't run if there are no friendly names.
                 {
                     string[] friendlySplit = lines[n].Split(";;");
-                    // The option is open for the use to specify friendly names using spaces instead of
+                    // The option is open for the user to specify friendly names using spaces instead of
                     // underscores, so make that uniform here.
                     friendlySplit[1] = friendlySplit[1].Replace(' ', '_');
 
@@ -227,24 +248,9 @@ namespace BridgeOpsClient
                         AddFriendlyName(login);
                 }
             }
-            catch (Exception e)
+            catch
             {
                 // File corrupted
-            }
-        }
-    }
-
-    class AgentCheckUp
-    {
-
-
-        void ListenAndRespond()
-        {
-
-
-            while (true)
-            {
-
             }
         }
     }
