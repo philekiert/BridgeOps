@@ -40,9 +40,32 @@ namespace BridgeOpsClient
 
         private void menuDatabaseNewContact_Click(object sender, RoutedEventArgs e)
         {
-            NewContact newContact = new NewContact();
-            newContact.ditContact.Initialise(ColumnRecord.contact);
+            NewContact newContact = new();
+            newContact.ditContact.Initialise(ColumnRecord.contact, "Contact");
+
+            // Implemement friendly name.
+            if (ColumnRecord.contact["Notes"].friendlyName != "")
+                newContact.lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
+
             newContact.Show();
+        }
+
+        private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
+        {
+            NewOrganisation newOrganisation = new();
+            newOrganisation.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
+
+            // Implemement friendly names.
+            if (ColumnRecord.organisation["Organisation_ID"].friendlyName != "")
+                newOrganisation.lblOrgID.Content = ColumnRecord.organisation["Organisation_ID"].friendlyName;
+            if (ColumnRecord.organisation["Parent_ID"].friendlyName != "")
+                newOrganisation.lblOrgParentID.Content = ColumnRecord.organisation["Parent_ID"].friendlyName;
+            if (ColumnRecord.organisation["Dial_No"].friendlyName != "")
+                newOrganisation.lblDialNo.Content = ColumnRecord.organisation["Dial_No"].friendlyName;
+            if (ColumnRecord.organisation["Notes"].friendlyName != "")
+                newOrganisation.lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
+
+            newOrganisation.Show();
         }
 
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)

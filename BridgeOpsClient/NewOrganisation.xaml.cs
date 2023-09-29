@@ -19,23 +19,23 @@ namespace BridgeOpsClient
     /// <summary>
     /// Interaction logic for NewContact.xaml
     /// </summary>
-    public partial class NewContact : Window
+    public partial class NewOrganisation : Window
     {
-        public NewContact()
+        public NewOrganisation()
         {
             InitializeComponent();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (ditContact.ScoopValues())
+            if (ditOrganisation.ScoopValues())
             {
                 Contact nc = new Contact();
 
                 nc.sessionID = App.sd.sessionID;
                 nc.notes = txtNotes.Text;
 
-                ditContact.ExtractValues(out nc.additionalCols, out nc.additionalVals);
+                ditOrganisation.ExtractValues(out nc.additionalCols, out nc.additionalVals);
 
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc))
                     Close();

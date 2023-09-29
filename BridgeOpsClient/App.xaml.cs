@@ -99,6 +99,25 @@ namespace BridgeOpsClient
                 return false;
             }
         }
+
+        public static bool SendInsert(byte fncByte, object toSerialise)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(fncByte);
+                    sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 
     public class SessionDetails

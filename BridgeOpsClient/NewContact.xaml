@@ -6,17 +6,20 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="NewContact" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+        Title="New Contact" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />
             <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
-        <custom:DataInputTable x:Name="ditContact" />
-        <Label Grid.Row="1" Content="Notes" HorizontalAlignment="Left" Margin="10,10,10,10" VerticalAlignment="Top"
-               Height="26"/>
-        <TextBox Grid.Row="2" HorizontalAlignment="Center" Margin="10,10,10,10" TextWrapping="Wrap" VerticalAlignment="Top"
-                 Width="472" Height="179"/>
+        <custom:DataInputTable x:Name="ditContact" Grid.Row="0"/>
+        <Label Grid.Row="1" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Margin="10,0,10,0" Height="26"/>
+        <TextBox x:Name="txtNotes" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top"
+                 Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"/>
+        <Button Grid.Row="3" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                Click="Button_Click" />
     </Grid>
 </Window>

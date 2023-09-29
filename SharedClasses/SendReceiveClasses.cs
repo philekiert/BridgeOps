@@ -241,7 +241,7 @@ namespace SendReceiveClasses
     struct Contact
     {
         public string sessionID;
-        public int contactID;
+        public int contactID = -1;
         public string notes;
         public List<string> additionalCols;
         public List<string> additionalVals;

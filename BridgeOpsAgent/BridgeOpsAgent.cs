@@ -101,11 +101,11 @@ internal class BridgeOpsAgent
 
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string connectionString = "server=localhost\\SQLEXPRESS;" +
-                                           "integrated security=SSPI;" +
-                                           //"user id=sa; password=^2*Re98E;" +
-                                           "encrypt=false;" +
-                                           "database=BridgeOps;" +
-                                           "Application Name=BridgeOpsAgent;";
+                                             "integrated security=SSPI;" +
+                                             //"user id=sa; password=^2*Re98E;" +
+                                             "encrypt=false;" +
+                                             "database=BridgeOps;" +
+                                             "Application Name=BridgeOpsAgent;";
 
     private static void Main(string[] args)
     {
