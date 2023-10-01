@@ -29,12 +29,15 @@ public static class Glo
     public const int CLIENT_NEW_CONFERENCE_TYPE = 7;
     public const int CLIENT_NEW_CONFERENCE = 8;
     public const int CLIENT_NEW_RESOURCE = 9;
+    public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
 
     // Console/Agent Function Specifiers
     public const int CONSOLE_CLIENT_LIST = 0;
     public const int CONSOLE_LOGOUT_USER = 1;
 
     // Operational
+    public const int CLIENT_REQUEST_FAILED = 0;
+    public const int CLIENT_REQUEST_SUCCESS = 1;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent

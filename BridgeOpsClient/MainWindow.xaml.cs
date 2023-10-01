@@ -55,7 +55,7 @@ namespace BridgeOpsClient
             NewOrganisation newOrganisation = new();
             newOrganisation.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
 
-            // Implemement friendly names.
+            // Implement friendly names.
             if (ColumnRecord.organisation["Organisation_ID"].friendlyName != "")
                 newOrganisation.lblOrgID.Content = ColumnRecord.organisation["Organisation_ID"].friendlyName;
             if (ColumnRecord.organisation["Parent_ID"].friendlyName != "")
@@ -64,6 +64,9 @@ namespace BridgeOpsClient
                 newOrganisation.lblDialNo.Content = ColumnRecord.organisation["Dial_No"].friendlyName;
             if (ColumnRecord.organisation["Notes"].friendlyName != "")
                 newOrganisation.lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
+
+            string[]? organisationList = App.SelectColumnPrimary("Organisation", "Organisation_ID");
+            newOrganisation.cmbOrgParentID.ItemsSource = organisationList;
 
             newOrganisation.Show();
         }
@@ -74,7 +77,7 @@ namespace BridgeOpsClient
                 MessageBox.Show("Already logged in as " + App.sd.username + ".");
             else
             {
-                LogIn logIn = new LogIn();  
+                LogIn logIn = new LogIn();
                 logIn.Show();
             }
         }

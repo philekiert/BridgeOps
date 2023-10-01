@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
@@ -24,12 +25,18 @@ namespace BridgeOpsClient
         public NewOrganisation()
         {
             InitializeComponent();
+
+
         }
 
+        public string[]? organisationList;
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (ditOrganisation.ScoopValues())
             {
+                if (txtOrgID.Text == "")
+                    MessageBox.Show("You must input a value for Organisation ID");
+
                 Organisation no = new Organisation();
 
                 no.sessionID = App.sd.sessionID;
@@ -46,7 +53,10 @@ namespace BridgeOpsClient
             }
             else
             {
-
+                string message = "One or more values caused an unknown error to occur.";
+                if (ditOrganisation.disallowed.Count > 0)
+                    message = ditOrganisation.disallowed[0];
+                MessageBox.Show(message);
             }
         }
     }

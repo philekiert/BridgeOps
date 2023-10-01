@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -109,13 +110,52 @@ namespace BridgeOpsClient
                 {
                     stream.WriteByte(fncByte);
                     sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
-                    return true;
+                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        stream.Close();
+                        return true;
+                    }
+                    else
+                    {
+                        stream.Close();
+                        return false;
+                    }
                 }
                 return false;
             }
             catch
             {
+                if (stream != null) stream.Close();
                 return false;
+            }
+        }
+
+        public static string[]? SelectColumnPrimary(string table, string column)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
+                    sr.WriteAndFlush(stream, table + ';' + column);
+                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        stream.Close();
+                        return sr.ReadString(stream).Split(';');
+                    }
+                    else
+                    {
+                        stream.Close();
+                        return null;
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                if (stream != null) stream.Close();
+                return null;
             }
         }
     }

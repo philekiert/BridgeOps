@@ -227,6 +227,9 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_RESOURCE ||
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
+                else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
+                    ClientSelectColumnPrimary(stream, sqlConnect);
+
                 else
                     throw new Exception("Received int " + fncByte + " does not correspond to a function.");
             }
@@ -433,11 +436,46 @@ internal class BridgeOpsAgent
                     com.CommandText = newRow.SqlInsert();
             }
 
-            com.ExecuteNonQuery();
+            if (com.ExecuteNonQuery() == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)
         {
             LogError("Couldn't create new contact. See error:", e);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelectColumnPrimary(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            string request = sr.ReadString(stream);
+            int separator = request.IndexOf(';');
+            string table = request.Substring(0, separator);
+            string column = request.Substring(separator + 1);
+
+            // Reject cheekiness
+            if (table.Contains('\'') || column.Contains('\''))
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+
+            SqlCommand com = new SqlCommand("SELECT " + column + " FROM " + table + ";", sqlConnect);
+            SqlDataReader reader = com.ExecuteReader();
+            string result = "";
+            while (reader.Read())
+                result += reader.GetString(0) + ',';
+            // We'll remove the trailing comma on the host machine to keep the agent performant.
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't run query, see error:", e);
         }
         finally
         {
