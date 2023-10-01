@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using static FieldDefs;
+using static System.Net.Mime.MediaTypeNames;
 
 public class DatabaseCreator
 {
@@ -499,7 +500,7 @@ public class DatabaseCreator
                            "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 0);");
 
 
-            //---- CREATE TYPE RESTRICTIONS FILE ----// (For use by Client)
+            //---- CREATE TYPE RESTRICTIONS FILE ----// (For use by Client in determining what to display/allow in UI)
             RestoreColumnRecord();
         }
     }
@@ -509,6 +510,8 @@ public class DatabaseCreator
         {
             Writer.Message("\nGathering data from database for column records file...");
             sqlConnect.Open();
+            
+            // Get a list of columns and their allowed values.
             sqlCommand = new SqlCommand("SELECT t.[name], con.[definition] " +
                                         "FROM sys.check_constraints con " +
                                             "LEFT OUTER JOIN sys.objects t " +
@@ -541,7 +544,7 @@ public class DatabaseCreator
             }
             reader.Close();
 
-
+            // Get the max lengths of varchars. TEXT will later be limited to 65535 for compatibility with MySQL.
             sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
                                         "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS;", sqlConnect);
             reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
@@ -551,7 +554,11 @@ public class DatabaseCreator
             {
                 string length = "";
                 if (!reader.IsDBNull(3))
-                    length = reader.GetInt32(3).ToString();
+                {
+                    int lengthInt = reader.GetInt32(3);
+                    // Limit TEXT length to 65535, as SQL Server returns this value as bytes allowed, not characters.
+                    length = (lengthInt > 65535 ? 65535 : lengthInt).ToString();
+                }
                 columns.Add(new string[] { reader.GetString(0), reader.GetString(1), reader.GetString(2), length });
             }
             reader.Close();
