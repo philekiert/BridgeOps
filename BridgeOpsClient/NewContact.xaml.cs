@@ -33,7 +33,10 @@ namespace BridgeOpsClient
                 Contact nc = new Contact();
 
                 nc.sessionID = App.sd.sessionID;
-                nc.notes = txtNotes.Text;
+                if (txtNotes.Text.Length == 0)
+                    nc.notes = null;
+                else
+                    nc.notes = txtNotes.Text;
 
                 ditContact.ExtractValues(out nc.additionalCols, out nc.additionalVals);
 

@@ -530,7 +530,9 @@ public class DatabaseCreator
                     string table = reader.GetString(0);
                     string constraint = reader.GetString(1);
                     string column = constraint.Substring(2, constraint.IndexOf(']') - 2);
+                    // SQL Server either lists or holds the constraints in the wrong order, so reverse here.
                     string[] possVals = constraint.Split(" OR [");
+                    Array.Reverse(possVals);
                     for (int n = 0; n < possVals.Length; ++n)
                     {
                         possVals[n] = possVals[n].Substring(possVals[n].IndexOf('\'') + 1);
@@ -684,7 +686,7 @@ public class DatabaseCreator
                     {
                         string allowList = line.Substring(allowIndex + 11);
                         type = type.Remove(type.IndexOf(" [allowed] "));
-                        allowArr = allowList.Split(";;");
+                        allowArr = allowList.Split(";");
                     }
 
                     // Exit this iteration if the any value is invalid.
@@ -754,7 +756,7 @@ public class DatabaseCreator
                         {
                             // SQL Server doesn't like BOOLEAN, but this is corrected to BIT in CreateDatabase().
                             bool isOtherType = type == "FLOAT" ||
-                                               type == "DATE" || type == "DATETIME" || type == "TIME" ||
+                                               type == "DATE" ||
                                                type == "TINYTEXT" || type == "MEDIUMTEXT" || type == "TEXT" ||
                                                type == "BOOLEAN";
                             if (isOtherType && foundAllowList)

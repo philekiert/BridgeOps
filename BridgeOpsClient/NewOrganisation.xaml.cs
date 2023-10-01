@@ -30,15 +30,23 @@ namespace BridgeOpsClient
         {
             if (ditOrganisation.ScoopValues())
             {
-                Contact nc = new Contact();
+                Organisation no = new Organisation();
 
-                nc.sessionID = App.sd.sessionID;
-                nc.notes = txtNotes.Text;
+                no.sessionID = App.sd.sessionID;
 
-                ditOrganisation.ExtractValues(out nc.additionalCols, out nc.additionalVals);
+                no.organisationID = txtOrgID.Text;
+                no.parentOrgID = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
+                no.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
+                no.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
-                if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc))
+                ditOrganisation.ExtractValues(out no.additionalCols, out no.additionalVals);
+
+                if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, no))
                     Close();
+            }
+            else
+            {
+
             }
         }
     }

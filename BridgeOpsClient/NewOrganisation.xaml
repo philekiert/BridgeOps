@@ -16,8 +16,13 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
+            <Grid.Resources>
+                <Style TargetType="TextBox">
+                    <Setter Property="Margin" Value="10 5 10 5" />
+                </Style>
+            </Grid.Resources>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
@@ -26,8 +31,11 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
             <Label Content="Organisation ID" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID" />
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgID" />
             <Label Content="Parent Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID" />
+            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2"/>
             <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>
+            <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo" />
         </Grid>
         <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="1"/>
         <Label Grid.Row="2" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"

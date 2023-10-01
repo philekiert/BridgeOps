@@ -206,9 +206,16 @@ namespace BridgeOpsClient
                     int r;
                     if (int.TryParse(restriction, out r))
                     {
-                        type = "Text";
+                        type = "TEXT";
                         max = r;
                     }
+                    else if (type == "TINYINT")
+                        max = 255;
+                    else if (type == "SMALLINT")
+                        max = 32_767;
+                    else if (type == "INT")
+                        max = 2_147_483_647;
+                    // else max remains 0 for dates.
 
                     Column col = new Column(type, max, allowedArr, "");
 

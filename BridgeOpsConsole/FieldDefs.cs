@@ -340,19 +340,22 @@ public class FieldDefs
     public void CreateNewColumnAdditionsTemplate()
     {
         string template = "# Use this file to add columns to the database. Use the following format (without the '# '):" +
-                        "\n# [table] TableName [column] ColumnName [type] TYPE [allowed] list;;of;;values;;double-semicolon;;separated" +
+                        "\n# [table] TableName [column] ColumnName [type] TYPE [allowed] list;of;values;semicolon;separated" +
                         "\n# Example:" +
-                        "\n# [table] Contact [column] Favourite Food [type] VARCHAR(10) [allowed] Sandwiches;;Pizza;;Seicon" +
+                        "\n# [table] Contact [column] Favourite Food [type] VARCHAR(10) [allowed] Sandwiches;Pizza;Seicon" +
                         "\n" +
                         "\n# Notes:" +
                         "\n#  - Spaces in the column name will be replaced with underscores in the database, and conversely, underscores" +
                         "\n#    will be replaced with spaces when displayed in the client software. For this reason, underscores cannot" +
                         "\n#    be displayed." +
                         "\n#  - Only the [allowed] section is optional and can be ommitted." +
+                        "\n#  - The [allowed] list can contain a blank value in order to allow the field to be left blank in the " +
+                        "\n#    application. The most readable way to do this is to simply precede your list with \";;\", example:" +
+                        "\n#    [allowed] ;list;with;blank;value" +
                         "\n#  - [type] is restricted to the following values:" +
                         "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT" +
                         "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
-                        "\n#      Time/date: DATE, DATETIME, TIME (cannot accept [allowed] values)" +
+                        "\n#      Date: DATE (cannot accept [allowed] values)" +
                         "\n#      Text: VARCHAR(0 - 65535), TINYTEXT, MEDIUMTEXT, TEXT (only VARCHAR can accept [allowed] values)" +
                         "\n#      Boolean: BOOLEAN (cannot accept [allowed] values)" +
                         "\n#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +

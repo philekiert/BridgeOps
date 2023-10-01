@@ -31,7 +31,7 @@ namespace BridgeOpsClient.CustomControls
             public string name;
             public string type;
             public int restriction;
-            public string value = "";
+            public string? value = "";
 
             public ColValue(string name, string type, int restriction)
             {
@@ -50,8 +50,8 @@ namespace BridgeOpsClient.CustomControls
             {
                 bool skip = false;
 
-                /* This is very very botch, it should be done elsewhere but things are a bit tight
-                   at the moment. It's here because the below column names have dedicated fields. */
+                /* This is very very botch, it should be done more elegantly elsewhere but things are a bit tight
+                   at the moment. It's here because the affected column names have dedicated fields. */
                 if (table == "Contact")
                 {
                     if (col.Key == "Contact_ID" ||
@@ -81,15 +81,35 @@ namespace BridgeOpsClient.CustomControls
                     ColValue colBinding = new(col.Key, col.Value.type, col.Value.restriction);
 
                     // Add the input field.
-                    if (col.Value.type == "Text")
+                    if (col.Value.type == "DATE")
                     {
-                        TextBox txtInput = new TextBox();
-                        txtInput.SetValue(Grid.ColumnProperty, 1);
-                        txtInput.SetValue(Grid.RowProperty, i);
-                        txtInput.MaxLength = col.Value.restriction;
-
-                        grdMain.Children.Add(txtInput);
-
+                        DatePicker dtpInput = new();
+                        dtpInput.SetValue(Grid.ColumnProperty, 1);
+                        dtpInput.SetValue(Grid.RowProperty, i);
+                        grdMain.Children.Add(dtpInput);
+                    }
+                    else
+                    {
+                        if (col.Value.allowed.Length == 0)
+                        {
+                            // If simple text value.
+                            TextBox txtInput = new();
+                            txtInput.SetValue(Grid.ColumnProperty, 1);
+                            txtInput.SetValue(Grid.RowProperty, i);
+                            if (col.Value.type == "TEXT")
+                                txtInput.MaxLength = col.Value.restriction;
+                            // else must be an INT type and will be checked against restriction in ScoopValues().
+                            grdMain.Children.Add(txtInput);
+                        }
+                        else
+                        {
+                            // If a constraint is in place.
+                            ComboBox cmbInput = new();
+                            cmbInput.SetValue(Grid.ColumnProperty, 1);
+                            cmbInput.SetValue(Grid.RowProperty, i);
+                            cmbInput.ItemsSource = col.Value.allowed;
+                            grdMain.Children.Add(cmbInput);
+                        }
                     }
 
                     colValues.Add(colBinding);
@@ -99,9 +119,12 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
-        // Update all columns, return false if any values are invalid.
+        public List<string> disallowed = new();
+        // Update all columns, return false if any values are invalid. Error messages can be found in disallowed List.
         public bool ScoopValues()
         {
+            disallowed.Clear();
+
             int i = 0;
             foreach (object child in grdMain.Children)
             {
@@ -111,21 +134,51 @@ namespace BridgeOpsClient.CustomControls
                     int curIndex = i / 2;
                     ColValue cv = colValues[curIndex];
                     if (t == typeof(TextBox))
-                        cv.value = ((TextBox)child).Text;
+                    {
+                        string input = ((TextBox)child).Text;
+                        if (input == "")
+                            cv.value = null;
+                        else if (cv.type == "TEXT")
+                            cv.value = input;
+                        else // Some sort of INT and needs checking against restriction.
+                        {
+                            int value;
+                            bool isNumber = int.TryParse(input, out value);
+                            if (isNumber || value < 0 || value > cv.restriction)
+                                disallowed.Add(cv.name.Replace('_', ' ') + " must be a whole number lower than " +
+                                               cv.restriction.ToString() + ";");
+                        }
+                    }
+                    else if (t == typeof(ComboBox))
+                    {
+                        if (((ComboBox)child).SelectedItem == null)
+                            cv.value = null;
+                        else
+                            cv.value = ((ComboBox)child).Text;
+                    }
+                    else if (t == typeof(DatePicker))
+                    {
+                        DateTime? dt = ((DatePicker)child).SelectedDate;
+                        if (dt == null)
+                            cv.value = null;
+                        else
+                            cv.value = dt.Value.ToString("yyyy-MM-dd");
+                    }
                     colValues[curIndex] = cv;
                 }
-
                 ++i;
             }
 
+            if (disallowed.Count > 0)
+                return false;
             return true;
         }
 
         // Return the two lists that the database table structs need.
-        public bool ExtractValues(out List<string> names, out List<string> values)
+        public bool ExtractValues(out List<string> names, out List<string?> values)
         {
             List<string> colNames = new();
-            List<string> colVals = new();
+            List<string?> colVals = new();
 
             foreach (ColValue cv in colValues)
             {

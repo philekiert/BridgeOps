@@ -203,15 +203,15 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public string organisationID;
-        public string parentOrgID;
-        public string dialNo;
-        public string notes;
+        public string? parentOrgID;
+        public string? dialNo;
+        public string? notes;
         public List<string> additionalCols;
-        public List<string> additionalVals;
+        public List<string?> additionalVals;
 
-        public Organisation(string sessionID, string organisationID, string parentOrgID,
-                            string dialNo, string notes, List<string> additionalCols,
-                                                         List<string> additionalVals)
+        public Organisation(string sessionID, string organisationID, string? parentOrgID,
+                            string? dialNo, string? notes, List<string> additionalCols,
+                                                           List<string?> additionalVals)
         {
             this.sessionID = sessionID;
             this.organisationID = organisationID;
@@ -242,12 +242,12 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int contactID = -1;
-        public string notes;
+        public string? notes;
         public List<string> additionalCols;
-        public List<string> additionalVals;
+        public List<string?> additionalVals;
 
-        public Contact(string sessionID, int contactID, string notes, List<string> additionalCols,
-                                                                      List<string> additionalVals)
+        public Contact(string sessionID, int contactID, string? notes, List<string> additionalCols,
+                                                                       List<string?> additionalVals)
         {
             this.sessionID = sessionID;
             this.contactID = contactID;
@@ -270,14 +270,14 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public string assetID;
-        public string organisationID;
-        public string notes;
+        public string? organisationID;
+        public string? notes;
         public List<string> additionalCols;
-        public List<string> additionalVals;
+        public List<string?> additionalVals;
 
-        public Asset(string sessionID, string assetID, string organisationID, string notes,
+        public Asset(string sessionID, string assetID, string? organisationID, string? notes,
                      List<string> additionalCols,
-                     List<string> additionalVals)
+                     List<string?> additionalVals)
         {
             this.sessionID = sessionID;
             this.assetID = assetID;
@@ -325,20 +325,20 @@ namespace SendReceiveClasses
         public string sessionID;
         public int conferenceID;
         public int typeID;
-        public string title;
+        public string? title;
         public DateTime start;
         public DateTime end;
         public TimeSpan buffer;
-        public string organisationID;
-        public int recurrenceID;
-        public string notes;
+        public string? organisationID;
+        public int? recurrenceID;
+        public string? notes;
         public List<string> additionalCols;
-        public List<string> additionalVals;
+        public List<string?> additionalVals;
 
-        public Conference(string sessionID, int conferenceID, int typeID, string title,
+        public Conference(string sessionID, int conferenceID, int typeID, string? title,
                           DateTime start, DateTime end, TimeSpan buffer,
-                          string organisationID, int recurrenceID, string notes, List<string> additionalCols,
-                                                                                 List<string> additionalVals)
+                          string? organisationID, int? recurrenceID, string? notes, List<string> additionalCols,
+                                                                                    List<string?> additionalVals)
         {
             this.sessionID = sessionID;
             this.conferenceID = conferenceID;
@@ -442,7 +442,7 @@ namespace SendReceiveClasses
 
     public class SqlAssist
     {
-        public static void LevelAdditionals(ref List<string> columns, ref List<string> values)
+        public static void LevelAdditionals(ref List<string> columns, ref List<string?> values)
         {
             if (columns.Count > values.Count)
                 columns.RemoveRange(values.Count, columns.Count - values.Count);
@@ -457,18 +457,21 @@ namespace SendReceiveClasses
 
         public static string ValConcat(params string[] values)
         {
-            return ValConcat(new List<string>(), values);
+            return ValConcat(new List<string?>(), values);
         }
-        public static string ValConcat(List<string> additionalVals, params string[] setValues)
+        public static string ValConcat(List<string?> additionalVals, params string?[] setValues)
         {
             additionalVals.AddRange(setValues);
-            string concat = "'";
             if (additionalVals.Count > 0)
             {
-                concat += additionalVals[0];
-                for (int n = 1; n < additionalVals.Count; ++n)
-                    concat += "', '" + additionalVals[n];
-                return concat + "'";
+                for (int i = 0; i < additionalVals.Count; ++i)
+                    if (additionalVals[i] == null)
+                        additionalVals[i] = "NULL";
+                    else
+#pragma warning disable CS8602
+                        additionalVals[i] = "'" + additionalVals[i].Replace("'", "''") + "'";
+#pragma warning restore CS8602
+                return string.Join(", ", additionalVals);
             }
             else return "";
         }
