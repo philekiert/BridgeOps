@@ -31,6 +31,8 @@
                     <Separator />
                     <MenuItem Header="Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click" />
+                    <MenuItem Header="Conference Type" x:Name="menuDatabaseNewConferenceType"
+                              Click="menuDatabaseNewConferenceType_Click" />
                 </MenuItem>
             </MenuItem>
         </Menu>

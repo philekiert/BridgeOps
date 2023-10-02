@@ -16,9 +16,6 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    /// <summary>
-    /// Interaction logic for NewContact.xaml
-    /// </summary>
     public partial class NewContact : Window
     {
         public NewContact()
@@ -47,6 +44,13 @@ namespace BridgeOpsClient
                     // There shouldn't be any errors with insert on this one, as everything is either text or null.
                     MessageBox.Show("Could not create contact.");
                 }
+            }
+            else
+            {
+                string message = "One or more values caused an unknown error to occur.";
+                if (ditContact.disallowed.Count > 0)
+                    message = ditContact.disallowed[0];
+                MessageBox.Show(message);
             }
         }
     }

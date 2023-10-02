@@ -45,16 +45,15 @@ namespace BridgeOpsClient
             }
 
             int capacity;
-            if (!(int.TryParse(txtCapacity.Text, out capacity) &&
-                  capacity > ColumnRecord.resource["Capacity"].restriction &&
-                  capacity < 1))
+            int.TryParse(txtCapacity.Text, out capacity);
+            if (capacity > ColumnRecord.resource["Capacity"].restriction || capacity < 1)
             {
                 MessageBox.Show("Capacity must be above 0 and less than " +
                                 ColumnRecord.resource["Capacity"].restriction.ToString() + ".");
                 return;
             }
 
-            nr.name = txtResourceName.Text;
+            nr.name = txtResourceName.Text.Length > 0 ? txtResourceName.Text : null;
             nr.availableFrom = timeAvailableFrom.GetDateTime();
             nr.availableTo = timeAvailableFrom.GetDateTime();
 

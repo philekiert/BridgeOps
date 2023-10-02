@@ -19,13 +19,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="New Asset.xaml.cs">
+    <Compile Update="NewEntries\New Asset.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="NewResource.xaml.cs">
+    <Compile Update="NewEntries\NewConferenceType.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="NewOrganisation.xaml.cs">
+    <Compile Update="NewEntries\NewResource.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="NewEntries\NewOrganisation.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

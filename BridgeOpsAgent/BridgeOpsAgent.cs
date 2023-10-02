@@ -31,6 +31,12 @@ internal class BridgeOpsAgent
     {
         return clientSessions.ContainsKey(id);
     }
+    // If you need to check the condition, but need the bool outside of the scope.
+    static bool CheckSessionValidity(string id, out bool result)
+    {
+        result = clientSessions.ContainsKey(id);
+        return result;
+    }
 
     // Multiple threads may try to access this at once, so hold them up if necessary.
     private static bool currentlyWriting = false;
@@ -394,47 +400,55 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             SqlCommand com = new SqlCommand("", sqlConnect);
+
+            bool sessionValid = false;
+
             if (target == Glo.CLIENT_NEW_ORGANISATION)
             {
                 Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
-                    com.CommandText = newRow.SqlInsert();
+                com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_CONTACT)
             {
                 Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_ASSET)
             {
                 Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_CONFERENCE_TYPE)
             {
                 ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_CONFERENCE)
             {
                 Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_RESOURCE)
             {
                 Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_LOGIN)
             {
                 Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
+            }
+
+            if (!sessionValid)
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
             }
 
             if (com.ExecuteNonQuery() == 0)

@@ -128,6 +128,18 @@ namespace BridgeOpsClient
             newResource.Show();
         }
 
+        private void menuDatabaseNewConferenceType_Click(object sender, RoutedEventArgs e)
+        {
+            NewConferenceType newResource = new();
+
+            if (ColumnRecord.conferenceType["Type_Name"].friendlyName != "")
+                newResource.lblTypeName.Content = ColumnRecord.conferenceType["Type_Name"].friendlyName;
+
+            newResource.txtTypeName.MaxLength = ColumnRecord.conferenceType["Type_Name"].restriction;
+
+            newResource.Show();
+        }
+
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)
         {
             if (App.IsLoggedIn)

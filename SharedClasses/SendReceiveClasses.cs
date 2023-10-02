@@ -305,9 +305,9 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int typeID;
-        public string name;
+        public string? name;
 
-        public ConferenceType(string sessionID, int typeID, string name)
+        public ConferenceType(string sessionID, int typeID, string? name)
         {
             this.sessionID = sessionID;
             this.typeID = typeID;
@@ -316,7 +316,7 @@ namespace SendReceiveClasses
 
         public string SqlInsert()
         {
-            return "INSERT INTO ConferenceType (" + Glo.Tab.CONFERENCE_TYPE_NAME + ") VALUES (" + name + ");";
+            return "INSERT INTO ConferenceType (" + Glo.Tab.CONFERENCE_TYPE_NAME + ") VALUES ('" + name + "');";
         }
     }
 
@@ -382,12 +382,12 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int resourceID;
-        public string name;
+        public string? name;
         public DateTime availableFrom;
         public DateTime availableTo;
         public int capacity;
 
-        public Resource(string sessionID, int resourceID, string name,
+        public Resource(string sessionID, int resourceID, string? name,
                         DateTime availableFrom, DateTime availableTo, int capacity)
         {
             this.sessionID = sessionID;
@@ -400,7 +400,7 @@ namespace SendReceiveClasses
 
         public string SqlInsert()
         {
-            return SqlAssist.InsertInto("Contact",
+            return SqlAssist.InsertInto("Resource",
                                         SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
                                                             Glo.Tab.RESOURCE_FROM,
                                                             Glo.Tab.RESOURCE_TO,
@@ -471,7 +471,7 @@ namespace SendReceiveClasses
             return "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ");";
         }
 
-        public static string ValConcat(params string[] values)
+        public static string ValConcat(params string?[] values)
         {
             return ValConcat(new List<string?>(), values);
         }
