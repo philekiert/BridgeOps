@@ -438,6 +438,22 @@ namespace SendReceiveClasses
         }
     }
 
+    struct PrimaryColumnSelect
+    {
+        public string sessionID;
+        public string table;
+        public string column;
+
+        public PrimaryColumnSelect(string sessionID, string table, string column)
+        {
+            this.sessionID = sessionID;
+            this.table = table;
+            this.column = column;
+        }
+
+        public string SqlSelect { get { return "SELECT " + column + " FROM " + table + ";"; } }
+    }
+
     //   H E L P E R   F U N C T I O N S
 
     public class SqlAssist

@@ -15,9 +15,6 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient.CustomControls
 {
-    /// <summary>
-    /// Interaction logic for DataInputTable.xaml
-    /// </summary>
     public partial class DataInputTable : UserControl
     {
         public DataInputTable()
@@ -63,6 +60,13 @@ namespace BridgeOpsClient.CustomControls
                     if (col.Key == "Organisation_ID" ||
                         col.Key == "Parent_ID" ||
                         col.Key == "Dial_No" ||
+                        col.Key == "Notes")
+                        skip = true;
+                }
+                else if (table == "Asset")
+                {
+                    if (col.Key == "Asset_ID" ||
+                        col.Key == "Organisation_ID" ||
                         col.Key == "Notes")
                         skip = true;
                 }

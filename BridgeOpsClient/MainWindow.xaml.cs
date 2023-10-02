@@ -46,12 +46,20 @@ namespace BridgeOpsClient
             // Implemement friendly name.
             if (ColumnRecord.contact["Notes"].friendlyName != "")
                 newContact.lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
+            newContact.txtNotes.MaxLength = ColumnRecord.contact["Notes"].restriction;
 
             newContact.Show();
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
         {
+            string[]? organisationList = App.SelectColumnPrimary("Organisation", "Organisation_ID");
+            if (organisationList == null)
+            {
+                MessageBox.Show("Could not pull organisation list from server.");
+                return;
+            }
+
             NewOrganisation newOrganisation = new();
             newOrganisation.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
 
@@ -65,10 +73,43 @@ namespace BridgeOpsClient
             if (ColumnRecord.organisation["Notes"].friendlyName != "")
                 newOrganisation.lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
 
-            string[]? organisationList = App.SelectColumnPrimary("Organisation", "Organisation_ID");
+            // Implement max lengths.
+            newOrganisation.txtOrgID.MaxLength = ColumnRecord.organisation["Organisation_ID"].restriction;
+            newOrganisation.txtDialNo.MaxLength = ColumnRecord.organisation["Dial_No"].restriction;
+            newOrganisation.txtNotes.MaxLength = ColumnRecord.organisation["Notes"].restriction;
+
             newOrganisation.cmbOrgParentID.ItemsSource = organisationList;
 
             newOrganisation.Show();
+        }
+
+        private void menuDatabaseNewAsset_Click(object sender, RoutedEventArgs e)
+        {
+            string[]? organisationList = App.SelectColumnPrimary("Organisation", "Organisation_ID");
+            if (organisationList == null)
+            {
+                MessageBox.Show("Could not pull organisation list from server.");
+                return;
+            }
+
+            NewAsset newAsset = new();
+            newAsset.ditAsset.Initialise(ColumnRecord.asset, "Asset");
+
+            // Implement friendly names.
+            if (ColumnRecord.asset["Asset_ID"].friendlyName != "")
+                newAsset.lblAssetID.Content = ColumnRecord.asset["Asset_ID"].friendlyName;
+            if (ColumnRecord.asset["Organisation_ID"].friendlyName != "")
+                newAsset.lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
+            if (ColumnRecord.asset["Notes"].friendlyName != "")
+                newAsset.lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
+
+            // Implement max lengths.
+            newAsset.txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
+            newAsset.txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+
+            newAsset.cmbOrgID.ItemsSource = organisationList;
+
+            newAsset.Show();
         }
 
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)

@@ -17,9 +17,6 @@ using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
-    /// <summary>
-    /// Interaction logic for NewContact.xaml
-    /// </summary>
     public partial class NewOrganisation : Window
     {
         public NewOrganisation()
@@ -50,6 +47,8 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, no))
                     Close();
+                else
+                    MessageBox.Show("Could not create organisation.");
             }
             else
             {

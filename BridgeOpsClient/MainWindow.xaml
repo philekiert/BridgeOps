@@ -26,6 +26,8 @@
                               Click="menuDatabaseNewContact_Click" />
                     <MenuItem Header="Organisation" x:Name="menuDatabaseNewOrganisation"
                               Click="menuDatabaseNewOrganisation_Click" />
+                    <MenuItem Header="Asset" x:Name="menuDatabaseNewAsset"
+                              Click="menuDatabaseNewAsset_Click" />
                 </MenuItem>
             </MenuItem>
         </Menu>

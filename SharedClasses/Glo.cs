@@ -36,8 +36,9 @@ public static class Glo
     public const int CONSOLE_LOGOUT_USER = 1;
 
     // Operational
-    public const int CLIENT_REQUEST_FAILED = 0;
-    public const int CLIENT_REQUEST_SUCCESS = 1;
+    public const int CLIENT_SESSION_INVALID = 0;
+    public const int CLIENT_REQUEST_FAILED = 1;
+    public const int CLIENT_REQUEST_SUCCESS = 2;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent
@@ -46,7 +47,7 @@ public static class Glo
 
     public const string CLIENT_LOGOUT_ACCEPT = "Safe travels";
 
-    public const string CLIENT_SESSION_INVALID = "Session invalid";
+    public const string CLIENT_LOGOUT_SESSION_INVALID = "Session invalid";
     
 
     // Network Config

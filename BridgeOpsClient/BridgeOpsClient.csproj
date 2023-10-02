@@ -19,6 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="New Asset.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="NewOrganisation.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

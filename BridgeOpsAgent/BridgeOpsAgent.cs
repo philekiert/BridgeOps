@@ -12,6 +12,7 @@ using System.Windows.Markup;
 using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.IO;
+using System.Security.Cryptography;
 
 internal class BridgeOpsAgent
 {
@@ -383,7 +384,7 @@ internal class BridgeOpsAgent
             sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
         }
         else
-            sr.WriteAndFlush(stream, Glo.CLIENT_SESSION_INVALID);
+            sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_INVALID);
 
     }
 
@@ -444,6 +445,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't create new contact. See error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally
         {
@@ -457,25 +459,33 @@ internal class BridgeOpsAgent
         try
         {
             sqlConnect.Open();
-            string request = sr.ReadString(stream);
-            int separator = request.IndexOf(';');
-            string table = request.Substring(0, separator);
-            string column = request.Substring(separator + 1);
+            PrimaryColumnSelect pcs = sr.Deserialise<PrimaryColumnSelect>(sr.ReadString(stream));
+            if (!clientSessions.ContainsKey(pcs.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
 
             // Reject cheekiness
-            if (table.Contains('\'') || column.Contains('\''))
+            if (pcs.table.Contains('\'') || pcs.table.Contains(';') ||
+                pcs.column.Contains('\'') || pcs.column.Contains(';'))
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
 
-            SqlCommand com = new SqlCommand("SELECT " + column + " FROM " + table + ";", sqlConnect);
+            SqlCommand com = new SqlCommand("SELECT " + pcs.column + " FROM " + pcs.table + ";", sqlConnect);
             SqlDataReader reader = com.ExecuteReader();
             string result = "";
             while (reader.Read())
-                result += reader.GetString(0) + ',';
-            // We'll remove the trailing comma on the host machine to keep the agent performant.
+                result += reader.GetString(0) + ';';
+            // Remove the trailing semicolon.
+            if (result.Length > 0)
+                result = result.Remove(result.Length - 1);
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, result);
         }
         catch (Exception e)
         {
             LogError("Couldn't run query, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally
         {

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -130,6 +131,7 @@ namespace BridgeOpsClient
             }
         }
 
+        // Returns null if the operation failed, returns an array if successful, empty or otherwise.
         public static string[]? SelectColumnPrimary(string table, string column)
         {
             NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
@@ -137,25 +139,23 @@ namespace BridgeOpsClient
             {
                 if (stream != null)
                 {
+                    PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, table, column);
                     stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
-                    sr.WriteAndFlush(stream, table + ';' + column);
+                    sr.WriteAndFlush(stream, sr.Serialise(pcs));
                     if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
-                    {
-                        stream.Close();
                         return sr.ReadString(stream).Split(';');
-                    }
                     else
-                    {
-                        stream.Close();
                         return null;
-                    }
                 }
                 return null;
             }
             catch
             {
-                if (stream != null) stream.Close();
                 return null;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
             }
         }
     }

@@ -42,6 +42,11 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc))
                     Close();
+                else
+                {
+                    // There shouldn't be any errors with insert on this one, as everything is either text or null.
+                    MessageBox.Show("Could not create contact.");
+                }
             }
         }
     }
