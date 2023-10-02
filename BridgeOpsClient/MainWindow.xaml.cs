@@ -112,6 +112,22 @@ namespace BridgeOpsClient
             newAsset.Show();
         }
 
+        private void menuDatabaseNewResource_Click(object sender, RoutedEventArgs e)
+        {
+            NewResource newResource = new();
+
+            if (ColumnRecord.resource["Resource_ID"].friendlyName != "")
+                newResource.lblResourceName.Content = ColumnRecord.resource["Resource_ID"].friendlyName;
+            if (ColumnRecord.resource["Available_From"].friendlyName != "")
+                newResource.lblAvailableFrom.Content = ColumnRecord.resource["Available_From"].friendlyName;
+            if (ColumnRecord.resource["Available_To"].friendlyName != "")
+                newResource.lblAvailableTo.Content = ColumnRecord.resource["Available_To"].friendlyName;
+
+            newResource.txtResourceName.MaxLength = ColumnRecord.resource["Resource_ID"].restriction;
+
+            newResource.Show();
+        }
+
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)
         {
             if (App.IsLoggedIn)

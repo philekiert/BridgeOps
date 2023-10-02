@@ -28,6 +28,9 @@
                               Click="menuDatabaseNewOrganisation_Click" />
                     <MenuItem Header="Asset" x:Name="menuDatabaseNewAsset"
                               Click="menuDatabaseNewAsset_Click" />
+                    <Separator />
+                    <MenuItem Header="Resource" x:Name="menuDatabaseNewResource"
+                              Click="menuDatabaseNewResource_Click" />
                 </MenuItem>
             </MenuItem>
         </Menu>

@@ -23,7 +23,7 @@ namespace BridgeOpsClient
     {
         DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);
 
-        public static int resourceCount = 1;
+        public static int resourceCount = 5;
         float smoothZoomSpeed = 1.6f;
 
         public PageConferenceView()
