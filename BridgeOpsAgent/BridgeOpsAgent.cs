@@ -31,7 +31,7 @@ internal class BridgeOpsAgent
     {
         return clientSessions.ContainsKey(id);
     }
-    // If you need to check the condition, but need the bool outside of the scope.
+    // If you need to check the quickly condition, but need the bool outside of scope.
     static bool CheckSessionValidity(string id, out bool result)
     {
         result = clientSessions.ContainsKey(id);
@@ -294,7 +294,13 @@ internal class BridgeOpsAgent
     {
         try
         {
-            sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+            if (!CheckSessionValidity(sr.ReadString(stream)))
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+            else
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+            }
         }
         catch (Exception e)
         {

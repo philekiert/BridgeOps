@@ -15,9 +15,6 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient.CustomControls
 {
-    /// <summary>
-    /// Interaction logic for NumberEntry.xaml
-    /// </summary>
     public partial class NumberEntry : UserControl
     {
         public NumberEntry()

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,20 +86,41 @@ namespace BridgeOpsClient
                 return false;
         }
 
+        public static void SessionInvalidated()
+        {
+            sd = new SessionDetails();
+            MessageBox.Show("Session is no longer valid, please log back in.");
+        }
+
         public static bool PullColumnRecord()
         {
             NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            if (stream == null)
-                return false;
             try
             {
-                stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
-                ColumnRecord.Initialise(sr.ReadString(stream));
-                return true;
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
+                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        ColumnRecord.Initialise(sr.ReadString(stream));
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Could not pull column record.");
+                        return false;
+                    }
+                }
+                else
+                    return false;
             }
             catch
             {
                 return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
             }
         }
 
@@ -112,22 +134,23 @@ namespace BridgeOpsClient
                     stream.WriteByte(fncByte);
                     sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
                     if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
-                    {
-                        stream.Close();
                         return true;
-                    }
-                    else
+                    else if (stream.ReadByte() == Glo.CLIENT_SESSION_INVALID)
                     {
-                        stream.Close();
+                        SessionInvalidated();
                         return false;
                     }
+
                 }
                 return false;
             }
             catch
             {
-                if (stream != null) stream.Close();
                 return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
             }
         }
 
@@ -144,8 +167,9 @@ namespace BridgeOpsClient
                     sr.WriteAndFlush(stream, sr.Serialise(pcs));
                     if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
                         return sr.ReadString(stream).Split(';');
-                    else
-                        return null;
+                    else if (stream.ReadByte() == Glo.CLIENT_SESSION_INVALID)
+                        SessionInvalidated();
+                    return null;
                 }
                 return null;
             }
