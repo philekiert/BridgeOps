@@ -100,6 +100,7 @@ namespace BridgeOpsClient
                 if (stream != null)
                 {
                     stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
+                    sr.WriteAndFlush(stream, sd.sessionID);
                     if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
                     {
                         ColumnRecord.Initialise(sr.ReadString(stream));

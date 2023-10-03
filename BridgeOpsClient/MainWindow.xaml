@@ -22,12 +22,12 @@
             </MenuItem>
             <MenuItem Header="Database">
                 <MenuItem Header="New">
-                    <MenuItem Header="Contact" x:Name="menuDatabaseNewContact"
-                              Click="menuDatabaseNewContact_Click" />
                     <MenuItem Header="Organisation" x:Name="menuDatabaseNewOrganisation"
                               Click="menuDatabaseNewOrganisation_Click" />
                     <MenuItem Header="Asset" x:Name="menuDatabaseNewAsset"
                               Click="menuDatabaseNewAsset_Click" />
+                    <MenuItem Header="Contact" x:Name="menuDatabaseNewContact"
+                              Click="menuDatabaseNewContact_Click" />
                     <Separator />
                     <MenuItem Header="Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click" />

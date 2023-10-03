@@ -36,6 +36,7 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             frameMain.Content = new PageConferenceView();
+            frameMain.Content = new PageDatabaseView();
         }
 
         private void menuDatabaseNewContact_Click(object sender, RoutedEventArgs e)

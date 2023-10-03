@@ -7,21 +7,9 @@
              Exit="ApplicationExit">
     <Application.Resources>
 
-        <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
-            <Setter Property="VerticalAlignment" Value="Bottom" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="Padding" Value="0 0 0 2" />
-            <Setter Property="Margin" Value="0 0 0 2" />
-            <Setter Property="Width" Value="24" />
-        </Style>
-
-        <Style TargetType="MenuItem">
-            <Setter Property="Height" Value="20" />
-            <Setter Property="Margin" Value="0 2 0 0" />
-        </Style>
-        <Style TargetType="ToolBarTray">
-            <Setter Property="IsLocked" Value="True" />
-            <Setter Property="VerticalAlignment" Value="Center" />
+        <!-- ComboBox -->
+        <Style TargetType="ComboBox">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <!-- DataInputTable -->
@@ -29,6 +17,25 @@
             <Setter Property="Padding" Value="0 0 0 0" />
             <Setter Property="Margin" Value="10 10 10 10" />
         </Style>
+
+        <!-- Menu Bar -->
+        <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="0 0 0 2" />
+            <Setter Property="Margin" Value="0 0 0 2" />
+            <Setter Property="Width" Value="24" />
+        </Style>
+        <Style TargetType="MenuItem">
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Margin" Value="0 2 0 0" />
+        </Style>
         
+        <!-- Old, may not want to use this eventually -->
+        <Style TargetType="ToolBarTray">
+            <Setter Property="IsLocked" Value="True" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
     </Application.Resources>
 </Application>
