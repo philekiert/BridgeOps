@@ -13,6 +13,7 @@ using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
+using System.Data;
 
 internal class BridgeOpsAgent
 {
@@ -236,9 +237,13 @@ internal class BridgeOpsAgent
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
-
+                else if (fncByte == Glo.CLIENT_SELECT_ALL)
+                    ClientSelectAll(stream, sqlConnect);
                 else
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
                     throw new Exception("Received int " + fncByte + " does not correspond to a function.");
+                }
             }
             catch (Exception e)
             {
@@ -493,18 +498,52 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand("SELECT " + pcs.column + " FROM " + pcs.table + ";", sqlConnect);
             SqlDataReader reader = com.ExecuteReader();
-            string result = "";
+            StringBuilder result = new();
             while (reader.Read())
-                result += reader.GetString(0) + ';';
+                result.Append(reader.GetString(0) + ';');
             // Remove the trailing semicolon.
             if (result.Length > 0)
-                result = result.Remove(result.Length - 1);
+                result = result.Remove(result.Length - 1, 1);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            sr.WriteAndFlush(stream, result);
+            sr.WriteAndFlush(stream, result.ToString());
         }
         catch (Exception e)
         {
             LogError("Couldn't run query, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelectAll(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            string[] request = sr.ReadString(stream).Split(';');
+            if (request.Length != 2 || request[1].Contains('\''))
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                return;
+            }
+            if (!CheckSessionValidity(request[0]))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand("SELECT * FROM " + request[1] + ";", sqlConnect);
+            SelectResult result = new(com.ExecuteReader());
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't run or return query, see error:", e);
             stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally

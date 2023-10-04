@@ -22,6 +22,14 @@ namespace BridgeOpsClient
             InitializeComponent();
         }
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Auto login for dev purposes.
+            txtUsername.Text = "admin";
+            txtPassword.Text = "admin";
+            btnLogIn_Click(btnLogIn, new());
+        }
+
         private void btnLogIn_Click(object sender, RoutedEventArgs e)
         {
             string result = App.LogIn(txtUsername.Text, txtPassword.Text);

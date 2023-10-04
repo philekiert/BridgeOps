@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,18 +20,17 @@ namespace BridgeOpsClient
     public partial class PageDatabaseView : Page
     {
         // This list holds the original column names of respective ComboBoxItems for easier lookup.
-        List<string> friendlyNameReversal = new();
+        Dictionary<string, string> friendlyNameReversal = new();
 
         public PageDatabaseView()
         {
             InitializeComponent();
 
+            // This will trigger cmbTableSelectionchanged() and therefore PopulateColumnComboBox().
             cmbTable.SelectedIndex = 0;
-
-            PopulateColumnComboBox();
         }
 
-        private void PopulateColumnComboBox()
+        private void PopulateColumns()
         {
             Dictionary<string, ColumnRecord.Column> table;
             if (cmbTable.SelectedIndex == 0)
@@ -41,20 +41,8 @@ namespace BridgeOpsClient
                 table = ColumnRecord.contact;
 
             cmbColumn.Items.Clear();
+            dtgResults.Items.Clear();
             friendlyNameReversal.Clear();
-            foreach (KeyValuePair<string, ColumnRecord.Column> col in table)
-            {
-                ComboBoxItem cbi = new ComboBoxItem();
-                cbi.Content = ColumnRecord.GetPrintName(col);
-                friendlyNameReversal.Add(col.Key);
-                cmbColumn.Items.Add(cbi);
-                if (col.Value.type != "TEXT")
-                {
-                    DataGridTextColumn header = new();
-                    header.Header = cbi.Content;
-                    dtgResults.Columns.Add(header);
-                }
-            }
 
             if (cmbTable.SelectedIndex == 2)
                 cmbColumn.Items.RemoveAt(0); // Removed Contact_ID as it's not required.
@@ -64,12 +52,43 @@ namespace BridgeOpsClient
 
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            PopulateColumnComboBox();
+            PopulateColumns();
         }
 
         private void btnListAll_Click(object sender, RoutedEventArgs e)
         {
+            Dictionary<string, ColumnRecord.Column> tableColDefs;
+            if (cmbTable.Text == "Organisation")
+                tableColDefs = ColumnRecord.organisation;
+            else if (cmbTable.Text == "Asset")
+                tableColDefs = ColumnRecord.asset;
+            else // if == "Contact"
+                tableColDefs = ColumnRecord.contact;
 
+            List<string?> columnNames;
+            List<List<string?>> rows;
+            if (App.SelectAll(cmbTable.Text, out columnNames, out rows))
+            {
+                dtgResults.Columns.Clear();
+                foreach (string? s in columnNames)
+                {
+                    DataGridTextColumn header = new();
+                    if (s == null)
+                        header.Header = "";
+                    else
+                    {
+                        header.Header = ColumnRecord.GetPrintName(s, tableColDefs[s]);
+                        header.Header = s;
+                        header.Binding = new Binding("rows[0][0]");
+                    }
+                    dtgResults.Columns.Add(header);
+                }
+                
+
+                // Data
+                dtgResults.ItemsSource = rows;
+
+            }
         }
     }
 }

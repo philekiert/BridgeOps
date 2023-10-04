@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -15,6 +16,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using SendReceiveClasses;
+using static BridgeOpsClient.ColumnRecord;
 
 namespace BridgeOpsClient
 {
@@ -166,9 +168,10 @@ namespace BridgeOpsClient
                     PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, table, column);
                     stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
                     sr.WriteAndFlush(stream, sr.Serialise(pcs));
-                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         return sr.ReadString(stream).Split(';');
-                    else if (stream.ReadByte() == Glo.CLIENT_SESSION_INVALID)
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
                         SessionInvalidated();
                     return null;
                 }
@@ -176,7 +179,45 @@ namespace BridgeOpsClient
             }
             catch
             {
+                MessageBox.Show("Could not run or return query.");
                 return null;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        // Returns null if the operation failed.
+        public static bool SelectAll(string table, out List<string?> columnNames, out List<List<string?>> rows)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_SELECT_ALL);
+                    sr.WriteAndFlush(stream, sd.sessionID + ';' + table);
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                        columnNames = result.columnNames;
+                        rows = result.rows;
+                        return true;
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                        SessionInvalidated();
+                    throw new Exception();
+                }
+                throw new Exception();
+            }
+            catch
+            {
+                MessageBox.Show("Could not run or return query.");
+                columnNames = new();
+                rows = new();
+                return false;
             }
             finally
             {
@@ -222,6 +263,13 @@ namespace BridgeOpsClient
                 return col.Value.friendlyName.Replace('_', ' ');
             else
                 return col.Key.Replace('_', ' ');
+        }
+        public static string GetPrintName(string key, Column col)
+        {
+            if (col.friendlyName != "")
+                return col.friendlyName.Replace('_', ' ');
+            else
+                return key.Replace('_', ' ');
         }
 
         public static Dictionary<string, Column> organisation = new Dictionary<string, Column>();

@@ -30,6 +30,7 @@ public static class Glo
     public const int CLIENT_NEW_CONFERENCE = 8;
     public const int CLIENT_NEW_RESOURCE = 9;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
+    public const int CLIENT_SELECT_ALL = 31;
 
     // Console/Agent Function Specifiers
     public const int CONSOLE_CLIENT_LIST = 0;

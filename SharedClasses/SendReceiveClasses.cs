@@ -1,8 +1,11 @@
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
@@ -97,7 +100,7 @@ namespace SendReceiveClasses
             }
             return unicodeEncoding.GetString(bString);
         }
-            
+
         public NamedPipeServerStream NewServerNamedPipe(string pipeName) // Inbound to server.
         {
             // timeout not supported on this type of stream.
@@ -452,6 +455,30 @@ namespace SendReceiveClasses
         }
 
         public string SqlSelect { get { return "SELECT " + column + " FROM " + table + ";"; } }
+    }
+
+    struct SelectResult
+    {
+        public List<string?> columnNames;
+        public List<List<string?>> rows;
+
+        // The constructor will automatically get the required information from the SqlDataReader.
+        public SelectResult(SqlDataReader reader)
+        {
+            columnNames = new();
+            DataTable schema = reader.GetSchemaTable();
+            foreach (DataRow row in schema.Rows)
+                columnNames.Add(row.Field<string>("ColumnName"));
+
+            rows = new();
+            while (reader.Read())
+            {
+                List<string?> row = new List<string?>();
+                for (int i = 0; i < reader.FieldCount; i++)
+                    row.Add(reader[i].ToString());
+                rows.Add(row);
+            }
+        }
     }
 
     //   H E L P E R   F U N C T I O N S

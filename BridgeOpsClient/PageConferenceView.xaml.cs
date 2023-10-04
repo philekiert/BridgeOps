@@ -16,9 +16,6 @@ using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
-    /// <summary>
-    /// Interaction logic for PageConferenceView.xaml
-    /// </summary>
     public partial class PageConferenceView : Page
     {
         DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);

@@ -14,7 +14,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid>
-            
+
             <!-- Search bar -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -36,8 +36,10 @@
             <Button x:Name="btnSearch" Grid.Row="0" Grid.Column="4" Margin="10 10 10 10" Width="50"
                     Content="Search"/>
         </Grid>
-        
+
         <!-- Results -->
-        <DataGrid x:Name="dtgResults" Grid.Row="1" />
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
+            <DataGrid x:Name="dtgResults"/>
+        </ScrollViewer>
     </Grid>
 </Page>

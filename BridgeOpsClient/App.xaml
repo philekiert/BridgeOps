@@ -30,7 +30,7 @@
             <Setter Property="Height" Value="20" />
             <Setter Property="Margin" Value="0 2 0 0" />
         </Style>
-        
+
         <!-- Old, may not want to use this eventually -->
         <Style TargetType="ToolBarTray">
             <Setter Property="IsLocked" Value="True" />
