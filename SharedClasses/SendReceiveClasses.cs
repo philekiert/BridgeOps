@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO.Pipes;
 using System.Net;
@@ -9,6 +10,7 @@ using System.Reflection.PortableExecutable;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 
 namespace SendReceiveClasses
@@ -25,6 +27,7 @@ namespace SendReceiveClasses
         public SendReceive()
         {
             jsonOpts.IncludeFields = true;
+            jsonOpts.UnknownTypeHandling = System.Text.Json.Serialization.JsonUnknownTypeHandling.JsonNode;
         }
 
         public string Serialise<T>(T classObj)
@@ -457,29 +460,59 @@ namespace SendReceiveClasses
         public string SqlSelect { get { return "SELECT " + column + " FROM " + table + ";"; } }
     }
 
+    struct SelectRequest
+    {
+        public string sessionID;
+        public string table;
+        public List<string> select;
+        public List<string> likeColumns;
+        public List<string> likeValues;
+
+        public SelectRequest(string sessionID, string table,
+                              List<string> select, List<string> likeColumns, List<string> likeValues)
+        {
+            /* There is no check here to make sure that columns and values are the equal lengths. Be careful
+               to respect this restriction. Agent will throw an exception if they are unequal. */
+            this.sessionID = sessionID;
+            this.table = table;
+            this.select = select;
+            this.likeColumns = likeColumns;
+            this.likeValues = likeValues;
+        }
+    }
+
     struct SelectResult
     {
+        /* The reason we return the type as well as the column name because it's so cumbersome to get some of this
+         * information across the JSON serialiser. */
         public List<string?> columnNames;
-        public List<List<string?>> rows;
+        public List<string?> columnTypes;
+        public List<List<object?>> rows;
 
         // The constructor will automatically get the required information from the SqlDataReader.
         public SelectResult(SqlDataReader reader)
         {
             columnNames = new();
+            columnTypes = new();
             DataTable schema = reader.GetSchemaTable();
             foreach (DataRow row in schema.Rows)
+            {
                 columnNames.Add(row.Field<string>("ColumnName"));
+                Type? t = row.Field<Type>("DataType");
+                columnTypes.Add(t == null ? null : t.Name);
+            }
 
             rows = new();
             while (reader.Read())
             {
-                List<string?> row = new List<string?>();
+                List<object?> row = new List<object?>();
                 for (int i = 0; i < reader.FieldCount; i++)
-                    row.Add(reader[i].ToString());
+                    row.Add(reader[i]);
                 rows.Add(row);
             }
         }
     }
+
 
     //   H E L P E R   F U N C T I O N S
 

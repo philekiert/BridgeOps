@@ -123,6 +123,31 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
+        public void Populate(List<object?> data)
+        {
+            int i = 0;
+            foreach (object child in grdMain.Children)
+            {
+                if (i % 2 == 1)
+                {
+                    int curIndex = i / 2;
+                    object? d = data[curIndex];
+                    if (d != null)
+                    {
+                        Type t = child.GetType();
+                        ColValue cv = colValues[curIndex];
+                        if (t == typeof(TextBox))
+                            ((TextBox)child).Text = d.ToString();
+                        else if (t == typeof(ComboBox))
+                            ((ComboBox)child).Text = d.ToString();
+                        else if (t == typeof(DatePicker) && d.ToString() != "")
+                            ((DatePicker)child).SelectedDate = (DateTime)d;
+                    }
+                }
+                ++i;
+            }
+        }
+
         public List<string> disallowed = new();
         // Update all columns, return false if any values are invalid. Error messages can be found in disallowed List.
         public bool ScoopValues()

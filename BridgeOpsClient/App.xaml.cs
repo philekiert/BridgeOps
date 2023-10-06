@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -157,6 +158,100 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool EditOrganisation(string id)
+        {
+            string[]? organisationList = SelectColumnPrimary("Organisation", "Organisation_ID");
+            if (organisationList == null)
+            {
+                MessageBox.Show("Could not pull organisation list from server.");
+                return false;
+            }
+
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("Organisation",
+                           new List<string> { "*" },
+                           new List<string> { "Organisation_ID" },
+                           new List<string> { id },
+                           out columnNames, out rows))
+            {
+                // We would expect data for every field. If the count is different, the operation must have failed.
+                if (rows[0].Count == ColumnRecord.organisation.Count)
+                {
+                    NewOrganisation org = new(id);
+                    org.cmbOrgParentID.ItemsSource = organisationList;
+                    org.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
+                    org.Populate(rows[0]);
+                    org.Show();
+                }
+                else
+                {
+                    MessageBox.Show("Incorrect number of fields received.");
+                }
+            }
+            return true;
+        }
+
+        public static bool EditAsset(string id)
+        {
+            string[]? organisationList = SelectColumnPrimary("Organisation", "Organisation_ID");
+            if (organisationList == null)
+            {
+                MessageBox.Show("Could not pull organisation list from server.");
+                return false;
+            }
+
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("Asset",
+                           new List<string> { "*" },
+                           new List<string> { "Asset_ID" },
+                           new List<string> { id },
+                           out columnNames, out rows))
+            {
+                // We expect data for every field. If the count is different, the operation must have failed.
+                if (rows[0].Count == ColumnRecord.asset.Count)
+                {
+                    NewAsset asset = new NewAsset(id);
+                    asset.cmbOrgID.ItemsSource = organisationList;
+                    asset.ditAsset.Initialise(ColumnRecord.asset, "Asset");
+                    asset.Populate(rows[0]);
+                    asset.Show();
+                }
+                else
+                {
+                    MessageBox.Show("Incorrect number of fields received.");
+                }
+            }
+            return true;
+        }
+
+        public static bool EditContact(string id)
+        {
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("Contact",
+                           new List<string> { "*" },
+                           new List<string> { "Contact_ID" },
+                           new List<string> { id.ToString() },
+                           out columnNames, out rows))
+            {
+                // We expect data for every field. If the count is different, the operation must have failed.
+                if (rows[0].Count == ColumnRecord.contact.Count)
+                {
+                    NewContact contact = new NewContact(id);
+                    contact.ditContact.Initialise(ColumnRecord.contact, "Contact");
+                    contact.Populate(rows[0]);
+                    contact.Show();
+                }
+                else
+                {
+                    MessageBox.Show("Incorrect number of fields received.");
+                }
+            }
+            return true;
+        }
+
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
         public static string[]? SelectColumnPrimary(string table, string column)
         {
@@ -189,21 +284,50 @@ namespace BridgeOpsClient
         }
 
         // Returns null if the operation failed.
-        public static bool SelectAll(string table, out List<string?> columnNames, out List<List<string?>> rows)
+        public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            return Select(table, new List<string> { "*" }, new(), new(), out columnNames, out rows);
+        }
+        public static bool Select(string table, List<string> select,
+                                  List<string> likeColumns, List<string> likeValues,
+                                  out List<string?> columnNames, out List<List<object?>> rows)
         {
             NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
             try
             {
                 if (stream != null)
                 {
-                    stream.WriteByte(Glo.CLIENT_SELECT_ALL);
-                    sr.WriteAndFlush(stream, sd.sessionID + ';' + table);
+                    SelectRequest req = new SelectRequest(sd.sessionID, table, select, likeColumns, likeValues);
+                    stream.WriteByte(Glo.CLIENT_SELECT);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
                     int response = stream.ReadByte();
                     if (response == Glo.CLIENT_REQUEST_SUCCESS)
                     {
                         SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                         columnNames = result.columnNames;
+                        List<string?> columnTypes = result.columnTypes;
                         rows = result.rows;
+                        for (int n = 0; n < rows.Count; ++n)
+                        {
+#pragma warning disable CS8602
+                            for (int i = 0; i < columnTypes.Count; ++i)
+                            {
+                                // A JsonObject here will always be empty.
+                                if (rows[n][i].GetType() == typeof(JsonObject))
+                                    rows[n][i] = "";
+                                else if (columnTypes[i] == "String")
+                                {
+                                    rows[n][i] = rows[n][i].ToString();
+                                }
+                                else if (columnTypes[i] == "DateTime")
+                                {
+                                    DateTime dt;
+                                    DateTime.TryParse(rows[n][i].ToString(), out dt);
+                                    rows[n][i] = dt;
+                                }
+                            }
+#pragma warning restore CS8602
+                        }
                         return true;
                     }
                     else if (response == Glo.CLIENT_SESSION_INVALID)
@@ -272,14 +396,22 @@ namespace BridgeOpsClient
                 return key.Replace('_', ' ');
         }
 
-        public static Dictionary<string, Column> organisation = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> contact = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> asset = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> conferenceType = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> conference = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> conferenceRecurrence = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> resource = new Dictionary<string, Column>();
-        public static Dictionary<string, Column> login = new Dictionary<string, Column>();
+        public static Dictionary<string, Column> organisation = new();
+        public static Dictionary<string, string> organisationFriendlyNameReversal = new();
+        public static Dictionary<string, Column> contact = new();
+        public static Dictionary<string, string> contactFriendlyNameReversal = new();
+        public static Dictionary<string, Column> asset = new();
+        public static Dictionary<string, string> assetFriendlyNameReversal = new();
+        public static Dictionary<string, Column> conferenceType = new();
+        public static Dictionary<string, string> conferenceTypeFriendlyNameReversal = new();
+        public static Dictionary<string, Column> conference = new();
+        public static Dictionary<string, string> conferenceFriendlyNameReversal = new();
+        public static Dictionary<string, Column> conferenceRecurrence = new();
+        public static Dictionary<string, string> conferenceRecurrenceFriendlyNameReversal = new();
+        public static Dictionary<string, Column> resource = new();
+        public static Dictionary<string, string> resourceFriendlyNameReversal = new();
+        public static Dictionary<string, Column> login = new();
+        public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
         public static void Initialise(string columns)
         {
@@ -386,6 +518,24 @@ namespace BridgeOpsClient
                     if (friendlySplit[0] == "Login")
                         AddFriendlyName(login);
                 }
+
+                // Populate the friendly name reversal dictionaries.
+                foreach (KeyValuePair<string, Column> kvp in organisation)
+                    organisationFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in contact)
+                    contactFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in asset)
+                    assetFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in conferenceType)
+                    conferenceTypeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in conference)
+                    conferenceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in conferenceRecurrence)
+                    conferenceRecurrenceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in resource)
+                    resourceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in login)
+                    loginFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
             }
             catch
             {

@@ -18,12 +18,36 @@ namespace BridgeOpsClient
 {
     public partial class NewContact : Window
     {
+        bool edit = false;
+        string id = "";
         public NewContact()
         {
             InitializeComponent();
         }
+        public NewContact(string id)
+        {
+            this.id = id;
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+            InitializeComponent();
+
+            edit = true;
+            btnAdd.Visibility = Visibility.Hidden;
+            btnEdit.Visibility = Visibility.Visible;
+            btnDelete.Visibility = Visibility.Visible;
+        }
+
+#pragma warning disable CS8602
+        public void Populate(List<object?> data)
+        {
+            // This method will not be called if the data has a different Count than expected.
+            if (data[1] != null)
+                txtNotes.Text = data[1].ToString();
+
+            ditContact.Populate(data.GetRange(2, data.Count - 2));
+        }
+#pragma warning restore CS8602
+
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             if (ditContact.ScoopValues())
             {

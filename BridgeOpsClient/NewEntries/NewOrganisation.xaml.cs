@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,15 +20,41 @@ namespace BridgeOpsClient
 {
     public partial class NewOrganisation : Window
     {
+        bool edit = false;
         public NewOrganisation()
         {
             InitializeComponent();
+        }
+        public NewOrganisation(string id)
+        {
+            InitializeComponent();
 
+            edit = true;
+            btnAdd.Visibility = Visibility.Hidden;
+            btnEdit.Visibility = Visibility.Visible;
+            btnDelete.Visibility = Visibility.Visible;
 
+            txtOrgID.Text = id;
+            txtOrgID.IsReadOnly = true;
         }
 
+#pragma warning disable CS8602
+        public void Populate(List<object?> data)
+        {
+            // This method will not be called if the data has a different Count than expected.
+            if (data[1] != null)
+                cmbOrgParentID.Text = data[1].ToString();
+            if (data[2] != null)
+                txtDialNo.Text = data[2].ToString();
+            if (data[3] != null)
+                txtNotes.Text = data[3].ToString();
+
+            ditOrganisation.Populate(data.GetRange(4, data.Count - 4));
+        }
+#pragma warning restore CS8602
+
         public string[]? organisationList;
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             if (ditOrganisation.ScoopValues())
             {

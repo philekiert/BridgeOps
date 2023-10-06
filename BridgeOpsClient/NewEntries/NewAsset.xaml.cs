@@ -19,13 +19,39 @@ namespace BridgeOpsClient
 {
     public partial class NewAsset : Window
     {
+        bool edit = false;
         public NewAsset()
         {
             InitializeComponent();
         }
+        public NewAsset(string id)
+        {
+            InitializeComponent();
+
+            edit = true;
+            btnAdd.Visibility = Visibility.Hidden;
+            btnEdit.Visibility = Visibility.Visible;
+            btnDelete.Visibility = Visibility.Visible;
+
+            txtAssetID.Text = id;
+            txtAssetID.IsReadOnly = true;
+        }
+
+#pragma warning disable CS8602
+        public void Populate(List<object?> data)
+        {
+            // This method will not be called if the data has a different Count than expected.
+            if (data[1] != null)
+                cmbOrgID.Text = data[1].ToString();
+            if (data[2] != null)
+                txtNotes.Text = data[2].ToString();
+
+            ditAsset.Populate(data.GetRange(3, data.Count - 3));
+        }
+#pragma warning restore CS8602
 
         public string[]? organisationList;
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             if (ditAsset.ScoopValues())
             {

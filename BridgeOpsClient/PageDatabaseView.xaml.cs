@@ -1,9 +1,13 @@
-﻿using System;
+﻿using SendReceiveClasses;
+using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,23 +18,24 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
+using static BridgeOpsClient.CustomControls.SqlDataGrid;
 
 namespace BridgeOpsClient
 {
     public partial class PageDatabaseView : Page
     {
-        // This list holds the original column names of respective ComboBoxItems for easier lookup.
-        Dictionary<string, string> friendlyNameReversal = new();
-
         public PageDatabaseView()
         {
             InitializeComponent();
 
-            // This will trigger cmbTableSelectionchanged() and therefore PopulateColumnComboBox().
+            // This will trigger cmbTableSelectionchanged(), which will PopulateColumnComboBox().
             cmbTable.SelectedIndex = 0;
+
+            dtgResults.MouseDoubleClick += dtg_DoubleClick;
         }
 
-        private void PopulateColumns()
+        private void PopulateColumnComboBox()
         {
             Dictionary<string, ColumnRecord.Column> table;
             if (cmbTable.SelectedIndex == 0)
@@ -41,18 +46,33 @@ namespace BridgeOpsClient
                 table = ColumnRecord.contact;
 
             cmbColumn.Items.Clear();
-            dtgResults.Items.Clear();
-            friendlyNameReversal.Clear();
+            dtgResults.Wipe();
 
-            if (cmbTable.SelectedIndex == 2)
+            foreach (KeyValuePair<string, ColumnRecord.Column> kvp in table)
+            {
+                string name = ColumnRecord.GetPrintName(kvp);
+                cmbColumn.Items.Add(name);
+            }
+
+            if (cmbTable.SelectedIndex == 2 && cmbColumn.Items.Count > 0)
                 cmbColumn.Items.RemoveAt(0); // Removed Contact_ID as it's not required.
 
             cmbColumn.SelectedIndex = 0;
         }
 
+        struct Row
+        {
+            public List<object?> items { get; set; }
+
+            public Row(List<object?> items)
+            {
+                this.items = items;
+            }
+        }
+
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            PopulateColumns();
+            PopulateColumnComboBox();
         }
 
         private void btnListAll_Click(object sender, RoutedEventArgs e)
@@ -66,28 +86,63 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.contact;
 
             List<string?> columnNames;
-            List<List<string?>> rows;
+            List<List<object?>> rows;
             if (App.SelectAll(cmbTable.Text, out columnNames, out rows))
+                dtgResults.Update(tableColDefs, columnNames, rows);
+        }
+
+        private void btnSearch_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<string, ColumnRecord.Column> tableColDefs;
+            Dictionary<string, string> nameReversals;
+            if (cmbTable.Text == "Organisation")
             {
-                dtgResults.Columns.Clear();
-                foreach (string? s in columnNames)
-                {
-                    DataGridTextColumn header = new();
-                    if (s == null)
-                        header.Header = "";
-                    else
-                    {
-                        header.Header = ColumnRecord.GetPrintName(s, tableColDefs[s]);
-                        header.Header = s;
-                        header.Binding = new Binding("rows[0][0]");
-                    }
-                    dtgResults.Columns.Add(header);
-                }
-                
+                tableColDefs = ColumnRecord.organisation;
+                nameReversals = ColumnRecord.organisationFriendlyNameReversal;
+            }
+            else if (cmbTable.Text == "Asset")
+            {
+                tableColDefs = ColumnRecord.asset;
+                nameReversals = ColumnRecord.assetFriendlyNameReversal;
+            }
+            else // if == "Contact"
+            {
+                tableColDefs = ColumnRecord.contact;
+                nameReversals = ColumnRecord.contactFriendlyNameReversal;
+            }
 
-                // Data
-                dtgResults.ItemsSource = rows;
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (!nameReversals.ContainsKey(cmbColumn.Text)) // Should only trigger on no selection.
+            {
+                MessageBox.Show("Please select a column to search.");
+                return;
+            }
+            if (App.Select(cmbTable.Text,
+                           new List<string> { "*" },
+                           new List<string> { nameReversals[cmbColumn.Text] },
+                           new List<string> { txtSearch.Text },
+                           out columnNames, out rows))
+                dtgResults.Update(tableColDefs, columnNames, rows);
+        }
 
+        // Bring up selected organisation on double-click.
+        private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (cmbTable.Text == "Organisation")
+            {
+                App.EditOrganisation(dtgResults.GetCurrentlySelectedID());
+                string id = dtgResults.GetCurrentlySelectedID();
+            }
+            if (cmbTable.Text == "Asset")
+            {
+                App.EditAsset(dtgResults.GetCurrentlySelectedID());
+                string id = dtgResults.GetCurrentlySelectedID();
+            }
+            if (cmbTable.Text == "Contact")
+            {
+                App.EditContact(dtgResults.GetCurrentlySelectedID());
+                string id = dtgResults.GetCurrentlySelectedID();
             }
         }
     }

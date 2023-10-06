@@ -237,8 +237,8 @@ internal class BridgeOpsAgent
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
-                else if (fncByte == Glo.CLIENT_SELECT_ALL)
-                    ClientSelectAll(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT)
+                    ClientSelect(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -519,24 +519,35 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectAll(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelect(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
         {
             sqlConnect.Open();
-            string[] request = sr.ReadString(stream).Split(';');
-            if (request.Length != 2 || request[1].Contains('\''))
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
-                return;
-            }
-            if (!CheckSessionValidity(request[0]))
+            SelectRequest req = sr.Deserialise<SelectRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
             }
 
-            SqlCommand com = new SqlCommand("SELECT * FROM " + request[1] + ";", sqlConnect);
+            string command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
+            List<string> conditions = new();
+            if (req.likeColumns.Count > 0)
+            {
+                for (int i = 0; i < req.likeColumns.Count; ++i)
+                {
+                    // If the search is blank, we want to return everything, including null values.
+                    if (req.likeValues[i] != "")
+                        conditions.Add(req.likeColumns[i] + " LIKE \'%" + req.likeValues[i] + "%'");
+                }
+
+                if (conditions.Count > 0)
+                    command += " WHERE " + string.Join(" AND ", conditions);
+            }
+
+            SqlCommand com = new SqlCommand(command, sqlConnect);
+
             SelectResult result = new(com.ExecuteReader());
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
