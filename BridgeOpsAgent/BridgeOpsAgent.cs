@@ -239,6 +239,8 @@ internal class BridgeOpsAgent
                     ClientSelectColumnPrimary(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT)
                     ClientSelect(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_UPDATE)
+                    ClientUpdate(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -417,7 +419,8 @@ internal class BridgeOpsAgent
             if (target == Glo.CLIENT_NEW_ORGANISATION)
             {
                 Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                com.CommandText = newRow.SqlInsert();
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_CONTACT)
             {
@@ -555,6 +558,37 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run or return query, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            UpdateRequest req = sr.Deserialise<UpdateRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlUpdate(), sqlConnect);
+
+            if (com.ExecuteNonQuery() == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't run update, see error:", e);
             stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally

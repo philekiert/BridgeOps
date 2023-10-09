@@ -513,6 +513,38 @@ namespace SendReceiveClasses
         }
     }
 
+    struct UpdateRequest
+    {
+        public string sessionID;
+        public string table;
+        public string column;
+        public string id;
+        public List<string> columnNames;
+        public List<string> columnTypes;
+        public List<object> newValues;
+
+        public UpdateRequest(string sessionID, string table, string column, string id,
+                             List<string> columnNames, List<string> columnTypes, List<object> newValues)
+        {
+            this.sessionID = sessionID;
+            this.table = table;
+            this.column = column;
+            this.id = id;
+            this.columnNames = columnNames;
+            this.columnTypes = columnTypes;
+            this.newValues = newValues;
+        }
+
+        public string SqlUpdate()
+        {
+            // Cycle through the lists, convert the unknown objects to strings and append those strings to their
+            // respective column names.
+            for (int i = 0; i < columnTypes.Count && i < newValues.Count && i < columnNames.Count; ++i)
+                columnNames[i] += " = '" + SqlAssist.UnknownObjectToString(newValues[i], columnTypes[i]) + '\'';
+            return SqlAssist.Update(table, string.Join(", ", columnNames), column, id);
+        }
+    }
+
 
     //   H E L P E R   F U N C T I O N S
 
@@ -529,6 +561,11 @@ namespace SendReceiveClasses
         public static string InsertInto(string tableName, string columns, string values)
         {
             return "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ");";
+        }
+
+        public static string Update(string tableName, string columnsAndValues, string whereCol, string whereID)
+        {
+            return "UPDATE " + tableName + " SET " + columnsAndValues + " WHERE " + whereCol.Replace("'", "") + " = " + whereID.Replace("'", "") + ';';
         }
 
         public static string ValConcat(params string?[] values)
@@ -560,12 +597,52 @@ namespace SendReceiveClasses
             additionalCols.AddRange(setColumns);
             if (additionalCols.Count > 0)
             {
-                string concat = additionalCols[0];
+                string concat = additionalCols[0].Replace("'", "''");
                 for (int n = 1; n < additionalCols.Count; ++n)
-                    concat += ", " + additionalCols[n];
+                    concat += ", " + additionalCols[n].Replace("'", "''");
                 return concat;
             }
             else return "";
+        }
+
+        public static string UnknownObjectToString(object val)
+        {
+            if (val.GetType() == typeof(string))
+                return "'" + ((string)val).Replace("'", "''") + "'";
+            else if (val.GetType() == typeof(int))
+                return ((int)val).ToString();
+            else if (val.GetType() == typeof(TimeSpan))
+                return ((TimeSpan)val).ToString("hh\\:mm");
+            else if (val.GetType() == typeof(DateTime))
+            {
+                DateTime valCast = (DateTime)val;
+                if (valCast.Ticks % 864_000_000_000 == 0) // On the day
+                    return valCast.ToString("yyyy-MM-dd");
+                else
+                    return valCast.ToString("yyyy-MM-dd HH:mm");
+            }
+            else
+                return "";
+        }
+        public static string UnknownObjectToString(object val, string type)
+        {
+            type = type.ToLower();
+            if (type == "string")
+                return "'" + ((string)val).Replace("'", "''") + "'";
+            else if (type == "int")
+                return ((int)val).ToString().Replace("'", "''");
+            else if (type == "timespan")
+                return ((TimeSpan)val).ToString("hh\\:mm");
+            else if (type == "datetime")
+            {
+                DateTime valCast = (DateTime)val;
+                if (valCast.Ticks % 864_000_000_000 == 0) // On the day
+                    return valCast.ToString("yyyy-MM-dd");
+                else
+                    return valCast.ToString("yyyy-MM-dd HH:mm");
+            }
+            else
+                return "";
         }
 
         public static string DateTimeToSQLType(DateTime dateTime)

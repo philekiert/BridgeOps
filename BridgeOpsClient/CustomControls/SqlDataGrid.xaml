@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <ScrollViewer x:Name="scb" HorizontalScrollBarVisibility="Auto" Margin="10 10 10 10">
-        <DataGrid x:Name="dtg" CanUserSortColumns="True">
+        <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="False">
             <DataGrid.Resources>
                 <Style TargetType="{x:Type DataGridCell}">
                     <Setter Property="BorderThickness" Value="0" />

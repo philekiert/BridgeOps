@@ -89,74 +89,6 @@ namespace BridgeOpsClient
                 return false;
         }
 
-        public static void SessionInvalidated()
-        {
-            sd = new SessionDetails();
-            MessageBox.Show("Session is no longer valid, please log back in.");
-        }
-
-        public static bool PullColumnRecord()
-        {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
-            {
-                if (stream != null)
-                {
-                    stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
-                    sr.WriteAndFlush(stream, sd.sessionID);
-                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
-                    {
-                        ColumnRecord.Initialise(sr.ReadString(stream));
-                        return true;
-                    }
-                    else
-                    {
-                        MessageBox.Show("Could not pull column record.");
-                        return false;
-                    }
-                }
-                else
-                    return false;
-            }
-            catch
-            {
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
-        }
-
-        public static bool SendInsert(byte fncByte, object toSerialise)
-        {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
-            {
-                if (stream != null)
-                {
-                    stream.WriteByte(fncByte);
-                    sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
-                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
-                        return true;
-                    else if (stream.ReadByte() == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        SessionInvalidated();
-                        return false;
-                    }
-
-                }
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
-        }
 
         public static bool EditOrganisation(string id)
         {
@@ -250,6 +182,108 @@ namespace BridgeOpsClient
                 }
             }
             return true;
+        }
+
+        public static void SessionInvalidated()
+        {
+            sd = new SessionDetails();
+            MessageBox.Show("Session is no longer valid, please log back in.");
+        }
+
+        public static bool PullColumnRecord()
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
+                    sr.WriteAndFlush(stream, sd.sessionID);
+                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        ColumnRecord.Initialise(sr.ReadString(stream));
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Could not pull column record.");
+                        return false;
+                    }
+                }
+                else
+                    return false;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        public static bool SendInsert(byte fncByte, object toSerialise)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(fncByte);
+                    sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        return true;
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        SessionInvalidated();
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        public static bool SendUpdate(string table, string column, string id,
+                                      List<string> columnNames, List<string> columnTypes, List<object> newValues)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    UpdateRequest req = new(sd.sessionID, table, column, id, columnNames, columnTypes, newValues);
+
+                    stream.WriteByte(Glo.CLIENT_UPDATE);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        return true;
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        SessionInvalidated();
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
         }
 
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
