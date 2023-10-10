@@ -235,12 +235,13 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_RESOURCE ||
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
+                else if (fncByte == Glo.CLIENT_UPDATE_ORGANISATION ||
+                         fncByte == Glo.CLIENT_UPDATE_LOGIN)
+                    ClientUpdate(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT)
                     ClientSelect(stream, sqlConnect);
-                else if (fncByte == Glo.CLIENT_UPDATE)
-                    ClientUpdate(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -567,19 +568,19 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect, int target)
     {
         try
         {
             sqlConnect.Open();
-            UpdateRequest req = sr.Deserialise<UpdateRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            Organisation org = sr.Deserialise<Organisation>(sr.ReadString(stream));
+            if (!CheckSessionValidity(org.sessionID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlUpdate(), sqlConnect);
+            SqlCommand com = new SqlCommand(org.SqlUpdate(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);

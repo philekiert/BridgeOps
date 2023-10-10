@@ -89,7 +89,6 @@ namespace BridgeOpsClient
                 return false;
         }
 
-
         public static bool EditOrganisation(string id)
         {
             string[]? organisationList = SelectColumnPrimary("Organisation", "Organisation_ID");
@@ -253,18 +252,15 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendUpdate(string table, string column, string id,
-                                      List<string> columnNames, List<string> columnTypes, List<object> newValues)
+        public static bool SendUpdate(byte fncByte, object toSerialise)
         {
             NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
             try
             {
                 if (stream != null)
                 {
-                    UpdateRequest req = new(sd.sessionID, table, column, id, columnNames, columnTypes, newValues);
-
-                    stream.WriteByte(Glo.CLIENT_UPDATE);
-                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    stream.WriteByte(fncByte);
+                    sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
                     int response = stream.ReadByte();
                     if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         return true;
@@ -278,6 +274,7 @@ namespace BridgeOpsClient
             }
             catch
             {
+                MessageBox.Show("Could not run table update.");
                 return false;
             }
             finally

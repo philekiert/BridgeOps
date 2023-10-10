@@ -7,6 +7,7 @@ using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
+using System.Security.Cryptography.Xml;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
@@ -37,6 +38,15 @@ namespace SendReceiveClasses
         public T? Deserialise<T>(string json)
         {
             return JsonSerializer.Deserialize<T>(json, jsonOpts);
+        }
+
+        public int ReadByte(NetworkStream stream)
+        {
+            if (!stream.DataAvailable)
+            {
+                Thread.Sleep(20);
+            }
+            return stream.ReadByte();
         }
 
         public byte[] PrepareBytes(string send)
@@ -212,12 +222,17 @@ namespace SendReceiveClasses
         public string? parentOrgID;
         public string? dialNo;
         public string? notes;
+        public bool parentOrgIdChanged;
+        public bool dialNoChanged;
+        public bool notesChanged;
         public List<string> additionalCols;
         public List<string?> additionalVals;
+        public List<bool> additionalNeedsQuotes;
 
         public Organisation(string sessionID, string organisationID, string? parentOrgID,
                             string? dialNo, string? notes, List<string> additionalCols,
-                                                           List<string?> additionalVals)
+                                                           List<string?> additionalVals,
+                                                           List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
             this.organisationID = organisationID;
@@ -226,12 +241,15 @@ namespace SendReceiveClasses
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
-
-            SqlAssist.LevelAdditionals(ref additionalCols, ref additionalVals);
+            this.additionalNeedsQuotes = additionalNeedsQuotes;
+            parentOrgIdChanged = false;
+            dialNoChanged = false;
+            notesChanged = false;
         }
 
         public string SqlInsert()
         {
+
             return SqlAssist.InsertInto("Organisation",
                                         SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_ID,
                                                                             Glo.Tab.PARENT_ID,
@@ -241,6 +259,21 @@ namespace SendReceiveClasses
                                                                             parentOrgID,
                                                                             dialNo,
                                                                             notes));
+        }
+
+        public string SqlUpdate()
+        {
+            List<string> setters = new();
+            if (parentOrgIdChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.PARENT_ID, parentOrgID, true));
+            if (dialNoChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo, true));
+            if (notesChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes, true));
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i], additionalNeedsQuotes[i]));
+            return SqlAssist.Update("Organisation", string.Join(", ", setters),
+                                    Glo.Tab.ORGANISATION_ID, organisationID);
         }
     }
 
@@ -521,10 +554,10 @@ namespace SendReceiveClasses
         public string id;
         public List<string> columnNames;
         public List<string> columnTypes;
-        public List<object> newValues;
+        public List<string> newValues;
 
         public UpdateRequest(string sessionID, string table, string column, string id,
-                             List<string> columnNames, List<string> columnTypes, List<object> newValues)
+                             List<string> columnNames, List<string> columnTypes, List<string> newValues)
         {
             this.sessionID = sessionID;
             this.table = table;
@@ -537,10 +570,11 @@ namespace SendReceiveClasses
 
         public string SqlUpdate()
         {
-            // Cycle through the lists, convert the unknown objects to strings and append those strings to their
-            // respective column names.
-            for (int i = 0; i < columnTypes.Count && i < newValues.Count && i < columnNames.Count; ++i)
-                columnNames[i] += " = '" + SqlAssist.UnknownObjectToString(newValues[i], columnTypes[i]) + '\'';
+            // All strings in newValues are expected here to be in their final form, i.e. with single quotes included
+            // for strings, or DateTime strings formatted correctly.
+            for (int i = 0; i < newValues.Count && i < columnNames.Count; ++i)
+                columnNames[i] = SqlAssist.SecureColumn(columnNames[i]) + " = " +
+                                 SqlAssist.SecureValue(newValues[i]);
             return SqlAssist.Update(table, string.Join(", ", columnNames), column, id);
         }
     }
@@ -550,6 +584,18 @@ namespace SendReceiveClasses
 
     public class SqlAssist
     {
+        public static string SecureColumn(string s)
+        {
+            if (s.Contains(';') || s.Contains('\''))
+                return "";
+            else
+                return s;
+        }
+        public static string SecureValue(string s)
+        {
+            return s.Replace("\'", "''");
+        }
+
         public static void LevelAdditionals(ref List<string> columns, ref List<string?> values)
         {
             if (columns.Count > values.Count)
@@ -558,14 +604,31 @@ namespace SendReceiveClasses
                 values.RemoveRange(columns.Count, values.Count - columns.Count);
         }
 
+        public static List<string?> ApplySingleQuotes(List<string?> values, List<bool> isString)
+        {
+            // This method will replace any null entries with NULL, rather than wrapping in single quotes.
+            List<string?> ret = new();
+            for (int i = 0; i < values.Count && i < isString.Count; ++i)
+                if (isString[i])
+                    ret.Add('\'' + values[i] + '\'');
+            return ret;
+        }
+
         public static string InsertInto(string tableName, string columns, string values)
         {
             return "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ");";
         }
 
+        public static bool NeedsQuotes(string type)
+        {
+            if (type.Contains("INT"))
+                return false;
+            return true;
+        }
         public static string Update(string tableName, string columnsAndValues, string whereCol, string whereID)
         {
-            return "UPDATE " + tableName + " SET " + columnsAndValues + " WHERE " + whereCol.Replace("'", "") + " = " + whereID.Replace("'", "") + ';';
+            return "UPDATE " + tableName + " SET " + columnsAndValues +
+                   " WHERE " + SecureColumn(whereCol) + " = '" + SecureValue(whereID) + "';";
         }
 
         public static string ValConcat(params string?[] values)
@@ -597,7 +660,7 @@ namespace SendReceiveClasses
             additionalCols.AddRange(setColumns);
             if (additionalCols.Count > 0)
             {
-                string concat = additionalCols[0].Replace("'", "''");
+                string concat = SecureColumn(additionalCols[0]);
                 for (int n = 1; n < additionalCols.Count; ++n)
                     concat += ", " + additionalCols[n].Replace("'", "''");
                 return concat;
@@ -605,10 +668,18 @@ namespace SendReceiveClasses
             else return "";
         }
 
+        public static string Setter(string column, string? value, bool isString)
+        {
+            if (value == null)
+                return SecureColumn(column) + " = NULL";
+            else
+                return SecureColumn(column) + " = " + (isString ? '\'' + SecureValue(value) + '\'' : value);
+        }
+
         public static string UnknownObjectToString(object val)
         {
             if (val.GetType() == typeof(string))
-                return "'" + ((string)val).Replace("'", "''") + "'";
+                return ((string)val).Replace("'", "''");
             else if (val.GetType() == typeof(int))
                 return ((int)val).ToString();
             else if (val.GetType() == typeof(TimeSpan))

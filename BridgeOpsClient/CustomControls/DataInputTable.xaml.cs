@@ -148,6 +148,18 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
+        // Store the starting values in edit mode. This helps reduce the size of the data being sent over the network.
+        // It is checked in the code-behind for the window containing the DataInputTable.
+        public List<string?> startingValues = new();
+        public void RememberStartingValues()
+        {
+            ScoopValues();
+            if (!ExtractValues(out _, out startingValues))
+                MessageBox.Show("Some data appears to  be missing or corrupted. " +
+                                "Editing should fix this, " +
+                                "but be careful to make sure all known data is present before saving.");
+        }
+
         public List<string> disallowed = new();
         // Update all columns, return false if any values are invalid. Error messages can be found in disallowed List.
         public bool ScoopValues()

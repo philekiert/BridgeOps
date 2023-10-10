@@ -29,6 +29,8 @@ public static class Glo
     public const int CLIENT_NEW_CONFERENCE_TYPE = 7;
     public const int CLIENT_NEW_CONFERENCE = 8;
     public const int CLIENT_NEW_RESOURCE = 9;
+    public const int CLIENT_UPDATE_LOGIN = 10;
+    public const int CLIENT_UPDATE_ORGANISATION = 11;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT = 31;
     public const int CLIENT_UPDATE = 32;
@@ -91,5 +93,7 @@ public static class Glo
         public const string LOGIN_USERNAME = "Username";
         public const string LOGIN_PASSWORD = "Password";
         public const string LOGIN_TYPE = "Type";
+
+        public const string NOTES = "Notes";
     }
 }

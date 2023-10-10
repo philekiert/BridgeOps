@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -21,6 +22,10 @@ namespace BridgeOpsClient
     public partial class NewOrganisation : Window
     {
         bool edit = false;
+        string id = "";
+        string? originalParent = "";
+        string? originalDialNo = "";
+        string? originalNotes = "";
         public NewOrganisation()
         {
             InitializeComponent();
@@ -33,6 +38,7 @@ namespace BridgeOpsClient
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
+            this.id = id;
 
             txtOrgID.Text = id;
             txtOrgID.IsReadOnly = true;
@@ -49,7 +55,15 @@ namespace BridgeOpsClient
             if (data[3] != null)
                 txtNotes.Text = data[3].ToString();
 
+            // Store the original values to check if any changes have been made for the data. The same takes place
+            // in the data input table.
+            originalParent = cmbOrgParentID.Text;
+            originalDialNo = txtDialNo.Text;
+            originalNotes = txtNotes.Text;
+
             ditOrganisation.Populate(data.GetRange(4, data.Count - 4));
+            if (edit)
+                ditOrganisation.RememberStartingValues();
         }
 #pragma warning restore CS8602
 
@@ -88,7 +102,65 @@ namespace BridgeOpsClient
 
         private void btnEdit_Click(object sender, RoutedEventArgs e)
         {
+            if (ditOrganisation.ScoopValues())
+            {
+                Organisation org = new Organisation();
+                org.sessionID = App.sd.sessionID;
+                org.organisationID = id;
+                List<string> cols;
+                List<string?> vals;
+                ditOrganisation.ExtractValues(out cols, out vals);
 
+                // Remove any values equal to their starting value.
+                List<int> toRemove = new();
+                for (int i = 0; i < vals.Count; ++i)
+                    if (ditOrganisation.startingValues[i] == vals[i])
+                        toRemove.Add(i);
+                int mod = 0; // Each one we remove, we need to take into account that the list is now 1 less.
+                foreach (int i in toRemove)
+                {
+                    cols.RemoveAt(i - mod);
+                    vals.RemoveAt(i - mod);
+                    ++mod;
+                }
+
+                // Obtain types and determine whether or not quotes will be needed.
+                org.additionalNeedsQuotes = new();
+                foreach (string c in cols)
+                    org.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
+
+                org.additionalCols = cols;
+                org.additionalVals = vals;
+
+                // Add the known fields if changed.
+                if (cmbOrgParentID.Text != originalParent)
+                {
+                    org.parentOrgID = cmbOrgParentID.Text;
+                    org.parentOrgIdChanged = true;
+                }
+                if (txtDialNo.Text != originalDialNo)
+                {
+                    org.dialNo = txtDialNo.Text;
+                    org.dialNoChanged = true;
+                }
+                if (txtNotes.Text != originalNotes)
+                {
+                    org.notes = txtNotes.Text;
+                    org.notesChanged = true;
+                }
+
+                if (App.SendUpdate(Glo.CLIENT_UPDATE_ORGANISATION, org))
+                    Close();
+                else
+                    MessageBox.Show("Could not edit organisation.");
+            }
+            else
+            {
+                string message = "One or more values caused an unknown error to occur.";
+                if (ditOrganisation.disallowed.Count > 0)
+                    message = ditOrganisation.disallowed[0];
+                MessageBox.Show(message);
+            }
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
