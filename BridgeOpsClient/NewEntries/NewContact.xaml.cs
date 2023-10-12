@@ -68,6 +68,11 @@ namespace BridgeOpsClient
 
                 ditContact.ExtractValues(out nc.additionalCols, out nc.additionalVals);
 
+                // Obtain types and determine whether or not quotes will be needed.
+                nc.additionalNeedsQuotes = new();
+                foreach (string c in nc.additionalCols)
+                    nc.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
+
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc))
                     Close();
                 else

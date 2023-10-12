@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography.Xml;
+using System.Security.Policy;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
@@ -248,14 +249,30 @@ namespace SendReceiveClasses
             notesChanged = false;
         }
 
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+            if (parentOrgID != null)
+                parentOrgID = SqlAssist.AddQuotes(SqlAssist.SecureValue(parentOrgID));
+            if (dialNo != null)
+                dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(dialNo));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
         public string SqlInsert()
         {
+            Prepare();
 
             return SqlAssist.InsertInto("Organisation",
                                         SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_ID,
                                                                             Glo.Tab.PARENT_ID,
                                                                             Glo.Tab.DIAL_NO,
-                                                                            "Notes"),
+                                                                            Glo.Tab.NOTES),
                                         SqlAssist.ValConcat(additionalVals, organisationID,
                                                                             parentOrgID,
                                                                             dialNo,
@@ -264,15 +281,17 @@ namespace SendReceiveClasses
 
         public string SqlUpdate()
         {
+            Prepare();
+
             List<string> setters = new();
             if (parentOrgIdChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.PARENT_ID, parentOrgID, true));
+                setters.Add(SqlAssist.Setter(Glo.Tab.PARENT_ID, parentOrgID));
             if (dialNoChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo, true));
+                setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo));
             if (notesChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes, true));
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
-                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i], additionalNeedsQuotes[i]));
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
             return SqlAssist.Update("Organisation", string.Join(", ", setters),
                                     Glo.Tab.ORGANISATION_ID, organisationID);
         }
@@ -301,21 +320,35 @@ namespace SendReceiveClasses
             notesChanged = false;
         }
 
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
         public string SqlInsert()
         {
+            Prepare();
+
             return SqlAssist.InsertInto("Contact",
                                         SqlAssist.ColConcat(additionalCols,
-                                                            "Notes"),
+                                                            Glo.Tab.NOTES),
                                         SqlAssist.ValConcat(additionalVals, notes));
         }
 
         public string SqlUpdate()
         {
+            Prepare();
+
             List<string> setters = new();
             if (notesChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes, true));
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
-                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i], additionalNeedsQuotes[i]));
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
             return SqlAssist.Update("Contact", string.Join(", ", setters),
                                     Glo.Tab.CONTACT_ID, contactID);
         }
@@ -349,12 +382,27 @@ namespace SendReceiveClasses
             notesChanged = false;
         }
 
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            assetID = SqlAssist.AddQuotes(SqlAssist.SecureValue(assetID));
+            if (organisationID != null)
+                organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
         public string SqlInsert()
         {
+            Prepare();
+
             return SqlAssist.InsertInto("Asset",
                                         SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_ID,
                                                                             Glo.Tab.ORGANISATION_ID,
-                                                                            "Notes"),
+                                                                            Glo.Tab.NOTES),
                                         SqlAssist.ValConcat(additionalVals, assetID,
                                                                             organisationID,
                                                                             notes));
@@ -362,13 +410,15 @@ namespace SendReceiveClasses
 
         public string SqlUpdate()
         {
+            Prepare();
+
             List<string> setters = new();
             if (organisationIdChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_ID, organisationID, true));
+                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_ID, organisationID));
             if (notesChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes, true));
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
-                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i], additionalNeedsQuotes[i]));
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
             return SqlAssist.Update("Asset", string.Join(", ", setters),
                                     Glo.Tab.ASSET_ID, assetID);
         }
@@ -624,23 +674,39 @@ namespace SendReceiveClasses
 
     public class SqlAssist
     {
-        public static string SecureColumn(string s)
+        public static string SecureColumn(string val)
         {
-            if (s.Contains(';') || s.Contains('\''))
+            if (val.Contains(';') || val.Contains('\''))
                 return "";
             else
-                return s;
+                return val;
         }
-        public static string SecureValue(string s)
+        public static void SecureColumn(List<string> vals)
         {
-            return s.Replace("\'", "''");
+            // Blank columns will cause an exception when the command is run, causing the SQL query/non-query to abort.
+            for (int i = 0; i < vals.Count; ++i)
+                if (vals[i].Contains(';') || vals[i].Contains('\''))
+                    vals[i] = "";
         }
-        public static string SecureValue(string s, bool needsQuotes)
+        public static string SecureValue(string val)
+        {
+            return val.Replace("\'", "''");
+        }
+        public static void SecureValue(List<string?> val)
+        {
+            for (int i = 0; i < val.Count; ++i)
+            {
+                string? s = val[i];
+                if (s != null)
+                    val[i] = SecureValue(s);
+            }
+        }
+        public static string SecureValue(string val, bool needsQuotes)
         {
             if (needsQuotes)
-                return '\'' + s.Replace("'", "''") + '\'';
+                return '\'' + val.Replace("'", "''") + '\'';
             else
-                return s.Replace("'", "''");
+                return val.Replace("'", "''");
         }
 
         public static void LevelAdditionals(ref List<string> columns, ref List<string?> values)
@@ -683,6 +749,27 @@ namespace SendReceiveClasses
                    " WHERE " + SecureColumn(whereCol) + " = " + whereID.ToString() + ";";
         }
 
+        public static string AddQuotes(string val)
+        {
+            return '\'' + val + '\'';
+        }
+        public static string AddQuotes(string val, bool needsQuotes)
+        {
+            return needsQuotes ? '\'' + val + '\'' : val;
+        }
+        public static void AddQuotes(List<string?> vals)
+        {
+            for (int i = 0; i < vals.Count; ++i)
+                if (vals[i] != null)
+                    vals[i] = '\'' + vals[i] + '\'';
+        }
+        public static void AddQuotes(List<string?> vals, List<bool> needsQuotes)
+        {
+            for (int i = 0; i < vals.Count; ++i)
+                if (vals[i] != null && needsQuotes[i])
+                    vals[i] = '\'' + vals[i] + '\'';
+        }
+
         public static string ValConcat(params string?[] values)
         {
             return ValConcat(new List<string?>(), values);
@@ -697,7 +784,7 @@ namespace SendReceiveClasses
                         additionalVals[i] = "NULL";
                     else
 #pragma warning disable CS8602
-                        additionalVals[i] = "'" + additionalVals[i].Replace("'", "''") + "'";
+                        additionalVals[i] = additionalVals[i];
 #pragma warning restore CS8602
                 return string.Join(", ", additionalVals);
             }
@@ -712,20 +799,20 @@ namespace SendReceiveClasses
             additionalCols.AddRange(setColumns);
             if (additionalCols.Count > 0)
             {
-                string concat = SecureColumn(additionalCols[0]);
+                string concat = additionalCols[0];
                 for (int n = 1; n < additionalCols.Count; ++n)
-                    concat += ", " + additionalCols[n].Replace("'", "''");
+                    concat += ", " + additionalCols[n];
                 return concat;
             }
             else return "";
         }
 
-        public static string Setter(string column, string? value, bool isString)
+        public static string Setter(string column, string? value)
         {
             if (value == null)
                 return SecureColumn(column) + " = NULL";
             else
-                return SecureColumn(column) + " = " + (isString ? '\'' + SecureValue(value) + '\'' : value);
+                return SecureColumn(column) + " = " + value;
         }
 
         public static string UnknownObjectToString(object val)

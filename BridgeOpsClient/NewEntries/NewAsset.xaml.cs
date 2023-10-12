@@ -68,7 +68,10 @@ namespace BridgeOpsClient
             if (ditAsset.ScoopValues())
             {
                 if (txtAssetID.Text == "")
+                {
                     MessageBox.Show("You must input a value for Asset ID");
+                    return;
+                }
 
                 Asset ao = new();
 
@@ -79,6 +82,11 @@ namespace BridgeOpsClient
                 ao.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
                 ditAsset.ExtractValues(out ao.additionalCols, out ao.additionalVals);
+
+                // Obtain types and determine whether or not quotes will be needed.
+                ao.additionalNeedsQuotes = new();
+                foreach (string c in ao.additionalCols)
+                    ao.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ASSET, ao))
                     Close();
@@ -121,7 +129,7 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 asset.additionalNeedsQuotes = new();
                 foreach (string c in cols)
-                    asset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
+                    asset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
 
                 asset.additionalCols = cols;
                 asset.additionalVals = vals;

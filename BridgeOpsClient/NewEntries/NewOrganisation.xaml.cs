@@ -73,7 +73,10 @@ namespace BridgeOpsClient
             if (ditOrganisation.ScoopValues())
             {
                 if (txtOrgID.Text == "")
+                {
                     MessageBox.Show("You must input a value for Organisation ID");
+                    return;
+                }
 
                 Organisation no = new Organisation();
 
@@ -85,6 +88,11 @@ namespace BridgeOpsClient
                 no.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
                 ditOrganisation.ExtractValues(out no.additionalCols, out no.additionalVals);
+
+                // Obtain types and determine whether or not quotes will be needed.
+                no.additionalNeedsQuotes = new();
+                foreach (string c in no.additionalCols)
+                    no.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, no))
                     Close();
@@ -127,7 +135,7 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 org.additionalNeedsQuotes = new();
                 foreach (string c in cols)
-                    org.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
+                    org.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
 
                 org.additionalCols = cols;
                 org.additionalVals = vals;
