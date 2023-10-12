@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,6 +25,49 @@ namespace BridgeOpsClient
     public partial class App : Application
     {
         public static bool IsLoggedIn { get { return sd.sessionID != ""; } }
+
+        public App()
+        {
+            // Set current working directory.
+            string? currentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            currentDir = Path.GetDirectoryName(currentDir);
+            if (currentDir == null)
+                MessageBox.Show("Could not get working directory for application.");
+            else
+                Environment.CurrentDirectory = currentDir;
+
+            // Get the port numbers, if present.
+            try
+            {
+                string[] networkConfig = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK);
+                foreach (string s in networkConfig)
+                {
+                    if (s.Length > Glo.NETWORK_SETTINGS_LENGTH && !s.StartsWith("# "))
+                    {
+                        int iVal;
+                        if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_INBOUND))
+                        {
+                            if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
+                                                         s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
+                                iVal >= 1025 && iVal <= 65535)
+                                sd.portInbound = iVal;
+                        }
+                        else if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_OUTBOUND))
+                        {
+                            if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
+                                                         s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
+                                iVal >= 1025 && iVal <= 65535)
+                                sd.portOutbound = iVal;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                MessageBox.Show("network-config.txt not found. Using default settings.");
+                return;
+            }
+        }
 
         public static SendReceive sr = new SendReceive();
         public static SessionDetails sd = new SessionDetails();
@@ -283,6 +327,40 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool SendDelete(string table, string column, string id, bool isString)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    DeleteRequest req = new DeleteRequest(sd.sessionID, table, column, id, isString);
+
+                    stream.WriteByte(Glo.CLIENT_DELETE);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        return true;
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        SessionInvalidated();
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                MessageBox.Show("Could not delete record.");
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+
+        }
+
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
         public static string[]? SelectColumnPrimary(string table, string column)
         {
@@ -386,8 +464,9 @@ namespace BridgeOpsClient
         public string sessionID = "";
         public string username = "";
 
-        public int portInbound = 1337; // Inbound to server.
-        public int portOutbound = 1338; // Outbound from server.
+        public int portInbound = 0; // Inbound to server.
+        public int portOutbound = 0; // Outbound from server.
+
         public IPAddress serverIP = new IPAddress(new byte[] { 127, 0, 0, 1 });
         public IPEndPoint ServerEP { get { return new IPEndPoint(serverIP, portInbound); } }
     }

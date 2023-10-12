@@ -31,9 +31,15 @@ public static class Glo
     public const int CLIENT_NEW_RESOURCE = 9;
     public const int CLIENT_UPDATE_LOGIN = 10;
     public const int CLIENT_UPDATE_ORGANISATION = 11;
+    public const int CLIENT_UPDATE_CONTACT = 12;
+    public const int CLIENT_UPDATE_ASSET = 13;
+    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 14;
+    public const int CLIENT_UPDATE_CONFERENCE = 15;
+    public const int CLIENT_UPDATE_RESOURCE = 16;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT = 31;
-    public const int CLIENT_UPDATE = 32;
+    public const int CLIENT_DELETE = 32;
+
 
     // Console/Agent Function Specifiers
     public const int CONSOLE_CLIENT_LIST = 0;
@@ -58,6 +64,12 @@ public static class Glo
     public const int NETWORK_SETTINGS_LENGTH = 15; // Increase if longer settings names are used in network-config.txt
     public const string NETWORK_SETTINGS_PORT_INBOUND = "inbound port:  ";
     public const string NETWORK_SETTINGS_PORT_OUTBOUND = "outbound port: ";
+
+
+    public const string TEXT = "TEXT";
+    public const string INT = "INT";
+    public const string SMALLINT = "SMALLINT";
+    public const string TINYINT = "TINYINT";
 
 
     // Column Names

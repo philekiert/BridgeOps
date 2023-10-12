@@ -14,6 +14,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
 using System.Data;
+using System.Threading.Channels;
 
 internal class BridgeOpsAgent
 {
@@ -191,7 +192,14 @@ internal class BridgeOpsAgent
 
     private static void BridgeOpsClientRequests()
     {
-        listener.Start();
+        try
+        {
+            listener.Start();
+        }
+        catch (Exception e)
+        {
+            LogError("TcpListener could not start, see error:", e);
+        }
 
         while (true)
         {
@@ -236,12 +244,19 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_UPDATE_ORGANISATION ||
+                         fncByte == Glo.CLIENT_UPDATE_CONTACT ||
+                         fncByte == Glo.CLIENT_UPDATE_ASSET ||
+                         fncByte == Glo.CLIENT_UPDATE_CONFERENCE_TYPE ||
+                         fncByte == Glo.CLIENT_UPDATE_CONFERENCE ||
+                         fncByte == Glo.CLIENT_UPDATE_RESOURCE ||
                          fncByte == Glo.CLIENT_UPDATE_LOGIN)
                     ClientUpdate(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT)
                     ClientSelect(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_DELETE)
+                    ClientDelete(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -573,14 +588,58 @@ internal class BridgeOpsAgent
         try
         {
             sqlConnect.Open();
-            Organisation org = sr.Deserialise<Organisation>(sr.ReadString(stream));
-            if (!CheckSessionValidity(org.sessionID))
+            SqlCommand com = new SqlCommand("", sqlConnect);
+
+            bool sessionValid = false;
+
+            if (target == Glo.CLIENT_UPDATE_ORGANISATION)
+            {
+                Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlUpdate();
+            }
+            else if (target == Glo.CLIENT_UPDATE_CONTACT)
+            {
+                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlUpdate();
+            }
+            else if (target == Glo.CLIENT_UPDATE_ASSET)
+            {
+                Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlUpdate();
+            }
+            else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
+            {
+                ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlUpdate();
+            }
+            else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
+            {
+                Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
+                //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                //    com.CommandText = newRow.SqlUpdate();
+            }
+            else if (target == Glo.CLIENT_UPDATE_RESOURCE)
+            {
+                Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
+                //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                //    com.CommandText = newRow.SqlUpdate();
+            }
+            else if (target == Glo.CLIENT_UPDATE_LOGIN)
+            {
+                Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
+                //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                //    com.CommandText = newRow.SqlUpdate();
+            }
+
+            if (!sessionValid)
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
             }
-
-            SqlCommand com = new SqlCommand(org.SqlUpdate(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -590,6 +649,37 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run update, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientDelete(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            DeleteRequest req = sr.Deserialise<DeleteRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlDelete(), sqlConnect);
+
+            if (com.ExecuteNonQuery() == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't delete record, see error:", e);
             stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally

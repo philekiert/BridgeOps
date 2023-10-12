@@ -44,9 +44,9 @@ namespace BridgeOpsClient
             txtOrgID.IsReadOnly = true;
         }
 
-#pragma warning disable CS8602
         public void Populate(List<object?> data)
         {
+#pragma warning disable CS8602
             // This method will not be called if the data has a different Count than expected.
             if (data[1] != null)
                 cmbOrgParentID.Text = data[1].ToString();
@@ -64,8 +64,8 @@ namespace BridgeOpsClient
             ditOrganisation.Populate(data.GetRange(4, data.Count - 4));
             if (edit)
                 ditOrganisation.RememberStartingValues();
-        }
 #pragma warning restore CS8602
+        }
 
         public string[]? organisationList;
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -127,7 +127,7 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 org.additionalNeedsQuotes = new();
                 foreach (string c in cols)
-                    org.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
+                    org.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
 
                 org.additionalCols = cols;
                 org.additionalVals = vals;
@@ -165,7 +165,10 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-
+            if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id, true))
+                Close();
+            else
+                MessageBox.Show("Could not delete organisation.");
         }
     }
 }

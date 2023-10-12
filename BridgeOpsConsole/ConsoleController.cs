@@ -570,16 +570,24 @@ public class ConsoleController
     {
         if (process != null)
         {
-            try
+            if (GetProcess(false))
             {
-                process.Kill();
-                process = null;
-                Writer.Affirmative("Process stopped.");
+                try
+                {
+                    process.Kill();
+                    process = null;
+                    Writer.Affirmative("Process stopped.");
+                }
+                catch (Exception e)
+                {
+                    Writer.Message("Something is preventing the process from terminating. See error:", ConsoleColor.Red);
+                    Writer.Message(e.Message);
+                }
             }
-            catch (Exception e)
+            else
             {
-                Writer.Message("Something is preventing the process from terminating. See error:", ConsoleColor.Red);
-                Writer.Message(e.Message);
+                Writer.Negative("It looks like the process was started, but has since terminated. See " +
+                                Glo.LOG_ERROR_AGENT + " for details.");
             }
         }
         else

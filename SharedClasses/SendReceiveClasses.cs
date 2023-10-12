@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
 using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
@@ -282,18 +283,22 @@ namespace SendReceiveClasses
         public string sessionID;
         public int contactID = -1;
         public string? notes;
+        public bool notesChanged;
         public List<string> additionalCols;
         public List<string?> additionalVals;
+        public List<bool> additionalNeedsQuotes;
 
         public Contact(string sessionID, int contactID, string? notes, List<string> additionalCols,
-                                                                       List<string?> additionalVals)
+                                                                       List<string?> additionalVals,
+                                                                       List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
             this.contactID = contactID;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
-            SqlAssist.LevelAdditionals(ref additionalCols, ref additionalVals);
+            this.additionalNeedsQuotes = additionalNeedsQuotes;
+            notesChanged = false;
         }
 
         public string SqlInsert()
@@ -303,6 +308,17 @@ namespace SendReceiveClasses
                                                             "Notes"),
                                         SqlAssist.ValConcat(additionalVals, notes));
         }
+
+        public string SqlUpdate()
+        {
+            List<string> setters = new();
+            if (notesChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes, true));
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i], additionalNeedsQuotes[i]));
+            return SqlAssist.Update("Contact", string.Join(", ", setters),
+                                    Glo.Tab.CONTACT_ID, contactID);
+        }
     }
 
     struct Asset
@@ -311,12 +327,16 @@ namespace SendReceiveClasses
         public string assetID;
         public string? organisationID;
         public string? notes;
+        public bool organisationIdChanged;
+        public bool notesChanged;
         public List<string> additionalCols;
         public List<string?> additionalVals;
+        public List<bool> additionalNeedsQuotes;
 
         public Asset(string sessionID, string assetID, string? organisationID, string? notes,
                      List<string> additionalCols,
-                     List<string?> additionalVals)
+                     List<string?> additionalVals,
+                     List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
             this.assetID = assetID;
@@ -324,8 +344,9 @@ namespace SendReceiveClasses
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
-
-            SqlAssist.LevelAdditionals(ref additionalCols, ref additionalVals);
+            this.additionalNeedsQuotes = additionalNeedsQuotes;
+            organisationIdChanged = false;
+            notesChanged = false;
         }
 
         public string SqlInsert()
@@ -338,6 +359,19 @@ namespace SendReceiveClasses
                                                                             organisationID,
                                                                             notes));
         }
+
+        public string SqlUpdate()
+        {
+            List<string> setters = new();
+            if (organisationIdChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_ID, organisationID, true));
+            if (notesChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes, true));
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i], additionalNeedsQuotes[i]));
+            return SqlAssist.Update("Asset", string.Join(", ", setters),
+                                    Glo.Tab.ASSET_ID, assetID);
+        }
     }
 
     struct ConferenceType
@@ -345,17 +379,32 @@ namespace SendReceiveClasses
         public string sessionID;
         public int typeID;
         public string? name;
+        public bool nameChanged;
 
         public ConferenceType(string sessionID, int typeID, string? name)
         {
             this.sessionID = sessionID;
             this.typeID = typeID;
             this.name = name;
+            nameChanged = false;
         }
 
         public string SqlInsert()
         {
             return "INSERT INTO ConferenceType (" + Glo.Tab.CONFERENCE_TYPE_NAME + ") VALUES ('" + name + "');";
+        }
+
+        public string SqlUpdate()
+        {
+            List<string> setters = new();
+            if (nameChanged && name != null)
+            {
+                return SqlAssist.Update("ConferenceType",
+                                        Glo.Tab.CONFERENCE_TYPE_NAME + " = '" + SqlAssist.SecureValue(name) + "'",
+                                        Glo.Tab.CONFERENCE_TYPE_ID, typeID);
+            }
+            else
+                return "";
         }
     }
 
@@ -546,36 +595,27 @@ namespace SendReceiveClasses
         }
     }
 
-    struct UpdateRequest
+    struct DeleteRequest
     {
         public string sessionID;
         public string table;
         public string column;
         public string id;
-        public List<string> columnNames;
-        public List<string> columnTypes;
-        public List<string> newValues;
+        public bool isString;
 
-        public UpdateRequest(string sessionID, string table, string column, string id,
-                             List<string> columnNames, List<string> columnTypes, List<string> newValues)
+        public DeleteRequest(string sessionID, string table, string column, string id, bool isString)
         {
             this.sessionID = sessionID;
             this.table = table;
             this.column = column;
             this.id = id;
-            this.columnNames = columnNames;
-            this.columnTypes = columnTypes;
-            this.newValues = newValues;
+            this.isString = isString;
         }
 
-        public string SqlUpdate()
+        public string SqlDelete()
         {
-            // All strings in newValues are expected here to be in their final form, i.e. with single quotes included
-            // for strings, or DateTime strings formatted correctly.
-            for (int i = 0; i < newValues.Count && i < columnNames.Count; ++i)
-                columnNames[i] = SqlAssist.SecureColumn(columnNames[i]) + " = " +
-                                 SqlAssist.SecureValue(newValues[i]);
-            return SqlAssist.Update(table, string.Join(", ", columnNames), column, id);
+            return "DELETE FROM " + table +
+                   " WHERE " + SqlAssist.SecureColumn(column) + " = " + SqlAssist.SecureValue(id, isString) + ';';
         }
     }
 
@@ -594,6 +634,13 @@ namespace SendReceiveClasses
         public static string SecureValue(string s)
         {
             return s.Replace("\'", "''");
+        }
+        public static string SecureValue(string s, bool needsQuotes)
+        {
+            if (needsQuotes)
+                return '\'' + s.Replace("'", "''") + '\'';
+            else
+                return s.Replace("'", "''");
         }
 
         public static void LevelAdditionals(ref List<string> columns, ref List<string?> values)
@@ -629,6 +676,11 @@ namespace SendReceiveClasses
         {
             return "UPDATE " + tableName + " SET " + columnsAndValues +
                    " WHERE " + SecureColumn(whereCol) + " = '" + SecureValue(whereID) + "';";
+        }
+        public static string Update(string tableName, string columnsAndValues, string whereCol, int whereID)
+        {
+            return "UPDATE " + tableName + " SET " + columnsAndValues +
+                   " WHERE " + SecureColumn(whereCol) + " = " + whereID.ToString() + ";";
         }
 
         public static string ValConcat(params string?[] values)

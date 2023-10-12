@@ -27,9 +27,9 @@
             <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnAdd" Click="btnAdd_Click" />
             <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnEdit" Visibility="Hidden"/>
+                    x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden"/>
             <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnDelete" Visibility="Hidden"/>
+                    x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
         </Grid>
     </Grid>
 </Window>
