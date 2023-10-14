@@ -26,12 +26,19 @@ namespace BridgeOpsClient
         public NewAsset()
         {
             InitializeComponent();
+
+            // Implement max lengths. Max lengths in the DataInputTable are set automatically.
+            txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
+            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
         }
         public NewAsset(string id)
         {
             this.id = id;
 
             InitializeComponent();
+
+            // Implement max length. Max lengths in the DataInputTable are set automatically.
+            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;

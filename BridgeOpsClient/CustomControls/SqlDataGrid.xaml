@@ -6,9 +6,11 @@
              xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <ScrollViewer x:Name="scb" HorizontalScrollBarVisibility="Auto" Margin="10 10 10 10">
+    <ScrollViewer x:Name="scb" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                  Margin="10 10 10 10" Width="Auto">
         <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="False"
-                  VerticalGridLinesBrush="#eee" HorizontalGridLinesBrush="#ccc">
+                  VerticalGridLinesBrush="#eee" HorizontalGridLinesBrush="#ccc"
+                  AutoGenerateColumns="False" HeadersVisibility="Column">
             <DataGrid.Resources>
                 <Style TargetType="{x:Type DataGridCell}">
                     <Setter Property="BorderThickness" Value="0" />

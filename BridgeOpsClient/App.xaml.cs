@@ -19,6 +19,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using SendReceiveClasses;
 using static BridgeOpsClient.ColumnRecord;
+using static BridgeOpsClient.CustomControls.SqlDataGrid;
 
 namespace BridgeOpsClient
 {
@@ -156,7 +157,7 @@ namespace BridgeOpsClient
                     NewOrganisation org = new(id);
                     org.cmbOrgParentID.ItemsSource = organisationList;
                     org.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
-                    org.Populate(rows[0]);
+                    org.PopulateExistingData(rows[0]);
                     org.Show();
                 }
                 else
@@ -268,6 +269,10 @@ namespace BridgeOpsClient
 
         public static bool SendInsert(byte fncByte, object toSerialise)
         {
+            return SendInsert(fncByte, toSerialise, out _);
+        }
+        public static bool SendInsert(byte fncByte, object toSerialise, out string returnID)
+        {
             NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
             try
             {
@@ -277,17 +282,28 @@ namespace BridgeOpsClient
                     sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
                     int response = stream.ReadByte();
                     if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        returnID = "";
                         return true;
+                    }
+                    else if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
+                    {
+                        returnID = sr.ReadString(stream);
+                        return true;
+                    }
                     else if (response == Glo.CLIENT_SESSION_INVALID)
                     {
                         SessionInvalidated();
+                        returnID = "";
                         return false;
                     }
                 }
+                returnID = "";
                 return false;
             }
             catch
             {
+                returnID = "";
                 return false;
             }
             finally
@@ -358,7 +374,6 @@ namespace BridgeOpsClient
             {
                 if (stream != null) stream.Close();
             }
-
         }
 
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
@@ -392,11 +407,18 @@ namespace BridgeOpsClient
             }
         }
 
-        // Returns null if the operation failed.
         public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows)
         {
             return Select(table, new List<string> { "*" }, new(), new(), out columnNames, out rows);
         }
+        public static bool SelectAll(string table, string likeColumn, string likeValue,
+                                     out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            return Select(table, new List<string> { "*" },
+                          new List<string> { likeColumn }, new List<string> { likeValue },
+                          out columnNames, out rows);
+        }
+
         public static bool Select(string table, List<string> select,
                                   List<string> likeColumns, List<string> likeValues,
                                   out List<string?> columnNames, out List<List<object?>> rows)
@@ -408,6 +430,99 @@ namespace BridgeOpsClient
                 {
                     SelectRequest req = new SelectRequest(sd.sessionID, table, select, likeColumns, likeValues);
                     stream.WriteByte(Glo.CLIENT_SELECT);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                        columnNames = result.columnNames;
+                        List<string?> columnTypes = result.columnTypes;
+                        rows = result.rows;
+                        for (int n = 0; n < rows.Count; ++n)
+                        {
+#pragma warning disable CS8602
+                            for (int i = 0; i < columnTypes.Count; ++i)
+                            {
+                                // A JsonObject here will always be empty.
+                                if (rows[n][i].GetType() == typeof(JsonObject))
+                                    rows[n][i] = "";
+                                else if (columnTypes[i] == "String")
+                                {
+                                    rows[n][i] = rows[n][i].ToString();
+                                }
+                                else if (columnTypes[i] == "DateTime")
+                                {
+                                    DateTime dt;
+                                    DateTime.TryParse(rows[n][i].ToString(), out dt);
+                                    rows[n][i] = dt;
+                                }
+                            }
+#pragma warning restore CS8602
+                        }
+                        return true;
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                        SessionInvalidated();
+                    throw new Exception();
+                }
+                throw new Exception();
+            }
+            catch
+            {
+                MessageBox.Show("Could not run or return query.");
+                columnNames = new();
+                rows = new();
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        public static bool LinkContact(string organisationID, int contactID, bool unlink)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    LinkContactRequest req = new LinkContactRequest(sd.sessionID, organisationID, contactID, unlink);
+
+                    stream.WriteByte(Glo.CLIENT_LINK_CONTACT);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        return true;
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        SessionInvalidated();
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                MessageBox.Show("Could not link or unlink contact to organisation.");
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        public static bool LinkedContactSelect(string organisationID,
+                                               out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    LinkedContactSelectRequest req = new(sd.sessionID, organisationID);
+                    stream.WriteByte(Glo.CLIENT_LINKED_CONTACT_SELECT);
                     sr.WriteAndFlush(stream, sr.Serialise(req));
                     int response = stream.ReadByte();
                     if (response == Glo.CLIENT_REQUEST_SUCCESS)

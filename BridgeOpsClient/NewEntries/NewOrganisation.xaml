@@ -7,52 +7,105 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
-            <Grid.Resources>
-                <Style TargetType="TextBox">
-                    <Setter Property="Margin" Value="10 5 10 5" />
-                </Style>
-            </Grid.Resources>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Label Content="Organisation ID" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID" />
-            <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgID" />
-            <Label Content="Parent Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID" />
-            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2" />
-            <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>
-            <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo" />
-        </Grid>
-        <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="1"/>
-        <Label Grid.Row="2" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
+    <TabControl>
+        <TabItem Header="Organisation">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.Resources>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Margin" Value="10 5 10 5" />
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Label Content="Organisation ID" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID" />
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgID" />
+                    <Label Content="Parent Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2" />
+                    <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo" />
+                </Grid>
+                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="1"/>
+                <Label Grid.Row="2" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
                Margin="10,0,10,0" Height="26"/>
-        <TextBox x:Name="txtNotes" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Top"
-                 Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"/>
-        <Grid Grid.Row="4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                <TextBox x:Name="txtNotes" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Top"
+                         Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
+                         VerticalScrollBarVisibility="Auto"/>
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnAdd" Click="btnAdd_Click" />
-            <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                    <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden"/>
-            <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                    <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnDelete" Click="btnDelete_Click"  Visibility="Hidden"/>
-        </Grid>
-    </Grid>
+                </Grid>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Assets &amp; Contacts" x:Name="tabAssetsContacts">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" Content="Assets" Margin="5 5 10 0" Padding="5 5 5 0"/>
+                <custom:SqlDataGrid Grid.Row="1" x:Name="dtgAssets" Width="470" Height="150"/>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="btnAssetNew" Click="btnAssetNew_Click" Grid.Column="0" Content="Add New"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                    <Button x:Name="btnAssetAdd" Click="btnAssetAdd_Click" Grid.Column="1" Content="Add Existing"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                    <Button x:Name="btnAssetRemove" Click="btnAssetRemove_Click" Grid.Column="2" Content="Remove"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                    <Button x:Name="btnAssetsRefresh" Click="btnAssetsRefresh_Click" Grid.Column="3" Content="Refresh"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                </Grid>
+                <Label Grid.Row="3" Content="Contacts" Margin="5 10 0 0" Padding="5 5 5 0"/>
+                <custom:SqlDataGrid Grid.Row="4" x:Name="dtgContacts" Width="470" Height="100" />
+                <Grid Grid.Row="5" Margin="0 0 0 10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="btnContactsNew" Click="btnContactsNew_Click" Grid.Column="0" Content="Add New"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                    <Button x:Name="btnContactsAdd" Click="btnContactsAdd_Click" Grid.Column="1" Content="Add Existing"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                    <Button x:Name="btnContactsRemove" Click="btnContactsRemove_Click" Grid.Column="2" Content="Remove"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                    <Button x:Name="btnContactsRefresh" Click="btnContactsRefresh_Click" Grid.Column="3" Content="Refresh"
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 " />
+                </Grid>
+            </Grid>
+        </TabItem>
+    </TabControl>
 </Window>

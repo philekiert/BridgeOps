@@ -19,17 +19,23 @@ namespace BridgeOpsClient
     public partial class NewContact : Window
     {
         bool edit = false;
-        string id = "";
+        public string id = "";
+        public bool requireIdBack = false; // Set by caller on load.
         string? originalNotes = "";
         public NewContact()
         {
             InitializeComponent();
+
+            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
         }
         public NewContact(string id)
         {
             this.id = id;
 
             InitializeComponent();
+
+            // Implement max length. Max lengths in the DataInputTable are set automatically.
+            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -60,6 +66,9 @@ namespace BridgeOpsClient
             {
                 Contact nc = new Contact();
 
+                // Only switched on when adding from NewOrganisation.
+                nc.requireIdBack = requireIdBack;
+
                 nc.sessionID = App.sd.sessionID;
                 if (txtNotes.Text.Length == 0)
                     nc.notes = null;
@@ -73,8 +82,11 @@ namespace BridgeOpsClient
                 foreach (string c in nc.additionalCols)
                     nc.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
 
-                if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc))
+                if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id))
+                {
+                    DialogResult = true;
                     Close();
+                }
                 else
                 {
                     // There shouldn't be any errors with insert on this one, as everything is either text or null.

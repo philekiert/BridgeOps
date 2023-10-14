@@ -306,6 +306,7 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
+        public bool requireIdBack = false;
 
         public Contact(string sessionID, int contactID, string? notes, List<string> additionalCols,
                                                                        List<string?> additionalVals,
@@ -334,10 +335,13 @@ namespace SendReceiveClasses
         {
             Prepare();
 
-            return SqlAssist.InsertInto("Contact",
-                                        SqlAssist.ColConcat(additionalCols,
-                                                            Glo.Tab.NOTES),
-                                        SqlAssist.ValConcat(additionalVals, notes));
+            string ret = SqlAssist.InsertInto("Contact",
+                                              SqlAssist.ColConcat(additionalCols,
+                                                                  Glo.Tab.NOTES),
+                                              SqlAssist.ValConcat(additionalVals, notes));
+            if (requireIdBack)
+                ret += " SET @ID = SCOPE_IDENTITY();"; // Picked up by ExecuteNonQuery() in agent.
+            return ret;
         }
 
         public string SqlUpdate()
@@ -669,6 +673,72 @@ namespace SendReceiveClasses
         }
     }
 
+    struct LinkContactRequest
+    {
+        public string sessionID;
+        public string organisationID;
+        public int contactID;
+        public bool unlink;
+
+        public LinkContactRequest(string sessionID, string organisationID, int contactID, bool unlink)
+        {
+            this.sessionID = sessionID;
+            this.organisationID = organisationID;
+            this.contactID = contactID;
+            this.unlink = unlink;
+        }
+
+        private void Prepare()
+        {
+            organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+            return SqlAssist.InsertInto("OrganisationContacts",
+                                        Glo.Tab.ORGANISATION_ID + ", " + Glo.Tab.CONTACT_ID,
+                                        organisationID + ", " + contactID.ToString());
+        }
+
+        public string SqlDelete()
+        {
+            Prepare();
+            return "DELETE FROM OrganisationContacts " +
+                   "WHERE " + Glo.Tab.ORGANISATION_ID + " = " + organisationID +
+                  " AND " + Glo.Tab.CONTACT_ID + " = " + contactID.ToString() + ";";
+        }
+    }
+
+    struct LinkedContactSelectRequest
+    {
+        public string sessionID;
+        public string organisationID;
+
+        public LinkedContactSelectRequest(string sessionID, string organisationID)
+        {
+            this.sessionID = sessionID;
+            this.organisationID = organisationID;
+        }
+
+        private void Prepare()
+        {
+            organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+        }
+
+        public string SqlSelect()
+        {
+            Prepare();
+
+            return "SELECT Contact.* FROM Contact" +
+                  " JOIN OrganisationContacts ON OrganisationContacts." + Glo.Tab.CONTACT_ID +
+                        " = Contact." + Glo.Tab.CONTACT_ID +
+                  " JOIN Organisation ON Organisation." + Glo.Tab.ORGANISATION_ID +
+                        " = OrganisationContacts." + Glo.Tab.ORGANISATION_ID +
+                  " WHERE Organisation." + Glo.Tab.ORGANISATION_ID + " = " + organisationID + ";";
+        }
+    }
+
 
     //   H E L P E R   F U N C T I O N S
 
@@ -741,7 +811,7 @@ namespace SendReceiveClasses
         public static string Update(string tableName, string columnsAndValues, string whereCol, string whereID)
         {
             return "UPDATE " + tableName + " SET " + columnsAndValues +
-                   " WHERE " + SecureColumn(whereCol) + " = '" + SecureValue(whereID) + "';";
+                   " WHERE " + whereCol + " = " + whereID + ";";
         }
         public static string Update(string tableName, string columnsAndValues, string whereCol, int whereID)
         {

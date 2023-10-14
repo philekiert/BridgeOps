@@ -43,21 +43,16 @@ namespace BridgeOpsClient.CustomControls
         public void Update(Dictionary<string, ColumnRecord.Column> tableColDefs,
                            List<string?> columnNames, List<List<object?>> rows)
         {
-            /* I suspect there's a more elegant way to do this in XAML, but this ensures that the scrollviewer respects
-             * the size allocated by the containing page or window if left on width="auto", and doesn't expand to fit
-             * the results. */
-            scb.MaxWidth = scb.ActualWidth;
-            scb.MaxHeight = scb.ActualHeight;
-
-
             dtg.Columns.Clear();
             dtg.ItemsSource = null;
 
             int count = 0;
 
+            DataGridTextColumn? notes = null; // We want to add this one last.
             foreach (string? s in columnNames)
             {
                 DataGridTextColumn header = new();
+                header.MaxWidth = 256;
                 if (s == null)
                     header.Header = "";
                 else
@@ -72,10 +67,16 @@ namespace BridgeOpsClient.CustomControls
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                 }
-                dtg.Columns.Add(header);
+                if (s != Glo.Tab.NOTES)
+                    dtg.Columns.Add(header);
+                else
+                    notes = header;
                 ++count;
             }
 
+            // Move the notes column to the end.
+            if (notes != null)
+                dtg.Columns.Add(notes);
 
             // Data
             rowsBinder = new();
@@ -83,10 +84,6 @@ namespace BridgeOpsClient.CustomControls
                 rowsBinder.Add(new Row(row));
 
             dtg.ItemsSource = rowsBinder;
-
-            // Hide the trailing column of(Collection) that appears for some reason.
-            if (dtg.Columns.Count > 1)
-                dtg.Columns[dtg.Columns.Count - 1].Visibility = Visibility.Hidden;
         }
 
         public string GetCurrentlySelectedID()

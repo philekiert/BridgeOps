@@ -194,8 +194,8 @@ public class FieldDefs
         defs.Add("Organisation Contacts Contact ID", new Definition(21, "Contact_ID", typeContactID, false, true, false));
 
         // Organisation Engineers
-        defs.Add("Organisation Engineers Organisation ID", new Definition(22, "Organisation_ID", typeOrgID, false, true, false));
-        defs.Add("Organisation Engineers Contact ID", new Definition(22, "Contact_ID", typeContactID, false, true, false));
+        //defs.Add("Organisation Engineers Organisation ID", new Definition(22, "Organisation_ID", typeOrgID, false, true, false));
+        //defs.Add("Organisation Engineers Contact ID", new Definition(22, "Contact_ID", typeContactID, false, true, false));
 
         // Organisation Contacts
         defs.Add("Organisation Change Contacts Organisation ID", new Definition(28, "Organisation_ID", typeOrgID, false, true, false));
@@ -203,9 +203,9 @@ public class FieldDefs
         defs.Add("Organisation Change Contacts Contact ID", new Definition(28, "Contact_ID", typeContactID, false, true, false));
 
         // Organisation Engineers
-        defs.Add("Organisation Change Engineers Organisation ID", new Definition(29, "Organisation_ID", typeOrgID, false, true, false));
-        defs.Add("Organisation Change Engineers Change ID", new Definition(29, "Change_ID", typeOrgChangeID, false, true, false));
-        defs.Add("Organisation Change Engineers Contact ID", new Definition(29, "Contact_ID", typeContactID, false, true, false));
+        //defs.Add("Organisation Change Engineers Organisation ID", new Definition(29, "Organisation_ID", typeOrgID, false, true, false));
+        //defs.Add("Organisation Change Engineers Change ID", new Definition(29, "Change_ID", typeOrgChangeID, false, true, false));
+        //defs.Add("Organisation Change Engineers Contact ID", new Definition(29, "Contact_ID", typeContactID, false, true, false));
 
         // Conference Resources
         defs.Add("Conference Resource Conference", new Definition(19, "Conference_ID", typeConfID, false, true, false));

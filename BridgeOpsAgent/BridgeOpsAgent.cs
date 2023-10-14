@@ -257,6 +257,10 @@ internal class BridgeOpsAgent
                     ClientSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_DELETE)
                     ClientDelete(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_LINK_CONTACT)
+                    ClientLinkContact(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_LINKED_CONTACT_SELECT)
+                    ClientLinkedContactSelect(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -481,10 +485,29 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            if (com.ExecuteNonQuery() == 0)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            // Contact inserts work slightly differently, as we need to get the ID back out.
+            if (target == Glo.CLIENT_NEW_CONTACT)
+            {
+                SqlParameter id = new SqlParameter("@ID", SqlDbType.Int);
+                id.Direction = ParameterDirection.Output;
+                com.Parameters.Add(id);
+
+                if (com.ExecuteNonQuery() == 0)
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                else
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW);
+                    string? idStr = Convert.ToInt32(com.Parameters["@ID"].Value).ToString();
+                    sr.WriteAndFlush(stream, idStr == null ? "" : idStr);
+                }
+            }
             else
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            {
+                if (com.ExecuteNonQuery() == 0)
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                else
+                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            }
         }
         catch (Exception e)
         {
@@ -680,6 +703,71 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't delete record, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientLinkContact(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            LinkContactRequest req = sr.Deserialise<LinkContactRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com;
+            if (req.unlink)
+                com = new SqlCommand(req.SqlDelete(), sqlConnect);
+            else
+                com = new SqlCommand(req.SqlInsert(), sqlConnect);
+
+            if (com.ExecuteNonQuery() == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't create or modify organisation/contact link, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientLinkedContactSelect(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            LinkedContactSelectRequest req = sr.Deserialise<LinkedContactSelectRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+
+            SelectResult result = new(com.ExecuteReader());
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't run or return query, see error:", e);
             stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally

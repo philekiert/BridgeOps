@@ -15,7 +15,7 @@ public static class Glo
     public const string CONFIG_COLUMN_ADDITIONS = "column-additions.txt";
     public const string CONFIG_NETWORK = "network-config.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
-    public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
+    public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";   
     public const string LOG_ERROR_AGENT = "agent-error-log.txt";
 
     // Client/Agent Function Specifiers
@@ -39,6 +39,8 @@ public static class Glo
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT = 31;
     public const int CLIENT_DELETE = 32;
+    public const int CLIENT_LINK_CONTACT = 40;
+    public const int CLIENT_LINKED_CONTACT_SELECT = 41;
 
 
     // Console/Agent Function Specifiers
@@ -49,6 +51,7 @@ public static class Glo
     public const int CLIENT_SESSION_INVALID = 0;
     public const int CLIENT_REQUEST_FAILED = 1;
     public const int CLIENT_REQUEST_SUCCESS = 2;
+    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 3;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent

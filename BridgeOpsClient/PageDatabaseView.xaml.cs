@@ -85,6 +85,7 @@ namespace BridgeOpsClient
             else // if == "Contact"
                 tableColDefs = ColumnRecord.contact;
 
+            // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.SelectAll(cmbTable.Text, out columnNames, out rows))
@@ -111,13 +112,14 @@ namespace BridgeOpsClient
                 nameReversals = ColumnRecord.contactFriendlyNameReversal;
             }
 
-            List<string?> columnNames;
-            List<List<object?>> rows;
             if (!nameReversals.ContainsKey(cmbColumn.Text)) // Should only trigger on no selection.
             {
                 MessageBox.Show("Please select a column to search.");
                 return;
             }
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
             if (App.Select(cmbTable.Text,
                            new List<string> { "*" },
                            new List<string> { nameReversals[cmbColumn.Text] },
@@ -130,20 +132,11 @@ namespace BridgeOpsClient
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (cmbTable.Text == "Organisation")
-            {
                 App.EditOrganisation(dtgResults.GetCurrentlySelectedID());
-                string id = dtgResults.GetCurrentlySelectedID();
-            }
             if (cmbTable.Text == "Asset")
-            {
                 App.EditAsset(dtgResults.GetCurrentlySelectedID());
-                string id = dtgResults.GetCurrentlySelectedID();
-            }
             if (cmbTable.Text == "Contact")
-            {
                 App.EditContact(dtgResults.GetCurrentlySelectedID());
-                string id = dtgResults.GetCurrentlySelectedID();
-            }
         }
     }
 }

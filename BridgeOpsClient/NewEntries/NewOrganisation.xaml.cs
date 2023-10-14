@@ -29,6 +29,11 @@ namespace BridgeOpsClient
         public NewOrganisation()
         {
             InitializeComponent();
+
+            // Implement max lengths. Max lengths in the DataInputTable are set automatically.
+            txtOrgID.MaxLength = ColumnRecord.organisation["Organisation_ID"].restriction;
+            txtDialNo.MaxLength = ColumnRecord.organisation["Dial_No"].restriction;
+            txtNotes.MaxLength = ColumnRecord.organisation["Notes"].restriction;
         }
         public NewOrganisation(string id)
         {
@@ -42,9 +47,32 @@ namespace BridgeOpsClient
 
             txtOrgID.Text = id;
             txtOrgID.IsReadOnly = true;
+
+            // Sort out contact and asset tables.
+            PopulateAssets();
+            PopulateContacts();
+            dtgAssets.MouseDoubleClick += dtgAssets_DoubleClick;
+            dtgContacts.MouseDoubleClick += dtgContacts_DoubleClick;
         }
 
-        public void Populate(List<object?> data)
+        public void PopulateAssets()
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_ID, id, out columnNames, out rows))
+                dtgAssets.Update(ColumnRecord.asset, columnNames, rows);
+        }
+        public void PopulateContacts()
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.LinkedContactSelect(id, out columnNames, out rows))
+                dtgContacts.Update(ColumnRecord.contact, columnNames, rows);
+        }
+
+        public void PopulateExistingData(List<object?> data)
         {
 #pragma warning disable CS8602
             // This method will not be called if the data has a different Count than expected.
@@ -177,6 +205,145 @@ namespace BridgeOpsClient
                 Close();
             else
                 MessageBox.Show("Could not delete organisation.");
+        }
+
+        // Bring up selected asset on double-click.
+        private void dtgAssets_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            App.EditAsset(dtgAssets.GetCurrentlySelectedID());
+            PopulateAssets();
+        }
+
+        // Bring up selected contact on double-click.
+        private void dtgContacts_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            App.EditContact(dtgContacts.GetCurrentlySelectedID());
+        }
+
+        private void btnAssetNew_Click(object sender, RoutedEventArgs e)
+        {
+            NewAsset newAsset = new();
+            newAsset.ditAsset.Initialise(ColumnRecord.asset, "Asset");
+
+            // Implement friendly names.
+            if (ColumnRecord.asset["Asset_ID"].friendlyName != "")
+                newAsset.lblAssetID.Content = ColumnRecord.asset["Asset_ID"].friendlyName;
+            if (ColumnRecord.asset["Organisation_ID"].friendlyName != "")
+                newAsset.lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
+            if (ColumnRecord.asset["Notes"].friendlyName != "")
+                newAsset.lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
+
+            // Set cmbOrgID to editable but disabled in order to hold the ID without fetching the list from the agent.
+            newAsset.cmbOrgID.IsEditable = true;
+            newAsset.cmbOrgID.Text = id;
+            newAsset.cmbOrgID.IsEnabled = false;
+
+            newAsset.ShowDialog();
+            PopulateAssets();
+        }
+
+        private void btnAssetAdd_Click(object sender, RoutedEventArgs e)
+        {
+            LinkRecord lr = new("Asset", ColumnRecord.asset);
+            lr.ShowDialog();
+            string? assetID = lr.id;
+            if (assetID == null)
+            {
+                MessageBox.Show("Could not discern asset ID from record.");
+                return;
+            }
+            Asset asset = new Asset(App.sd.sessionID, assetID, id, null, new(), new(), new());
+            asset.organisationIdChanged = true;
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+                PopulateAssets();
+            else
+                MessageBox.Show("Could not update specified asset.");
+        }
+
+        private void btnAssetRemove_Click(object sender, RoutedEventArgs e)
+        {
+            string? assetID = dtgAssets.GetCurrentlySelectedID();
+            if (assetID == null)
+            {
+                MessageBox.Show("Could not discern asset ID from record.");
+                return;
+            }
+            Asset asset = new Asset(App.sd.sessionID, assetID, null, null, new(), new(), new());
+            asset.organisationIdChanged = true;
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+                PopulateAssets();
+            else
+                MessageBox.Show("Could not update specified asset.");
+        }
+
+        private void btnAssetsRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateAssets();
+        }
+
+        private void btnContactsNew_Click(object sender, RoutedEventArgs e)
+        {
+            NewContact newContact = new();
+            newContact.ditContact.Initialise(ColumnRecord.contact, "Contact");
+            newContact.requireIdBack = true;
+
+            // Implement friendly names.
+            if (ColumnRecord.contact[Glo.Tab.NOTES].friendlyName != "")
+                newContact.lblNotes.Content = ColumnRecord.contact[Glo.Tab.NOTES].friendlyName;
+
+            bool? completed = newContact.ShowDialog();
+
+            int contactID;
+            if (completed == true)
+            {
+                if (int.TryParse(newContact.id, out contactID))
+                {
+                    // Error message presented by LinkContact() if needed.
+                    App.LinkContact(id, contactID, false);
+                    PopulateContacts();
+                }
+                else
+                {
+                    MessageBox.Show("Contact could not be linked to organisation.");
+                }
+            }
+            // else the NewContact form was closed without being completed.
+        }
+
+        private void btnContactsAdd_Click(object sender, RoutedEventArgs e)
+        {
+            LinkRecord lr = new("Contact", ColumnRecord.contact);
+            lr.ShowDialog();
+            int contactIdInt;
+            if (lr.id == null || !int.TryParse(lr.id, out contactIdInt))
+            {
+                MessageBox.Show("Could not discern contact ID from record.");
+                return;
+            }
+
+            // Error message handled in LinkContact().
+            if (App.LinkContact(id, contactIdInt, false))
+                PopulateContacts();
+        }
+
+        private void btnContactsRemove_Click(object sender, RoutedEventArgs e)
+        {
+            string? contactID = dtgContacts.GetCurrentlySelectedID();
+            int contactIdInt;
+            if (contactID == null || !int.TryParse(contactID, out contactIdInt))
+            {
+                MessageBox.Show("Could not discern contact ID from record.");
+                return;
+            }
+            if (App.LinkContact(id, contactIdInt, true))
+                PopulateContacts();
+            else
+                MessageBox.Show("Could not update specified asset.");
+        }
+
+        private void btnContactsRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateContacts();
         }
     }
 }

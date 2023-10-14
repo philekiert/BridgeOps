@@ -368,12 +368,12 @@ public class DatabaseCreator
                     AddColumn(ref assetChange, def);
                 if (fieldDefs.Category(def) == "Organisation Contacts")
                     AddColumn(ref junctionOrgContacts, def);
-                if (fieldDefs.Category(def) == "Organisation Engineers")
-                    AddColumn(ref junctionOrgEngineers, def);
+                //if (fieldDefs.Category(def) == "Organisation Engineers")
+                //    AddColumn(ref junctionOrgEngineers, def);
                 if (fieldDefs.Category(def) == "Organisation Change Contacts")
                     AddColumn(ref junctionOrgChangeContacts, def);
-                if (fieldDefs.Category(def) == "Organisation Change Engineers")
-                    AddColumn(ref junctionOrgChangeEngineers, def);
+                //if (fieldDefs.Category(def) == "Organisation Change Engineers")
+                //    AddColumn(ref junctionOrgChangeEngineers, def);
                 if (fieldDefs.Category(def) == "Conference Resource")
                     AddColumn(ref junctionConfResource, def);
             }
@@ -425,15 +425,15 @@ public class DatabaseCreator
             junctionOrgContacts += ", CONSTRAINT pk_jncContacts_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
                                    ", CONSTRAINT fk_jncContacts_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
                                    ", CONSTRAINT fk_jncContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
-            junctionOrgEngineers += ", CONSTRAINT pk_jncEngs_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
-                                    ", CONSTRAINT fk_jncEngs_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
-                                    ", CONSTRAINT fk_jncEngs_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
+            //junctionOrgEngineers += ", CONSTRAINT pk_jncEngs_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
+            //                        ", CONSTRAINT fk_jncEngs_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
+            //                        ", CONSTRAINT fk_jncEngs_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
             junctionOrgChangeContacts += ", CONSTRAINT pk_jncChangeContacts_OrgID_ChangeID_ContactID PRIMARY KEY (Organisation_ID, Change_ID, Contact_ID)" +
                                          ", CONSTRAINT fk_jncChangeContacts_OrgID FOREIGN KEY (Organisation_ID, Change_ID) REFERENCES OrganisationChange (Organisation_ID, Change_ID) ON DELETE CASCADE" +
                                          ", CONSTRAINT fk_jncChangeContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
-            junctionOrgChangeEngineers += ", CONSTRAINT pk_jncChangeEngs_OrgID_ChangeID_ContactID PRIMARY KEY (Organisation_ID, Change_ID, Contact_ID)" +
-                                          ", CONSTRAINT fk_jncChangeEngs_OrgID FOREIGN KEY (Organisation_ID, Change_ID) REFERENCES OrganisationChange (Organisation_ID, Change_ID) ON DELETE CASCADE" +
-                                          ", CONSTRAINT fk_jncChangeEngs_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
+            //junctionOrgChangeEngineers += ", CONSTRAINT pk_jncChangeEngs_OrgID_ChangeID_ContactID PRIMARY KEY (Organisation_ID, Change_ID, Contact_ID)" +
+            //                              ", CONSTRAINT fk_jncChangeEngs_OrgID FOREIGN KEY (Organisation_ID, Change_ID) REFERENCES OrganisationChange (Organisation_ID, Change_ID) ON DELETE CASCADE" +
+            //                              ", CONSTRAINT fk_jncChangeEngs_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
             junctionConfResource += ", CONSTRAINT pk_jncConfRes_ConfID_ResID PRIMARY KEY (Conference_ID, Resource_ID)" +
                                     ", CONSTRAINT fk_jncConfRes_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
                                     ", CONSTRAINT fk_jncConfRes_ResID FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID) ON DELETE CASCADE );";
@@ -468,12 +468,12 @@ public class DatabaseCreator
             SendCommandSQL(assetChange);
             Writer.Message("Creating Organisation Contacts junction table...");
             SendCommandSQL(junctionOrgContacts);
-            Writer.Message("Creating Organisation Engineers junction table...");
-            SendCommandSQL(junctionOrgEngineers);
+            //Writer.Message("Creating Organisation Engineers junction table...");
+            //SendCommandSQL(junctionOrgEngineers);
             Writer.Message("Creating Organisation Change Contacts junction table...");
             SendCommandSQL(junctionOrgChangeContacts);
-            Writer.Message("Creating Organisation Change Engineers junction table...");
-            SendCommandSQL(junctionOrgChangeEngineers);
+            //Writer.Message("Creating Organisation Change Engineers junction table...");
+            //SendCommandSQL(junctionOrgChangeEngineers);
             Writer.Message("Creating Conference Resource junction table...");
             SendCommandSQL(junctionConfResource);
 

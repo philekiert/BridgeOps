@@ -47,7 +47,6 @@ namespace BridgeOpsClient
             // Implemement friendly name.
             if (ColumnRecord.contact["Notes"].friendlyName != "")
                 newContact.lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
-            newContact.txtNotes.MaxLength = ColumnRecord.contact["Notes"].restriction;
 
             newContact.Show();
         }
@@ -74,12 +73,9 @@ namespace BridgeOpsClient
             if (ColumnRecord.organisation["Notes"].friendlyName != "")
                 newOrganisation.lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
 
-            // Implement max lengths.
-            newOrganisation.txtOrgID.MaxLength = ColumnRecord.organisation["Organisation_ID"].restriction;
-            newOrganisation.txtDialNo.MaxLength = ColumnRecord.organisation["Dial_No"].restriction;
-            newOrganisation.txtNotes.MaxLength = ColumnRecord.organisation["Notes"].restriction;
-
             newOrganisation.cmbOrgParentID.ItemsSource = organisationList;
+
+            newOrganisation.tabAssetsContacts.IsEnabled = false;
 
             newOrganisation.Show();
         }
@@ -103,10 +99,6 @@ namespace BridgeOpsClient
                 newAsset.lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
             if (ColumnRecord.asset["Notes"].friendlyName != "")
                 newAsset.lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
-
-            // Implement max lengths.
-            newAsset.txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
-            newAsset.txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
 
             newAsset.cmbOrgID.ItemsSource = organisationList;
 

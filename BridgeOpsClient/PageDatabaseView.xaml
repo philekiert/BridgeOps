@@ -7,9 +7,10 @@
       xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="PageDatabaseView">
+      Title="PageDatabaseView"
+      >
 
-    <Grid>
+    <Grid x:Name="pageGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="44" />
             <RowDefinition />
@@ -39,6 +40,13 @@
         </Grid>
 
         <!-- Results -->
-        <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1" />
+        <Grid Grid.Row="1" x:Name="resultsArea">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1"
+                                Width="{Binding ActualWidth, ElementName=pageGrid}"
+                                Height="{Binding ActualHeight, ElementName=resultsArea}"/>
+        </Grid>
     </Grid>
 </Page>
