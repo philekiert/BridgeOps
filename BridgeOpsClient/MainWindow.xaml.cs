@@ -39,18 +39,6 @@ namespace BridgeOpsClient
             frameMain.Content = new PageDatabaseView();
         }
 
-        private void menuDatabaseNewContact_Click(object sender, RoutedEventArgs e)
-        {
-            NewContact newContact = new();
-            newContact.ditContact.Initialise(ColumnRecord.contact, "Contact");
-
-            // Implemement friendly name.
-            if (ColumnRecord.contact["Notes"].friendlyName != "")
-                newContact.lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
-
-            newContact.Show();
-        }
-
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
         {
             string[]? organisationList = App.SelectColumnPrimary("Organisation", "Organisation_ID");
@@ -61,22 +49,7 @@ namespace BridgeOpsClient
             }
 
             NewOrganisation newOrganisation = new();
-            newOrganisation.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
-
-            // Implement friendly names.
-            if (ColumnRecord.organisation["Organisation_ID"].friendlyName != "")
-                newOrganisation.lblOrgID.Content = ColumnRecord.organisation["Organisation_ID"].friendlyName;
-            if (ColumnRecord.organisation["Parent_ID"].friendlyName != "")
-                newOrganisation.lblOrgParentID.Content = ColumnRecord.organisation["Parent_ID"].friendlyName;
-            if (ColumnRecord.organisation["Dial_No"].friendlyName != "")
-                newOrganisation.lblDialNo.Content = ColumnRecord.organisation["Dial_No"].friendlyName;
-            if (ColumnRecord.organisation["Notes"].friendlyName != "")
-                newOrganisation.lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
-
             newOrganisation.cmbOrgParentID.ItemsSource = organisationList;
-
-            newOrganisation.tabAssetsContacts.IsEnabled = false;
-
             newOrganisation.Show();
         }
 
@@ -90,19 +63,15 @@ namespace BridgeOpsClient
             }
 
             NewAsset newAsset = new();
-            newAsset.ditAsset.Initialise(ColumnRecord.asset, "Asset");
-
-            // Implement friendly names.
-            if (ColumnRecord.asset["Asset_ID"].friendlyName != "")
-                newAsset.lblAssetID.Content = ColumnRecord.asset["Asset_ID"].friendlyName;
-            if (ColumnRecord.asset["Organisation_ID"].friendlyName != "")
-                newAsset.lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
-            if (ColumnRecord.asset["Notes"].friendlyName != "")
-                newAsset.lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
-
             newAsset.cmbOrgID.ItemsSource = organisationList;
-
             newAsset.Show();
+        }
+
+        private void menuDatabaseNewContact_Click(object sender, RoutedEventArgs e)
+        {
+            NewContact newContact = new();
+
+            newContact.Show();
         }
 
         private void menuDatabaseNewResource_Click(object sender, RoutedEventArgs e)

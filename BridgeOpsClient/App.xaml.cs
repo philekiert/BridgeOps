@@ -151,19 +151,23 @@ namespace BridgeOpsClient
                            new List<string> { id },
                            out columnNames, out rows))
             {
-                // We would expect data for every field. If the count is different, the operation must have failed.
-                if (rows[0].Count == ColumnRecord.organisation.Count)
+                if (rows.Count > 0)
                 {
-                    NewOrganisation org = new(id);
-                    org.cmbOrgParentID.ItemsSource = organisationList;
-                    org.ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
-                    org.PopulateExistingData(rows[0]);
-                    org.Show();
+                    // We would expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.organisation.Count)
+                    {
+                        NewOrganisation org = new(id);
+                        org.cmbOrgParentID.ItemsSource = organisationList;
+                        org.PopulateExistingData(rows[0]);
+                        org.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Incorrect number of fields received.");
+                    }
                 }
                 else
-                {
-                    MessageBox.Show("Incorrect number of fields received.");
-                }
+                    MessageBox.Show("Could no longer retrieve record.");
             }
             return true;
         }
@@ -185,19 +189,23 @@ namespace BridgeOpsClient
                            new List<string> { id },
                            out columnNames, out rows))
             {
-                // We expect data for every field. If the count is different, the operation must have failed.
-                if (rows[0].Count == ColumnRecord.asset.Count)
+                if (rows.Count > 0)
                 {
-                    NewAsset asset = new NewAsset(id);
-                    asset.cmbOrgID.ItemsSource = organisationList;
-                    asset.ditAsset.Initialise(ColumnRecord.asset, "Asset");
-                    asset.Populate(rows[0]);
-                    asset.Show();
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.asset.Count)
+                    {
+                        NewAsset asset = new NewAsset(id);
+                        asset.cmbOrgID.ItemsSource = organisationList;
+                        asset.Populate(rows[0]);
+                        asset.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Incorrect number of fields received.");
+                    }
                 }
                 else
-                {
-                    MessageBox.Show("Incorrect number of fields received.");
-                }
+                    MessageBox.Show("Could no longer retrieve record.");
             }
             return true;
         }
@@ -212,25 +220,29 @@ namespace BridgeOpsClient
                            new List<string> { id.ToString() },
                            out columnNames, out rows))
             {
-                // We expect data for every field. If the count is different, the operation must have failed.
-                if (rows[0].Count == ColumnRecord.contact.Count)
+                if (rows.Count > 0)
                 {
-                    NewContact contact = new NewContact(id);
-                    contact.ditContact.Initialise(ColumnRecord.contact, "Contact");
-                    contact.Populate(rows[0]);
-                    contact.Show();
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.contact.Count)
+                    {
+                        NewContact contact = new NewContact(id);
+                        contact.Populate(rows[0]);
+                        contact.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Incorrect number of fields received.");
+                    }
                 }
                 else
-                {
-                    MessageBox.Show("Incorrect number of fields received.");
-                }
+                    MessageBox.Show("Could no longer retrieve record.");
             }
             return true;
         }
 
         public static void SessionInvalidated()
         {
-            sd = new SessionDetails();
+            sd = new SessionDetails(); // Tells the app that it's no longer logged in.
             MessageBox.Show("Session is no longer valid, please log back in.");
         }
 
@@ -436,29 +448,8 @@ namespace BridgeOpsClient
                     {
                         SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                         columnNames = result.columnNames;
-                        List<string?> columnTypes = result.columnTypes;
                         rows = result.rows;
-                        for (int n = 0; n < rows.Count; ++n)
-                        {
-#pragma warning disable CS8602
-                            for (int i = 0; i < columnTypes.Count; ++i)
-                            {
-                                // A JsonObject here will always be empty.
-                                if (rows[n][i].GetType() == typeof(JsonObject))
-                                    rows[n][i] = "";
-                                else if (columnTypes[i] == "String")
-                                {
-                                    rows[n][i] = rows[n][i].ToString();
-                                }
-                                else if (columnTypes[i] == "DateTime")
-                                {
-                                    DateTime dt;
-                                    DateTime.TryParse(rows[n][i].ToString(), out dt);
-                                    rows[n][i] = dt;
-                                }
-                            }
-#pragma warning restore CS8602
-                        }
+                        ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
                         return true;
                     }
                     else if (response == Glo.CLIENT_SESSION_INVALID)
@@ -529,29 +520,8 @@ namespace BridgeOpsClient
                     {
                         SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                         columnNames = result.columnNames;
-                        List<string?> columnTypes = result.columnTypes;
                         rows = result.rows;
-                        for (int n = 0; n < rows.Count; ++n)
-                        {
-#pragma warning disable CS8602
-                            for (int i = 0; i < columnTypes.Count; ++i)
-                            {
-                                // A JsonObject here will always be empty.
-                                if (rows[n][i].GetType() == typeof(JsonObject))
-                                    rows[n][i] = "";
-                                else if (columnTypes[i] == "String")
-                                {
-                                    rows[n][i] = rows[n][i].ToString();
-                                }
-                                else if (columnTypes[i] == "DateTime")
-                                {
-                                    DateTime dt;
-                                    DateTime.TryParse(rows[n][i].ToString(), out dt);
-                                    rows[n][i] = dt;
-                                }
-                            }
-#pragma warning restore CS8602
-                        }
+                        ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
                         return true;
                     }
                     else if (response == Glo.CLIENT_SESSION_INVALID)
@@ -570,6 +540,31 @@ namespace BridgeOpsClient
             finally
             {
                 if (stream != null) stream.Close();
+            }
+        }
+
+        static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes, List<List<object?>> rows)
+        {
+            for (int n = 0; n < rows.Count; ++n)
+            {
+#pragma warning disable CS8602
+                for (int i = 0; i < columnTypes.Count; ++i)
+                {
+                    // A JsonObject here will always be empty.
+                    if (rows[n][i].GetType() == typeof(JsonObject))
+                        rows[n][i] = "";
+                    else if (columnTypes[i] == "String")
+                    {
+                        rows[n][i] = rows[n][i].ToString();
+                    }
+                    else if (columnTypes[i] == "DateTime")
+                    {
+                        DateTime dt;
+                        DateTime.TryParse(rows[n][i].ToString(), out dt);
+                        rows[n][i] = dt;
+                    }
+                }
+#pragma warning restore CS8602
             }
         }
     }

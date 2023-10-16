@@ -25,22 +25,31 @@ namespace BridgeOpsClient
         public NewContact()
         {
             InitializeComponent();
-
-            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+            InitialiseFields();
         }
         public NewContact(string id)
         {
             this.id = id;
 
             InitializeComponent();
-
-            // Implement max length. Max lengths in the DataInputTable are set automatically.
-            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+            InitialiseFields();
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
+        }
+
+        private void InitialiseFields()
+        {
+            // Implement max length. Max lengths in the DataInputTable are set automatically.
+            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+
+            // Implemement friendly name.
+            if (ColumnRecord.contact["Notes"].friendlyName != "")
+                lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
+
+            ditContact.Initialise(ColumnRecord.contact, "Contact");
         }
 
 #pragma warning disable CS8602

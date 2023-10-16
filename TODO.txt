@@ -2,6 +2,4 @@
 Housekeeping
 ------------
 
-- Select and LinkedContactSelect share a lot of code, should be moved into another method.
-- Maximum lengths need moving from MainWindow and NewOrganisation into the actual new asset codebehind.
-- Trying to open a record from PageDatabaseView that no longer exists causes the program to crash.
+- Saving a record without making changes results in an error message due to there being no rows affected in the database.

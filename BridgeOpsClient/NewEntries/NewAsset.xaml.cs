@@ -26,19 +26,14 @@ namespace BridgeOpsClient
         public NewAsset()
         {
             InitializeComponent();
-
-            // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
-            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
-        }
+            InitialiseFields();
+        }   
         public NewAsset(string id)
         {
             this.id = id;
 
             InitializeComponent();
-
-            // Implement max length. Max lengths in the DataInputTable are set automatically.
-            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+            InitialiseFields();
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -47,6 +42,23 @@ namespace BridgeOpsClient
 
             txtAssetID.Text = id;
             txtAssetID.IsReadOnly = true;
+        }
+
+        private void InitialiseFields()
+        {
+            // Implement max lengths. Max lengths in the DataInputTable are set automatically.
+            txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
+            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+
+            // Implement friendly names.
+            if (ColumnRecord.asset["Asset_ID"].friendlyName != "")
+                lblAssetID.Content = ColumnRecord.asset["Asset_ID"].friendlyName;
+            if (ColumnRecord.asset["Organisation_ID"].friendlyName != "")
+                lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
+            if (ColumnRecord.asset["Notes"].friendlyName != "")
+                lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
+
+            ditAsset.Initialise(ColumnRecord.asset, "Asset");
         }
 
 #pragma warning disable CS8602

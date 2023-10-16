@@ -30,14 +30,15 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
-            // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtOrgID.MaxLength = ColumnRecord.organisation["Organisation_ID"].restriction;
-            txtDialNo.MaxLength = ColumnRecord.organisation["Dial_No"].restriction;
-            txtNotes.MaxLength = ColumnRecord.organisation["Notes"].restriction;
+            InitialiseFields();
+
+            tabAssetsContacts.IsEnabled = false;
         }
         public NewOrganisation(string id)
         {
             InitializeComponent();
+
+            InitialiseFields();
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -53,6 +54,27 @@ namespace BridgeOpsClient
             PopulateContacts();
             dtgAssets.MouseDoubleClick += dtgAssets_DoubleClick;
             dtgContacts.MouseDoubleClick += dtgContacts_DoubleClick;
+        }
+
+        private void InitialiseFields()
+        {
+
+            ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
+
+            // Implement max lengths. Max lengths in the DataInputTable are set automatically.
+            txtOrgID.MaxLength = ColumnRecord.organisation["Organisation_ID"].restriction;
+            txtDialNo.MaxLength = ColumnRecord.organisation["Dial_No"].restriction;
+            txtNotes.MaxLength = ColumnRecord.organisation["Notes"].restriction;
+
+            // Implement friendly names.
+            if (ColumnRecord.organisation["Organisation_ID"].friendlyName != "")
+                lblOrgID.Content = ColumnRecord.organisation["Organisation_ID"].friendlyName;
+            if (ColumnRecord.organisation["Parent_ID"].friendlyName != "")
+                lblOrgParentID.Content = ColumnRecord.organisation["Parent_ID"].friendlyName;
+            if (ColumnRecord.organisation["Dial_No"].friendlyName != "")
+                lblDialNo.Content = ColumnRecord.organisation["Dial_No"].friendlyName;
+            if (ColumnRecord.organisation["Notes"].friendlyName != "")
+                lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
         }
 
         public void PopulateAssets()
@@ -211,7 +233,6 @@ namespace BridgeOpsClient
         private void dtgAssets_DoubleClick(object sender, MouseButtonEventArgs e)
         {
             App.EditAsset(dtgAssets.GetCurrentlySelectedID());
-            PopulateAssets();
         }
 
         // Bring up selected contact on double-click.

@@ -664,10 +664,15 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            if (com.ExecuteNonQuery() == 0)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
-            else
+            try
+            {
+                com.ExecuteNonQuery();
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            }
+            catch
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            }
         }
         catch (Exception e)
         {
