@@ -25,9 +25,15 @@ namespace BridgeOpsClient
 {
     public partial class PageDatabaseView : Page
     {
-        public PageDatabaseView()
+        PageDatabase containingPage;
+        Frame containingFrame;
+
+        public PageDatabaseView(PageDatabase containingPage, Frame containingFrame)
         {
             InitializeComponent();
+
+            this.containingPage = containingPage;
+            this.containingFrame = containingFrame;
 
             // This will trigger cmbTableSelectionchanged(), which will PopulateColumnComboBox().
             cmbTable.SelectedIndex = 0;
@@ -89,7 +95,12 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.SelectAll(cmbTable.Text, out columnNames, out rows))
-                dtgResults.Update(tableColDefs, columnNames, rows);
+            {
+                if (cmbTable.Text == "Contact")
+                    dtgResults.Update(tableColDefs, columnNames, rows, Glo.Tab.CONTACT_ID);
+                else
+                    dtgResults.Update(tableColDefs, columnNames, rows);
+            }
         }
 
         private void btnSearch_Click(object sender, RoutedEventArgs e)
@@ -137,6 +148,16 @@ namespace BridgeOpsClient
                 App.EditAsset(dtgResults.GetCurrentlySelectedID());
             if (cmbTable.Text == "Contact")
                 App.EditContact(dtgResults.GetCurrentlySelectedID());
+        }
+
+        private void btnAddPane_Click(object sender, RoutedEventArgs e)
+        {
+            containingPage.AddPane(containingFrame);
+        }
+
+        private void btnRemovePane_Click(object sender, RoutedEventArgs e)
+        {
+            containingPage.RemovePan(containingFrame);
         }
     }
 }

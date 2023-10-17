@@ -36,7 +36,7 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             frameMain.Content = new PageConferenceView();
-            frameMain.Content = new PageDatabaseView();
+            frameMain.Content = new PageDatabase(this);
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)

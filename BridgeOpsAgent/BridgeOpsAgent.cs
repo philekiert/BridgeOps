@@ -190,6 +190,7 @@ internal class BridgeOpsAgent
         }
     }
 
+    static int tried = 0;
     private static void BridgeOpsClientRequests()
     {
         try
@@ -208,8 +209,6 @@ internal class BridgeOpsAgent
             // Do not accept any 
             autoResetEvent.WaitOne();
             autoResetEvent.Reset();
-
-            Thread.Sleep(10);
         }
     }
     private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
@@ -351,9 +350,16 @@ internal class BridgeOpsAgent
 
         try
         {
+            // No idea why this has to be here, but for some reason the client receives a string length of 0 after the
+            // agent WriteAndFlush()es. If there's a small sleep here or in the listener thread, the issue goes away.
+            // Only logins are affected, everything else works perfectly. I'm also hoping this only affects the client
+            // when running on the same machine as the agent, so this will need testing again when development shifts
+            // to using two machines.
+            Thread.Sleep(500);
+
             Task taskSqlConnect = sqlConnect.OpenAsync();
 
-            // Prepare variables if else block below.
+            // Prepare variables for if/else block below.
             string userAlreadyLoggedIn = "";
             string ipAlreadyConnected = "";
 

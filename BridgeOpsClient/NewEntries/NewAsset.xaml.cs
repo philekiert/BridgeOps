@@ -186,5 +186,10 @@ namespace BridgeOpsClient
             else
                 MessageBox.Show("Could not delete contact.");
         }
+
+        private void SqlDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

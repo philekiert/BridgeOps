@@ -41,8 +41,16 @@ namespace BridgeOpsClient.CustomControls
 
         List<Row> rowsBinder = new();
         public void Update(Dictionary<string, ColumnRecord.Column> tableColDefs,
-                           List<string?> columnNames, List<List<object?>> rows)
+                           List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
+            // Add any columns to omit to a dictionary for fast lookup.
+            Dictionary<string, bool> columnstoOmit = new();
+            if (omitColumns.Length > 0)
+            {
+                foreach (string s in omitColumns)
+                    columnstoOmit.Add(s, true);
+            }
+
             dtg.Columns.Clear();
             dtg.ItemsSource = null;
 
@@ -67,10 +75,12 @@ namespace BridgeOpsClient.CustomControls
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                 }
-                if (s != Glo.Tab.NOTES)
-                    dtg.Columns.Add(header);
-                else
+                if (s == Glo.Tab.NOTES) // We want notes at the end at the moment.
                     notes = header;
+                else if (s != null && columnstoOmit.ContainsKey(s))
+                    header.Visibility = Visibility.Hidden;
+                else
+                    dtg.Columns.Add(header);
                 ++count;
             }
 

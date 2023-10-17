@@ -82,16 +82,18 @@ namespace BridgeOpsClient
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
+
             if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_ID, id, out columnNames, out rows))
-                dtgAssets.Update(ColumnRecord.asset, columnNames, rows);
+                dtgAssets.Update(ColumnRecord.asset, columnNames, rows, Glo.Tab.ORGANISATION_ID);
         }
         public void PopulateContacts()
         {
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
+
             if (App.LinkedContactSelect(id, out columnNames, out rows))
-                dtgContacts.Update(ColumnRecord.contact, columnNames, rows);
+                dtgContacts.Update(ColumnRecord.contact, columnNames, rows, Glo.Tab.CONTACT_ID);
         }
 
         public void PopulateExistingData(List<object?> data)
@@ -244,15 +246,6 @@ namespace BridgeOpsClient
         private void btnAssetNew_Click(object sender, RoutedEventArgs e)
         {
             NewAsset newAsset = new();
-            newAsset.ditAsset.Initialise(ColumnRecord.asset, "Asset");
-
-            // Implement friendly names.
-            if (ColumnRecord.asset["Asset_ID"].friendlyName != "")
-                newAsset.lblAssetID.Content = ColumnRecord.asset["Asset_ID"].friendlyName;
-            if (ColumnRecord.asset["Organisation_ID"].friendlyName != "")
-                newAsset.lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
-            if (ColumnRecord.asset["Notes"].friendlyName != "")
-                newAsset.lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
 
             // Set cmbOrgID to editable but disabled in order to hold the ID without fetching the list from the agent.
             newAsset.cmbOrgID.IsEditable = true;
@@ -305,12 +298,7 @@ namespace BridgeOpsClient
         private void btnContactsNew_Click(object sender, RoutedEventArgs e)
         {
             NewContact newContact = new();
-            newContact.ditContact.Initialise(ColumnRecord.contact, "Contact");
             newContact.requireIdBack = true;
-
-            // Implement friendly names.
-            if (ColumnRecord.contact[Glo.Tab.NOTES].friendlyName != "")
-                newContact.lblNotes.Content = ColumnRecord.contact[Glo.Tab.NOTES].friendlyName;
 
             bool? completed = newContact.ShowDialog();
 

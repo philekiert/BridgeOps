@@ -5,8 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:BridgeOpsClient"
       xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
-      mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="800"
+      mc:Ignorable="d" d:DesignWidth="800"
       Title="PageDatabaseView"
       >
 
@@ -16,9 +15,10 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid>
-
             <!-- Search bar -->
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -37,6 +37,10 @@
             <TextBox x:Name="txtSearch" Grid.Row="0" Grid.Column="3" Margin="10 10 10 10" Width="200"/>
             <Button x:Name="btnSearch" Grid.Row="0" Grid.Column="4" Margin="10 10 10 10" Width="50"
                     Content="Search" Click="btnSearch_Click"/>
+            <Button x:Name="btnRemovePane" Grid.Row="0" Grid.Column="5" Margin="10 10 10 10" Width="24"
+                    Content="-" Click="btnRemovePane_Click"/>
+            <Button x:Name="btnAddPane" Grid.Row="0" Grid.Column="6" Margin="0 10 10 10" Width="24"
+                    Content="+" Click="btnAddPane_Click"/>
         </Grid>
 
         <!-- Results -->

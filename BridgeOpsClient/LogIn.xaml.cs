@@ -38,7 +38,7 @@ namespace BridgeOpsClient
             {
                 if (App.PullColumnRecord())
                     Close();
-                else 
+                else
                 {
                     MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +
                                     "contact the software adminitrator.");
