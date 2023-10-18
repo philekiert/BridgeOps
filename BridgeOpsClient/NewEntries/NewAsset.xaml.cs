@@ -181,10 +181,10 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id, false))
+            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id, true))
                 Close();
             else
-                MessageBox.Show("Could not delete contact.");
+                MessageBox.Show("Could not delete asset.");
         }
 
         private void SqlDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)

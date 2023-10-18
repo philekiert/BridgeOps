@@ -224,12 +224,14 @@ namespace SendReceiveClasses
         public string? parentOrgID;
         public string? dialNo;
         public string? notes;
-        public bool parentOrgIdChanged;
-        public bool dialNoChanged;
-        public bool notesChanged;
+        public bool parentOrgIdChanged = false;
+        public bool dialNoChanged = false;
+        public bool notesChanged = false;
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
+        public bool changeTracked = false;
+        public string changeReason = "";
 
         public Organisation(string sessionID, string organisationID, string? parentOrgID,
                             string? dialNo, string? notes, List<string> additionalCols,
@@ -244,11 +246,7 @@ namespace SendReceiveClasses
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
             this.additionalNeedsQuotes = additionalNeedsQuotes;
-            parentOrgIdChanged = false;
-            dialNoChanged = false;
-            notesChanged = false;
         }
-
         private void Prepare()
         {
             // Make sure the columns and values are safe, then add quotes where needed.
@@ -294,6 +292,76 @@ namespace SendReceiveClasses
                 setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
             return SqlAssist.Update("Organisation", string.Join(", ", setters),
                                     Glo.Tab.ORGANISATION_ID, organisationID);
+        }
+    }
+
+    struct Asset
+    {
+        public string sessionID;
+        public string assetID;
+        public string? organisationID;
+        public string? notes;
+        public bool organisationIdChanged = false;
+        public bool notesChanged = false;
+        public List<string> additionalCols;
+        public List<string?> additionalVals;
+        public List<bool> additionalNeedsQuotes;
+        public bool changeTracked = false;
+        public string changeReason = "";
+
+        public Asset(string sessionID, string assetID, string? organisationID, string? notes,
+                     List<string> additionalCols,
+                     List<string?> additionalVals,
+                     List<bool> additionalNeedsQuotes)
+        {
+            this.sessionID = sessionID;
+            this.assetID = assetID;
+            this.organisationID = organisationID;
+            this.notes = notes;
+            this.additionalCols = additionalCols;
+            this.additionalVals = additionalVals;
+            this.additionalNeedsQuotes = additionalNeedsQuotes;
+        }
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            assetID = SqlAssist.AddQuotes(SqlAssist.SecureValue(assetID));
+            if (organisationID != null)
+                organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+
+            return SqlAssist.InsertInto("Asset",
+                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_ID,
+                                                                            Glo.Tab.ORGANISATION_ID,
+                                                                            Glo.Tab.NOTES),
+                                        SqlAssist.ValConcat(additionalVals, assetID,
+                                                                            organisationID,
+                                                                            notes));
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new();
+            if (organisationIdChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_ID, organisationID));
+            if (notesChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
+            return SqlAssist.Update("Asset", string.Join(", ", setters),
+                                    Glo.Tab.ASSET_ID, assetID);
         }
     }
 
@@ -358,75 +426,6 @@ namespace SendReceiveClasses
         }
     }
 
-    struct Asset
-    {
-        public string sessionID;
-        public string assetID;
-        public string? organisationID;
-        public string? notes;
-        public bool organisationIdChanged;
-        public bool notesChanged;
-        public List<string> additionalCols;
-        public List<string?> additionalVals;
-        public List<bool> additionalNeedsQuotes;
-
-        public Asset(string sessionID, string assetID, string? organisationID, string? notes,
-                     List<string> additionalCols,
-                     List<string?> additionalVals,
-                     List<bool> additionalNeedsQuotes)
-        {
-            this.sessionID = sessionID;
-            this.assetID = assetID;
-            this.organisationID = organisationID;
-            this.notes = notes;
-            this.additionalCols = additionalCols;
-            this.additionalVals = additionalVals;
-            this.additionalNeedsQuotes = additionalNeedsQuotes;
-            organisationIdChanged = false;
-            notesChanged = false;
-        }
-
-        private void Prepare()
-        {
-            // Make sure the columns and values are safe, then add quotes where needed.
-            assetID = SqlAssist.AddQuotes(SqlAssist.SecureValue(assetID));
-            if (organisationID != null)
-                organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
-            if (notes != null)
-                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
-            SqlAssist.SecureColumn(additionalCols);
-            SqlAssist.SecureValue(additionalVals);
-            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
-        }
-
-        public string SqlInsert()
-        {
-            Prepare();
-
-            return SqlAssist.InsertInto("Asset",
-                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_ID,
-                                                                            Glo.Tab.ORGANISATION_ID,
-                                                                            Glo.Tab.NOTES),
-                                        SqlAssist.ValConcat(additionalVals, assetID,
-                                                                            organisationID,
-                                                                            notes));
-        }
-
-        public string SqlUpdate()
-        {
-            Prepare();
-
-            List<string> setters = new();
-            if (organisationIdChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_ID, organisationID));
-            if (notesChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
-            for (int i = 0; i < additionalCols.Count; ++i)
-                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
-            return SqlAssist.Update("Asset", string.Join(", ", setters),
-                                    Glo.Tab.ASSET_ID, assetID);
-        }
-    }
 
     struct ConferenceType
     {
@@ -655,7 +654,7 @@ namespace SendReceiveClasses
         public string table;
         public string column;
         public string id;
-        public bool isString;
+        public bool needsQuotes;
 
         public DeleteRequest(string sessionID, string table, string column, string id, bool isString)
         {
@@ -663,13 +662,14 @@ namespace SendReceiveClasses
             this.table = table;
             this.column = column;
             this.id = id;
-            this.isString = isString;
+            this.needsQuotes = isString;
         }
 
         public string SqlDelete()
         {
             return "DELETE FROM " + table +
-                   " WHERE " + SqlAssist.SecureColumn(column) + " = " + SqlAssist.SecureValue(id, isString) + ';';
+                   " WHERE " + SqlAssist.SecureColumn(column) + " = " +
+                               SqlAssist.AddQuotes(SqlAssist.SecureValue(id), needsQuotes) + ';';
         }
     }
 
@@ -770,13 +770,6 @@ namespace SendReceiveClasses
                 if (s != null)
                     val[i] = SecureValue(s);
             }
-        }
-        public static string SecureValue(string val, bool needsQuotes)
-        {
-            if (needsQuotes)
-                return '\'' + val.Replace("'", "''") + '\'';
-            else
-                return val.Replace("'", "''");
         }
 
         public static void LevelAdditionals(ref List<string> columns, ref List<string?> values)

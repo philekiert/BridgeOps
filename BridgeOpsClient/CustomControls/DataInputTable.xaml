@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
+             xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" 
              d:DesignHeight="400" d:DesignWidth="400">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
@@ -28,6 +28,9 @@
                 </Style>
                 <Style TargetType="RowDefinition">
                     <Setter Property="Height" Value="Auto" />
+                </Style>
+                <Style TargetType="DatePicker">
+                    <Setter Property="Margin" Value="0 0 10 0"/>
                 </Style>
             </Grid.Resources>
             <Grid.ColumnDefinitions>

@@ -148,10 +148,11 @@ public class FieldDefs
         defs.Add("Conferences by Day Conference ID", new Definition(18, "Conference_ID", typeConfID, false, true, false));
 
         // Organisation Change Snapshot
-        defs.Add("Organisation Change Organisation ID", new Definition(19, "Organisation_ID", typeOrgID, false, true, false));
-        defs.Add("Organisation Change ID", new Definition(19, "Change_ID", typeOrgChangeID, false, true, false));
-        defs.Add("Organisation Change Time", new Definition(19, "Time", "DATETIME", false, false, false));
-        defs.Add("Organisation Change Reason", new Definition(19, "Reason", "VARCHAR(100)", true, false, false));
+        defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
+        defs.Add("Organisation Change ID", new Definition(19, Glo.Tab.CHANGE_ID, typeOrgChangeID, false, true, false));
+        defs.Add("Organisation Change Time", new Definition(19, Glo.Tab.CHANGE_TIME, "DATETIME", false, false, false));
+        defs.Add("Organisation Change Reason", new Definition(19, Glo.Tab.CHANGE_REASON, "VARCHAR(100)", true, false, false));
+        defs.Add("Organisation Change Login_ID", new Definition(19, Glo.Tab.LOGIN_ID, typeUsername, false, false, false));
         List<string> additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         List<Definition> additionsValues = new List<Definition>();
         foreach (var d in defs)
@@ -159,9 +160,11 @@ public class FieldDefs
             {
                 if (d.Value.columnName != "Organisation_ID") // Already stated above, makes up part of the composite key.
                 {
-                    additionsKeys.Add(d.Key);
                     // All of these should have canOverride set to false.
-                    additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.type, false, d.Value.primaryKey, false));
+                    additionsKeys.Add(d.Key);
+                    additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.type, false, false, false));
+                    additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, d.Value.type, false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
@@ -179,8 +182,11 @@ public class FieldDefs
             {
                 if (d.Value.columnName != "Asset_ID") // Already stated above, makes up part of the composite key.
                 {
+                    // All of these should have canOverride set to false.
                     additionsKeys.Add(d.Key);
-                    additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.type, false, d.Value.primaryKey, false));
+                    additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.type, false, false, false));
+                    additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, d.Value.type, false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
@@ -198,9 +204,9 @@ public class FieldDefs
         //defs.Add("Organisation Engineers Contact ID", new Definition(22, "Contact_ID", typeContactID, false, true, false));
 
         // Organisation Contacts
-        defs.Add("Organisation Change Contacts Organisation ID", new Definition(28, "Organisation_ID", typeOrgID, false, true, false));
-        defs.Add("Organisation Change Contacts Change ID", new Definition(28, "Change_ID", typeOrgChangeID, false, true, false));
-        defs.Add("Organisation Change Contacts Contact ID", new Definition(28, "Contact_ID", typeContactID, false, true, false));
+        //defs.Add("Organisation Change Contacts Organisation ID", new Definition(28, "Organisation_ID", typeOrgID, false, true, false));
+        //defs.Add("Organisation Change Contacts Change ID", new Definition(28, "Change_ID", typeOrgChangeID, false, true, false));
+        //defs.Add("Organisation Change Contacts Contact ID", new Definition(28, "Contact_ID", typeContactID, false, true, false));
 
         // Organisation Engineers
         //defs.Add("Organisation Change Engineers Organisation ID", new Definition(29, "Organisation_ID", typeOrgID, false, true, false));

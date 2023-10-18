@@ -204,6 +204,13 @@ internal class BridgeOpsAgent
 
         while (true)
         {
+            // No idea why this has to be here, but for some reason the client receives a string length of 0 after the
+            // agent WriteAndFlush()es when logging in. If there's a small sleep here or in the listener thread, the
+            // issue goes away. Only logins are affected, everything else works perfectly. I'm also hoping this only
+            // affects the client when running on the same machine as the agent, so this will need testing again when
+            // development shifts to using two machines.
+            Thread.Sleep(50);
+
             // Start an ASync Accept.
             IAsyncResult result = listener.BeginAcceptTcpClient(HandleClientListenAccept, listener);
             // Do not accept any 
@@ -336,7 +343,6 @@ internal class BridgeOpsAgent
 
     private static async void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
     {
-
         string credentials = sr.ReadString(stream);
         LoginRequest loginReq = sr.Deserialise<LoginRequest>(credentials);
         Random rnd = new Random();
@@ -350,13 +356,6 @@ internal class BridgeOpsAgent
 
         try
         {
-            // No idea why this has to be here, but for some reason the client receives a string length of 0 after the
-            // agent WriteAndFlush()es. If there's a small sleep here or in the listener thread, the issue goes away.
-            // Only logins are affected, everything else works perfectly. I'm also hoping this only affects the client
-            // when running on the same machine as the agent, so this will need testing again when development shifts
-            // to using two machines.
-            Thread.Sleep(500);
-
             Task taskSqlConnect = sqlConnect.OpenAsync();
 
             // Prepare variables for if/else block below.

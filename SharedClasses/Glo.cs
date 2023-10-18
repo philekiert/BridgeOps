@@ -82,6 +82,11 @@ public static class Glo
         public const string PARENT_ID = "Parent_ID";
         public const string DIAL_NO = "Dial_No";
 
+        public const string CHANGE_ID = "Change_ID";
+        public const string CHANGE_TIME = "Time";
+        public const string CHANGE_REASON = "Reason";
+        public const string CHANGE_REGISTER_SUFFIX = "_Register";
+
         public const string CONTACT_ID = "Contact_ID";
 
         public const string ASSET_ID = "Asset_ID";

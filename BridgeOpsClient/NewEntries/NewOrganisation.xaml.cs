@@ -130,23 +130,23 @@ namespace BridgeOpsClient
                     return;
                 }
 
-                Organisation no = new Organisation();
+                Organisation newOrg = new Organisation();
 
-                no.sessionID = App.sd.sessionID;
+                newOrg.sessionID = App.sd.sessionID;
 
-                no.organisationID = txtOrgID.Text;
-                no.parentOrgID = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
-                no.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
-                no.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
+                newOrg.organisationID = txtOrgID.Text;
+                newOrg.parentOrgID = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
+                newOrg.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
+                newOrg.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
-                ditOrganisation.ExtractValues(out no.additionalCols, out no.additionalVals);
+                ditOrganisation.ExtractValues(out newOrg.additionalCols, out newOrg.additionalVals);
 
                 // Obtain types and determine whether or not quotes will be needed.
-                no.additionalNeedsQuotes = new();
-                foreach (string c in no.additionalCols)
-                    no.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
+                newOrg.additionalNeedsQuotes = new();
+                foreach (string c in newOrg.additionalCols)
+                    newOrg.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
 
-                if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, no))
+                if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, newOrg))
                     Close();
                 else
                     MessageBox.Show("Could not create organisation.");

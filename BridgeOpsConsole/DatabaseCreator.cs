@@ -332,9 +332,9 @@ public class DatabaseCreator
             string organisationChange = "";
             string assetChange = "";
             string junctionOrgContacts = "";
-            string junctionOrgEngineers = "";
-            string junctionOrgChangeContacts = "";
-            string junctionOrgChangeEngineers = "";
+            //string junctionOrgEngineers = "";
+            //string junctionOrgChangeContacts = "";
+            //string junctionOrgChangeEngineers = "";
             string junctionConfResource = "";
 
             foreach (var def in fieldDefs.defs)
@@ -370,8 +370,8 @@ public class DatabaseCreator
                     AddColumn(ref junctionOrgContacts, def);
                 //if (fieldDefs.Category(def) == "Organisation Engineers")
                 //    AddColumn(ref junctionOrgEngineers, def);
-                if (fieldDefs.Category(def) == "Organisation Change Contacts")
-                    AddColumn(ref junctionOrgChangeContacts, def);
+                //if (fieldDefs.Category(def) == "Organisation Change Contacts")
+                //    AddColumn(ref junctionOrgChangeContacts, def);
                 //if (fieldDefs.Category(def) == "Organisation Change Engineers")
                 //    AddColumn(ref junctionOrgChangeEngineers, def);
                 if (fieldDefs.Category(def) == "Conference Resource")
@@ -385,7 +385,8 @@ public class DatabaseCreator
                 else
                     column += "CREATE TABLE " + fieldDefs.TableName(def.Key) + " (";
                 // UNSIGNED is not supported in SQL Server.
-                column += def.Value.columnName + " " + def.Value.type.Replace(" UNSIGNED", "");
+                column += def.Value.columnName + " " +
+                          (def.Value.type == "BOOLEAN" ? "BIT" : def.Value.type).Replace(" UNSIGNED", "");
                 if (def.Value.autoIncrement)
                     column += " IDENTITY";
 
@@ -410,7 +411,7 @@ public class DatabaseCreator
 
             // Supplemental Tables Strings
             dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
-                         ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
+                      ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
             connections += ", CONSTRAINT pk_ConfID_DialNo PRIMARY KEY (Conference_ID, Dial_No)" +
                            ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
                            ", CONSTRAINT fk_ConnectionDialNo FOREIGN KEY (Dial_No) REFERENCES DialNo (Dial_No) );";
@@ -418,6 +419,7 @@ public class DatabaseCreator
                                 ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
                                   ", CONSTRAINT fk_OrgChange_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
+            //                    No real point making a foreign key for Login_ID - we don't want to cascade delete or set to null if the login is deleted.
             assetChange += ", CONSTRAINT pk_AssetID_Change_ID PRIMARY KEY (Asset_ID, Change_ID)" +
                            ", CONSTRAINT fk_AssetChange_AssetID FOREIGN KEY (Asset_ID) REFERENCES Asset (Asset_ID) ON DELETE CASCADE );";
 
@@ -428,9 +430,9 @@ public class DatabaseCreator
             //junctionOrgEngineers += ", CONSTRAINT pk_jncEngs_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
             //                        ", CONSTRAINT fk_jncEngs_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
             //                        ", CONSTRAINT fk_jncEngs_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
-            junctionOrgChangeContacts += ", CONSTRAINT pk_jncChangeContacts_OrgID_ChangeID_ContactID PRIMARY KEY (Organisation_ID, Change_ID, Contact_ID)" +
-                                         ", CONSTRAINT fk_jncChangeContacts_OrgID FOREIGN KEY (Organisation_ID, Change_ID) REFERENCES OrganisationChange (Organisation_ID, Change_ID) ON DELETE CASCADE" +
-                                         ", CONSTRAINT fk_jncChangeContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
+            //junctionOrgChangeContacts += ", CONSTRAINT pk_jncChangeContacts_OrgID_ChangeID_ContactID PRIMARY KEY (Organisation_ID, Change_ID, Contact_ID)" +
+            //                             ", CONSTRAINT fk_jncChangeContacts_OrgID FOREIGN KEY (Organisation_ID, Change_ID) REFERENCES OrganisationChange (Organisation_ID, Change_ID) ON DELETE CASCADE" +
+            //                             ", CONSTRAINT fk_jncChangeContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
             //junctionOrgChangeEngineers += ", CONSTRAINT pk_jncChangeEngs_OrgID_ChangeID_ContactID PRIMARY KEY (Organisation_ID, Change_ID, Contact_ID)" +
             //                              ", CONSTRAINT fk_jncChangeEngs_OrgID FOREIGN KEY (Organisation_ID, Change_ID) REFERENCES OrganisationChange (Organisation_ID, Change_ID) ON DELETE CASCADE" +
             //                              ", CONSTRAINT fk_jncChangeEngs_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
@@ -470,8 +472,8 @@ public class DatabaseCreator
             SendCommandSQL(junctionOrgContacts);
             //Writer.Message("Creating Organisation Engineers junction table...");
             //SendCommandSQL(junctionOrgEngineers);
-            Writer.Message("Creating Organisation Change Contacts junction table...");
-            SendCommandSQL(junctionOrgChangeContacts);
+            //Writer.Message("Creating Organisation Change Contacts junction table...");
+            //SendCommandSQL(junctionOrgChangeContacts);
             //Writer.Message("Creating Organisation Change Engineers junction table...");
             //SendCommandSQL(junctionOrgChangeEngineers);
             Writer.Message("Creating Conference Resource junction table...");
@@ -495,6 +497,22 @@ public class DatabaseCreator
                     Writer.Affirmative("Adding " + addition.column + " to " + addition.table);
             }
 
+            Writer.Message("\nReplicating column additions for change tables...");
+            foreach (ColumnAddition addition in columnAdditions)
+            {
+                if (addition.table == "Organisation" || addition.table == "Asset")
+                {
+                    string table = addition.table + "Change";
+
+                    string command = "ALTER TABLE " + table + " ADD ";
+                    command += addition.column + " " + (addition.type == "BOOLEAN" ? "BIT" : addition.type) + ",";
+                    command += addition.column + Glo.Tab.CHANGE_REGISTER_SUFFIX + " BIT;";
+
+                    if (SendCommandSQL(command))
+                        Writer.Affirmative("Adding " + addition.column + " to " + table);
+                }
+            }
+
             Writer.Message("\nCreating admin login...");
             SendCommandSQL("INSERT INTO Login (Username, Password, Type) " +
                            "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 0);");
@@ -510,7 +528,7 @@ public class DatabaseCreator
         {
             Writer.Message("\nGathering data from database for column records file...");
             sqlConnect.Open();
-            
+
             // Get a list of columns and their allowed values.
             sqlCommand = new SqlCommand("SELECT t.[name], con.[definition] " +
                                         "FROM sys.check_constraints con " +
