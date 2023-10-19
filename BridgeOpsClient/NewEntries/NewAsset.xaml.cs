@@ -27,6 +27,8 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
             InitialiseFields();
+
+            tabHistory.IsEnabled = false;
         }   
         public NewAsset(string id)
         {
@@ -92,22 +94,22 @@ namespace BridgeOpsClient
                     return;
                 }
 
-                Asset ao = new();
+                Asset newAsset = new();
 
-                ao.sessionID = App.sd.sessionID;
+                newAsset.sessionID = App.sd.sessionID;
 
-                ao.assetID = txtAssetID.Text;
-                ao.organisationID = cmbOrgID.Text.Length == 0 ? null : cmbOrgID.Text;
-                ao.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
+                newAsset.assetID = txtAssetID.Text;
+                newAsset.organisationID = cmbOrgID.Text.Length == 0 ? null : cmbOrgID.Text;
+                newAsset.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
-                ditAsset.ExtractValues(out ao.additionalCols, out ao.additionalVals);
+                ditAsset.ExtractValues(out newAsset.additionalCols, out newAsset.additionalVals);
 
                 // Obtain types and determine whether or not quotes will be needed.
-                ao.additionalNeedsQuotes = new();
-                foreach (string c in ao.additionalCols)
-                    ao.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
+                newAsset.additionalNeedsQuotes = new();
+                foreach (string c in newAsset.additionalCols)
+                    newAsset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
 
-                if (App.SendInsert(Glo.CLIENT_NEW_ASSET, ao))
+                if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset))
                     Close();
                 else
                     MessageBox.Show("Could not create asset.");
@@ -128,6 +130,7 @@ namespace BridgeOpsClient
                 Asset asset = new Asset();
                 asset.sessionID = App.sd.sessionID;
                 asset.assetID = id;
+                asset.changeTracked = true;
                 List<string> cols;
                 List<string?> vals;
                 ditAsset.ExtractValues(out cols, out vals);
@@ -190,6 +193,17 @@ namespace BridgeOpsClient
         private void SqlDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
 
+        }
+
+        private void tabHistory_GotFocus(object sender, RoutedEventArgs e)
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+
+            if (App.SelectHistory("AssetChange", id, out columnNames, out rows))
+                dtgHistory.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                                 { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows);
         }
     }
 }

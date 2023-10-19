@@ -29,10 +29,10 @@ namespace BridgeOpsClient
         public NewOrganisation()
         {
             InitializeComponent();
-
             InitialiseFields();
 
             tabAssetsContacts.IsEnabled = false;
+            tabHistory.IsEnabled = false;
         }
         public NewOrganisation(string id)
         {
@@ -167,6 +167,7 @@ namespace BridgeOpsClient
                 Organisation org = new Organisation();
                 org.sessionID = App.sd.sessionID;
                 org.organisationID = id;
+                org.changeTracked = true;
                 List<string> cols;
                 List<string?> vals;
                 ditOrganisation.ExtractValues(out cols, out vals);
@@ -353,6 +354,17 @@ namespace BridgeOpsClient
         private void btnContactsRefresh_Click(object sender, RoutedEventArgs e)
         {
             PopulateContacts();
+        }
+
+        private void tabHistory_GotFocus(object sender, RoutedEventArgs e)
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+
+            if (App.SelectHistory("OrganisationChange", id, out columnNames, out rows))
+                dtgHistory.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                                 { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows);
         }
     }
 }

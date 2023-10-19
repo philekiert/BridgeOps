@@ -8,6 +8,7 @@ using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.Xml;
 using System.Security.Policy;
 using System.Security.Principal;
@@ -224,13 +225,13 @@ namespace SendReceiveClasses
         public string? parentOrgID;
         public string? dialNo;
         public string? notes;
-        public bool parentOrgIdChanged = false;
-        public bool dialNoChanged = false;
-        public bool notesChanged = false;
+        public bool parentOrgIdChanged;
+        public bool dialNoChanged;
+        public bool notesChanged;
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
-        public bool changeTracked = false;
+        public bool changeTracked;
         public string changeReason = "";
 
         public Organisation(string sessionID, string organisationID, string? parentOrgID,
@@ -246,6 +247,11 @@ namespace SendReceiveClasses
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
             this.additionalNeedsQuotes = additionalNeedsQuotes;
+            parentOrgIdChanged = false;
+            dialNoChanged = false;
+            notesChanged = false;
+            changeTracked = false;
+            changeReason = "";
         }
         private void Prepare()
         {
@@ -260,24 +266,56 @@ namespace SendReceiveClasses
             SqlAssist.SecureColumn(additionalCols);
             SqlAssist.SecureValue(additionalVals);
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+            if (changeTracked && changeReason != null)
+                changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
         }
 
-        public string SqlInsert()
+        public string SqlInsert(int loginID)
         {
             Prepare();
 
-            return SqlAssist.InsertInto("Organisation",
-                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_ID,
-                                                                            Glo.Tab.PARENT_ID,
-                                                                            Glo.Tab.DIAL_NO,
-                                                                            Glo.Tab.NOTES),
-                                        SqlAssist.ValConcat(additionalVals, organisationID,
-                                                                            parentOrgID,
-                                                                            dialNo,
-                                                                            notes));
+            string com = SqlAssist.InsertInto("Organisation",
+                                              SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_ID,
+                                                                                  Glo.Tab.PARENT_ID,
+                                                                                  Glo.Tab.DIAL_NO,
+                                                                                  Glo.Tab.NOTES),
+                                              SqlAssist.ValConcat(additionalVals, organisationID,
+                                                                                  parentOrgID,
+                                                                                  dialNo,
+                                                                                  notes));
+            // Create a first change instance.
+            additionalCols.RemoveRange(additionalCols.Count - 4, 4); // ColConcat and ValConcat added the main fields
+            additionalVals.RemoveRange(additionalVals.Count - 4, 4); // to the Lists, so walk that back here.
+            int initialCount = additionalCols.Count;
+            for (int i = 0; i < initialCount; ++i)
+            {
+                additionalCols.Add(additionalCols[i] + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add("1");
+            }
+            com += SqlAssist.InsertInto("OrganisationChange",
+                                        SqlAssist.ColConcat(additionalCols,
+                                                            Glo.Tab.ORGANISATION_ID,
+                                                            Glo.Tab.CHANGE_TIME,
+                                                            Glo.Tab.LOGIN_ID,
+                                                            Glo.Tab.CHANGE_REASON,
+                                                            Glo.Tab.PARENT_ID,
+                                                            Glo.Tab.PARENT_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX,
+                                                            Glo.Tab.DIAL_NO,
+                                                            Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_REGISTER_SUFFIX,
+                                                            Glo.Tab.NOTES,
+                                                            Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX),
+                                        SqlAssist.ValConcat(additionalVals,
+                                                            organisationID,
+                                                            '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                            loginID.ToString(),
+                                                            "'Created new organisation.'",
+                                                            parentOrgID, "1",
+                                                            dialNo, "1",
+                                                            notes, "1")); ;
+            return com;
         }
 
-        public string SqlUpdate()
+        public string SqlUpdate(int loginID)
         {
             Prepare();
 
@@ -290,8 +328,55 @@ namespace SendReceiveClasses
                 setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
                 setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
-            return SqlAssist.Update("Organisation", string.Join(", ", setters),
-                                    Glo.Tab.ORGANISATION_ID, organisationID);
+            string command = SqlAssist.Update("Organisation", string.Join(", ", setters),
+                                              Glo.Tab.ORGANISATION_ID, organisationID);
+
+            if (changeTracked)
+            {
+                // Add _Register bools for each column affected.
+                int initialCount = additionalCols.Count;
+                for (int i = 0; i < initialCount; ++i)
+                {
+                    additionalCols.Add(additionalCols[i] + "_Register");
+                    additionalVals.Add("1");
+                }
+                // Put the other values into additionals for the sake of simplicity this time around.
+                if (parentOrgIdChanged)
+                {
+                    additionalCols.Add(Glo.Tab.PARENT_ID);
+                    additionalCols.Add(Glo.Tab.PARENT_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionalVals.Add(parentOrgID);
+                    additionalVals.Add("1");
+                }
+                if (dialNoChanged)
+                {
+                    additionalCols.Add(Glo.Tab.DIAL_NO);
+                    additionalCols.Add(Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionalVals.Add(dialNo);
+                    additionalVals.Add("1");
+                }
+                if (notesChanged)
+                {
+                    additionalCols.Add(Glo.Tab.NOTES);
+                    additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionalVals.Add(notes);
+                    additionalVals.Add("1");
+                }
+
+                command += SqlAssist.InsertInto("OrganisationChange",
+                                           SqlAssist.ColConcat(additionalCols,
+                                                               Glo.Tab.ORGANISATION_ID,
+                                                               Glo.Tab.CHANGE_TIME,
+                                                               Glo.Tab.LOGIN_ID,
+                                                               Glo.Tab.CHANGE_REASON),
+                                           SqlAssist.ValConcat(additionalVals,
+                                                               organisationID,
+                                                               '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                               loginID.ToString(),
+                                                               changeReason == null ? "''" : changeReason));
+            }
+
+            return command;
         }
     }
 
@@ -334,22 +419,51 @@ namespace SendReceiveClasses
             SqlAssist.SecureColumn(additionalCols);
             SqlAssist.SecureValue(additionalVals);
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+            if (changeTracked && changeReason != null)
+                changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
         }
 
-        public string SqlInsert()
+        public string SqlInsert(int loginID)
         {
             Prepare();
 
-            return SqlAssist.InsertInto("Asset",
-                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_ID,
-                                                                            Glo.Tab.ORGANISATION_ID,
-                                                                            Glo.Tab.NOTES),
-                                        SqlAssist.ValConcat(additionalVals, assetID,
-                                                                            organisationID,
-                                                                            notes));
+            string com = SqlAssist.InsertInto("Asset",
+                                              SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_ID,
+                                                                                  Glo.Tab.ORGANISATION_ID,
+                                                                                  Glo.Tab.NOTES),
+                                              SqlAssist.ValConcat(additionalVals, assetID,
+                                                                                  organisationID,
+                                                                                  notes));
+            // Create a first change instance.
+            additionalCols.RemoveRange(additionalCols.Count - 3, 3); // ColConcat and ValConcat added the main fields
+            additionalVals.RemoveRange(additionalVals.Count - 3, 3); // to the Lists, so walk that back here.
+            int initialCount = additionalCols.Count;
+            for (int i = 0; i < initialCount; ++i)
+            {
+                additionalCols.Add(additionalCols[i] + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add("1");
+            }
+            com += SqlAssist.InsertInto("AssetChange",
+                                        SqlAssist.ColConcat(additionalCols,
+                                                            Glo.Tab.ASSET_ID,
+                                                            Glo.Tab.CHANGE_TIME,
+                                                            Glo.Tab.LOGIN_ID,
+                                                            Glo.Tab.CHANGE_REASON,
+                                                            Glo.Tab.ORGANISATION_ID,
+                                                            Glo.Tab.ORGANISATION_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX,
+                                                            Glo.Tab.NOTES,
+                                                            Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX),
+                                        SqlAssist.ValConcat(additionalVals,
+                                                            assetID,
+                                                            '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                            loginID.ToString(),
+                                                            "'Created new asset.'",
+                                                            organisationID, "1",
+                                                            notes, "1"));
+            return com;
         }
 
-        public string SqlUpdate()
+        public string SqlUpdate(int loginID)
         {
             Prepare();
 
@@ -360,8 +474,48 @@ namespace SendReceiveClasses
                 setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
                 setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
-            return SqlAssist.Update("Asset", string.Join(", ", setters),
-                                    Glo.Tab.ASSET_ID, assetID);
+            string com = SqlAssist.Update("Asset", string.Join(", ", setters),
+                                          Glo.Tab.ASSET_ID, assetID);
+
+            if (changeTracked)
+            {
+                // Add _Register bools for each column affected.
+                int initialCount = additionalCols.Count;
+                for (int i = 0; i < initialCount; ++i)
+                {
+                    additionalCols.Add(additionalCols[i] + "_Register");
+                    additionalVals.Add("1");
+                }
+                // Put the other values into additionals for the sake of simplicity this time around.
+                if (organisationIdChanged)
+                {
+                    additionalCols.Add(Glo.Tab.ORGANISATION_ID);
+                    additionalCols.Add(Glo.Tab.ORGANISATION_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionalVals.Add(organisationID);
+                    additionalVals.Add("1");
+                }
+                if (notesChanged)
+                {
+                    additionalCols.Add(Glo.Tab.NOTES);
+                    additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                    additionalVals.Add(notes);
+                    additionalVals.Add("1");
+                }
+
+                com += SqlAssist.InsertInto("AssetChange",
+                                            SqlAssist.ColConcat(additionalCols,
+                                                                Glo.Tab.ORGANISATION_ID,
+                                                                Glo.Tab.CHANGE_TIME,
+                                                                Glo.Tab.LOGIN_ID,
+                                                                Glo.Tab.CHANGE_REASON),
+                                            SqlAssist.ValConcat(additionalVals,
+                                                                organisationID,
+                                                                '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                                loginID.ToString(),
+                                                                changeReason == null ? "" : changeReason));
+            }
+
+            return com;
         }
     }
 
@@ -374,7 +528,7 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
-        public bool requireIdBack = false;
+        public bool requireIdBack;
 
         public Contact(string sessionID, int contactID, string? notes, List<string> additionalCols,
                                                                        List<string?> additionalVals,
@@ -387,6 +541,7 @@ namespace SendReceiveClasses
             this.additionalVals = additionalVals;
             this.additionalNeedsQuotes = additionalNeedsQuotes;
             notesChanged = false;
+            requireIdBack = false;
         }
 
         private void Prepare()
@@ -736,6 +891,40 @@ namespace SendReceiveClasses
                   " JOIN Organisation ON Organisation." + Glo.Tab.ORGANISATION_ID +
                         " = OrganisationContacts." + Glo.Tab.ORGANISATION_ID +
                   " WHERE Organisation." + Glo.Tab.ORGANISATION_ID + " = " + organisationID + ";";
+        }
+    }
+
+    struct SelectHistoryRequest
+    {
+        public string sessionID;
+        public string tableName;
+        public string recordID;
+
+        public SelectHistoryRequest(string sessionID, string tableName, string recordID)
+        {
+            this.sessionID = sessionID;
+            this.tableName = tableName;
+            this.recordID = recordID;
+        }
+
+        private void Prepare()
+        {
+            tableName = SqlAssist.SecureColumn(tableName);
+            recordID = SqlAssist.AddQuotes(SqlAssist.SecureValue(recordID));
+        }
+
+        public string SqlSelect()
+        {
+            Prepare();
+
+            return "SELECT" + " " + tableName + "." + Glo.Tab.CHANGE_TIME + ","
+                            + " Login." + Glo.Tab.LOGIN_USERNAME + ","
+                            + " " + tableName + "." + Glo.Tab.CHANGE_REASON +
+                  " FROM " + tableName +
+                  " JOIN " + "Login ON " + tableName + "." + Glo.Tab.LOGIN_ID + " = Login." + Glo.Tab.LOGIN_ID +
+                  " WHERE " + (tableName == "AssetChange" ? Glo.Tab.ASSET_ID : Glo.Tab.ORGANISATION_ID)
+                            + " = " + recordID +
+                  " ORDER BY " + Glo.Tab.CHANGE_TIME + " DESC;";
         }
     }
 

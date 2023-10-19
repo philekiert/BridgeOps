@@ -543,6 +543,45 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool SelectHistory(string table, string id,
+                                         out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    SelectHistoryRequest req = new(sd.sessionID, table, id);
+                    stream.WriteByte(Glo.CLIENT_SELECT_HISTORY);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                        columnNames = result.columnNames;
+                        rows = result.rows;
+                        ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
+                        return true;
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                        SessionInvalidated();
+                    throw new Exception();
+                }
+                throw new Exception();
+            }
+            catch
+            {
+                MessageBox.Show("Could not run or return history list.");
+                columnNames = new();
+                rows = new();
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
         static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes, List<List<object?>> rows)
         {
             for (int n = 0; n < rows.Count; ++n)
@@ -618,10 +657,14 @@ namespace BridgeOpsClient
 
         public static Dictionary<string, Column> organisation = new();
         public static Dictionary<string, string> organisationFriendlyNameReversal = new();
-        public static Dictionary<string, Column> contact = new();
-        public static Dictionary<string, string> contactFriendlyNameReversal = new();
+        public static Dictionary<string, Column> organisationChange = new();
+        public static Dictionary<string, string> organisationChangeFriendlyNameReversal = new();
         public static Dictionary<string, Column> asset = new();
         public static Dictionary<string, string> assetFriendlyNameReversal = new();
+        public static Dictionary<string, Column> assetChange = new();
+        public static Dictionary<string, string> assetChangeFriendlyNameReversal = new();
+        public static Dictionary<string, Column> contact = new();
+        public static Dictionary<string, string> contactFriendlyNameReversal = new();
         public static Dictionary<string, Column> conferenceType = new();
         public static Dictionary<string, string> conferenceTypeFriendlyNameReversal = new();
         public static Dictionary<string, Column> conference = new();
@@ -688,10 +731,14 @@ namespace BridgeOpsClient
                     // Add column to the relevant Dictionary, using the column name as the key.
                     if (table == "Organisation")
                         organisation.Add(column, col);
+                    if (table == "OrganisationChange")
+                        organisationChange.Add(column, col);
                     else if (table == "Contact")
                         contact.Add(column, col);
                     else if (table == "Asset")
                         asset.Add(column, col);
+                    else if (table == "AssetChange")
+                        assetChange.Add(column, col);
                     else if (table == "ConferenceType")
                         conferenceType.Add(column, col);
                     else if (table == "Conference")
@@ -723,10 +770,14 @@ namespace BridgeOpsClient
 
                     if (friendlySplit[0] == "Organisation")
                         AddFriendlyName(organisation);
-                    if (friendlySplit[0] == "Contact")
-                        AddFriendlyName(contact);
+                    if (friendlySplit[0] == "OrganisationChange")
+                        AddFriendlyName(organisationChange);
                     if (friendlySplit[0] == "Asset")
                         AddFriendlyName(asset);
+                    if (friendlySplit[0] == "AssetChange")
+                        AddFriendlyName(assetChange);
+                    if (friendlySplit[0] == "Contact")
+                        AddFriendlyName(contact);
                     if (friendlySplit[0] == "ConferenceType")
                         AddFriendlyName(conferenceType);
                     if (friendlySplit[0] == "Conference")
@@ -742,10 +793,14 @@ namespace BridgeOpsClient
                 // Populate the friendly name reversal dictionaries.
                 foreach (KeyValuePair<string, Column> kvp in organisation)
                     organisationFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-                foreach (KeyValuePair<string, Column> kvp in contact)
-                    contactFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in organisationChange)
+                    organisationChangeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
                 foreach (KeyValuePair<string, Column> kvp in asset)
                     assetFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in assetChange)
+                    assetChangeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+                foreach (KeyValuePair<string, Column> kvp in contact)
+                    contactFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
                 foreach (KeyValuePair<string, Column> kvp in conferenceType)
                     conferenceTypeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
                 foreach (KeyValuePair<string, Column> kvp in conference)

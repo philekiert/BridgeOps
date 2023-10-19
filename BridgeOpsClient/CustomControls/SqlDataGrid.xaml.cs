@@ -40,7 +40,17 @@ namespace BridgeOpsClient.CustomControls
         }
 
         List<Row> rowsBinder = new();
+
+        // I have allowed more than one dictionary to be fed to this array, because sometimes you want a select result
+        // that joins two tables. The downside is that tables sharing column names need to use the same type and
+        // friendly name. I can't see this being an issue, but note it for future reference.
         public void Update(Dictionary<string, ColumnRecord.Column> tableColDefs,
+                           List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
+        {
+            Update(new List<Dictionary<string, ColumnRecord.Column>>() { tableColDefs },
+                   columnNames, rows, omitColumns);
+        }
+        public void Update(List<Dictionary<string, ColumnRecord.Column>> tableColDefs,
                            List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
             // Add any columns to omit to a dictionary for fast lookup.
@@ -65,9 +75,19 @@ namespace BridgeOpsClient.CustomControls
                     header.Header = "";
                 else
                 {
-                    header.Header = ColumnRecord.GetPrintName(s, tableColDefs[s]);
+                    ColumnRecord.Column col = new ColumnRecord.Column();
+                    foreach (Dictionary<string, ColumnRecord.Column> defs in tableColDefs)
+                    {
+                        if (defs.ContainsKey(s))
+                        {
+                            col = defs[s];
+                            break;
+                        }
+                    }
+
+                    header.Header = ColumnRecord.GetPrintName(s, col);
                     header.IsReadOnly = true;
-                    if (tableColDefs[s].type == "DATE")
+                    if (col.type == "DATE")
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:yy/MM/dd}";

@@ -107,7 +107,7 @@
                 </Grid>
             </Grid>
         </TabItem>
-        <TabItem Header="History" x:Name="tabHistory">
+        <TabItem Header="History" x:Name="tabHistory" GotFocus="tabHistory_GotFocus">
             <custom:SqlDataGrid Grid.Row="1" x:Name="dtgHistory" Width="470" Height="400"/>
         </TabItem>
     </TabControl>

@@ -41,6 +41,7 @@ public static class Glo
     public const int CLIENT_DELETE = 32;
     public const int CLIENT_LINK_CONTACT = 40;
     public const int CLIENT_LINKED_CONTACT_SELECT = 41;
+    public const int CLIENT_SELECT_HISTORY = 42;
 
 
     // Console/Agent Function Specifiers

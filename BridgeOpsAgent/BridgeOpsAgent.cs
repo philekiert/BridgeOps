@@ -15,6 +15,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Data;
 using System.Threading.Channels;
+using System.Reflection.PortableExecutable;
 
 internal class BridgeOpsAgent
 {
@@ -25,8 +26,9 @@ internal class BridgeOpsAgent
     {
         public string username;
         public string ip;
-        public ClientSession(string username, string ip)
-        { this.username = username; this.ip = ip; }
+        public int loginID;
+        public ClientSession(string username, string ip, int loginID)
+        { this.username = username; this.ip = ip; this.loginID = loginID; }
     }
     static Dictionary<string, ClientSession> clientSessions = new Dictionary<string, ClientSession>();
     static bool CheckSessionValidity(string id)
@@ -267,6 +269,8 @@ internal class BridgeOpsAgent
                     ClientLinkContact(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LINKED_CONTACT_SELECT)
                     ClientLinkedContactSelect(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_HISTORY)
+                    ClientSelectHistory(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -382,8 +386,11 @@ internal class BridgeOpsAgent
                                                    "Password = HASHBYTES('SHA2_512', '{1}'));",
                                                    loginReq.username, loginReq.password), sqlConnect);
 
-            if (sqlCommand.ExecuteScalar() != null)
+            SqlDataReader reader = sqlCommand.ExecuteReader();
+            if (reader.Read())
             {
+                Type t = reader.GetFieldType(0);
+                int loginID = Convert.ToInt32(reader.GetValue(0)); // Has to be an int if anything was returned at all.
                 // Assuming login was successful, kick out any sessions with clashing IPs or usernames.
                 if (userAlreadyLoggedIn != "")
                     clientSessions.Remove(userAlreadyLoggedIn);
@@ -400,7 +407,7 @@ internal class BridgeOpsAgent
                 }
                 while (clientSessions.ContainsKey(key));
 
-                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr));
+                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID));
 
                 sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
             }
@@ -445,17 +452,17 @@ internal class BridgeOpsAgent
             {
                 Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
                 if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                    com.CommandText = newRow.SqlInsert();
-            }
-            else if (target == Glo.CLIENT_NEW_CONTACT)
-            {
-                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                    com.CommandText = newRow.SqlInsert();
+                    com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
             }
             else if (target == Glo.CLIENT_NEW_ASSET)
             {
                 Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
+            }
+            else if (target == Glo.CLIENT_NEW_CONTACT)
+            {
+                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
                 if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlInsert();
             }
@@ -624,17 +631,17 @@ internal class BridgeOpsAgent
             {
                 Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
                 if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                    com.CommandText = newRow.SqlUpdate();
-            }
-            else if (target == Glo.CLIENT_UPDATE_CONTACT)
-            {
-                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                    com.CommandText = newRow.SqlUpdate();
+                    com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
             }
             else if (target == Glo.CLIENT_UPDATE_ASSET)
             {
                 Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
+            }
+            else if (target == Glo.CLIENT_UPDATE_CONTACT)
+            {
+                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
                 if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     com.CommandText = newRow.SqlUpdate();
             }
@@ -782,7 +789,37 @@ internal class BridgeOpsAgent
         }
         finally
         {
-            if (sqlConnect.State == System.Data.ConnectionState.Open)
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelectHistory(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            SelectHistoryRequest req = sr.Deserialise<SelectHistoryRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+
+            SelectResult result = new(com.ExecuteReader());
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't select history, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
                 sqlConnect.Close();
         }
     }

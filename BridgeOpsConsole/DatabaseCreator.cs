@@ -387,17 +387,18 @@ public class DatabaseCreator
                 // UNSIGNED is not supported in SQL Server.
                 column += def.Value.columnName + " " +
                           (def.Value.type == "BOOLEAN" ? "BIT" : def.Value.type).Replace(" UNSIGNED", "");
-                if (def.Value.autoIncrement)
-                    column += " IDENTITY";
 
                 // Auto Increment keys.
+                if (def.Value.autoIncrement)
+                    column += " IDENTITY";
             }
 
             // Entity Table Strings
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
                             ", CONSTRAINT fk_ParentOrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID)  );";
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
-            login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID) );";
+            login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
+                     ", CONSTRAINT nq_Username UNIQUE (Username) );";
             asset += ", CONSTRAINT pk_AssetID PRIMARY KEY (Asset_ID)" +
                      ", CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE SET NULL );";
             resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID) );";

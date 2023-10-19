@@ -149,10 +149,10 @@ public class FieldDefs
 
         // Organisation Change Snapshot
         defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
-        defs.Add("Organisation Change ID", new Definition(19, Glo.Tab.CHANGE_ID, typeOrgChangeID, false, true, false));
+        defs.Add("Organisation Change ID", new Definition(19, Glo.Tab.CHANGE_ID, typeOrgChangeID, false, true, true));
         defs.Add("Organisation Change Time", new Definition(19, Glo.Tab.CHANGE_TIME, "DATETIME", false, false, false));
-        defs.Add("Organisation Change Reason", new Definition(19, Glo.Tab.CHANGE_REASON, "VARCHAR(100)", true, false, false));
         defs.Add("Organisation Change Login_ID", new Definition(19, Glo.Tab.LOGIN_ID, typeUsername, false, false, false));
+        defs.Add("Organisation Change Reason", new Definition(19, Glo.Tab.CHANGE_REASON, "VARCHAR(100)", true, false, false));
         List<string> additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         List<Definition> additionsValues = new List<Definition>();
         foreach (var d in defs)
@@ -164,7 +164,7 @@ public class FieldDefs
                     additionsKeys.Add(d.Key);
                     additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.type, false, false, false));
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, d.Value.type, false, false, false));
+                    additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
@@ -172,8 +172,9 @@ public class FieldDefs
 
         // Asset Change Snapshot
         defs.Add("Asset Change Asset ID", new Definition(12, "Asset_ID", typeAssetID, false, true, false));
-        defs.Add("Asset Change ID", new Definition(12, "Change_ID", typeAssetChangeID, false, true, false));
+        defs.Add("Asset Change ID", new Definition(12, "Change_ID", typeAssetChangeID, false, true, true));
         defs.Add("Asset Change Time", new Definition(12, "Time", "DATETIME", false, false, false));
+        defs.Add("Asset Change Login_ID", new Definition(12, Glo.Tab.LOGIN_ID, typeUsername, false, false, false));
         defs.Add("Asset Change Reason", new Definition(12, "Reason", "VARCHAR(100)", true, false, false));
         additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         additionsValues = new List<Definition>();
@@ -186,7 +187,7 @@ public class FieldDefs
                     additionsKeys.Add(d.Key);
                     additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.type, false, false, false));
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, d.Value.type, false, false, false));
+                    additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
