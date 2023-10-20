@@ -3,6 +3,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -574,6 +575,50 @@ namespace BridgeOpsClient
                 MessageBox.Show("Could not run or return history list.");
                 columnNames = new();
                 rows = new();
+                return false;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+        }
+
+        public static bool BuildHistorical(string table, string changeID, string recordID, out List<object?> data)
+        {
+            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    SelectHistoricalRecordRequest req = new(sd.sessionID, table, changeID, recordID);
+                    stream.WriteByte(Glo.CLIENT_SELECT_HISTORICAL_RECORD);
+                    sr.WriteAndFlush(stream, sr.Serialise(req));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                        if (result.rows.Count > 0 &&
+                            (table == "Organisation" && result.rows[0].Count == ColumnRecord.organisation.Count) ||
+                            (table == "Asset" && result.rows[0].Count == ColumnRecord.asset.Count))
+                        {
+                            data = result.rows[0];
+                            return true;
+                        }
+                        else
+                        {
+                            throw new Exception();
+                        }
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                        SessionInvalidated();
+                    throw new Exception();
+                }
+                throw new Exception();
+            }
+            catch
+            {
+                MessageBox.Show("Could not run or return historical record.");
+                data = new();
                 return false;
             }
             finally

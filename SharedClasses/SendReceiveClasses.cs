@@ -930,6 +930,22 @@ namespace SendReceiveClasses
         }
     }
 
+    struct SelectHistoricalRecordRequest
+    {
+        public string sessionID;
+        public string tableName;
+        public string changeID;
+        public string recordID;
+
+        public SelectHistoricalRecordRequest(string sessionID, string tableName, string changeID, string recordID)
+        {
+            this.sessionID = sessionID;
+            this.tableName = tableName;
+            this.changeID = changeID;
+            this.recordID = recordID;
+        }
+    }
+
 
     //   H E L P E R   F U N C T I O N S
 

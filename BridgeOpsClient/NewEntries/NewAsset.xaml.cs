@@ -228,12 +228,13 @@ namespace BridgeOpsClient
         bool timeTravel = false; // Everyone knows you can't alter the past.
         private void btnLoad_Click(object sender, RoutedEventArgs e)
         {
-            GetHistory();
+            List<object?> data;
+            App.BuildHistorical("Asset", dtgChangeLog.GetCurrentlySelectedID(), id, out data);
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
-
+            GetHistory();
         }
     }
 }
