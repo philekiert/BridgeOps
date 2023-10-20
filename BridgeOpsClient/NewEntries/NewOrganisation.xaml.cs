@@ -1,4 +1,5 @@
-﻿using SendReceiveClasses;
+﻿using BridgeOpsClient.DialogWindows;
+using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace BridgeOpsClient
             InitialiseFields();
 
             tabAssetsContacts.IsEnabled = false;
-            tabHistory.IsEnabled = false;
+            tabChangeLog.IsEnabled = false;
         }
         public NewOrganisation(string id)
         {
@@ -210,10 +211,16 @@ namespace BridgeOpsClient
                     org.notesChanged = true;
                 }
 
-                if (App.SendUpdate(Glo.CLIENT_UPDATE_ORGANISATION, org))
-                    Close();
-                else
-                    MessageBox.Show("Could not edit organisation.");
+                DialogChangeReason reasonDialog = new("Organisation");
+                bool? result = reasonDialog.ShowDialog();
+                if (result != null && result == true)
+                {
+                    org.changeReason = reasonDialog.txtReason.Text;
+                    if (App.SendUpdate(Glo.CLIENT_UPDATE_ORGANISATION, org))
+                        Close();
+                    else
+                        MessageBox.Show("Could not edit organisation.");
+                }
             }
             else
             {
@@ -222,6 +229,18 @@ namespace BridgeOpsClient
                     message = ditOrganisation.disallowed[0];
                 MessageBox.Show(message);
             }
+        }
+
+        private void GetHistory()
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+
+            if (App.SelectHistory("OrganisationChange", id, out columnNames, out rows))
+                dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                                   { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
+                                   Glo.Tab.CHANGE_ID);
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -356,15 +375,26 @@ namespace BridgeOpsClient
             PopulateContacts();
         }
 
+        // Pick up history only on the first time the tab is clicked. After that, the user will need to click Refresh.
+        bool firstHistoryFocus = false;
         private void tabHistory_GotFocus(object sender, RoutedEventArgs e)
         {
-            // Error message is displayed by App.SelectAll() if something goes wrong.
-            List<string?> columnNames;
-            List<List<object?>> rows;
+            if (!firstHistoryFocus)
+            {
+                GetHistory();
+                firstHistoryFocus = true;
+            }
+        }
 
-            if (App.SelectHistory("OrganisationChange", id, out columnNames, out rows))
-                dtgHistory.Update(new List<Dictionary<string, ColumnRecord.Column>>()
-                                 { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows);
+        bool timeTravel = false; // Everyone knows you can't alter the past.
+        private void btnLoad_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            GetHistory();
         }
     }
 }

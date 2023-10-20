@@ -1,0 +1,21 @@
+﻿<Window x:Class="BridgeOpsClient.DialogWindows.DialogChangeReason"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BridgeOpsClient.DialogWindows"
+        mc:Ignorable="d"
+        Title="Change Reason" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0" Grid.ColumnSpan="2" x:Name="txtReason"
+                     Width="200" Height="100" Margin="10"/>
+            <Button Grid.Row="1" x:Name="btnSubmit" Content="Submit" Margin="10 0 10 10" Width="60"
+                    Click="btnSubmit_Click"/>
+        </Grid>
+    </Grid>
+</Window>

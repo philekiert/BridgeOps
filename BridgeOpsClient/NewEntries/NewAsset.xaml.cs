@@ -1,4 +1,5 @@
-﻿using SendReceiveClasses;
+﻿using BridgeOpsClient.DialogWindows;
+using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +29,8 @@ namespace BridgeOpsClient
             InitializeComponent();
             InitialiseFields();
 
-            tabHistory.IsEnabled = false;
-        }   
+            tabChangeLog.IsEnabled = false;
+        }
         public NewAsset(string id)
         {
             this.id = id;
@@ -63,9 +64,9 @@ namespace BridgeOpsClient
             ditAsset.Initialise(ColumnRecord.asset, "Asset");
         }
 
-#pragma warning disable CS8602
         public void Populate(List<object?> data)
         {
+#pragma warning disable CS8602
             // This method will not be called if the data has a different Count than expected.
             if (data[1] != null)
                 cmbOrgID.Text = data[1].ToString();
@@ -80,8 +81,20 @@ namespace BridgeOpsClient
             ditAsset.Populate(data.GetRange(3, data.Count - 3));
             if (edit)
                 ditAsset.RememberStartingValues();
-        }
 #pragma warning restore CS8602
+        }
+
+        private void GetHistory()
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+
+            if (App.SelectHistory("AssetChange", id, out columnNames, out rows))
+                dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                                   { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows,
+                                   Glo.Tab.CHANGE_ID);
+        }
 
         public string[]? organisationList;
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -168,10 +181,16 @@ namespace BridgeOpsClient
                     asset.notesChanged = true;
                 }
 
-                if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
-                    Close();
-                else
-                    MessageBox.Show("Could not edit asset.");
+                DialogChangeReason reasonDialog = new("Asset");
+                bool? result = reasonDialog.ShowDialog();
+                if (result != null && result == true)
+                {
+                    asset.changeReason = reasonDialog.txtReason.Text;
+                    if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+                        Close();
+                    else
+                        MessageBox.Show("Could not edit asset.");
+                }
             }
             else
             {
@@ -195,15 +214,26 @@ namespace BridgeOpsClient
 
         }
 
+        // Pick up history only on the first time the tab is clicked. After that, the user will need to click Refresh.
+        bool firstHistoryFocus = false;
         private void tabHistory_GotFocus(object sender, RoutedEventArgs e)
         {
-            // Error message is displayed by App.SelectAll() if something goes wrong.
-            List<string?> columnNames;
-            List<List<object?>> rows;
+            if (!firstHistoryFocus)
+            {
+                GetHistory();
+                firstHistoryFocus = true;
+            }
+        }
 
-            if (App.SelectHistory("AssetChange", id, out columnNames, out rows))
-                dtgHistory.Update(new List<Dictionary<string, ColumnRecord.Column>>()
-                                 { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows);
+        bool timeTravel = false; // Everyone knows you can't alter the past.
+        private void btnLoad_Click(object sender, RoutedEventArgs e)
+        {
+            GetHistory();
+        }
+
+        private void btnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

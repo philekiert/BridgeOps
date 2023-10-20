@@ -504,12 +504,12 @@ namespace SendReceiveClasses
 
                 com += SqlAssist.InsertInto("AssetChange",
                                             SqlAssist.ColConcat(additionalCols,
-                                                                Glo.Tab.ORGANISATION_ID,
+                                                                Glo.Tab.ASSET_ID,
                                                                 Glo.Tab.CHANGE_TIME,
                                                                 Glo.Tab.LOGIN_ID,
                                                                 Glo.Tab.CHANGE_REASON),
                                             SqlAssist.ValConcat(additionalVals,
-                                                                organisationID,
+                                                                assetID,
                                                                 '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
                                                                 loginID.ToString(),
                                                                 changeReason == null ? "" : changeReason));
@@ -917,11 +917,13 @@ namespace SendReceiveClasses
         {
             Prepare();
 
-            return "SELECT" + " " + tableName + "." + Glo.Tab.CHANGE_TIME + ","
-                            + " Login." + Glo.Tab.LOGIN_USERNAME + ","
-                            + " " + tableName + "." + Glo.Tab.CHANGE_REASON +
-                  " FROM " + tableName +
-                  " JOIN " + "Login ON " + tableName + "." + Glo.Tab.LOGIN_ID + " = Login." + Glo.Tab.LOGIN_ID +
+            // This really needs putting into string.Format() at some point...
+            return "SELECT " + tableName + "." + Glo.Tab.CHANGE_ID + ", "
+                             + tableName + "." + Glo.Tab.CHANGE_TIME + ", "
+                             + "Login." + Glo.Tab.LOGIN_USERNAME + ", "
+                             + tableName + "." + Glo.Tab.CHANGE_REASON +
+                  " FROM " + tableName + // LEFT JOIN here because we want to include records with NULL login IDs.
+                  " LEFT JOIN " + "Login ON " + tableName + "." + Glo.Tab.LOGIN_ID + " = Login." + Glo.Tab.LOGIN_ID +
                   " WHERE " + (tableName == "AssetChange" ? Glo.Tab.ASSET_ID : Glo.Tab.ORGANISATION_ID)
                             + " = " + recordID +
                   " ORDER BY " + Glo.Tab.CHANGE_TIME + " DESC;";

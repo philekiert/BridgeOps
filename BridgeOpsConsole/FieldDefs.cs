@@ -69,7 +69,7 @@ public class FieldDefs
     // Primary Key Types (defaults used only for override txt file generation)
     public string typeOrgID = "VARCHAR(20)";
     public string typeContactID = "SMALLINT UNSIGNED";
-    public string typeUsername = "SMALLINT UNSIGNED";
+    public string typeLoginID = "SMALLINT UNSIGNED";
     public string typeAssetID = "VARCHAR(10)";
     public string typeResourceID = "SMALLINT UNSIGNED";
     public string typeConfID = "INT UNSIGNED";
@@ -94,7 +94,7 @@ public class FieldDefs
         defs.Add("Contact Notes", new Definition(7, "Notes", "TEXT", false, false, false));
 
         // User
-        defs.Add("Login ID", new Definition(5, Glo.Tab.LOGIN_ID, typeUsername, false, true, true));
+        defs.Add("Login ID", new Definition(5, Glo.Tab.LOGIN_ID, typeLoginID, false, true, true));
         defs.Add("Login Username", new Definition(5, Glo.Tab.LOGIN_USERNAME, "VARCHAR(30)", true, false, false));
         defs.Add("Login Password", new Definition(5, Glo.Tab.LOGIN_PASSWORD, "BINARY(64)", false, false, false));
         defs.Add("Login Type", new Definition(5, Glo.Tab.LOGIN_TYPE, "TINYINT UNSIGNED", false, false, false));
@@ -151,8 +151,8 @@ public class FieldDefs
         defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
         defs.Add("Organisation Change ID", new Definition(19, Glo.Tab.CHANGE_ID, typeOrgChangeID, false, true, true));
         defs.Add("Organisation Change Time", new Definition(19, Glo.Tab.CHANGE_TIME, "DATETIME", false, false, false));
-        defs.Add("Organisation Change Login_ID", new Definition(19, Glo.Tab.LOGIN_ID, typeUsername, false, false, false));
-        defs.Add("Organisation Change Reason", new Definition(19, Glo.Tab.CHANGE_REASON, "VARCHAR(100)", true, false, false));
+        defs.Add("Organisation Change Login_ID", new Definition(19, Glo.Tab.LOGIN_ID, typeLoginID, false, false, false));
+        defs.Add("Organisation Change Reason", new Definition(19, Glo.Tab.CHANGE_REASON, "VARCHAR(200)", true, false, false));
         List<string> additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         List<Definition> additionsValues = new List<Definition>();
         foreach (var d in defs)
@@ -174,8 +174,8 @@ public class FieldDefs
         defs.Add("Asset Change Asset ID", new Definition(12, "Asset_ID", typeAssetID, false, true, false));
         defs.Add("Asset Change ID", new Definition(12, "Change_ID", typeAssetChangeID, false, true, true));
         defs.Add("Asset Change Time", new Definition(12, "Time", "DATETIME", false, false, false));
-        defs.Add("Asset Change Login_ID", new Definition(12, Glo.Tab.LOGIN_ID, typeUsername, false, false, false));
-        defs.Add("Asset Change Reason", new Definition(12, "Reason", "VARCHAR(100)", true, false, false));
+        defs.Add("Asset Change Login_ID", new Definition(12, Glo.Tab.LOGIN_ID, typeLoginID, false, false, false));
+        defs.Add("Asset Change Reason", new Definition(12, Glo.Tab.CHANGE_REASON, "VARCHAR(200)", true, false, false));
         additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         additionsValues = new List<Definition>();
         foreach (var d in defs)
@@ -252,7 +252,7 @@ public class FieldDefs
                "\n" +
                "\nOrganisation ID:                      Max Length = " + ExtractVARCHARLength(typeOrgID) +
                "\nContact ID:                           Type = " + typeContactID +
-               "\nLogin ID:                             Type = " + typeUsername +
+               "\nLogin ID:                             Type = " + typeLoginID +
                "\nAsset ID:                             Max Length = " + ExtractVARCHARLength(typeAssetID) +
                "\nResource ID:                          Type = " + typeResourceID +
                "\nConference Type ID:                   Type = " + typeConfTypeID +
