@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using System.Data;
 using System.Threading.Channels;
 using System.Reflection.PortableExecutable;
+using System.Xml.Schema;
 
 internal class BridgeOpsAgent
 {
@@ -271,6 +272,8 @@ internal class BridgeOpsAgent
                     ClientLinkedContactSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_HISTORY)
                     ClientSelectHistory(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_HISTORICAL_RECORD)
+                    ClientBuildHistoricalRecord(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -815,6 +818,92 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't select history, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientBuildHistoricalRecord(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        /* This function builds the state of an organisation or asset from the change log. It selects all rows before
+         * the chosen date, then goes down each column to find the first row where the Register value is set to 1
+         * (or rather, not NULL). It uses all of these values to build a faux-organisation or asset.
+         * */
+
+        try
+        {
+            sqlConnect.Open();
+            SelectHistoricalRecordRequest req = sr.Deserialise<SelectHistoricalRecordRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+
+            SqlDataReader reader = com.ExecuteReader();
+
+            List<string?> columnNames = new();
+            List<string?> columnTypes = new();
+            List<object?> data = new();
+
+            DataTable schema = reader.GetSchemaTable();
+
+            // Cycle through and add every non-Register column name.
+            for (int i = 0; i < schema.Rows.Count; i += 2)
+            {
+                columnNames.Add(schema.Rows[i].Field<string>("ColumnName"));
+                Type? t = schema.Rows[i].Field<Type>("DataType");
+                columnTypes.Add(t == null ? null : t.Name);
+
+                if (i == 0) // Skip the change-specific columns near the start of the table.
+                    i += 4;
+            }
+
+            // Create a bool array to track which columns have found their resting value.
+            int fieldCount = columnNames.Count;
+            bool[] found = new bool[fieldCount];
+            int foundSoFar = 0;
+            for (int i = 0; i < fieldCount; ++i)
+                data.Add(null); // Give every column a starting value.
+
+            List<List<object?>> rows = new();
+
+            while (reader.Read() && foundSoFar < fieldCount)
+            {
+                // Add the organisation number first.
+                if (!found[0] && !reader.IsDBNull(0))
+                {
+                    found[0] = true;
+                    data[0] = reader[0];
+                    ++foundSoFar;
+                }
+
+                // i is the index of the row, n is the index for data List.
+                for (int i = 5, n = 1; i < reader.FieldCount; i += 2, ++n)
+                {
+                    if (found[n] || reader.IsDBNull(i)) continue;
+
+                    // i represents the Register field, so + 1 to get the relevant value.
+                    if (!reader.IsDBNull(i + 1))
+                    data[n] = reader[i + 1];
+                    found[n] = true;
+                    ++foundSoFar;
+                }
+            }
+
+            SelectResult result = new(columnNames, columnTypes, new List<List<object?>> { data });
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't build historical record, see error:", e);
             stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally

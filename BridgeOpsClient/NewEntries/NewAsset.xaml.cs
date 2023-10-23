@@ -70,10 +70,14 @@ namespace BridgeOpsClient
             // This method will not be called if the data has a different Count than expected.
             if (data[1] != null)
                 cmbOrgID.Text = data[1].ToString();
+            else
+                cmbOrgID.Text = null;
             if (data[2] != null)
                 txtNotes.Text = data[2].ToString();
+            else
+                txtNotes.Text = null;
 
-            // Store the original values to check if any changes have been made for the data. The same takes place
+            // Store the original values to check if any changes have been made to the data. The same takes place
             // in the data input table.
             originalOrgID = cmbOrgID.Text;
             originalNotes = txtNotes.Text;
@@ -225,16 +229,52 @@ namespace BridgeOpsClient
             }
         }
 
-        bool timeTravel = false; // Everyone knows you can't alter the past.
-        private void btnLoad_Click(object sender, RoutedEventArgs e)
+        private void btnView_Click(object sender, RoutedEventArgs e)
         {
             List<object?> data;
-            App.BuildHistorical("Asset", dtgChangeLog.GetCurrentlySelectedID(), id, out data);
+            // Error message will present itself in BuildHistorical() if needed.
+            if (App.BuildHistorical("Asset", dtgChangeLog.GetCurrentlySelectedID(), id, out data))
+            {
+                Populate(data);
+                ToggleFieldsEnabled(false);
+                btnReset.IsEnabled = true;
+            }
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             GetHistory();
+        }
+
+        private void ToggleFieldsEnabled(bool enabled)
+        {
+            cmbOrgID.IsEnabled = enabled;
+            txtNotes.IsReadOnly = !enabled;
+            ditAsset.ToggleFieldsEnabled(enabled);
+            btnEdit.IsEnabled = enabled;
+            btnDelete.IsEnabled = enabled;
+        }
+
+        private void btnReset_Click(object sender, RoutedEventArgs e)
+        {
+            List<List<object?>> rows;
+            if (App.Select("Asset",
+                           new List<string> { "*" },
+                           new List<string> { Glo.Tab.ASSET_ID },
+                           new List<string> { id },
+                           out _, out rows))
+            {
+                try
+                {
+                    Populate(rows[0]);
+                    ToggleFieldsEnabled(true);
+                    btnReset.IsEnabled = false;
+                }
+                catch // Something must have gone horribly wrong with the database since the record was opened,
+                {     // so just scrap the whole thing.
+                    Close();
+                }
+            }
         }
     }
 }

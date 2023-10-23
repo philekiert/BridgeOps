@@ -90,7 +90,7 @@ namespace BridgeOpsClient.CustomControls
                     if (col.type == "DATE")
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
-                        header.Binding.StringFormat = "{0:yy/MM/dd}";
+                        header.Binding.StringFormat = "{0:dd/MM/yyyy}";
                     }
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));

@@ -137,7 +137,7 @@ namespace BridgeOpsClient
 
         public static bool EditOrganisation(string id)
         {
-            string[]? organisationList = SelectColumnPrimary("Organisation", "Organisation_ID");
+            string[]? organisationList = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
             if (organisationList == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
@@ -148,7 +148,7 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
             if (App.Select("Organisation",
                            new List<string> { "*" },
-                           new List<string> { "Organisation_ID" },
+                           new List<string> { Glo.Tab.ORGANISATION_ID },
                            new List<string> { id },
                            out columnNames, out rows))
             {
@@ -175,7 +175,7 @@ namespace BridgeOpsClient
 
         public static bool EditAsset(string id)
         {
-            string[]? organisationList = SelectColumnPrimary("Organisation", "Organisation_ID");
+            string[]? organisationList = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
             if (organisationList == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
@@ -186,7 +186,7 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
             if (App.Select("Asset",
                            new List<string> { "*" },
-                           new List<string> { "Asset_ID" },
+                           new List<string> { Glo.Tab.ASSET_ID },
                            new List<string> { id },
                            out columnNames, out rows))
             {
@@ -217,7 +217,7 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
             if (App.Select("Contact",
                            new List<string> { "*" },
-                           new List<string> { "Contact_ID" },
+                           new List<string> { Glo.Tab.CONTACT_ID },
                            new List<string> { id.ToString() },
                            out columnNames, out rows))
             {
@@ -602,6 +602,7 @@ namespace BridgeOpsClient
                             (table == "Asset" && result.rows[0].Count == ColumnRecord.asset.Count))
                         {
                             data = result.rows[0];
+                            ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
                             return true;
                         }
                         else
@@ -634,18 +635,14 @@ namespace BridgeOpsClient
 #pragma warning disable CS8602
                 for (int i = 0; i < columnTypes.Count; ++i)
                 {
-                    // A JsonObject here will always be empty.
-                    if (rows[n][i].GetType() == typeof(JsonObject))
-                        rows[n][i] = "";
-                    else if (columnTypes[i] == "String")
+                    if (rows[n][i] != null)
                     {
-                        rows[n][i] = rows[n][i].ToString();
-                    }
-                    else if (columnTypes[i] == "DateTime")
-                    {
-                        DateTime dt;
-                        DateTime.TryParse(rows[n][i].ToString(), out dt);
-                        rows[n][i] = dt;
+                        if (columnTypes[i] == "DateTime")
+                        {
+                            DateTime dt;
+                            DateTime.TryParse(rows[n][i].ToString(), out dt);
+                            rows[n][i] = dt;
+                        }
                     }
                 }
 #pragma warning restore CS8602

@@ -779,7 +779,14 @@ namespace SendReceiveClasses
         public List<string?> columnTypes;
         public List<List<object?>> rows;
 
-        // The constructor will automatically get the required information from the SqlDataReader.
+        public SelectResult(List<string?> columnNames, List<string?> columnTypes, List<List<object?>> rows)
+        {
+            this.columnNames = columnNames;
+            this.columnTypes = columnTypes;
+            this.rows = rows;
+        }
+
+        // This constructor will automatically get the required information from the SqlDataReader.
         public SelectResult(SqlDataReader reader)
         {
             columnNames = new();
@@ -797,7 +804,10 @@ namespace SendReceiveClasses
             {
                 List<object?> row = new List<object?>();
                 for (int i = 0; i < reader.FieldCount; i++)
-                    row.Add(reader[i]);
+                    if (reader.IsDBNull(i))
+                        row.Add(null);
+                    else
+                        row.Add(reader[i]);
                 rows.Add(row);
             }
         }
@@ -943,6 +953,32 @@ namespace SendReceiveClasses
             this.tableName = tableName;
             this.changeID = changeID;
             this.recordID = recordID;
+        }
+
+        private void Prepare()
+        {
+            tableName = SqlAssist.SecureColumn(tableName);
+            changeID = SqlAssist.SecureValue(changeID);
+            recordID = SqlAssist.AddQuotes(SqlAssist.SecureValue(recordID));
+        }
+
+        public string SqlSelect()
+        {
+            Prepare();
+
+            string recordColumnName;
+            if (tableName == "Organisation")
+                recordColumnName = Glo.Tab.ORGANISATION_ID;
+            else // if == Asset
+                recordColumnName = Glo.Tab.ASSET_ID;
+
+            return string.Format("SELECT * FROM {0}Change " +
+                                 "WHERE {2} = {3} " +
+                                 "AND {1} <= (SELECT {1} FROM {0}Change " +
+                                               "WHERE {2} = {3} AND {4} = {5}) " +
+                                 "ORDER BY {1} DESC;",
+                                 tableName, Glo.Tab.CHANGE_TIME, recordColumnName, recordID,
+                                                                 Glo.Tab.CHANGE_ID, changeID);
         }
     }
 

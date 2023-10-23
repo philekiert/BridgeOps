@@ -130,19 +130,33 @@ namespace BridgeOpsClient.CustomControls
             {
                 if (i % 2 == 1)
                 {
-                    int curIndex = i / 2;
-                    object? d = data[curIndex];
-                    if (d != null)
-                    {
-                        Type t = child.GetType();
-                        ColValue cv = colValues[curIndex];
-                        if (t == typeof(TextBox))
-                            ((TextBox)child).Text = d.ToString();
-                        else if (t == typeof(ComboBox))
-                            ((ComboBox)child).Text = d.ToString();
-                        else if (t == typeof(DatePicker) && d.ToString() != "")
-                            ((DatePicker)child).SelectedDate = (DateTime)d;
-                    }
+                    object? d = data[i / 2];
+                    Type t = child.GetType();
+                    if (t == typeof(TextBox))
+                        ((TextBox)child).Text = d == null ? null : d.ToString();
+                    else if (t == typeof(ComboBox))
+                        ((ComboBox)child).Text = d == null ? null : d.ToString();
+                    else if (t == typeof(DatePicker))
+                        ((DatePicker)child).SelectedDate = d == null ? null : (DateTime)d;
+                }
+                ++i;
+            }
+        }
+
+        public void ToggleFieldsEnabled(bool enabled)
+        {
+            int i = 0;
+            foreach (object child in grdMain.Children)
+            {
+                if (i % 2 == 1)
+                {
+                    Type t = child.GetType();
+                    if (t == typeof(TextBox))
+                        ((TextBox)child).IsReadOnly = !enabled;
+                    else if (t == typeof(ComboBox))
+                        ((ComboBox)child).IsEnabled = enabled;
+                    else if (t == typeof(DatePicker))
+                        ((DatePicker)child).IsEnabled = enabled;
                 }
                 ++i;
             }

@@ -506,8 +506,8 @@ public class DatabaseCreator
                     string table = addition.table + "Change";
 
                     string command = "ALTER TABLE " + table + " ADD ";
-                    command += addition.column + " " + (addition.type == "BOOLEAN" ? "BIT" : addition.type) + ",";
-                    command += addition.column + Glo.Tab.CHANGE_REGISTER_SUFFIX + " BIT;";
+                    command += addition.column + Glo.Tab.CHANGE_REGISTER_SUFFIX + " BIT, ";
+                    command += addition.column + " " + (addition.type == "BOOLEAN" ? "BIT" : addition.type) + ";";
 
                     if (SendCommandSQL(command))
                         Writer.Affirmative("Adding " + addition.column + " to " + table);

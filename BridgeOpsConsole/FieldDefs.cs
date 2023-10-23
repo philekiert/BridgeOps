@@ -161,10 +161,10 @@ public class FieldDefs
                 if (d.Value.columnName != "Organisation_ID") // Already stated above, makes up part of the composite key.
                 {
                     // All of these should have canOverride set to false.
-                    additionsKeys.Add(d.Key);
-                    additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.type, false, false, false));
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
                     additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
+                    additionsKeys.Add(d.Key);
+                    additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.type, false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
@@ -183,11 +183,11 @@ public class FieldDefs
             {
                 if (d.Value.columnName != "Asset_ID") // Already stated above, makes up part of the composite key.
                 {
-                    // All of these should have canOverride set to false.
-                    additionsKeys.Add(d.Key);
-                    additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.type, false, false, false));
+                    // All of these should have canOverride set to false. Bool must come first due to the way Agent.ClientSelectHistory() works.
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
                     additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
+                    additionsKeys.Add(d.Key);
+                    additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.type, false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)

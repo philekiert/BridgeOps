@@ -64,13 +64,16 @@
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Row="0" Grid.Column="0" x:Name="btnView" Content="View"
-                        Margin="10 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnLoad_Click"/>
-                <Button Grid.Row="0" Grid.Column="1" x:Name="btnRefresh" Content="Refresh"
-                        Margin="0 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnRefresh_Click"/>
-                <custom:SqlDataGrid Grid.Row="1" Grid.ColumnSpan="2" x:Name="dtgChangeLog" Width="470" Height="400"/>
+                        Margin="10 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnView_Click"/>
+                <Button Grid.Row="0" Grid.Column="1" x:Name="btnReset" Content="Reset" IsEnabled="False"
+                        Margin="0 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnReset_Click"/>
+                <Button Grid.Row="0" Grid.Column="2" x:Name="btnRefresh" Content="Refresh"
+                        Margin="20 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnRefresh_Click"/>
+                <custom:SqlDataGrid Grid.Row="1" Grid.ColumnSpan="3" x:Name="dtgChangeLog" Width="470" Height="400"/>
             </Grid>
         </TabItem>
     </TabControl>
