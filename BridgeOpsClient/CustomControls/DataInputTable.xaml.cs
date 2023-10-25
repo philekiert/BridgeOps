@@ -111,7 +111,10 @@ namespace BridgeOpsClient.CustomControls
                             ComboBox cmbInput = new();
                             cmbInput.SetValue(Grid.ColumnProperty, 1);
                             cmbInput.SetValue(Grid.RowProperty, i);
-                            cmbInput.ItemsSource = col.Value.allowed;
+                            List<string> options = col.Value.allowed.ToList();
+                            options.Insert(0, " "); // Wedge a blank option at the beginning.
+                            cmbInput.ItemsSource = options;
+                            cmbInput.SelectedIndex = 0;
                             grdMain.Children.Add(cmbInput);
                         }
                     }

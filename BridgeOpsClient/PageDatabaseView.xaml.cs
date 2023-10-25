@@ -56,8 +56,13 @@ namespace BridgeOpsClient
 
             foreach (KeyValuePair<string, ColumnRecord.Column> kvp in table)
             {
-                string name = ColumnRecord.GetPrintName(kvp);
-                cmbColumn.Items.Add(name);
+                // Any anything that's TEXT type. Could add date and int search in the future, but it's just not urgent
+                // as you can just sort by date or int in the results.
+                if (ColumnRecord.IsTypeString(kvp.Value))
+                {
+                    string name = ColumnRecord.GetPrintName(kvp);
+                    cmbColumn.Items.Add(name);
+                }
             }
 
             if (cmbTable.SelectedIndex == 2 && cmbColumn.Items.Count > 0)

@@ -356,11 +356,8 @@ public class FieldDefs
                         "\n#    will be replaced with spaces when displayed in the client software. For this reason, underscores cannot" +
                         "\n#    be displayed." +
                         "\n#  - Only the [allowed] section is optional and can be ommitted." +
-                        "\n#  - The [allowed] list can contain a blank value in order to allow the field to be left blank in the" +
-                        "\n#    application. The most readable way to do this is to simply precede your list with \";\", example:" +
-                        "\n#    [allowed] ;list;with;blank;value" +
                         "\n#  - [type] is restricted to the following values:" +
-                        "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT" +
+                        "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT (these cannot accept [allowed] values)" +
                         "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
                         "\n#      Date: DATE (cannot accept [allowed] values)" +
                         "\n#      Text: VARCHAR(0 - 65535), TINYTEXT, MEDIUMTEXT, TEXT (only VARCHAR can accept [allowed] values)" +

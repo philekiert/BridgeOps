@@ -718,6 +718,11 @@ namespace BridgeOpsClient
         public static Dictionary<string, Column> login = new();
         public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
+        public static bool IsTypeString(Column col)
+        { return col.type == "TEXT"; }
+        public static bool IsTypeInt(Column col)
+        { return col.type.Contains("INT"); }
+
         public static void Initialise(string columns)
         {
             try
