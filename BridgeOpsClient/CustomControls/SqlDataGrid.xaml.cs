@@ -118,13 +118,19 @@ namespace BridgeOpsClient.CustomControls
 
         public string GetCurrentlySelectedID()
         {
+            return GetCurrentlySelectedCell(0);
+        }
+        public string GetCurrentlySelectedCell(int column)
+        {
             if (dtg.SelectedItem == null)
                 return "";
             Row selectedRow = (Row)dtg.SelectedItem;
-            object? firstItem = selectedRow.items[0];
-            if (firstItem == null)
+            if (column > selectedRow.items.Count)
                 return "";
-            string? id = firstItem.ToString();
+            object? item = selectedRow.items[column];
+            if (item == null)
+                return "";
+            string? id = item.ToString();
             if (id == null)
                 return "";
             return id;

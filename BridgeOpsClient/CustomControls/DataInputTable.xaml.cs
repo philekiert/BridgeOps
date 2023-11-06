@@ -100,7 +100,7 @@ namespace BridgeOpsClient.CustomControls
                             TextBox txtInput = new();
                             txtInput.SetValue(Grid.ColumnProperty, 1);
                             txtInput.SetValue(Grid.RowProperty, i);
-                            if (col.Value.type == "TEXT")
+                            if (ColumnRecord.IsTypeString(col.Value))
                                 txtInput.MaxLength = col.Value.restriction;
                             // else must be an INT type and will be checked against restriction in ScoopValues().
                             grdMain.Children.Add(txtInput);
@@ -196,7 +196,7 @@ namespace BridgeOpsClient.CustomControls
                         string input = ((TextBox)child).Text;
                         if (input == "")
                             cv.value = null;
-                        else if (cv.type == "TEXT")
+                        else if (ColumnRecord.IsTypeString(cv.type))
                             cv.value = input;
                         else // Some sort of INT and needs checking against restriction.
                         {

@@ -33,10 +33,4 @@
     </Compile>
   </ItemGroup>
 
-  <ItemGroup>
-    <Page Update="MainWindow.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </Page>
-  </ItemGroup>
-
 </Project>

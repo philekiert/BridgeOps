@@ -147,12 +147,16 @@ namespace BridgeOpsClient
         // Bring up selected organisation on double-click.
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (cmbTable.Text == "Organisation")
-                App.EditOrganisation(dtgResults.GetCurrentlySelectedID());
-            if (cmbTable.Text == "Asset")
-                App.EditAsset(dtgResults.GetCurrentlySelectedID());
-            if (cmbTable.Text == "Contact")
-                App.EditContact(dtgResults.GetCurrentlySelectedID());
+            string currentID = dtgResults.GetCurrentlySelectedID();
+            if (currentID != "")
+            {
+                if (cmbTable.Text == "Organisation")
+                    App.EditOrganisation(dtgResults.GetCurrentlySelectedID());
+                if (cmbTable.Text == "Asset")
+                    App.EditAsset(dtgResults.GetCurrentlySelectedID());
+                if (cmbTable.Text == "Contact")
+                    App.EditContact(dtgResults.GetCurrentlySelectedID());
+            }
         }
 
         private void btnAddPane_Click(object sender, RoutedEventArgs e)

@@ -151,6 +151,10 @@ internal class BridgeOpsAgent
         // Read network configuraiton.
         LoadNetworkConfig();
 
+        // Start the thread responsible for nudging SQL Server. Remove this at some point.
+        Thread sqlNudgeThr = new Thread(SqlServerNudge);
+        sqlNudgeThr.Start();
+
         // Start the thread responsible for handling requests from the server console.
         Thread bridgeOpsConsoleRequestsThr = new Thread(BridgeOpsConsoleRequests);
         bridgeOpsConsoleRequestsThr.Start();
@@ -162,6 +166,34 @@ internal class BridgeOpsAgent
 
 
     //   T H R E A D   F U N C T I O N S
+
+    private static void SqlServerNudge()
+    {
+        // If the database is inactive for more than a few minutes, we see a very slight delay to the next query. This
+        // causes logins to fail for some inexplicable reason when developing on one machine. You can probably get rid
+        // of this function at some point in the future.
+
+        SqlConnection sqlConnect = new SqlConnection(connectionString);
+        while (true)
+        {
+            Thread.Sleep(120_000); // Sleep for two minutes.
+            try
+            {
+                sqlConnect.Open();
+                // Carry out the most lightweight query I can think of.
+                SqlCommand com = new SqlCommand("SELECT TOP 1 Login_ID FROM Login;", sqlConnect);
+                com.ExecuteNonQuery();
+            }
+            catch (Exception e)
+            {
+                LogError("Could not nudge SQL Server. See error:", e);
+            }
+            finally
+            {
+                sqlConnect.Close();
+            }
+        }
+    }
 
     private static void BridgeOpsConsoleRequests()
     {
@@ -193,7 +225,6 @@ internal class BridgeOpsAgent
         }
     }
 
-    static int tried = 0;
     private static void BridgeOpsClientRequests()
     {
         try

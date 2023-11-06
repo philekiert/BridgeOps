@@ -368,7 +368,6 @@ public class FieldDefs
                         "\n# ! One slight quirk... [allowed] values cannot contain square brackets (\"[\" or \"]\") as this would interfere with some vital operations." +
                         "\n" +
                         "\n";
-
         try
         {
             File.WriteAllText(Glo.PATH_CONFIG_FILES + Glo.CONFIG_COLUMN_ADDITIONS, template);

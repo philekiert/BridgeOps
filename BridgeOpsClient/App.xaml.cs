@@ -124,7 +124,9 @@ namespace BridgeOpsClient
                                                           sd.username)));
                     sr.ReadString(stream); // Empty the pipe.
 
-                    sd = new SessionDetails();
+                    sd.sessionID = "";
+
+                    ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
 
                     return true;
                 }
@@ -133,6 +135,13 @@ namespace BridgeOpsClient
             }
             else
                 return false;
+        }
+
+        public static void SessionInvalidated()
+        {
+            sd.sessionID = ""; // Tells the app that it's no longer logged in.
+            ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
+            MessageBox.Show("Session is no longer valid, please log back in.");
         }
 
         public static bool EditOrganisation(string id)
@@ -239,12 +248,6 @@ namespace BridgeOpsClient
                     MessageBox.Show("Could no longer retrieve record.");
             }
             return true;
-        }
-
-        public static void SessionInvalidated()
-        {
-            sd = new SessionDetails(); // Tells the app that it's no longer logged in.
-            MessageBox.Show("Session is no longer valid, please log back in.");
         }
 
         public static bool PullColumnRecord()
@@ -718,8 +721,12 @@ namespace BridgeOpsClient
         public static Dictionary<string, Column> login = new();
         public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
+        public static bool IsTypeString(string type)
+        { return type == "TEXT"; }
         public static bool IsTypeString(Column col)
         { return col.type == "TEXT"; }
+        public static bool IsTypeInt(string type)
+        { return type == "INT"; }
         public static bool IsTypeInt(Column col)
         { return col.type.Contains("INT"); }
 

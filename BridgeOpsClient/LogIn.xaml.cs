@@ -17,9 +17,13 @@ namespace BridgeOpsClient
 {
     public partial class LogIn : Window
     {
-        public LogIn()
+        MainWindow mainWindow;
+
+        public LogIn(MainWindow mainWindow)
         {
             InitializeComponent();
+
+            this.mainWindow = mainWindow;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -37,7 +41,13 @@ namespace BridgeOpsClient
             if (result == Glo.CLIENT_LOGIN_ACCEPT)
             {
                 if (App.PullColumnRecord())
+                {
                     Close();
+                    // If Main window hasn't opened yet, the buttons will be null. If they aren't and MainWindow is
+                    // still starting up, it will toggle the buttons correctly itself.
+                    if (mainWindow.menuUserLogIn != null)
+                        mainWindow.ToggleLogInOut(true);
+                }
                 else
                 {
                     MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +

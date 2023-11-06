@@ -260,13 +260,17 @@ namespace BridgeOpsClient
         // Bring up selected asset on double-click.
         private void dtgAssets_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            App.EditAsset(dtgAssets.GetCurrentlySelectedID());
+            string currentID = dtgContacts.GetCurrentlySelectedID();
+            if (currentID != "")
+                App.EditAsset(dtgAssets.GetCurrentlySelectedID());
         }
 
         // Bring up selected contact on double-click.
         private void dtgContacts_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            App.EditContact(dtgContacts.GetCurrentlySelectedID());
+            string currentID = dtgContacts.GetCurrentlySelectedID();
+            if (currentID != "")
+                App.EditContact(dtgContacts.GetCurrentlySelectedID());
         }
 
         private void btnAssetNew_Click(object sender, RoutedEventArgs e)
@@ -288,10 +292,8 @@ namespace BridgeOpsClient
             lr.ShowDialog();
             string? assetID = lr.id;
             if (assetID == null)
-            {
-                MessageBox.Show("Could not discern asset ID from record.");
                 return;
-            }
+
             Asset asset = new Asset(App.sd.sessionID, assetID, id, null, new(), new(), new());
             asset.organisationIdChanged = true;
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
@@ -351,10 +353,7 @@ namespace BridgeOpsClient
             lr.ShowDialog();
             int contactIdInt;
             if (lr.id == null || !int.TryParse(lr.id, out contactIdInt))
-            {
-                MessageBox.Show("Could not discern contact ID from record.");
                 return;
-            }
 
             // Error message handled in LinkContact().
             if (App.LinkContact(id, contactIdInt, false))
@@ -401,6 +400,8 @@ namespace BridgeOpsClient
                 PopulateExistingData(data);
                 ToggleFieldsEnabled(false);
                 btnReset.IsEnabled = true;
+                lblViewingChange.Height = 20;
+                lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
             }
         }
 
@@ -433,6 +434,8 @@ namespace BridgeOpsClient
                     PopulateExistingData(rows[0]);
                     ToggleFieldsEnabled(true);
                     btnReset.IsEnabled = false;
+                    // Set height to 0 ather than Visibility to Hidden as we want the field to collapse.
+                    lblViewingChange.Height = 0;
                 }
                 catch // Something must have gone horribly wrong with the database since the record was opened,
                 {     // so just scrap the whole thing.

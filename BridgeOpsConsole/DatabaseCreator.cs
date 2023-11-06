@@ -515,8 +515,8 @@ public class DatabaseCreator
             }
 
             Writer.Message("\nCreating admin login...");
-            SendCommandSQL("INSERT INTO Login (Username, Password, Type) " +
-                           "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 0);");
+            SendCommandSQL(string.Format("INSERT INTO Login (Username, Password, Type) " +
+                                         "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), {0});", Glo.USER_ADMIN));
 
 
             //---- CREATE TYPE RESTRICTIONS FILE ----// (For use by Client in determining what to display/allow in UI)

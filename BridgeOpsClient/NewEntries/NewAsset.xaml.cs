@@ -238,6 +238,8 @@ namespace BridgeOpsClient
                 Populate(data);
                 ToggleFieldsEnabled(false);
                 btnReset.IsEnabled = true;
+                lblViewingChange.Height = 20;
+                lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
             }
         }
 
@@ -269,6 +271,8 @@ namespace BridgeOpsClient
                     Populate(rows[0]);
                     ToggleFieldsEnabled(true);
                     btnReset.IsEnabled = false;
+                    // Set height to 0 ather than Visibility to Hidden as we want the field to collapse.
+                    lblViewingChange.Height = 0;
                 }
                 catch // Something must have gone horribly wrong with the database since the record was opened,
                 {     // so just scrap the whole thing.

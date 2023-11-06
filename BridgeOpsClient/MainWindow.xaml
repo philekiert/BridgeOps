@@ -16,8 +16,10 @@
 
         <Menu Grid.Row="0">
             <MenuItem Header="User">
-                <MenuItem Header="Log In" x:Name="menuUserLogIn" Click="menuUserLogIn_Click" />
-                <MenuItem Header="Log Out" x:Name="menuUserLogOut" Click="menuUserLogOut_Click" />
+                <MenuItem Header="Log In" IsEnabled="False"
+                          x:Name="menuUserLogIn" Click="menuUserLogIn_Click" />
+                <MenuItem Header="Log Out" IsEnabled="True"
+                          x:Name="menuUserLogOut" Click="menuUserLogOut_Click" />
             </MenuItem>
             <MenuItem Header="Database">
                 <MenuItem Header="New">

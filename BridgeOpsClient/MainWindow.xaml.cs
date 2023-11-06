@@ -28,7 +28,7 @@ namespace BridgeOpsClient
         public MainWindow()
         {
             // Request login credentials on startup.
-            LogIn logIn = new LogIn();
+            LogIn logIn = new LogIn(this);
             logIn.ShowDialog();
             if (!App.IsLoggedIn)
                 Close();
@@ -108,7 +108,7 @@ namespace BridgeOpsClient
                 MessageBox.Show("Already logged in as " + App.sd.username + ".");
             else
             {
-                LogIn logIn = new LogIn();
+                LogIn logIn = new LogIn(this);
                 logIn.Show();
             }
         }
@@ -119,6 +119,12 @@ namespace BridgeOpsClient
                 App.LogOut();
             else
                 MessageBox.Show("Not logged in.");
+        }
+
+        public void ToggleLogInOut(bool loggedIn)
+        {
+            menuUserLogIn.IsEnabled = loggedIn;
+            menuUserLogOut.IsEnabled = !loggedIn;
         }
     }
 }

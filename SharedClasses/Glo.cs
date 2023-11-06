@@ -76,6 +76,8 @@ public static class Glo
     public const string SMALLINT = "SMALLINT";
     public const string TINYINT = "TINYINT";
 
+    public const int USER_ADMIN = 0;
+    public const int USER_NON_ADMIN = 1;
 
     // Column Names
     public static class Tab

@@ -16,8 +16,11 @@
                     <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
+                <Label Grid.Row="0" x:Name="lblViewingChange"
+                       Content="Viewing change" Background="#F56" Height="0" Padding="5 1"/>
+                <Grid Grid.Row="1">
                     <Grid.Resources>
                         <Style TargetType="TextBox">
                             <Setter Property="Margin" Value="10 5 10 5" />
@@ -36,13 +39,13 @@
                     <Label Content="Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID" />
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgID" Margin="10 2 10 2"/>
                 </Grid>
-                <custom:DataInputTable x:Name="ditAsset" Grid.Row="1"/>
-                <Label Grid.Row="2" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
+                <custom:DataInputTable x:Name="ditAsset" Grid.Row="2"/>
+                <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
                Margin="10,0,10,0" Height="26"/>
-                <TextBox x:Name="txtNotes" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Top"
+                <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
                  Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"
                  VerticalScrollBarVisibility="Auto"/>
-                <Grid Grid.Row="4">
+                <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
