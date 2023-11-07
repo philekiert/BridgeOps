@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         SizeToContent="WidthAndHeight"
         ResizeMode="CanResize"
-        Title="" Height="500" Width="500" MinWidth="100">
+        Title="" Height="500" Width="500" MinWidth="744">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>

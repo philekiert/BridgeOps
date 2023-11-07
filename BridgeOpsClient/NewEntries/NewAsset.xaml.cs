@@ -46,6 +46,23 @@ namespace BridgeOpsClient
             txtAssetID.Text = id;
             txtAssetID.IsReadOnly = true;
         }
+        public NewAsset(string id, string record)
+        {
+            InitializeComponent();
+            InitialiseFields();
+
+            btnAdd.Visibility = Visibility.Hidden;
+            btnEdit.Visibility = Visibility.Hidden;
+            btnDelete.Visibility = Visibility.Hidden;
+            this.id = id;
+
+            txtAssetID.Text = id;
+            txtAssetID.IsReadOnly = true;
+            cmbOrgID.IsEditable = true; // This makes it so we can set the value without loading the list of IDs.
+            ToggleFieldsEnabled(false);
+
+            tabChangeLog.IsEnabled = false;
+        }
 
         private void InitialiseFields()
         {
@@ -229,20 +246,6 @@ namespace BridgeOpsClient
             }
         }
 
-        private void btnView_Click(object sender, RoutedEventArgs e)
-        {
-            List<object?> data;
-            // Error message will present itself in BuildHistorical() if needed.
-            if (App.BuildHistorical("Asset", dtgChangeLog.GetCurrentlySelectedID(), id, out data))
-            {
-                Populate(data);
-                ToggleFieldsEnabled(false);
-                btnReset.IsEnabled = true;
-                lblViewingChange.Height = 20;
-                lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
-            }
-        }
-
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
         {
             GetHistory();
@@ -257,27 +260,22 @@ namespace BridgeOpsClient
             btnDelete.IsEnabled = enabled;
         }
 
-        private void btnReset_Click(object sender, RoutedEventArgs e)
+        private void dtgChangeLog_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            List<List<object?>> rows;
-            if (App.Select("Asset",
-                           new List<string> { "*" },
-                           new List<string> { Glo.Tab.ASSET_ID },
-                           new List<string> { id },
-                           out _, out rows))
+            List<object?> data;
+            string selectedID = dtgChangeLog.GetCurrentlySelectedID();
+            if (selectedID == "")
+                return;
+
+            // Error message will present itself in BuildHistorical() if needed.
+            if (App.BuildHistorical("Asset", selectedID, id, out data))
             {
-                try
-                {
-                    Populate(rows[0]);
-                    ToggleFieldsEnabled(true);
-                    btnReset.IsEnabled = false;
-                    // Set height to 0 ather than Visibility to Hidden as we want the field to collapse.
-                    lblViewingChange.Height = 0;
-                }
-                catch // Something must have gone horribly wrong with the database since the record was opened,
-                {     // so just scrap the whole thing.
-                    Close();
-                }
+                NewAsset viewAsset = new(id, dtgChangeLog.GetCurrentlySelectedCell(1));
+                viewAsset.Populate(data);
+                viewAsset.ToggleFieldsEnabled(false);
+                viewAsset.lblViewingChange.Height = 20;
+                viewAsset.lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
+                viewAsset.Show();
             }
         }
     }

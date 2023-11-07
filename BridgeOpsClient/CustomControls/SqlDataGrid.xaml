@@ -9,7 +9,8 @@
                   Margin="10 10 10 10" Width="Auto">
         <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="False"
                   VerticalGridLinesBrush="#eee" HorizontalGridLinesBrush="#ccc"
-                  AutoGenerateColumns="False" HeadersVisibility="Column">
+                  AutoGenerateColumns="False" HeadersVisibility="Column"
+                  SelectionMode="Single">
             <DataGrid.Resources>
                 <Style TargetType="{x:Type DataGridCell}">
                     <Setter Property="BorderThickness" Value="0" />
