@@ -910,7 +910,9 @@ public class DatabaseCreator
 
     // Automatically opens and closes the connection.
     // If query is true, sqlReader is updated with the results.
-    private bool SendCommandSQL(string s)
+    public string lastSqlError = "";
+    public bool SendCommandSQL(string s) { return SendCommandSQL(s, false); }
+    public bool SendCommandSQL(string s, bool silent)
     {
         if (sqlCommand == null || sqlCommand.Connection.Database != sqlConnect.Database)
             sqlCommand = new SqlCommand("", sqlConnect);
@@ -925,9 +927,13 @@ public class DatabaseCreator
         }
         catch (Exception e)
         {
-            Writer.Message("\nSomething went wrong when attempting to send the SQL command. See error:",
-                           ConsoleColor.Red);
-            Writer.Message(e.Message, ConsoleColor.Red);
+            if (!silent)
+            {
+                Writer.Message("\nSomething went wrong when attempting to send the SQL command. See error:",
+                               ConsoleColor.Red);
+                Writer.Message(e.Message, ConsoleColor.Red);
+            }
+            lastSqlError = e.Message;
 
             return false;
         }

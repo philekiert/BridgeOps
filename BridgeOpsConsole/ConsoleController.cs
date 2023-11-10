@@ -41,10 +41,11 @@ public class ConsoleController
     public const int MENU_GLOBAL = -1;
     public const int MENU_HOME = 0;
     public const int MENU_DATABASE = 1;
-    public const int MENU_AGENT = 2;
-    public const int MENU_NETWORK = 3;
+    public const int MENU_DATA = 2;
+    public const int MENU_AGENT = 3;
+    public const int MENU_NETWORK = 4;
     // Used by ConsoleWriter.Help() to determine the list. Should always be the highest menu index + 1.
-    public const int MENU_LAST_INDEX = 4;
+    public const int MENU_LAST_INDEX = 5;
 
     static int currentMenu = 0;
     public static string MenuName(int menuState)
@@ -57,6 +58,8 @@ public class ConsoleController
                 return "home";
             case MENU_DATABASE:
                 return "database";
+            case MENU_DATA:
+                return "data";
             case MENU_AGENT:
                 return "agent";
             case MENU_NETWORK:
@@ -127,10 +130,10 @@ public class ConsoleController
         menu = MENU_DATABASE;
         AddCommand("load type overrides", ValType.None, menu, LoadTypeOverrides,
                    "Load type overrides from file \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_TYPE_OVERRIDES +
-                   "\". Filepath is relevant to the path of this executable.");
+                   "\". File path is relevant to the path of this executable.");
         AddCommand("create type overrides", ValType.None, menu, CreateTypeOverrides,
                    "Generate default values and output to \"" + Glo.PATH_CONFIG_FILES +
-                   Glo.CONFIG_TYPE_OVERRIDES + "\". Filepath is relevant to the path of this executable.");
+                   Glo.CONFIG_TYPE_OVERRIDES + "\". File path is relevant to the path of this executable.");
         AddCommand("reset type verrides", ValType.None, menu, ResetTypeOverrides,
                    "Reset type overrides to default values.");
         AddCommand("view current values", ValType.None, menu, ViewCurrentValuesWithOverrides,
@@ -138,10 +141,10 @@ public class ConsoleController
                    "not include column additions.");
         AddCommand("load column additions", ValType.None, menu, LoadColumnAdditions,
                    "Load column additions from file \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_COLUMN_ADDITIONS +
-                   "\". Filepath is relevant to the path of this executable.");
+                   "\". File path is relevant to the path of this executable.");
         AddCommand("create column additions", ValType.None, menu, CreateColumnAdditions,
                    "Create a new column additions template file under \"" + Glo.PATH_CONFIG_FILES +
-                   Glo.CONFIG_COLUMN_ADDITIONS + "\". Filepath is relevant to the path of this executable.");
+                   Glo.CONFIG_COLUMN_ADDITIONS + "\". File path is relevant to the path of this executable.");
         AddCommand("wipe column additions", ValType.None, menu, WipeColumnAdditions,
                    "Wipe all loaded column additions. Does not affect the column additions template file.");
         AddCommand("restore column record", ValType.None, menu, RestoreColumnRecord,
@@ -150,15 +153,30 @@ public class ConsoleController
                    "created database as its reference, and does not consider any config files.");
         AddCommand("create friendly names", ValType.None, menu, CreateFriendlyNames,
                    "Create a new friendly names template file under \"" + Glo.PATH_CONFIG_FILES +
-                   Glo.CONFIG_FRIENDLY_NAMES + "\". Filepath is relevant to the path of this executable.");
+                   Glo.CONFIG_FRIENDLY_NAMES + "\". File path is relevant to the path of this executable.");
         AddCommand("parse friendly names", ValType.None, menu, ParseFriendlyNames,
                    "Check to make sure \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES +
-                   "\" is legible for agent. Does not verify stated column names. Filepath is relevent to the path " +
+                   "\" is legible for agent. Does not verify stated column names. File path is relevent to the path " +
                    "of this executable.");
         AddCommand("create database", ValType.None, menu, CreateDatabase,
                    "Create a new database on the localhost\\SQLEXPRESS server.");
         AddCommand("delete database", ValType.None, menu, DeleteDatabase,
                    "Delete the BridgeOps database on the localhost\\SQLEXPRESS server.");
+
+        // Data
+        menu = MENU_DATA;
+        AddCommand("import assets", ValType.String, menu, ImportAssets,
+                   "Import assets from a specified .csv file. Full file path is required, " +
+                   "make sure to read docs before proceeding.");
+        AddCommand("import asset parents", ValType.String, menu, ImportAssetParents,
+                   "Import asset parents from a specified .csv file. Full file path is required, " +
+                   "make sure to read docs before proceeding.");
+        AddCommand("import organisations", ValType.String, menu, ImportOrganisations,
+                   "Import organisations from a specified .csv file. " +
+                   "Full file path is required, make sure to read docs before proceeding.");
+        AddCommand("import organisation parents", ValType.String, menu, ImportOrganisationParents,
+                   "Import organisation parents from a specified .csv file. " +
+                   "Full file path is required, make sure to read docs before proceeding.");
 
         // Agent
         menu = MENU_AGENT;
@@ -176,10 +194,10 @@ public class ConsoleController
         menu = MENU_NETWORK;
         AddCommand("parse network config", ValType.None, menu, ParseNetworkSettings,
                    "Check to make sure \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK +
-                   "\" is legible for agent. Filepath is relevent to the path of this executable.");
+                   "\" is legible for agent. File path is relevent to the path of this executable.");
         AddCommand("create network config", ValType.None, menu, CreateNetworkSettings,
                    "Generate default values and output to \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK +
-                    "\". Filepath is relevant to the path of this executable.");
+                    "\". File path is relevant to the path of this executable.");
     }
 
     public int ProcessCommand(string command)
@@ -443,6 +461,323 @@ public class ConsoleController
         dbCreate.DeleteDatabase();
 
         return 0;
+    }
+
+    // These methods are barely optimised due to time restrictions and how often this feature is likely to be used.
+    private int ImportOrganisations() { return ImportRecords("Organisation", Glo.Tab.ORGANISATION_ID); }
+    private int ImportAssets() { return ImportRecords("Asset", Glo.Tab.ASSET_ID); }
+    private int ImportRecords(string table, string primaryKey)
+    {
+        if (!File.Exists(commandValString))
+        {
+            Writer.Negative("File not found.");
+            return 1;
+        }
+
+        // This is the simplest way I can find to parse a CSV file without a third party library.
+        Microsoft.VisualBasic.FileIO.TextFieldParser parser = new(commandValString);
+        parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
+        parser.SetDelimiters(",");
+
+        // The first line should be the types, so parse this first.
+        string[]? types = parser.ReadFields();
+        if (types == null)
+        {
+            Writer.Negative("No types row found. Please see docs for explanation.");
+            parser.Close();
+            return 1;
+        }
+        foreach (string type in types)
+        {
+            if (type != "TEXT" && type != "NUMBER")
+            {
+                Writer.Negative("Types must be TEXT or NUMBER.");
+                parser.Close();
+                return 1;
+            }
+        }
+
+        // The second line should be the header names, so parse this second.
+        string[]? headers = parser.ReadFields();
+        if (headers == null || !headers.Contains(primaryKey))
+        {
+            Writer.Negative("No " + primaryKey + " header found. This is the primary key for the " +
+                            table + " table and must be present.");
+            parser.Close();
+            return 1;
+        }
+
+        // Cycle through the next rows one by one, carrying out inserts. There are faster ways to accomplish this,
+        // but they could lean on RAM quite heavily.
+        int rowNum = 0;
+        int successes = 0;
+        List<List<string>> failed = new();
+
+        // Set parent organisation ID to null. User can and should load parents separately.
+        bool parentPresent = false;
+        int parentIndex = -1;
+        if (table == "Organisation")
+        {
+            for (int i = 0; i < headers.Length; ++i)
+                if (headers[i] == Glo.Tab.PARENT_ID)
+                {
+                    parentIndex = i;
+                    break;
+                }
+        }
+        else // if Asset
+        {
+            for (int i = 0; i < headers.Length; ++i)
+                if (headers[i] == Glo.Tab.ORGANISATION_ID)
+                {
+                    parentIndex = i;
+                    break;
+                }
+        }
+        if (parentIndex != -1)
+            parentPresent = true;
+
+        Writer.Message("Attempting inserts...");
+
+        while (!parser.EndOfData)
+        {
+            ++rowNum;
+            string[]? row = parser.ReadFields();
+            if (row == null || row.Length != headers.Length)
+            {
+                Writer.Negative("Line " + rowNum + " could not be read.");
+                continue;
+            }
+
+            string[] rowUnchanged = (string[])row.Clone();
+
+            string insertInto = "INSERT INTO " + table + " (";
+            string values = ") VALUES (";
+
+            for (int i = 0; i < row.Length; ++i)
+            {
+                if (row[i] == "")   // NULL
+                    row[i] = "NULL";
+                else if (types[i] == "TEXT") // TEXT
+                    row[i] = "'" + row[i].Replace("'", "''") + "'";
+                else // NUMBER
+                    row[i] = row[i].Replace("'", "''");
+            }
+
+            if (parentPresent)
+                row[parentIndex] = "NULL";
+
+            // Attempt insert, and if it fails, store the row for review by the user.
+            if (!dbCreate.SendCommandSQL(insertInto + string.Join(',', headers) + values + string.Join(',', row) + ");", true))
+            {
+                List<string> failedRow = new(rowUnchanged);
+                failedRow.Add(dbCreate.lastSqlError);
+                failed.Add(failedRow);
+                PrintCSVReadDot(false);
+            }
+            else
+            {
+                ++successes;
+                PrintCSVReadDot(true);
+            }
+        }
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine();
+
+        // Write any failed inserts to a CSV file for the user to review.
+        if (failed.Count > 0)
+        {
+            string errorFileName = GetErrorCSVPath(commandValString);
+            string count = failed.Count == 1 ? "There was 1 failure." : "There were " + failed.Count + " failures.";
+            Writer.Negative(count + " Generating " + errorFileName + " for review.");
+
+        TryFileWrite:
+            try
+            {
+                File.WriteAllText(errorFileName, string.Join(',', types) + "\n");
+            }
+            catch
+            {
+                Writer.Message("Could not write to " + errorFileName + "\nMake sure the file is not currently open " +
+                               "and press any key to try again.", ConsoleColor.Red);
+                Console.ReadKey(true);
+                goto TryFileWrite;
+            }
+            File.AppendAllText(errorFileName, string.Join(',', headers) + "\n");
+            foreach (List<string> line in failed)
+            {
+                // Make data safe for CSV file again.
+                for (int i = 0; i < line.Count; ++i)
+                    if (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n'))
+                        line[i] = "\"" + line[i].Replace("\"", "\"\"") + "\"";
+                File.AppendAllText(errorFileName, string.Join(',', line) + "\n");
+            }
+        }
+        if (failed.Count != rowNum)
+            Writer.Affirmative(successes + " inserts carried out successfully.");
+
+        parser.Close();
+        return 0;
+    }
+    private int ImportOrganisationParents() { return ImportRecordParents("Organisation", Glo.Tab.ORGANISATION_ID); }
+    private int ImportAssetParents() { return ImportRecordParents("Asset", Glo.Tab.ASSET_ID); }
+    private int ImportRecordParents(string table, string primaryKey)
+    {
+        if (!File.Exists(commandValString))
+        {
+            Writer.Negative("File not found.");
+            return 1;
+        }
+
+        // This is the simplest way I can find to parse a CSV file without a third party library.
+        Microsoft.VisualBasic.FileIO.TextFieldParser parser = new(commandValString);
+        parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
+        parser.SetDelimiters(",");
+
+        // The first line should be the types, so parse this first.
+        string[]? types = parser.ReadFields();
+        if (types == null)
+        {
+            Writer.Negative("No types row found. Please see docs for explanation.");
+            parser.Close();
+            return 1;
+        }
+        foreach (string type in types)
+        {
+            if (type != "TEXT" && type != "NUMBER")
+            {
+                Writer.Negative("Types must be TEXT or NUMBER.");
+                parser.Close();
+                return 1;
+            }
+        }
+
+        // The second line should be the header names, so parse this second.
+        string[]? headers = parser.ReadFields();
+        string parentColName = (table == "Organisation" ? Glo.Tab.PARENT_ID : Glo.Tab.ORGANISATION_ID);
+        if (headers == null || !(headers.Contains(primaryKey) && headers.Contains(parentColName)))
+        {
+            Writer.Negative(primaryKey + " and " + parentColName + " columns must be present.");
+            parser.Close();
+            return 1;
+        }
+
+        // Cycle through the next rows one by one, carrying out updates. There are faster ways to accomplish this,
+        // but they could lean on RAM quite heavily.
+        int rowNum = 0;
+        int successes = 0;
+        List<List<string>> failed = new();
+
+        // Set parent organisation ID to null. User can and should load parents separately.
+        int parentIndex = -1;
+        int idIndex = -1;
+        if (table == "Organisation")
+        {
+            for (int i = 0; i < headers.Length && (parentIndex == -1 || idIndex == -1); ++i)
+                if (headers[i] == parentColName)
+                    parentIndex = i;
+                else if (headers[i] == primaryKey)
+                    idIndex = i;
+        }
+        else // if Asset
+        {
+            for (int i = 0; i < headers.Length && (parentIndex == -1 || idIndex == -1); ++i)
+                if (headers[i] == parentColName)
+                    parentIndex = i;
+                else if (headers[i] == primaryKey)
+                    idIndex = i;
+        }
+
+        Writer.Message("Attempting updates...");
+
+        while (!parser.EndOfData)
+        {
+            ++rowNum;
+            string[]? row = parser.ReadFields();
+            if (row == null || row.Length != headers.Length)
+            {
+                Writer.Negative("Line " + rowNum + " could not be read.");
+                continue;
+            }
+
+            string[] rowUnchanged = (string[])row.Clone();
+
+            for (int i = 0; i < row.Length; ++i)
+            {
+                if (row[i] == "")   // NULL
+                    row[i] = "NULL";
+                else if (types[i] == "TEXT") // TEXT
+                    row[i] = "'" + row[i].Replace("'", "''") + "'";
+                else // NUMBER
+                    row[i] = row[i].Replace("'", "''");
+            }
+
+            // Attempt update, and if it fails, store the row for review by the user.
+            if (!dbCreate.SendCommandSQL("UPDATE " + table +
+                                         " SET " + parentColName + " = " + row[parentIndex] +
+                                         " WHERE " + primaryKey + " = " + row[idIndex] + ";", true))
+            {
+                List<string> failedRow = new(rowUnchanged);
+                failedRow.Add(dbCreate.lastSqlError);
+                failed.Add(failedRow);
+                PrintCSVReadDot(false);
+            }
+            else
+            {
+                ++successes;
+                PrintCSVReadDot(true);
+            }
+        }
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine();
+
+        // Write any failed inserts to a CSV file for the user to review.
+        if (failed.Count > 0)
+        {
+            string errorFileName = GetErrorCSVPath(commandValString);
+            string count = failed.Count == 1 ? "There was 1 failure." : "There were " + failed.Count + " failures.";
+            Writer.Negative(count + " Generating " + errorFileName + " for review.");
+
+        TryFileWrite:
+            try
+            {
+                File.WriteAllText(errorFileName, string.Join(',', types) + "\n");
+            }
+            catch
+            {
+                Writer.Message("Could not write to " + errorFileName + "\nMake sure the file is not currently open " +
+                               "and press any key to try again.", ConsoleColor.Red);
+                Console.ReadKey(true);
+                goto TryFileWrite;
+            }
+            File.AppendAllText(errorFileName, string.Join(',', headers) + "\n");
+            foreach (List<string> line in failed)
+            {
+                // Make data safe for CSV file again.
+                for (int i = 0; i < line.Count; ++i)
+                    if (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n'))
+                        line[i] = "\"" + line[i].Replace("\"", "\"\"") + "\"";
+                File.AppendAllText(errorFileName, string.Join(',', line) + "\n");
+            }
+        }
+        if (failed.Count != rowNum)
+            Writer.Affirmative(successes + " updates carried out successfully.");
+
+        parser.Close();
+        return 0;
+    }
+    private string GetErrorCSVPath(string path)
+    {
+        if (path.ToLower().EndsWith(".csv"))
+            path = path.Remove(path.Length - 4);
+        return path + "-import-errors.csv";
+    }
+    private void PrintCSVReadDot(bool success)
+    {
+        // Colour must be reset to white outside of this function.
+        if (success) Console.ForegroundColor = ConsoleColor.DarkGreen;
+        else Console.ForegroundColor = ConsoleColor.Red;
+        Console.Write("●");
     }
 
 
