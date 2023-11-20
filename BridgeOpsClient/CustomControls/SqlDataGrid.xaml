@@ -5,18 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" d:DesignWidth="800">
-    <ScrollViewer x:Name="scb" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                  Margin="10 10 10 10" Width="Auto">
-        <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="False"
+    <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="False"
                   VerticalGridLinesBrush="#eee" HorizontalGridLinesBrush="#ccc"
                   AutoGenerateColumns="False" HeadersVisibility="Column"
-                  SelectionMode="Single">
-            <DataGrid.Resources>
-                <Style TargetType="{x:Type DataGridCell}">
-                    <Setter Property="BorderThickness" Value="0" />
-                    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-                </Style>
-            </DataGrid.Resources>
-        </DataGrid>
-    </ScrollViewer>
+                  SelectionMode="Single" Margin="10 10 10 10"
+                  EnableRowVirtualization="True" EnableColumnVirtualization="True">
+        <DataGrid.Resources>
+            <Style TargetType="{x:Type DataGridCell}">
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            </Style>
+        </DataGrid.Resources>
+    </DataGrid>
 </UserControl>

@@ -5,14 +5,14 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:BridgeOpsClient"
       xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
-      mc:Ignorable="d" d:DesignWidth="800" Height="440"
+      mc:Ignorable="d" d:DesignWidth="800"
       Title="PageDatabaseView"
       >
 
     <Grid x:Name="pageGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="44" />
-            <RowDefinition />
+            <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid>
             <!-- Search bar -->
@@ -46,7 +46,7 @@
         <!-- Results -->
         <Grid Grid.Row="1" x:Name="resultsArea">
             <Grid.RowDefinitions>
-                <RowDefinition/>
+                <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
             <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1"
                                 Width="{Binding ActualWidth, ElementName=pageGrid}"

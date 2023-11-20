@@ -126,7 +126,8 @@ namespace BridgeOpsClient
 
                     sd.sessionID = "";
 
-                    ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
+                    if (Current.MainWindow != null)
+                        ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
 
                     return true;
                 }
