@@ -34,7 +34,7 @@ namespace BridgeOpsClient
         public void AddPane(Frame element)
         {
             AddPane(Grid.GetRow(element));
-        }
+        }   
         public void AddPane(int index)
         {
             if (paneCount < 3)

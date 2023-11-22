@@ -6,10 +6,10 @@
              xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" d:DesignWidth="800">
     <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="False"
-                  VerticalGridLinesBrush="#eee" HorizontalGridLinesBrush="#ccc"
-                  AutoGenerateColumns="False" HeadersVisibility="Column"
-                  SelectionMode="Single" Margin="10 10 10 10"
-                  EnableRowVirtualization="True" EnableColumnVirtualization="True">
+              VerticalGridLinesBrush="#f0f0f0" HorizontalGridLinesBrush="#eee"
+              AutoGenerateColumns="False" HeadersVisibility="Column"
+              SelectionMode="Single" Margin="10 10 10 10"
+              EnableRowVirtualization="True" EnableColumnVirtualization="True">
         <DataGrid.Resources>
             <Style TargetType="{x:Type DataGridCell}">
                 <Setter Property="BorderThickness" Value="0" />
