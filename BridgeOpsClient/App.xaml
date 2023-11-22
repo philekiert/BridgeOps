@@ -10,7 +10,7 @@
         <!-- ComboBox -->
         <Style TargetType="ComboBox">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <!-- This code enables virtualization on all ComboBoxes so they aren't too slow to load. -->
+            <!-- This enables virtualization on all ComboBoxes so they aren't too slow to load. -->
             <Setter Property="ItemsPanel">
                 <Setter.Value>
                     <ItemsPanelTemplate>

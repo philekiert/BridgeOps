@@ -355,6 +355,8 @@ public class FieldDefs
                         "\n#  - Spaces in the column name will be replaced with underscores in the database, and conversely, underscores" +
                         "\n#    will be replaced with spaces when displayed in the client software. For this reason, underscores cannot" +
                         "\n#    be displayed." +
+                        "\n#  - Do not end any column names with 'Register', as this could interfere with some operations, including " +
+                        "\n#    database creation." +
                         "\n#  - Only the [allowed] section is optional and can be ommitted." +
                         "\n#  - [type] is restricted to the following values:" +
                         "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT (these cannot accept [allowed] values)" +
@@ -365,7 +367,8 @@ public class FieldDefs
                         "\n#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +
                         "\n" +
                         "\n# ! Some knowledge of the listed SQL types is recommended before using this file." +
-                        "\n# ! One slight quirk... [allowed] values cannot contain square brackets (\"[\" or \"]\") as this would interfere with some vital operations." +
+                        "\n# ! One slight quirk... [allowed] values cannot contain square brackets (\"[\" or \"]\") as this would " +
+                        "\n#   interfere with some vital operations." +
                         "\n" +
                         "\n";
         try

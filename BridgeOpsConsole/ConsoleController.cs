@@ -431,7 +431,7 @@ public class ConsoleController
             File.WriteAllText(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES,
                             "# To use this file, simply write the table name, followed by the column name, followed" +
                             "# by the name you wish to be used, separated by ';;'. For example (omitting  the '# '):" +
-                            "\n" + 
+                            "\n" +
                             "\n# TableName;;ColumnName;;Your Custom Field Name" +
                             "\n# Food;;Bananas;;Yellow Fruit" +
                             "\n# Food;;Raisins;;Dried Grapes" +
@@ -464,6 +464,7 @@ public class ConsoleController
     }
 
     // These methods are barely optimised due to time restrictions and how often this feature is likely to be used.
+    // Keep "Organisation" and "Asset" capitalised.
     private int ImportOrganisations() { return ImportRecords("Organisation", Glo.Tab.ORGANISATION_ID); }
     private int ImportAssets() { return ImportRecords("Asset", Glo.Tab.ASSET_ID); }
     private int ImportRecords(string table, string primaryKey)
@@ -506,6 +507,14 @@ public class ConsoleController
             parser.Close();
             return 1;
         }
+        // Record the ID index, necessary for some error reporting below.
+        int idIndex = -1; // This code cannot end with -1, was we already made sure primaryKey is present above.
+        for (int i = 0; i < headers.Length; ++i)
+            if (headers[i] == primaryKey)
+            {
+                idIndex = i;
+                break;
+            }
 
         // Cycle through the next rows one by one, carrying out inserts. There are faster ways to accomplish this,
         // but they could lean on RAM quite heavily.
@@ -539,6 +548,21 @@ public class ConsoleController
 
         Writer.Message("Attempting inserts...");
 
+        // Create a list of register column names, as these will all want setting to 1.
+        string registersOn = "";
+        List<string> headersRegister = new(headers);
+        List<string> allTableColumnNames = dbCreate.GetAllColumnNames(table + "Change");
+        foreach (string s in allTableColumnNames)
+            if (s.EndsWith(Glo.Tab.CHANGE_REGISTER_SUFFIX))
+            {
+                // There will always be a value in front of the list of 1's due to an ID needing to be present.
+                registersOn += ",1";
+                headersRegister.Add(s);
+            }
+        headersRegister.AddRange(new string[2] { Glo.Tab.LOGIN_ID, Glo.Tab.CHANGE_REASON });
+        string register = "Imported " + (table == "Organisation" ? "organisation." : "asset.");
+        registersOn += $",1,'{register}'"; // 1 is always admin due to the database creation process.
+
         while (!parser.EndOfData)
         {
             ++rowNum;
@@ -552,6 +576,7 @@ public class ConsoleController
             string[] rowUnchanged = (string[])row.Clone();
 
             string insertInto = "INSERT INTO " + table + " (";
+            string insertRegisterInto = "INSERT INTO " + table + "Change (";
             string values = ") VALUES (";
 
             for (int i = 0; i < row.Length; ++i)
@@ -567,8 +592,10 @@ public class ConsoleController
             if (parentPresent)
                 row[parentIndex] = "NULL";
 
+            string rowString = string.Join(',', row);
             // Attempt insert, and if it fails, store the row for review by the user.
-            if (!dbCreate.SendCommandSQL(insertInto + string.Join(',', headers) + values + string.Join(',', row) + ");", true))
+            if (!dbCreate.SendCommandSQL(insertInto + string.Join(',', headers) +
+                                         values + rowString + ");", true))
             {
                 List<string> failedRow = new(rowUnchanged);
                 failedRow.Add(dbCreate.lastSqlError);
@@ -577,8 +604,20 @@ public class ConsoleController
             }
             else
             {
-                ++successes;
-                PrintCSVReadDot(true);
+                // Create changelog entry.
+                if (!dbCreate.SendCommandSQL(insertRegisterInto + string.Join(',', headersRegister) +
+                                             values + rowString + registersOn + ");", true))
+                {
+                    string id = row[idIndex];
+                    Console.Write($"[Error writing changelog for {id}. Deleting record...]");
+                    if (!dbCreate.SendCommandSQL($"DELETE FROM {table} WHERE {primaryKey} = '{id}'"))
+                        Console.Write("[Error. Record will need to be manually deleted.]");
+                }
+                else
+                {
+                    ++successes;
+                    PrintCSVReadDot(true);
+                }
             }
         }
         Console.ForegroundColor = ConsoleColor.White;
@@ -590,6 +629,7 @@ public class ConsoleController
             string errorFileName = GetErrorCSVPath(commandValString);
             string count = failed.Count == 1 ? "There was 1 failure." : "There were " + failed.Count + " failures.";
             Writer.Negative(count + " Generating " + errorFileName + " for review.");
+
 
         TryFileWrite:
             try
@@ -724,8 +764,20 @@ public class ConsoleController
             }
             else
             {
-                ++successes;
-                PrintCSVReadDot(true);
+                // Create changelog entry.
+                if (!dbCreate.SendCommandSQL($"UPDATE {table}Change " +
+                                             $"SET {parentColName} = {row[parentIndex]}" +
+                                             $", {parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX} = 1" +
+                                             $"WHERE {primaryKey} = {row[idIndex]};", true))
+                {
+                    Console.Write($"[Error writing changelog for {row[idIndex]}, " +
+                                  $"the change will have to be made manually.]");
+                }
+                else
+                {
+                    ++successes;
+                    PrintCSVReadDot(true);
+                }
             }
         }
         Console.ForegroundColor = ConsoleColor.White;
@@ -735,7 +787,8 @@ public class ConsoleController
         if (failed.Count > 0)
         {
             string errorFileName = GetErrorCSVPath(commandValString);
-            string count = failed.Count == 1 ? "There was 1 failure." : "There were " + failed.Count + " failures.";
+            string count = failed.Count == 1 ? "There was 1 recorded failure." : "There were " + failed.Count +
+                                                                                 " recorded failures.";
             Writer.Negative(count + " Generating " + errorFileName + " for review.");
 
         TryFileWrite:
@@ -778,6 +831,7 @@ public class ConsoleController
         if (success) Console.ForegroundColor = ConsoleColor.DarkGreen;
         else Console.ForegroundColor = ConsoleColor.Red;
         Console.Write("●");
+        Console.ForegroundColor = ConsoleColor.White;
     }
 
 

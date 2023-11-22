@@ -3,6 +3,7 @@ using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -287,11 +288,11 @@ public class DatabaseCreator
         string creation = "CREATE DATABASE " + DATABASE_NAME + " ON PRIMARY (" +
                             "NAME = " + DATABASE_NAME + "_Data, " +
                             "FILENAME = '" + DATABASE_FILEPATH + "', " +
-                            "SIZE = 2MB, MAXSIZE = 10MB, FILEGROWTH = 10%) " +
+                            "SIZE = 2GB, MAXSIZE = 10GB, FILEGROWTH = 10%) " +
                           "LOG ON (" +
                             "NAME = BridgeOps_Log, " +
                             "FILENAME = 'C:\\BridgeOps_Log.ldf', " +
-                            "SIZE = 1MB, MAXSIZE = 5MB, FILEGROWTH = 10%)";
+                            "SIZE = 1GB, MAXSIZE = 5GB, FILEGROWTH = 10%)";
 
         if (SendCommandSQL(creation))
         {
@@ -906,6 +907,36 @@ public class DatabaseCreator
         {
             CloseSQL();
         }
+    }
+
+    public List<string> GetAllColumnNames(string table)
+    {
+        try
+        {
+            OpenSQL();
+            List<string> columnNames = new();
+
+            if (sqlCommand == null || sqlCommand.Connection.Database != sqlConnect.Database)
+                sqlCommand = new SqlCommand("", sqlConnect);
+            sqlCommand.CommandText = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS" +
+                                   $" WHERE TABLE_NAME = '{table}' AND" +
+                                   $" COLUMN_NAME LIKE '%{Glo.Tab.CHANGE_REGISTER_SUFFIX}';";
+
+            using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                while (reader.Read())
+                    columnNames.Add(reader.GetString(0));
+
+            return columnNames;
+        }
+        catch
+        {
+            Writer.Message("Could not read column names.", ConsoleColor.Red);
+        }
+        finally
+        {
+            CloseSQL();
+        }
+        return new List<string>();
     }
 
     // Automatically opens and closes the connection.
