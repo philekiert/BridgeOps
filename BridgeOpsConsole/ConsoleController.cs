@@ -559,9 +559,9 @@ public class ConsoleController
                 registersOn += ",1";
                 headersRegister.Add(s);
             }
-        headersRegister.AddRange(new string[2] { Glo.Tab.LOGIN_ID, Glo.Tab.CHANGE_REASON });
+        headersRegister.AddRange(new string[] { Glo.Tab.LOGIN_ID, Glo.Tab.CHANGE_REASON, Glo.Tab.CHANGE_TIME });
         string register = "Imported " + (table == "Organisation" ? "organisation." : "asset.");
-        registersOn += $",1,'{register}'"; // 1 is always admin due to the database creation process.
+        registersOn += $",1,'{register}', "; // 1 is always admin due to the database creation process.
 
         while (!parser.EndOfData)
         {
@@ -606,7 +606,8 @@ public class ConsoleController
             {
                 // Create changelog entry.
                 if (!dbCreate.SendCommandSQL(insertRegisterInto + string.Join(',', headersRegister) +
-                                             values + rowString + registersOn + ");", true))
+                                             values + rowString + registersOn +
+                                             "'" + SqlAssist.DateTimeToSQLType(DateTime.Now) + "');", true))
                 {
                     string id = row[idIndex];
                     Console.Write($"[Error writing changelog for {id}. Deleting record...]");
@@ -765,10 +766,17 @@ public class ConsoleController
             else
             {
                 // Create changelog entry.
-                if (!dbCreate.SendCommandSQL($"UPDATE {table}Change " +
-                                             $"SET {parentColName} = {row[parentIndex]}" +
-                                             $", {parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX} = 1" +
-                                             $"WHERE {primaryKey} = {row[idIndex]};", true))
+                if (!dbCreate.SendCommandSQL($"INSERT INTO {table}Change " +
+                                                    $"({primaryKey}, " +
+                                                    $"{parentColName}, " +
+                                                    $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
+                                                    $"{Glo.Tab.CHANGE_REASON}, " +
+                                                    $"{Glo.Tab.CHANGE_TIME})" +
+                                             $"VALUES({row[idIndex]}, " +
+                                                    $"{row[parentIndex]}, " +
+                                                    $"1, " +
+                                                    $"'Set parent.', " +
+                                                    $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}');", true))
                 {
                     Console.Write($"[Error writing changelog for {row[idIndex]}, " +
                                   $"the change will have to be made manually.]");
