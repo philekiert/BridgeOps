@@ -19,6 +19,7 @@ using Azure.Core.GeoJson;
 using Microsoft.Data.SqlClient;
 using SendReceiveClasses;
 using System.ComponentModel.Design;
+using System.Data;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.Principal;
@@ -230,7 +231,7 @@ public class ConsoleController
                     else
                     {
                         Writer.Message("Invalid integer value.");
-                        return 0;
+                        return 1;
                     }
                 }
                 return commandDefs[commandString].method();
@@ -241,7 +242,6 @@ public class ConsoleController
                     if (command == MenuName(n).ToLower())
                     {
                         currentMenu = n;
-
                         return 0;
                     }
             }
@@ -490,9 +490,9 @@ public class ConsoleController
         }
         foreach (string type in types)
         {
-            if (type != "TEXT" && type != "NUMBER")
+            if (type != "TEXT" && type != "NUMBER" && type != "DATETIME")
             {
-                Writer.Negative("Types must be TEXT or NUMBER.");
+                Writer.Negative("Types must be TEXT, NUMBER or DATETIME.");
                 parser.Close();
                 return 1;
             }
@@ -586,8 +586,26 @@ public class ConsoleController
                     row[i] = "NULL";
                 else if (types[i] == "TEXT") // TEXT
                     row[i] = "'" + row[i].Replace("'", "''") + "'";
-                else // NUMBER
+                else if (types[i] == "NUMBER") // NUMBER
                     row[i] = row[i].Replace("'", "''");
+                else // DATETIME
+                {
+                    long unixTimestamp;
+                    DateTime dateTime;
+                    if (long.TryParse(row[i], out unixTimestamp))
+                    {
+                        DateTime test = new DateTime(1686830167);
+                        if (unixTimestamp == 0)
+                            row[i] = "NULL";
+                        else
+                        {
+                            DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
+                            row[i] = $"'{SqlAssist.DateTimeToSQLType(dto.DateTime)}'";
+                        }
+                    }
+                    else if (DateTime.TryParse(row[i], out dateTime))
+                        row[i] = $"'{SqlAssist.DateTimeToSQLType(dateTime)}'";
+                }
             }
 
             if (parentPresent)
@@ -681,9 +699,9 @@ public class ConsoleController
         }
         foreach (string type in types)
         {
-            if (type != "TEXT" && type != "NUMBER")
+            if (type != "TEXT" && type != "NUMBER" && type != "DATETIME")
             {
-                Writer.Negative("Types must be TEXT or NUMBER.");
+                Writer.Negative("Types must be TEXT, NUMBER or DATETIME.");
                 parser.Close();
                 return 1;
             }
