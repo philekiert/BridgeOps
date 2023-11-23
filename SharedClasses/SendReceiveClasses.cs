@@ -312,7 +312,7 @@ namespace SendReceiveClasses
                                                             parentOrgID, "1",
                                                             dialNo, "1",
                                                             notes, "1")); ;
-            return com;
+            return SqlAssist.Transaction(com);
         }
 
         public string SqlUpdate(int loginID)
@@ -376,7 +376,7 @@ namespace SendReceiveClasses
                                                                changeReason == null ? "''" : changeReason));
             }
 
-            return command;
+            return SqlAssist.Transaction(command);
         }
     }
 
@@ -460,7 +460,7 @@ namespace SendReceiveClasses
                                                             "'Created new asset.'",
                                                             organisationID, "1",
                                                             notes, "1"));
-            return com;
+            return SqlAssist.Transaction(com);
         }
 
         public string SqlUpdate(int loginID)
@@ -515,7 +515,7 @@ namespace SendReceiveClasses
                                                                 changeReason == null ? "" : changeReason));
             }
 
-            return com;
+            return SqlAssist.Transaction(com);
         }
     }
 
@@ -580,7 +580,6 @@ namespace SendReceiveClasses
                                     Glo.Tab.CONTACT_ID, contactID);
         }
     }
-
 
     struct ConferenceType
     {
@@ -1053,6 +1052,20 @@ namespace SendReceiveClasses
         {
             return "UPDATE " + tableName + " SET " + columnsAndValues +
                    " WHERE " + SecureColumn(whereCol) + " = " + whereID.ToString() + ";";
+        }
+
+        public static string Transaction(params string[] statements)
+        {
+            for (int i = 0; i < statements.Length; ++i)
+                if (!statements[i].EndsWith(';'))
+                    statements[i] += ";";
+
+            StringBuilder bldr = new("BEGIN TRANSACTION; BEGIN TRY");
+            foreach (string s in statements)
+                bldr.Append(" " + s);
+            bldr.Append(" COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
+
+            return bldr.ToString();
         }
 
         public static string AddQuotes(string val)
