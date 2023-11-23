@@ -942,6 +942,7 @@ public class DatabaseCreator
     // Automatically opens and closes the connection.
     // If query is true, sqlReader is updated with the results.
     public string lastSqlError = "";
+    public int lastSqlRowsAffected = 0;
     public bool SendCommandSQL(string s) { return SendCommandSQL(s, false); }
     public bool SendCommandSQL(string s, bool silent)
     {
@@ -952,7 +953,7 @@ public class DatabaseCreator
         {
             OpenSQL();
             sqlCommand.CommandText = s;
-            sqlCommand.ExecuteNonQuery();
+            lastSqlRowsAffected = sqlCommand.ExecuteNonQuery();
 
             return true;
         }

@@ -579,6 +579,7 @@ public class ConsoleController
             string insertRegisterInto = "INSERT INTO " + table + "Change (";
             string values = ") VALUES (";
 
+            // Add quotes to text fields.
             for (int i = 0; i < row.Length; ++i)
             {
                 if (row[i] == "")   // NULL
@@ -593,9 +594,17 @@ public class ConsoleController
                 row[parentIndex] = "NULL";
 
             string rowString = string.Join(',', row);
+
+            // Create a transaction for the inserts into the main and change tables.
+            StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
+            bldr.Append(insertInto + string.Join(',', headers) + values + rowString + "); ");
+            bldr.Append(insertRegisterInto + string.Join(',', headersRegister) +
+                        values + rowString + registersOn +
+                        "'" + SqlAssist.DateTimeToSQLType(DateTime.Now) + "'); ");
+            bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
+
             // Attempt insert, and if it fails, store the row for review by the user.
-            if (!dbCreate.SendCommandSQL(insertInto + string.Join(',', headers) +
-                                         values + rowString + ");", true))
+            if (!dbCreate.SendCommandSQL(bldr.ToString(), true))
             {
                 List<string> failedRow = new(rowUnchanged);
                 failedRow.Add(dbCreate.lastSqlError);
@@ -604,21 +613,8 @@ public class ConsoleController
             }
             else
             {
-                // Create changelog entry.
-                if (!dbCreate.SendCommandSQL(insertRegisterInto + string.Join(',', headersRegister) +
-                                             values + rowString + registersOn +
-                                             "'" + SqlAssist.DateTimeToSQLType(DateTime.Now) + "');", true))
-                {
-                    string id = row[idIndex];
-                    Console.Write($"[Error writing changelog for {id}. Deleting record...]");
-                    if (!dbCreate.SendCommandSQL($"DELETE FROM {table} WHERE {primaryKey} = '{id}'"))
-                        Console.Write("[Error. Record will need to be manually deleted.]");
-                }
-                else
-                {
-                    ++successes;
-                    PrintCSVReadDot(true);
-                }
+                ++successes;
+                PrintCSVReadDot(true);
             }
         }
         Console.ForegroundColor = ConsoleColor.White;
@@ -753,10 +749,26 @@ public class ConsoleController
                     row[i] = row[i].Replace("'", "''");
             }
 
+            // Create a transaction for the inserts into the main and change tables.
+            StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
+            bldr.Append("UPDATE " + table +
+                       " SET " + parentColName + " = " + row[parentIndex] +
+                       " WHERE " + primaryKey + " = " + row[idIndex] + "; ");
+            bldr.Append($"INSERT INTO {table}Change " +
+                               $"({primaryKey}, " +
+                               $"{parentColName}, " +
+                               $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
+                               $"{Glo.Tab.CHANGE_REASON}, " +
+                               $"{Glo.Tab.CHANGE_TIME})" +
+                        $"VALUES({row[idIndex]}, " +
+                               $"{row[parentIndex]}, " +
+                               $"1, " +
+                               $"'Set parent to imported value.', " +
+                               $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}'); ");
+            bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
+
             // Attempt update, and if it fails, store the row for review by the user.
-            if (!dbCreate.SendCommandSQL("UPDATE " + table +
-                                         " SET " + parentColName + " = " + row[parentIndex] +
-                                         " WHERE " + primaryKey + " = " + row[idIndex] + ";", true))
+            if (!dbCreate.SendCommandSQL(bldr.ToString(), true))
             {
                 List<string> failedRow = new(rowUnchanged);
                 failedRow.Add(dbCreate.lastSqlError);
@@ -765,27 +777,8 @@ public class ConsoleController
             }
             else
             {
-                // Create changelog entry.
-                if (!dbCreate.SendCommandSQL($"INSERT INTO {table}Change " +
-                                                    $"({primaryKey}, " +
-                                                    $"{parentColName}, " +
-                                                    $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
-                                                    $"{Glo.Tab.CHANGE_REASON}, " +
-                                                    $"{Glo.Tab.CHANGE_TIME})" +
-                                             $"VALUES({row[idIndex]}, " +
-                                                    $"{row[parentIndex]}, " +
-                                                    $"1, " +
-                                                    $"'Set parent.', " +
-                                                    $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}');", true))
-                {
-                    Console.Write($"[Error writing changelog for {row[idIndex]}, " +
-                                  $"the change will have to be made manually.]");
-                }
-                else
-                {
-                    ++successes;
-                    PrintCSVReadDot(true);
-                }
+                ++successes;
+                PrintCSVReadDot(true);
             }
         }
         Console.ForegroundColor = ConsoleColor.White;
