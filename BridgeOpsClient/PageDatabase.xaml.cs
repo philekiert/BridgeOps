@@ -34,7 +34,7 @@ namespace BridgeOpsClient
         public void AddPane(Frame element)
         {
             AddPane(Grid.GetRow(element));
-        }   
+        }
         public void AddPane(int index)
         {
             if (paneCount < 3)
@@ -45,7 +45,8 @@ namespace BridgeOpsClient
 
                 // Add the new frame.
                 Frame frame = new();
-                frame.SetValue(Grid.RowProperty, paneCount);
+                frame.SetValue(Grid.RowProperty, index + 1);
+
                 PageDatabaseView view = new PageDatabaseView(this, frame);
                 frame.Content = view;
                 views.Add(view);
@@ -53,11 +54,28 @@ namespace BridgeOpsClient
 
                 grdPanes.Children.Insert(index + 1, frame);
 
-                // Reset all row indexes.
+                if (paneCount > 1)
+                {
+                    GridSplitter splitter = new GridSplitter();
+                    frame.SetValue(Grid.RowProperty, index);
+                    grdPanes.Children.Add(splitter);
+                }
+
+                // Reset all row indexes and bottom-padding to accomodate splitters.
+                int splitterIndex = 0;
+                int paneIndex = 0;
                 for (int i = 0; i < grdPanes.Children.Count; ++i)
                 {
-                    grdPanes.Children[i].SetValue(Grid.RowProperty, i);
-                    // Children of this grid will only ever be Frames containing PageDatabaseViews.
+                    if (grdPanes.Children[i].GetType() != typeof(GridSplitter))
+                    {
+                        grdPanes.Children[i].SetValue(Grid.RowProperty, paneIndex);
+                        ++paneIndex;
+                    }
+                    else
+                    {
+                        grdPanes.Children[i].SetValue(Grid.RowProperty, splitterIndex);
+                        ++splitterIndex;
+                    }
                 }
 
                 EnforceMinimumSize();
@@ -65,7 +83,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public void RemovePan(Frame element)
+        public void RemovePane(Frame element)
         {
             int index = Grid.GetRow(element);
             if (paneCount > 1)
@@ -74,9 +92,32 @@ namespace BridgeOpsClient
                 grdPanes.Children.RemoveAt(index);
                 views.Remove((PageDatabaseView)element.Content);
 
-
+                // Reset all row indexes and remove one splitter
+                bool deletedSplitter = false;
+                int splitterIndex = 0;
+                int paneIndex = 0;
                 for (int i = 0; i < grdPanes.Children.Count; ++i)
-                    grdPanes.Children[i].SetValue(Grid.RowProperty, i);
+                {
+                    if (grdPanes.Children[i].GetType() != typeof(GridSplitter))
+                    {
+                        grdPanes.Children[i].SetValue(Grid.RowProperty, paneIndex);
+                        ++paneIndex;
+                    }
+                    else
+                    {
+                        if (deletedSplitter)
+                        {
+                            grdPanes.Children[i].SetValue(Grid.RowProperty, splitterIndex);
+                            ++splitterIndex;
+                        }
+                        else
+                        {
+                            grdPanes.Children.RemoveAt(i);
+                            --i;
+                            deletedSplitter = true;
+                        }
+                    }
+                }
 
                 --paneCount;
 

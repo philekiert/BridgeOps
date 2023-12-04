@@ -285,6 +285,7 @@ public class DatabaseCreator
     }
     public void CreateDatabase()
     {
+        Writer.Message("Creating database and log file...");
         string creation = "CREATE DATABASE " + DATABASE_NAME + " ON PRIMARY (" +
                             "NAME = " + DATABASE_NAME + "_Data, " +
                             "FILENAME = '" + DATABASE_FILEPATH + "', " +

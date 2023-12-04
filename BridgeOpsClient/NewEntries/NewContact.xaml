@@ -19,7 +19,7 @@
                Margin="10,0,10,0" Height="26"/>
         <TextBox x:Name="txtNotes" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top"
                  Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"
-                 VerticalScrollBarVisibility="Auto"/>
+                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>

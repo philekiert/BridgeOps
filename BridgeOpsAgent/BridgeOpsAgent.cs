@@ -43,7 +43,7 @@ internal class BridgeOpsAgent
         return result;
     }
 
-    // Multiple threads may try to access this at once, so hold them up if necessary.
+    // Multiple threads may try to access this at once, so hold them up if stopnecessary.
     private static bool currentlyWriting = false;
     private static void LogError(string context, Exception e)
     {
@@ -110,6 +110,19 @@ internal class BridgeOpsAgent
     private static IPEndPoint thisEP = new IPEndPoint(thisIP, portInbound);
     private static TcpListener listener = new TcpListener(thisEP);
 
+    private static void GetColumnRecordFromFile()
+    {
+        try
+        {
+            if (!ColumnRecord.Initialise(File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD)))
+                throw new Exception("Column record file may be corrupted. Restore from console.");
+        }
+        catch (Exception e)
+        {
+            LogError("Column record could not be initialised, see error:", e);
+        }
+    }
+
 
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string connectionString = "server=localhost\\SQLEXPRESS;" +
@@ -121,6 +134,9 @@ internal class BridgeOpsAgent
 
     private static void Main(string[] args)
     {
+        // Get the column record.
+        GetColumnRecordFromFile();
+
         // Test sending a command to the database to see if it works. If it doesn't, keep trying every 5 seconds.
         bool successfulSqlConnection = false;
         while (!successfulSqlConnection)
@@ -295,6 +311,8 @@ internal class BridgeOpsAgent
                     ClientSelectColumnPrimary(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT)
                     ClientSelect(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_WIDE)
+                    ClientSelectWide(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_DELETE)
                     ClientDelete(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LINK_CONTACT)
@@ -652,6 +670,60 @@ internal class BridgeOpsAgent
         }
     }
 
+    private static void ClientSelectWide(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            SelectWideRequest req = sr.Deserialise<SelectWideRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            // Get the list of columns to search, reject if the table was invalid.
+            Dictionary<string, ColumnRecord.Column> columns;
+            if (req.table == "Organisation")
+                columns = ColumnRecord.organisation;
+            else if (req.table == "Asset")
+                columns = ColumnRecord.asset;
+            else if (req.table == "Contact")
+                columns = ColumnRecord.contact;
+            else
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                return;
+            }
+
+            string command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
+            List<string> conditions = new();
+            foreach (KeyValuePair<string, ColumnRecord.Column> kvp in columns)
+            {
+                if (ColumnRecord.IsTypeString(kvp.Value))
+                    conditions.Add(kvp.Key + " LIKE \'%" + req.value + "%'");
+            }
+
+            command += " WHERE " + string.Join(" OR ", conditions);
+
+            SqlCommand com = new SqlCommand(command, sqlConnect);
+
+            SelectResult result = new(com.ExecuteReader());
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't run or return query, see error:", e);
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
     private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect, int target)
     {
         try
@@ -922,7 +994,7 @@ internal class BridgeOpsAgent
 
                     // i represents the Register field, so + 1 to get the relevant value.
                     if (!reader.IsDBNull(i + 1))
-                    data[n] = reader[i + 1];
+                        data[n] = reader[i + 1];
                     found[n] = true;
                     ++foundSoFar;
                 }

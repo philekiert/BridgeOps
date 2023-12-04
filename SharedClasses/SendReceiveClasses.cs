@@ -770,6 +770,22 @@ namespace SendReceiveClasses
         }
     }
 
+    struct SelectWideRequest
+    {
+        public string sessionID;
+        public List<string> select;
+        public string table;
+        public string value;
+
+        public SelectWideRequest(string sessionID, List<string> select, string table, string value)
+        {
+            this.sessionID = sessionID;
+            this.table = table;
+            this.select = select;
+            this.value = value;
+        }
+    }
+
     struct SelectResult
     {
         /* The reason we return the type as well as the column name because it's so cumbersome to get some of this

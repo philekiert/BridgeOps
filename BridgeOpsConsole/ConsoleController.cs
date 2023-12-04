@@ -776,11 +776,13 @@ public class ConsoleController
                                $"({primaryKey}, " +
                                $"{parentColName}, " +
                                $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
+                               $"{Glo.Tab.LOGIN_ID}, " +
                                $"{Glo.Tab.CHANGE_REASON}, " +
                                $"{Glo.Tab.CHANGE_TIME})" +
                         $"VALUES({row[idIndex]}, " +
                                $"{row[parentIndex]}, " +
-                               $"1, " +
+                               $"1, " + // Switch on the register.
+                               $"1, " + // Admin account should always be 1 after database creation.
                                $"'Set parent to imported value.', " +
                                $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}'); ");
             bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");

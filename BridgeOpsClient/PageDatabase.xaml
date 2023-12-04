@@ -14,6 +14,13 @@
                 <Setter Property="Height" Value="1*"/>
                 <Setter Property="MinHeight" Value="180"/>
             </Style>
+            <Style TargetType="GridSplitter" >
+                <Setter Property="Padding" Value="0 20 0 0"/>
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="Height" Value="10"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="VerticalAlignment" Value="Bottom"/>
+            </Style>
         </Grid.Resources>
     </Grid>
 </Page>

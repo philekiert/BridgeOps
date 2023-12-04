@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        SizeToContent="WidthAndHeight"
         ResizeMode="CanResize"
-        Title="" Height="500" Width="500" MinWidth="744">
+        Title="" Height="500" Width="500" MinWidth="834">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>

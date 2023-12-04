@@ -440,5 +440,10 @@ namespace BridgeOpsClient
                 viewOrg.Show();
             }
         }
+
+        private void tabAssetsContacts_GotFocus(object sender, RoutedEventArgs e)
+        {
+            btnAssetNew.Focus();
+        }
     }
 }

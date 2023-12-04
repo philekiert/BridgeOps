@@ -39,6 +39,8 @@ namespace BridgeOpsClient
             cmbTable.SelectedIndex = 0;
 
             dtgResults.MouseDoubleClick += dtg_DoubleClick;
+
+            txtSearch.Focus();
         }
 
         private void PopulateColumnComboBox()
@@ -144,6 +146,44 @@ namespace BridgeOpsClient
                 dtgResults.Update(tableColDefs, columnNames, rows);
         }
 
+        // Wide search on either enter or click.
+        private void WideSearch()
+        {
+            Dictionary<string, ColumnRecord.Column> tableColDefs;
+            Dictionary<string, string> nameReversals;
+            if (cmbTable.Text == "Organisation")
+            {
+                tableColDefs = ColumnRecord.organisation;
+                nameReversals = ColumnRecord.organisationFriendlyNameReversal;
+            }
+            else if (cmbTable.Text == "Asset")
+            {
+                tableColDefs = ColumnRecord.asset;
+                nameReversals = ColumnRecord.assetFriendlyNameReversal;
+            }
+            else // if == "Contact"
+            {
+                tableColDefs = ColumnRecord.contact;
+                nameReversals = ColumnRecord.contactFriendlyNameReversal;
+            }
+
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.SelectWide(cmbTable.Text, txtSearch.Text,
+                           out columnNames, out rows))
+                dtgResults.Update(tableColDefs, columnNames, rows);
+        }
+        private void btnWideSearch_Click(object sender, RoutedEventArgs e)
+        {
+            WideSearch();
+        }
+        private void txtSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                WideSearch();
+        }
+
         // Bring up selected organisation on double-click.
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -166,7 +206,7 @@ namespace BridgeOpsClient
 
         private void btnRemovePane_Click(object sender, RoutedEventArgs e)
         {
-            containingPage.RemovePan(containingFrame);
+            containingPage.RemovePane(containingFrame);
         }
     }
 }
