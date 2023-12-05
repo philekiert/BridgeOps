@@ -27,15 +27,15 @@ namespace BridgeOpsClient
     public partial class MainWindow : Window
     {
         public const int CONF_PANE_MIN_WIDTH = 200;
-        public const int DATA_PANE_MIN_WIDTH = 834;
+        public const int DATA_PANE_MIN_WIDTH = 818;
         private void SetMinWidth(int option)
         {
             if (option == 0)
                 MinWidth = CONF_PANE_MIN_WIDTH;
             else if (option == 1)
-                MinWidth = CONF_PANE_MIN_WIDTH + 14 + DATA_PANE_MIN_WIDTH;
+                MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
             else if (option == 2)
-                MinWidth = DATA_PANE_MIN_WIDTH;
+                MinWidth = DATA_PANE_MIN_WIDTH + 16;
         }
 
         public MainWindow()
@@ -216,26 +216,6 @@ namespace BridgeOpsClient
 
                 frameConf.SetValue(Grid.RowProperty, 0);
             }
-        }
-
-        private void btnZoomOutTime_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void btnZoomInTime_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void btnZoomOutRes_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void btnZoomInRes_Click(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }
