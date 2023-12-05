@@ -13,14 +13,29 @@
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <ToolBarTray Grid.Row="0">
-            <ToolBar>
-                <Button Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click" />
-                <Button Content="+" x:Name="btnTimeZoomIn" Click="btnTimeZoomIn_Click" />
-                <Button Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click" />
-                <Button Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click" />
-            </ToolBar>
-        </ToolBarTray>
+        <Grid Grid.Row="0">
+            <Grid.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Width" Value="20"/>
+                    <Setter Property="Height" Value="20"/>
+                    <Setter Property="Margin" Value="2"/>
+                    <Setter Property="Padding" Value="0 -2 0 0"/>
+                </Style>
+                <Style TargetType="ColumnDefinition">
+                    <Setter Property="Width" Value="Auto"/>
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click" />
+            <Button Grid.Column="1" Content="+" x:Name="btnTimeZoomIn" Click="btnTimeZoomIn_Click" />
+            <Button Grid.Column="2" Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click" />
+            <Button Grid.Column="3" Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click" />
+        </Grid>
         <Grid Grid.Row="1">
             <local:ScheduleView x:Name="schView" />
         </Grid>

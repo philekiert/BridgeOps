@@ -155,7 +155,7 @@ namespace BridgeOpsClient
         private void EnforceMinimumSize()
         {
             // I happen to know that th title bar and menu bar add up to 63 here, but this needs reworking some time.
-            containingWindow.MinHeight = 180 * paneCount + 63;
+            containingWindow.MinHeight = 180 * paneCount + 87;
         }
     }
 }

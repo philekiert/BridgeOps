@@ -16,6 +16,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
@@ -25,6 +26,18 @@ namespace BridgeOpsClient
 {
     public partial class MainWindow : Window
     {
+        public const int CONF_PANE_MIN_WIDTH = 200;
+        public const int DATA_PANE_MIN_WIDTH = 834;
+        private void SetMinWidth(int option)
+        {
+            if (option == 0)
+                MinWidth = CONF_PANE_MIN_WIDTH;
+            else if (option == 1)
+                MinWidth = CONF_PANE_MIN_WIDTH + 14 + DATA_PANE_MIN_WIDTH;
+            else if (option == 2)
+                MinWidth = DATA_PANE_MIN_WIDTH;
+        }
+
         public MainWindow()
         {
             // Request login credentials on startup.
@@ -35,8 +48,9 @@ namespace BridgeOpsClient
 
             InitializeComponent();
 
-            frameMain.Content = new PageConferenceView();
-            frameMain.Content = new PageDatabase(this);
+            frameConf.Content = new PageConferenceView();
+            frameData.Content = new PageDatabase(this);
+            MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
@@ -125,6 +139,103 @@ namespace BridgeOpsClient
         {
             menuUserLogIn.IsEnabled = loggedIn;
             menuUserLogOut.IsEnabled = !loggedIn;
+        }
+
+        /* This is surely needlessly verbose, will optimise later if time allows. Removing and re-adding the columns
+         * was the only way I could get it all to work. */
+        double oldConfWidth = 1;
+        double oldDataWidth = 1;
+        private void btnConfPane_Click(object sender, RoutedEventArgs e)
+        {
+            if (frameData.Visibility == Visibility.Visible)
+            {
+                // If we're coming from a pane split, remember their widths.
+                if (frameConf.Visibility == Visibility.Visible)
+                {
+                    oldConfWidth = grdConfData.ColumnDefinitions[0].Width.Value;
+                    oldDataWidth = grdConfData.ColumnDefinitions[1].Width.Value;
+                }
+
+                SetMinWidth(0);
+
+                frameConf.Visibility = Visibility.Visible;
+                spltConfData.Visibility = Visibility.Collapsed;
+                frameData.Visibility = Visibility.Collapsed;
+
+                grdConfData.ColumnDefinitions.Clear();
+                ColumnDefinition col = new ColumnDefinition();
+                col.MinWidth = CONF_PANE_MIN_WIDTH;
+                grdConfData.ColumnDefinitions.Add(col);
+            }
+        }
+
+        private void btnMixedPane_Click(object sender, RoutedEventArgs e)
+        {
+            if (frameConf.Visibility == Visibility.Collapsed || frameData.Visibility == Visibility.Collapsed)
+            {
+                SetMinWidth(1);
+                frameConf.Visibility = Visibility.Visible;
+                spltConfData.Visibility = Visibility.Visible;
+                frameData.Visibility = Visibility.Visible;
+
+                grdConfData.ColumnDefinitions.Clear();
+                ColumnDefinition col = new ColumnDefinition();
+                col.MinWidth = CONF_PANE_MIN_WIDTH;
+                col.Width = new GridLength(oldConfWidth, GridUnitType.Star);
+                grdConfData.ColumnDefinitions.Add(col);
+                col = new ColumnDefinition();
+                col.MinWidth = DATA_PANE_MIN_WIDTH;
+                col.Width = new GridLength(oldDataWidth, GridUnitType.Star);
+                grdConfData.ColumnDefinitions.Add(col);
+
+                frameData.SetValue(Grid.RowProperty, 1);
+            }
+        }
+
+        private void btnDataPane_Click(object sender, RoutedEventArgs e)
+        {
+            if (frameConf.Visibility == Visibility.Visible)
+            {
+                // If we're coming from a pane split, remember their widths.
+                if (frameData.Visibility == Visibility.Visible)
+                {
+                    oldConfWidth = grdConfData.ColumnDefinitions[0].Width.Value;
+                    oldDataWidth = grdConfData.ColumnDefinitions[1].Width.Value;
+                }
+
+                SetMinWidth(2);
+
+                frameConf.Visibility = Visibility.Collapsed;
+                spltConfData.Visibility = Visibility.Collapsed;
+                frameData.Visibility = Visibility.Visible;
+
+                grdConfData.ColumnDefinitions.Clear();
+                ColumnDefinition col = new ColumnDefinition();
+                col.MinWidth = CONF_PANE_MIN_WIDTH;
+                grdConfData.ColumnDefinitions.Add(col);
+
+                frameConf.SetValue(Grid.RowProperty, 0);
+            }
+        }
+
+        private void btnZoomOutTime_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void btnZoomInTime_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void btnZoomOutRes_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void btnZoomInRes_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

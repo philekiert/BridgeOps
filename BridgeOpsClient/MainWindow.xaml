@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         ResizeMode="CanResize"
-        Title="" Height="500" Width="500" MinWidth="834">
+        Title="" Height="500" Width="500">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="24"/>
             <RowDefinition Height="24"/>
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -36,7 +37,42 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
-        <Frame Grid.Row="1" x:Name="frameMain"></Frame>
+        <Grid Grid.Row="1">
+            <Grid.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Width" Value="20"/>
+                    <Setter Property="Height" Value="20"/>
+                    <Setter Property="Margin" Value="2"/>
+                    <Setter Property="Padding" Value="0 -2 0 0"/>
+                </Style>
+                <Style TargetType="ColumnDefinition">
+                    <Setter Property="Width" Value="Auto"/>
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click"/>
+            <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click"/>
+            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click"
+                    Margin="2 2 10 2"/>
+        </Grid>
+        <Grid x:Name="grdConfData" Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MinWidth="200" />
+                <ColumnDefinition Width="1*" MinWidth="834"/>
+            </Grid.ColumnDefinitions>
+            <Frame Grid.Column="0" x:Name="frameConf"></Frame>
+            <GridSplitter Grid.Column="0" x:Name="spltConfData" Width="5"
+                          HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
+            <Frame Grid.Column="1" x:Name="frameData"></Frame>
+        </Grid>
     </Grid>
 </Window>
 
