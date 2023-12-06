@@ -120,9 +120,33 @@ namespace BridgeOpsClient
                 (int)schView.TimeToX(DateTime.Now, displayZoom))
                 changed = true;
 
+            if (!changed && schView.scheduleTime != schView.lastScheduleTime)
+                changed = true;
+
             if (changed)
                 RedrawGrid();
             lastFrame = Environment.TickCount64;
+        }
+
+        bool dragging = false;
+        private void schView_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            dragging = true;
+            CaptureMouse();
+        }
+
+        private void schView_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            dragging = false;
+            ReleaseMouseCapture();
+        }
+
+        int lastX = 0;
+        private void schView_MouseMove(object sender, MouseEventArgs e)
+        {
+            int newX = (int)(e.GetPosition(this).X);
+            schView.Drag(newX - lastX);
+            lastX = newX;
         }
     }
 
@@ -148,19 +172,18 @@ namespace BridgeOpsClient
         const long ticks1Hour = 36_000_000_000;
         const long ticks1Day = 864_000_000_000;
 
+        public DateTime lastScheduleTime = DateTime.Now;
         public DateTime scheduleTime = DateTime.Now;
 
         protected override void OnRender(DrawingContext dc)
         {
-            scheduleTime = DateTime.Now;
-
             // Reduce zoom sensitivity the further out you get.
             float zoomTimeDisplay = DisplayZoom();
             float zoomResourceDisplay = zoomResourceCurrent;
 
             // Prepare shades and brushes.
 
-            float shadeFive = (zoomTimeDisplay - 70f) / 30f;
+            float shadeFive = (zoomTimeDisplay - 65) / 30f;
             MathHelper.Clamp(ref shadeFive, 0f, 1f);
             shadeFive *= 255f;
             float shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
@@ -178,15 +201,19 @@ namespace BridgeOpsClient
                                                                                                 180, 180, 180));
             Brush brsScheduleLineDay = new SolidColorBrush(System.Windows.Media.Color.FromRgb(120, 120, 120));
 
-            brsScheduleLineFive.Freeze();
-            brsScheduleLineQuarter.Freeze();
-            brsScheduleLineHour.Freeze();
-            brsScheduleLineDay.Freeze();
-
             Pen penScheduleLineFive = new Pen(brsScheduleLineFive, 1);
             Pen penScheduleLineQuarter = new Pen(brsScheduleLineQuarter, 1);
             Pen penScheduleLineHour = new Pen(brsScheduleLineHour, 1);
             Pen penScheduleLineDay = new Pen(brsScheduleLineDay, 1);
+
+            // Freez()ing Pens increases draw speed dramatically. Freez()ing the Brushes helps a bit, but Freez()ing
+            // the Pens seems to implicitly catch the Brushes as well to draw outrageously fast.
+            penScheduleLineFive.Freeze();
+            penScheduleLineQuarter.Freeze();
+            penScheduleLineHour.Freeze();
+            brsScheduleLineDay.Freeze();
+
+
 
             double maxLineHeight = PageConferenceView.resourceCount * zoomResourceDisplay + .5f;
             if (maxLineHeight > ActualHeight)
@@ -265,6 +292,12 @@ namespace BridgeOpsClient
             for (float y = 0; y < maxLineHeight; y += zoomResourceDisplay)
                 dc.DrawLine(penScheduleLineDay, new System.Windows.Point(.5f, y + .5f),
                                                 new System.Windows.Point(ActualWidth, y + .5f));
+        }
+
+        public void Drag(double xDif)
+        {
+            lastScheduleTime = scheduleTime;
+            scheduleTime = scheduleTime.AddMinutes(-xDif * DisplayZoom());
         }
 
 

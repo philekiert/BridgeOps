@@ -36,8 +36,9 @@
             <Button Grid.Column="2" Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click" />
             <Button Grid.Column="3" Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click" />
         </Grid>
-        <Grid Grid.Row="1">
-            <local:ScheduleView x:Name="schView" />
+        <Grid Grid.Row="1" Background="White"
+              MouseDown="schView_MouseDown" MouseUp="schView_MouseUp" MouseMove="schView_MouseMove">
+            <local:ScheduleView x:Name="schView"/>
         </Grid>
     </Grid>
 </Page>
