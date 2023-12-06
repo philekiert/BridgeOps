@@ -93,16 +93,19 @@ namespace BridgeOpsClient
             // Smooth zoom (prefer 60Hz).
             float deltaTime = (float)((double)(Environment.TickCount - lastFrame) / 60f);
             bool changed = false;
-            if (schView.zoomTimeCurrent != schView.zoomTime && schView.smoothZoom)
+            if (schView.smoothZoom)
             {
-                MathC.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime, smoothZoomSpeed * deltaTime, 1.2f);
-                changed = true;
-            }
-            if (schView.zoomResourceCurrent != schView.zoomResource && schView.smoothZoom)
-            {
-                MathC.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
-                                                            smoothZoomSpeed * deltaTime, 1.2f);
-                changed = true;
+                if (schView.zoomTimeCurrent != schView.zoomTime)
+                {
+                    MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime, smoothZoomSpeed * deltaTime, 1.2f);
+                    changed = true;
+                }
+                if (schView.zoomResourceCurrent != schView.zoomResource)
+                {
+                    MathHelper.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
+                                                                smoothZoomSpeed * deltaTime, 1.2f);
+                    changed = true;
+                }
             }
 
             // Follow the current time.
@@ -158,13 +161,13 @@ namespace BridgeOpsClient
             // Prepare shades and brushes.
 
             float shadeFive = (zoomTimeDisplay - 70f) / 30f;
-            MathC.Clamp(ref shadeFive, 0f, 1f);
+            MathHelper.Clamp(ref shadeFive, 0f, 1f);
             shadeFive *= 255f;
             float shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
-            MathC.Clamp(ref shadeQuarter, 0f, 1f);
+            MathHelper.Clamp(ref shadeQuarter, 0f, 1f);
             shadeQuarter *= 255f;
             float shadeHour = zoomTimeDisplay / 40f;
-            MathC.Clamp(ref shadeHour, .45f, 1f);
+            MathHelper.Clamp(ref shadeHour, .45f, 1f);
             shadeHour *= 255f;
 
             Brush brsScheduleLineFive = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeFive,
