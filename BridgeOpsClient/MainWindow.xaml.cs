@@ -51,6 +51,8 @@ namespace BridgeOpsClient
             frameConf.Content = new PageConferenceView();
             frameData.Content = new PageDatabase(this);
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
+
+            btnConfPane_Click(new bool(), new RoutedEventArgs());
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)

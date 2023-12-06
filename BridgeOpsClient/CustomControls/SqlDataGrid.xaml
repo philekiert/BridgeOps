@@ -9,11 +9,27 @@
               VerticalGridLinesBrush="#f0f0f0" HorizontalGridLinesBrush="#eee"
               AutoGenerateColumns="False" HeadersVisibility="Column"
               SelectionMode="Single" Margin="10 10 10 10"
-              EnableRowVirtualization="True" EnableColumnVirtualization="True">
+              EnableRowVirtualization="True" EnableColumnVirtualization="True"
+              MouseDown="dtg_MouseDown">
         <DataGrid.Resources>
-            <Style TargetType="{x:Type DataGridCell}">
-                <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Style TargetType="DataGridCell">
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <!-- Annoying that this botch solution is necessary, but this centres each row vertically -->
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type DataGridCell}">
+                            <Grid Background="{TemplateBinding Background}">
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style TargetType="DataGridRow">
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Height" Value="20"/>
             </Style>
         </DataGrid.Resources>
     </DataGrid>

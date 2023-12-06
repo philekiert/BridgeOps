@@ -121,7 +121,7 @@ namespace BridgeOpsClient.CustomControls
             return GetCurrentlySelectedCell(0);
         }
         public string GetCurrentlySelectedCell(int column)
-        {
+            {
             if (dtg.SelectedItem == null)
                 return "";
             Row selectedRow = (Row)dtg.SelectedItem;
@@ -134,6 +134,17 @@ namespace BridgeOpsClient.CustomControls
             if (id == null)
                 return "";
             return id;
+        }
+
+        // When clicking on an empty space on the DataGrid, select item 0 if present.
+        private void dtg_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // A mousedown on the DataGrid won't be triggered if it's on a data row or header.
+            if (dtg.Items.Count != 0 && dtg.SelectedIndex == -1)
+            {
+                dtg.SelectedIndex = 0;
+                dtg.Focus(); // Otherwise the item highlight is greyed out.
+            }
         }
     }
 }

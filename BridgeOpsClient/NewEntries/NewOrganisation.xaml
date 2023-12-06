@@ -62,7 +62,7 @@
                 </Grid>
             </Grid>
         </TabItem>
-        <TabItem Header="Assets &amp; Contacts" x:Name="tabAssetsContacts" GotFocus="tabAssetsContacts_GotFocus">
+        <TabItem Header="Assets &amp; Contacts" x:Name="tabAssetsContacts">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -73,7 +73,8 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" Content="Assets" Margin="5 5 10 0" Padding="5 5 5 0"/>
-                <custom:SqlDataGrid Grid.Row="1" x:Name="dtgAssets" Width="470" Height="250"/>
+                <custom:SqlDataGrid Grid.Row="1" x:Name="dtgAssets" Width="470" Height="250"
+                                    MouseDoubleClick="dtgAssets_DoubleClick"/>
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"/>
@@ -91,7 +92,8 @@
                             HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
                 </Grid>
                 <Label Grid.Row="3" Content="Contacts" Margin="5 10 0 0" Padding="5 5 5 0"/>
-                <custom:SqlDataGrid Grid.Row="4" x:Name="dtgContacts" Width="470" Height="150"/>
+                <custom:SqlDataGrid Grid.Row="4" x:Name="dtgContacts" Width="470" Height="150"
+                                    MouseDoubleClick="dtgContacts_DoubleClick"/>
                 <Grid Grid.Row="5" Margin="0 0 0 10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"/>

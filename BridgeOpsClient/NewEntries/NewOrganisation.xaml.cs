@@ -52,8 +52,6 @@ namespace BridgeOpsClient
             // Sort out contact and asset tables.
             PopulateAssets();
             PopulateContacts();
-            dtgAssets.MouseDoubleClick += dtgAssets_DoubleClick;
-            dtgContacts.MouseDoubleClick += dtgContacts_DoubleClick;
         }
         public NewOrganisation(string id, string record)
         {
@@ -277,7 +275,7 @@ namespace BridgeOpsClient
         // Bring up selected asset on double-click.
         private void dtgAssets_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            string currentID = dtgContacts.GetCurrentlySelectedID();
+            string currentID = dtgAssets.GetCurrentlySelectedID();
             if (currentID != "")
                 App.EditAsset(dtgAssets.GetCurrentlySelectedID());
         }
@@ -439,11 +437,6 @@ namespace BridgeOpsClient
                 viewOrg.lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
                 viewOrg.Show();
             }
-        }
-
-        private void tabAssetsContacts_GotFocus(object sender, RoutedEventArgs e)
-        {
-            btnAssetNew.Focus();
         }
     }
 }
