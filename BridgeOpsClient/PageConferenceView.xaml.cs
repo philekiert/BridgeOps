@@ -20,7 +20,7 @@ namespace BridgeOpsClient
     {
         DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);
 
-        public static int resourceCount = 5;
+        public static int resourceCount = 20;
         float smoothZoomSpeed = 1.6f;
 
         public PageConferenceView()
@@ -115,7 +115,7 @@ namespace BridgeOpsClient
                rather than ints, so without this measure, each time it's redrawn due to the time changing, it wants to
                move a fraction of a pixel, causing some lines to be truncated to a different pixel than before, but not
                others. */
-            float displayZoom = schView.DisplayZoom();
+            double displayZoom = schView.DisplayTimeZoom();
             if ((int)schView.TimeToX(schView.scheduleTime, displayZoom) !=
                 (int)schView.TimeToX(DateTime.Now, displayZoom))
                 changed = true;
@@ -123,30 +123,41 @@ namespace BridgeOpsClient
             if (!changed && schView.scheduleTime != schView.lastScheduleTime)
                 changed = true;
 
+            if (!changed && schView.scrollResource != schView.lastScrollResource)
+                changed = true;
+
             if (changed)
                 RedrawGrid();
             lastFrame = Environment.TickCount64;
         }
 
-        bool dragging = false;
+        bool dragging = false; // Switched on in MouseDown() inside the grid, switched off in MouseUp() anywhere.
         private void schView_MouseDown(object sender, MouseButtonEventArgs e)
         {
             dragging = true;
-            CaptureMouse();
+            ((IInputElement)sender).CaptureMouse();
         }
 
         private void schView_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            dragging = false;
-            ReleaseMouseCapture();
+            if (dragging)
+            {
+                dragging = false;
+                ((IInputElement)sender).ReleaseMouseCapture();
+                schView.EnforceResourceScrollLimits();
+            }
         }
 
-        int lastX = 0;
+        double lastX = 0;
+        double lastY = 0;
         private void schView_MouseMove(object sender, MouseEventArgs e)
         {
-            int newX = (int)(e.GetPosition(this).X);
-            schView.Drag(newX - lastX);
+            double newX = (int)(e.GetPosition(this).X);
+            double newY = (int)(e.GetPosition(this).Y);
+            if (dragging)
+                schView.Drag(lastX - newX, lastY - newY);
             lastX = newX;
+            lastY = newY;
         }
     }
 
@@ -154,16 +165,15 @@ namespace BridgeOpsClient
     {
         public bool smoothZoom = true;
         public int zoomTime = 10; // How many pixels an hour can be reduced to.
-        public float zoomTimeCurrent = 10f; // Used for smooth Lerp()ing.
+        public double zoomTimeCurrent = 10f; // Used for smooth Lerp()ing.
         public int zoomTimeMinimum = 10;
         public int zoomTimeMaximum = 200;
         public int zoomTimeSensitivity = 10;
         public int zoomResource = 80;
-        public float zoomResourceCurrent = 80f; // Used for smooth Lerp()ing.
+        public double zoomResourceCurrent = 80f; // Used for smooth Lerp()ing.
         public int zoomResourceMinimum = 20;
         public int zoomResourceMaximum = 200;
         public int zoomResourceSensitivity = 20;
-        public float scrollResource = 0f;
 
         float minShade = .2f;
 
@@ -174,22 +184,24 @@ namespace BridgeOpsClient
 
         public DateTime lastScheduleTime = DateTime.Now;
         public DateTime scheduleTime = DateTime.Now;
+        public double lastScrollResource = 0f;
+        public double scrollResource = 0f;
 
         protected override void OnRender(DrawingContext dc)
         {
             // Reduce zoom sensitivity the further out you get.
-            float zoomTimeDisplay = DisplayZoom();
-            float zoomResourceDisplay = zoomResourceCurrent;
+            double zoomTimeDisplay = DisplayTimeZoom();
+            double zoomResourceDisplay = zoomResourceCurrent;
 
             // Prepare shades and brushes.
 
-            float shadeFive = (zoomTimeDisplay - 65) / 30f;
+            double shadeFive = (zoomTimeDisplay - 65) / 30f;
             MathHelper.Clamp(ref shadeFive, 0f, 1f);
             shadeFive *= 255f;
-            float shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
+            double shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
             MathHelper.Clamp(ref shadeQuarter, 0f, 1f);
             shadeQuarter *= 255f;
-            float shadeHour = zoomTimeDisplay / 40f;
+            double shadeHour = zoomTimeDisplay / 40f;
             MathHelper.Clamp(ref shadeHour, .45f, 1f);
             shadeHour *= 255f;
 
@@ -289,33 +301,57 @@ namespace BridgeOpsClient
 
 
             // Resources (drawn last as these lines want to overlay the time lines).
-            for (float y = 0; y < maxLineHeight; y += zoomResourceDisplay)
-                dc.DrawLine(penScheduleLineDay, new System.Windows.Point(.5f, y + .5f),
-                                                new System.Windows.Point(ActualWidth, y + .5f));
+            double scroll = DisplayScrollResource();
+            for (double y = 0; y < maxLineHeight; y += zoomResourceDisplay)
+            {
+                double yPix = (y + .5f) - (scroll % zoomResourceDisplay);
+                // Wrap around if the line falls off the top.
+                if (yPix < 0)
+                    yPix += ActualHeight + (zoomResourceDisplay - (ActualHeight % zoomResourceDisplay));
+                dc.DrawLine(penScheduleLineDay, new Point(.5f, yPix),
+                                                new Point(ActualWidth, yPix));
+            }
         }
 
-        public void Drag(double xDif)
+        public void Drag(double xDif, double yDif)
         {
             lastScheduleTime = scheduleTime;
-            scheduleTime = scheduleTime.AddMinutes(-xDif * DisplayZoom());
+            scheduleTime = scheduleTime.AddSeconds(xDif * (3600 * (1 / DisplayTimeZoom())));
+            lastScrollResource = scrollResource;
+            scrollResource += yDif;
+        }
+
+        public void EnforceResourceScrollLimits()
+        {
+            if (scrollResource > 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight)
+                scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight;
+            if (scrollResource < 0) scrollResource = 0;
         }
 
 
         //   H E L P E R   F U N C T I O N S
 
         // Make zoom feel more sensitive when zoomed in, and less sensitive when zoomed out.
-        public float DisplayZoom()
+        public double DisplayTimeZoom()
         {
-            float zoomTimeDisplay = (zoomTimeCurrent - zoomTimeMinimum) / (zoomTimeMaximum - zoomTimeMinimum);
-            zoomTimeDisplay = (1f - MathF.Cos(zoomTimeDisplay * MathF.PI * .5f));
+            double zoomTimeDisplay = (zoomTimeCurrent - zoomTimeMinimum) / (zoomTimeMaximum - zoomTimeMinimum);
+            zoomTimeDisplay = (1f - Math.Cos(zoomTimeDisplay * Math.PI * .5d));
             zoomTimeDisplay *= zoomTimeMaximum - zoomTimeMinimum;
             zoomTimeDisplay += zoomTimeMinimum;
 
             return zoomTimeDisplay;
         }
+        public double DisplayScrollResource()
+        {
+            double scroll = scrollResource;
+            if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight)
+                scroll = 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight;
+            if (scroll < 0) scroll = 0;
+            return scroll;
+        }
 
         // Get the X coordinate on the cnvConferenceView from DateTime.
-        public double TimeToX(DateTime dt, float zoomTimeDisplay)
+        public double TimeToX(DateTime dt, double zoomTimeDisplay)
         {
             double canvasMid = ActualWidth * .5d;
             long relativeTicks = dt.Ticks - scheduleTime.Ticks;

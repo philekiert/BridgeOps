@@ -31,10 +31,10 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click" />
-            <Button Grid.Column="1" Content="+" x:Name="btnTimeZoomIn" Click="btnTimeZoomIn_Click" />
-            <Button Grid.Column="2" Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click" />
-            <Button Grid.Column="3" Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click" />
+            <Button Grid.Column="0" Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click"/>
+            <Button Grid.Column="1" Content="+" x:Name="btnTimeZoomIn" Click="btnTimeZoomIn_Click"/>
+            <Button Grid.Column="2" Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click"/>
+            <Button Grid.Column="3" Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click"/>
         </Grid>
         <Grid Grid.Row="1" Background="White"
               MouseDown="schView_MouseDown" MouseUp="schView_MouseUp" MouseMove="schView_MouseMove">
