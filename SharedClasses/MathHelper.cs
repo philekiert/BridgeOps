@@ -67,4 +67,64 @@ static class MathHelper
             if (value < target) value = target;
         }
     }
+    public static float Lerp(float value, float target, float amount)
+    {
+        if (value < target)
+        {
+            value += ((target - value) * amount);
+            if (value > target) value = target;
+        }
+        else if (value > target)
+        {
+            value += ((target - value) * amount);
+            if (value < target) value = target;
+        }
+        return value;
+    }
+    public static float Lerp(float value, float target, float amount, float minimum)
+    {
+        if (value < target)
+        {
+            float movement = ((target - value) * amount);
+            value += movement > minimum ? movement : minimum;
+            if (value > target) value = target;
+        }
+        else if (value > target)
+        {
+            float movement = ((target - value) * amount);
+            value += movement < -minimum ? movement : -minimum;
+            if (value < target) value = target;
+        }
+        return value;
+    }
+    public static double Lerp(double value, double target, double amount)
+    {
+        if (value < target)
+        {
+            value += ((target - value) * amount);
+            if (value > target) value = target;
+        }
+        else if (value > target)
+        {
+            value += ((target - value) * amount);
+            if (value < target) value = target;
+        }
+        return value;
+    }
+    public static double Lerp(double value, double target, double amount, double minimum)
+    {
+        if (value < target)
+        {
+            double movement = ((target - value) * amount);
+            value += movement > minimum ? movement : minimum;
+            if (value > target) value = target;
+        }
+        else if (value > target)
+        {
+            double movement = ((target - value) * amount);
+            value += movement < -minimum ? movement : -minimum;
+            if (value < target) value = target;
+        }
+        return value;
+    }
 }

@@ -38,7 +38,12 @@
         </Grid>
         <Grid Grid.Row="1" Background="White"
               MouseDown="schView_MouseDown" MouseUp="schView_MouseUp" MouseMove="schView_MouseMove">
-            <local:ScheduleView x:Name="schView"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <local:ScheduleView x:Name="schView" Grid.Column="0"/>
+            <ScrollBar x:Name="scrollBar" Grid.Column="1"/>
         </Grid>
     </Grid>
 </Page>

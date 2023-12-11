@@ -63,11 +63,12 @@ namespace BridgeOpsClient
 
         private void btnResourceZoomOut_Click(object sender, RoutedEventArgs e)
         {
-            schView.zoomResource -= schView.zoomResourceSensitivity;
             if (schView.zoomResource != schView.zoomResourceMinimum)
             {
-                if (schView.zoomResource < schView.zoomResourceMinimum) schView.zoomResource = schView.zoomResourceMinimum;
-                if (!schView.smoothZoom) schView.zoomResourceCurrent = schView.zoomResource;
+                schView.zoomResource -= schView.zoomResourceSensitivity;
+                if (!schView.smoothZoom)
+                    schView.zoomResourceCurrent = schView.zoomResource;
+                schView.EnforceResourceScrollLimits();
                 RedrawGrid();
             }
         }
@@ -77,7 +78,9 @@ namespace BridgeOpsClient
             if (schView.zoomResource != schView.zoomResourceMaximum)
             {
                 schView.zoomResource += schView.zoomResourceSensitivity;
-                if (!schView.smoothZoom) schView.zoomResourceCurrent = schView.zoomResource;
+                if (!schView.smoothZoom)
+                    schView.zoomResourceCurrent = schView.zoomResource;
+                schView.EnforceResourceScrollLimits();
                 RedrawGrid();
             }
         }
@@ -97,13 +100,16 @@ namespace BridgeOpsClient
             {
                 if (schView.zoomTimeCurrent != schView.zoomTime)
                 {
-                    MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime, smoothZoomSpeed * deltaTime, 1.2f);
+                    MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime,
+                                                                 smoothZoomSpeed * deltaTime, 1.2d);
                     changed = true;
                 }
                 if (schView.zoomResourceCurrent != schView.zoomResource)
                 {
+                    double old = schView.zoomResourceCurrent;
                     MathHelper.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
-                                                                smoothZoomSpeed * deltaTime, 1.2f);
+                                                                     smoothZoomSpeed * deltaTime, 1.2d);
+                    schView.scrollResource *= schView.zoomResourceCurrent / old;
                     changed = true;
                 }
             }
@@ -347,7 +353,7 @@ namespace BridgeOpsClient
             if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight)
                 scroll = 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight;
             if (scroll < 0) scroll = 0;
-            return scroll;
+            return (int)scroll;
         }
 
         // Get the X coordinate on the cnvConferenceView from DateTime.
