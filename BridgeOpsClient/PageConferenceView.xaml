@@ -43,7 +43,8 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <local:ScheduleView x:Name="schView" Grid.Column="0"/>
-            <ScrollBar x:Name="scrollBar" Grid.Column="1"/>
+            <ScrollBar x:Name="scrollBar" Grid.Column="1"
+                       Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
         </Grid>
     </Grid>
 </Page>

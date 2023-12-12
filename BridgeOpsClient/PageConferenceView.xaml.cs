@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -42,47 +43,27 @@ namespace BridgeOpsClient
         private void btnTimeZoomOut_Click(object sender, RoutedEventArgs e)
         {
             schView.zoomTime -= schView.zoomTimeSensitivity;
-            if (schView.zoomTime != schView.zoomTimeMinimum)
-            {
-                if (schView.zoomTime < schView.zoomTimeMinimum) schView.zoomTime = schView.zoomTimeMinimum;
-                if (!schView.smoothZoom) schView.zoomTimeCurrent = schView.zoomTime;
-                RedrawGrid();
-            }
+            if (schView.zoomTime != schView.zoomTimeMinimum && schView.zoomTime < schView.zoomTimeMinimum)
+                schView.zoomTime = schView.zoomTimeMinimum;
         }
 
         private void btnTimeZoomIn_Click(object sender, RoutedEventArgs e)
         {
             schView.zoomTime += schView.zoomTimeSensitivity;
-            if (schView.zoomTime != schView.zoomTimeMaximum)
-            {
-                if (schView.zoomTime > schView.zoomTimeMaximum) schView.zoomTime = schView.zoomTimeMaximum;
-                if (!schView.smoothZoom) schView.zoomTimeCurrent = schView.zoomTime;
-                RedrawGrid();
-            }
+            if (schView.zoomTime != schView.zoomTimeMaximum && schView.zoomTime > schView.zoomTimeMaximum)
+                schView.zoomTime = schView.zoomTimeMaximum;
         }
 
         private void btnResourceZoomOut_Click(object sender, RoutedEventArgs e)
         {
             if (schView.zoomResource != schView.zoomResourceMinimum)
-            {
                 schView.zoomResource -= schView.zoomResourceSensitivity;
-                if (!schView.smoothZoom)
-                    schView.zoomResourceCurrent = schView.zoomResource;
-                schView.EnforceResourceScrollLimits();
-                RedrawGrid();
-            }
         }
 
         private void btnResourceZoomIn_Click(object sender, RoutedEventArgs e)
         {
             if (schView.zoomResource != schView.zoomResourceMaximum)
-            {
                 schView.zoomResource += schView.zoomResourceSensitivity;
-                if (!schView.smoothZoom)
-                    schView.zoomResourceCurrent = schView.zoomResource;
-                schView.EnforceResourceScrollLimits();
-                RedrawGrid();
-            }
         }
 
         void WindowResized(object sender, SizeChangedEventArgs e)
@@ -96,29 +77,35 @@ namespace BridgeOpsClient
             // Smooth zoom (prefer 60Hz).
             float deltaTime = (float)((double)(Environment.TickCount - lastFrame) / 60f);
             bool changed = false;
-            if (schView.smoothZoom)
+
+            if (schView.zoomTimeCurrent != schView.zoomTime)
             {
-                if (schView.zoomTimeCurrent != schView.zoomTime)
-                {
+                if (schView.smoothZoom)
                     MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime,
-                                                                 smoothZoomSpeed * deltaTime, 1.2d);
-                    changed = true;
-                }
-                if (schView.zoomResourceCurrent != schView.zoomResource)
-                {
-                    double old = schView.zoomResourceCurrent;
+                                                             smoothZoomSpeed * deltaTime, 1.2d);
+                else
+                    schView.zoomTimeCurrent = schView.zoomTime;
+                changed = true;
+            }
+            if (schView.zoomResourceCurrent != schView.zoomResource)
+            {
+                double old = schView.zoomResourceCurrent;
+                if (schView.smoothZoom)
                     MathHelper.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
                                                                      smoothZoomSpeed * deltaTime, 1.2d);
+                else
+                    schView.zoomResourceCurrent = schView.zoomResource;
 
-                    // Nudge the scroll down .5 of the screen so that the zoom tracks with the middle of the scroll,
-                    // not the start.
-                    schView.scrollResource += schView.ActualHeight * .5d;
-                    schView.scrollResource *= schView.zoomResourceCurrent / old;
-                    schView.scrollResource -= schView.ActualHeight * .5d;
-                    schView.EnforceResourceScrollLimits();
+                // Nudge the scroll down .5 of the screen so that the zoom tracks with the middle of the scroll,
+                // not the start.
+                schView.scrollResource += schView.ActualHeight * .5d;
+                schView.scrollResource *= schView.zoomResourceCurrent / old;
+                schView.scrollResource -= schView.ActualHeight * .5d;
+                schView.EnforceResourceScrollLimits();
 
-                    changed = true;
-                }
+                UpdateScrollBar();
+
+                changed = true;
             }
 
             // Follow the current time.
@@ -168,9 +155,30 @@ namespace BridgeOpsClient
             double newX = (int)(e.GetPosition(this).X);
             double newY = (int)(e.GetPosition(this).Y);
             if (dragging)
+            {
                 schView.Drag(lastX - newX, lastY - newY);
+                UpdateScrollBar();
+            }
             lastX = newX;
             lastY = newY;
+        }
+
+        private void UpdateScrollBar()
+        {
+            scrollBar.ViewportSize = schView.ViewPercent();
+            scrollBar.Maximum = 1 - scrollBar.ViewportSize;
+            scrollBar.Value = schView.ScrollPercent() * scrollBar.Maximum;
+        }
+
+        private void scrollBar_Loaded(object sender, RoutedEventArgs e)
+        {
+            UpdateScrollBar();
+        }
+
+        private void scrollBar_Scroll(object sender, ScrollEventArgs e)
+        {
+            double scrollPercent = scrollBar.Value / scrollBar.Maximum;
+            schView.scrollResource = schView.ScrollMax() * scrollPercent;
         }
     }
 
@@ -361,6 +369,20 @@ namespace BridgeOpsClient
                 scroll = 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight;
             if (scroll < 0) scroll = 0;
             return (int)scroll;
+        }
+
+        public double ScrollMax()
+        {
+            return ((zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight) + 1;
+        }
+        public double ScrollPercent()
+        {
+            return scrollResource / (((zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight) + 1);
+        }
+        public double ViewPercent()
+        {
+            double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.resourceCount) + 1);
+            return ret > 1 ? 1 : ret;
         }
 
         // Get the X coordinate on the cnvConferenceView from DateTime.
