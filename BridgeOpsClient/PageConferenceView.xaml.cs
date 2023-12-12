@@ -109,7 +109,14 @@ namespace BridgeOpsClient
                     double old = schView.zoomResourceCurrent;
                     MathHelper.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
                                                                      smoothZoomSpeed * deltaTime, 1.2d);
+
+                    // Nudge the scroll down .5 of the screen so that the zoom tracks with the middle of the scroll,
+                    // not the start.
+                    schView.scrollResource += schView.ActualHeight * .5d;
                     schView.scrollResource *= schView.zoomResourceCurrent / old;
+                    schView.scrollResource -= schView.ActualHeight * .5d;
+                    schView.EnforceResourceScrollLimits();
+
                     changed = true;
                 }
             }
