@@ -11,11 +11,12 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="20" />
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.Resources>
-                <Style TargetType="Button">
+                <Style TargetType="Button" x:Key="ToolbarButton" >
                     <Setter Property="Width" Value="20"/>
                     <Setter Property="Height" Value="20"/>
                     <Setter Property="Margin" Value="2"/>
@@ -30,13 +31,32 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click"/>
-            <Button Grid.Column="1" Content="+" x:Name="btnTimeZoomIn" Click="btnTimeZoomIn_Click"/>
-            <Button Grid.Column="2" Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click"/>
-            <Button Grid.Column="3" Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click"/>
+            <Button Grid.Column="0" Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click"
+                    Style="{StaticResource ToolbarButton}"/>
+            <Button Grid.Column="1" Content="+" x:Name="btnTimeZoomIn" Click="btnTimeZoomIn_Click"
+                    Style="{StaticResource ToolbarButton}"/>
+            <Button Grid.Column="2" Content="-" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click"
+                    Style="{StaticResource ToolbarButton}"/>
+            <Button Grid.Column="3" Content="+" x:Name="btnResourceZoomIn" Click="btnResourceZoomIn_Click"
+                    Style="{StaticResource ToolbarButton}"/>
+            <DatePicker Grid.Column="4" x:Name="datePicker" Margin="10 0 0 0" BorderThickness="0"
+                        SelectedDateChanged="datePicker_SelectedDateChanged">
+                <DatePicker.Resources>
+                    <Style TargetType="DatePickerTextBox">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </Style>
+                    <Style TargetType="Label">
+                        <Setter Property="Padding" Value="0"/>
+                    </Style>
+                </DatePicker.Resources>
+            </DatePicker>
         </Grid>
-        <Grid Grid.Row="1" Background="White"
+        <Grid Grid.Row="1" Background="White">
+            <local:ScheduleRuler x:Name="schRuler"/>
+        </Grid>
+        <Grid Grid.Row="2" Background="White"
               MouseDown="schView_MouseDown" MouseUp="schView_MouseUp" MouseMove="schView_MouseMove">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>

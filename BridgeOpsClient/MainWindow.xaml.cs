@@ -168,6 +168,9 @@ namespace BridgeOpsClient
                 ColumnDefinition col = new ColumnDefinition();
                 col.MinWidth = CONF_PANE_MIN_WIDTH;
                 grdConfData.ColumnDefinitions.Add(col);
+
+                if (frameConf.Content is PageConferenceView pcv)
+                    pcv.scrollBar.Margin = new Thickness(0);
             }
         }
 
@@ -191,6 +194,9 @@ namespace BridgeOpsClient
                 grdConfData.ColumnDefinitions.Add(col);
 
                 frameData.SetValue(Grid.RowProperty, 1);
+
+                if (frameConf.Content is PageConferenceView pcv)
+                    pcv.scrollBar.Margin = new Thickness(0, 0, 7, 0);
             }
         }
 
@@ -217,6 +223,9 @@ namespace BridgeOpsClient
                 grdConfData.ColumnDefinitions.Add(col);
 
                 frameConf.SetValue(Grid.RowProperty, 0);
+
+                if (frameConf.Content is PageConferenceView pcv)
+                    pcv.scrollBar.Margin = new Thickness(0);
             }
         }
     }
