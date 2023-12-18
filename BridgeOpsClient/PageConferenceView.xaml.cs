@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -127,7 +128,17 @@ namespace BridgeOpsClient
             if (!viewChanged && schView.scrollResource != schView.lastScrollResource)
             {
                 viewChanged = true;
+                // Without a ruler update here, it sometimes doesn't update when scrolling vertically and horizontally
+                // at the same time. I can't figure out why, and to be honest it kind of makes having the ruler
+                // separate from the schedule view a bit pointless, but it's too much to change now on time
+                // constraints.
                 rulerChanged = true;
+            }
+
+            if (!viewChanged && cursorMoved)
+            {
+                cursorMoved = false;
+                viewChanged = true;
             }
 
             if (viewChanged) RedrawGrid();
@@ -150,19 +161,31 @@ namespace BridgeOpsClient
                 dragging = false;
                 ((IInputElement)sender).ReleaseMouseCapture();
                 schView.EnforceResourceScrollLimits();
+                if (e.GetPosition(schView).X >= 0 && e.GetPosition(schView).Y >= 0)
+                {
+                    schView.SetCursor((int)e.GetPosition(schView).X, (int)e.GetPosition(schView).Y);
+                    cursorMoved = true;
+                }
             }
         }
 
         double lastX = 0;
         double lastY = 0;
+        bool cursorMoved = false;
         private void schView_MouseMove(object sender, MouseEventArgs e)
         {
-            double newX = (int)(e.GetPosition(this).X);
-            double newY = (int)(e.GetPosition(this).Y);
+            double newX = (int)e.GetPosition(this).X;
+            double newY = (int)e.GetPosition(this).Y;
             if (dragging)
             {
                 schView.Drag(lastX - newX, lastY - newY);
                 UpdateScrollBar();
+                schView.SetCursor(-1d, -1d);
+            }
+            else
+            {
+                schView.SetCursor((int)e.GetPosition(schView).X, (int)e.GetPosition(schView).Y);
+                cursorMoved = true;
             }
             lastX = newX;
             lastY = newY;
@@ -197,7 +220,14 @@ namespace BridgeOpsClient
                                            schView.scheduleTime.Minute,
                                            schView.scheduleTime.Second,
                                            schView.scheduleTime.Millisecond);
+                RedrawRuler();
+                RedrawGrid();
             }
+        }
+
+        private void schView_MouseLeave(object sender, MouseEventArgs e)
+        {
+            schView.SetCursor(-1, -1);
         }
     }
 
@@ -268,7 +298,7 @@ namespace BridgeOpsClient
                     }
                     if (t.Hour == 0)
                     {
-                        if (xInt >= 1)
+                        if (xInt >= 2)
                         {
                             FormattedText date = new($"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}",
                                        CultureInfo.CurrentCulture,
@@ -299,7 +329,7 @@ namespace BridgeOpsClient
                                              Brushes.Black,
                                              VisualTreeHelper.GetDpi(this).PixelsPerDip);
                 if (firstDateX > dateEdge.Width + 20)
-                    dc.DrawText(dateEdge, new Point(1, 0));
+                    dc.DrawText(dateEdge, new Point(2, 0));
             }
         }
     }
@@ -332,8 +362,13 @@ namespace BridgeOpsClient
         public double lastScrollResource = 0f;
         public double scrollResource = 0f;
 
+        public Point? cursor = null;
+
         protected override void OnRender(DrawingContext dc)
         {
+            // Background
+            dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, ActualWidth, ActualHeight));
+
             // Reduce zoom sensitivity the further out you get.
             double zoomTimeDisplay = DisplayTimeZoom();
             double zoomResourceDisplay = zoomResourceCurrent;
@@ -350,25 +385,30 @@ namespace BridgeOpsClient
             MathHelper.Clamp(ref shadeHour, .45f, 1f);
             shadeHour *= 255f;
 
-            Brush brsScheduleLineFive = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeFive,
-                                                                                                230, 230, 230));
-            Brush brsScheduleLineQuarter = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeQuarter,
-                                                                                                   210, 210, 210));
-            Brush brsScheduleLineHour = new SolidColorBrush(System.Windows.Media.Color.FromArgb((byte)shadeHour,
-                                                                                                180, 180, 180));
-            Brush brsScheduleLineDay = new SolidColorBrush(System.Windows.Media.Color.FromRgb(120, 120, 120));
+            Brush brsScheduleLineFive = new SolidColorBrush(Color.FromArgb((byte)shadeFive,
+                                                                           240, 240, 240));
+            Brush brsScheduleLineQuarter = new SolidColorBrush(Color.FromArgb((byte)shadeQuarter,
+                                                                              225, 225, 225));
+            Brush brsScheduleLineHour = new SolidColorBrush(Color.FromArgb((byte)shadeHour,
+                                                                           180, 180, 180));
+            Brush brsScheduleLineDay = new SolidColorBrush(Color.FromRgb(120, 120, 120));
 
             Pen penScheduleLineFive = new Pen(brsScheduleLineFive, 1);
             Pen penScheduleLineQuarter = new Pen(brsScheduleLineQuarter, 1);
             Pen penScheduleLineHour = new Pen(brsScheduleLineHour, 1);
             Pen penScheduleLineDay = new Pen(brsScheduleLineDay, 1);
 
+            Brush brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+            Pen penCursor = new Pen(brsCursor, 1);
+
+
             // Freez()ing Pens increases draw speed dramatically. Freez()ing the Brushes helps a bit, but Freez()ing
             // the Pens seems to implicitly catch the Brushes as well to draw outrageously fast.
             penScheduleLineFive.Freeze();
             penScheduleLineQuarter.Freeze();
             penScheduleLineHour.Freeze();
-            brsScheduleLineDay.Freeze();
+            penScheduleLineDay.Freeze();
+            penCursor.Freeze();
 
             double maxLineHeight = PageConferenceView.resourceCount * zoomResourceDisplay + .5f;
             if (maxLineHeight > ActualHeight)
@@ -425,23 +465,22 @@ namespace BridgeOpsClient
                 if (x > 0d && x < ActualWidth)
                 {
                     if (t.Ticks % ticks1Day == 0)
-                        dc.DrawLine(penScheduleLineDay, new System.Windows.Point(xInt, .5f),
-                                                         new System.Windows.Point(xInt, maxLineHeight));
+                        dc.DrawLine(penScheduleLineDay, new Point(xInt, .5f),
+                                                         new Point(xInt, maxLineHeight));
                     else if (t.Ticks % ticks1Hour == 0)
-                        dc.DrawLine(penScheduleLineHour, new System.Windows.Point(xInt, .5f),
-                                                            new System.Windows.Point(xInt, maxLineHeight));
+                        dc.DrawLine(penScheduleLineHour, new Point(xInt, .5f),
+                                                            new Point(xInt, maxLineHeight));
                     else if (t.Ticks % ticks15Min == 0)
-                        dc.DrawLine(penScheduleLineQuarter, new System.Windows.Point(xInt, .5f),
-                                                         new System.Windows.Point(xInt, maxLineHeight));
+                        dc.DrawLine(penScheduleLineQuarter, new Point(xInt, .5f),
+                                                         new Point(xInt, maxLineHeight));
                     else // has to be 5 minutes
-                        dc.DrawLine(penScheduleLineFive, new System.Windows.Point(xInt, .5f),
-                                                        new System.Windows.Point(xInt, maxLineHeight));
+                        dc.DrawLine(penScheduleLineFive, new Point(xInt, .5f),
+                                                        new Point(xInt, maxLineHeight));
                 }
 
                 t = t.AddTicks(incrementTicks);
                 x += incrementX;
             }
-
 
             // Resources (drawn last as these lines want to overlay the time lines).
             double scroll = DisplayResourceScroll();
@@ -454,6 +493,29 @@ namespace BridgeOpsClient
                 dc.DrawLine(penScheduleLineDay, new Point(.5f, yPix),
                                                 new Point(ActualWidth, yPix));
             }
+
+            // Draw the cursor.
+            if (cursor != null)
+            {
+                double y = GetResourceFromY(cursor.Value.Y);
+                y *= zoomResourceCurrent;
+                y -= scroll;
+                DateTime xDT = GetDateTimeFromX(cursor.Value.X, zoomTimeDisplay);
+                if (zoomTimeDisplay < 25)
+                    xDT = SnapDateTime(xDT, 60);
+                else if (zoomTimeDisplay < 75)
+                    xDT = SnapDateTime(xDT, 15);
+                else if (zoomTimeDisplay < 200)
+                    xDT = SnapDateTime(xDT, 5);
+                else
+                    xDT = SnapDateTime(xDT, 1);
+                x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
+
+                dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
+                                       new Point(x, y + zoomResourceDisplay));
+                dc.DrawLine(penCursor, new Point(x, -4.5d),
+                                       new Point(x, .5d));
+            }
         }
 
         public void Drag(double xDif, double yDif)
@@ -462,6 +524,13 @@ namespace BridgeOpsClient
             scheduleTime = scheduleTime.AddSeconds(xDif * (3600 * (1 / DisplayTimeZoom())));
             lastScrollResource = scrollResource;
             scrollResource += yDif;
+        }
+        public void SetCursor(double x, double y)
+        {
+            if (x < 0 || y < 0)
+                cursor = null;
+            else
+                cursor = new Point(x, y);
         }
 
         public void EnforceResourceScrollLimits()
@@ -505,6 +574,41 @@ namespace BridgeOpsClient
         {
             double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.resourceCount) + 1);
             return ret > 1 ? 1 : ret;
+        }
+
+        public int GetResourceFromY(double y)
+        {
+            y += DisplayResourceScroll();
+            return (int)(y / zoomResourceCurrent);
+        }
+        public double GetYfromResource(int resource)
+        {
+            double y = resource * zoomResourceCurrent;
+            return y - DisplayResourceScroll();
+        }
+        public DateTime GetDateTimeFromX(double x, double zoom)
+        {
+            x -= ActualWidth * .5d;
+            TimeSpan dif = new TimeSpan((long)(36_000_000_000d * (x / zoom)));
+            return scheduleTime + dif;
+        }
+        public double GetXfromDateTime(DateTime dt, double zoom)
+        {
+            TimeSpan dif = dt - scheduleTime;
+            return ActualWidth * .5d + .49d + zoom * ((dif.Days * 24d) +
+                                                     dif.Hours +
+                                                     (dif.Minutes / 60d) +
+                                                     (dif.Seconds / 3600d));
+        }
+        public DateTime SnapDateTime(DateTime dt, int minutes)
+        {
+            // Nudge dt forwards half of minutes in order to snap to nearest rather than floor.
+            dt = dt.AddMinutes(minutes / 2);
+            if (minutes % 1f != 0)
+                dt = dt.AddSeconds((minutes % 1f) * 60);
+
+            long minutesInTicks = minutes * 600_000_000L;
+            return new DateTime(dt.Ticks - (dt.Ticks % minutesInTicks));
         }
 
         // Get the X coordinate on the cnvConferenceView from DateTime.

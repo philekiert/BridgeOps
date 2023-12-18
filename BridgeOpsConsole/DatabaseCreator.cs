@@ -661,6 +661,11 @@ public class DatabaseCreator
             this.allowed = allowed;
         }
     }
+    public void WipeColumnAdditions()
+    {
+        columnAdditions.Clear();
+        Writer.Affirmative("Column additions wiped.");
+    }
     public void LoadAdditionalColumns(bool detailed)
     {
         columnAdditions.Clear();
@@ -836,11 +841,6 @@ public class DatabaseCreator
         {
             Writer.Negative(Glo.CONFIG_COLUMN_ADDITIONS + " not found.");
         }
-    }
-    public void WipeColumnAdditions()
-    {
-        columnAdditions.Clear();
-        Writer.Affirmative("Column additions wiped.");
     }
 
     private void OpenSQL()

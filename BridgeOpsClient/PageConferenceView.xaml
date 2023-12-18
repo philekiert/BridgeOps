@@ -11,7 +11,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="40" />
+            <RowDefinition Height="42" />
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
@@ -56,13 +56,14 @@
         <Grid Grid.Row="1" Background="White">
             <local:ScheduleRuler x:Name="schRuler"/>
         </Grid>
-        <Grid Grid.Row="2" Background="White"
-              MouseDown="schView_MouseDown" MouseUp="schView_MouseUp" MouseMove="schView_MouseMove">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <local:ScheduleView x:Name="schView" Grid.Column="0"/>
+            <local:ScheduleView x:Name="schView" Grid.Column="0" Background="White"
+              MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
+              MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"/>
             <ScrollBar x:Name="scrollBar" Grid.Column="1"
                        Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
         </Grid>
