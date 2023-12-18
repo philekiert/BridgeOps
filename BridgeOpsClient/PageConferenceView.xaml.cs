@@ -258,6 +258,16 @@ namespace BridgeOpsClient
 
                 double incrementX = zoomTimeDisplay;
                 long incrementTicks = ScheduleView.ticks1Hour;
+                if (zoomTimeDisplay > 120)
+                {
+                    incrementTicks = ScheduleView.ticks15Min;
+                    incrementX /= 4d;
+                }
+                else if (zoomTimeDisplay > 60)
+                {
+                    incrementTicks = ScheduleView.ticks30Min;
+                    incrementX /= 2d;
+                }
 
                 // Get the start time, rounded down to the nearest increment.
                 DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
@@ -277,8 +287,20 @@ namespace BridgeOpsClient
                                            12,
                                            Brushes.Black,
                                            VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                FormattedText[] formattedTextLight = new FormattedText[24];
+                for (int i = 0; i < 3; ++i)
+                    formattedTextLight[i] = new(((i * 15) + 15).ToString(),
+                                           CultureInfo.CurrentCulture,
+                                           FlowDirection.LeftToRight,
+                                           segoeUI,
+                                           10,
+                                           Brushes.LightSlateGray,
+                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                 double hourWidth = formattedText[0].Width;
+                double minuteWidth = formattedTextLight[0].Width;
+                double minuteYmod = formattedText[0].Height - formattedTextLight[0].Height;
+
 
                 double firstDateX = double.MaxValue;
                 string firstDateStringOverride = "";
@@ -291,12 +313,16 @@ namespace BridgeOpsClient
                 while (t < end)
                 {
                     double xInt = (int)x + .5d; // Snap to nearest pixel.
-                    if (t.Hour % hourDisplay == 0)
+                    if (t.Hour % hourDisplay == 0 && t.Minute == 0)
                     {
-                        if (t.Ticks % incrementTicks == 0)
                             dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 20d));
                     }
-                    if (t.Hour == 0)
+                    else if (t.Minute % 15 == 0 && hourDisplay == 1)
+                    {
+                            dc.DrawText(formattedTextLight[(t.Minute / 15 - 1)],
+                                                           new Point(xInt - (minuteWidth * .5d), 20d + minuteYmod));
+                    }
+                    if (t.Hour == 0 && t.Minute == 0)
                     {
                         if (xInt >= 2)
                         {
@@ -354,6 +380,7 @@ namespace BridgeOpsClient
 
         public const long ticks5Min = 3_000_000_000;
         public const long ticks15Min = 9_000_000_000;
+        public const long ticks30Min = 18_000_000_000;
         public const long ticks1Hour = 36_000_000_000;
         public const long ticks1Day = 864_000_000_000;
 
@@ -367,7 +394,7 @@ namespace BridgeOpsClient
         protected override void OnRender(DrawingContext dc)
         {
             // Background
-            dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, ActualWidth, ActualHeight));
+            dc.DrawRectangle(Brushes.White, new Pen(Brushes.LightGray, 1), new Rect(.5d, .5d, ActualWidth - 1d, ActualHeight - 1d));
 
             // Reduce zoom sensitivity the further out you get.
             double zoomTimeDisplay = DisplayTimeZoom();
@@ -513,7 +540,7 @@ namespace BridgeOpsClient
 
                 dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
                                        new Point(x, y + zoomResourceDisplay));
-                dc.DrawLine(penCursor, new Point(x, -4.5d),
+                dc.DrawLine(penCursor, new Point(x, -5d),
                                        new Point(x, .5d));
             }
         }
