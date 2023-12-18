@@ -8,7 +8,7 @@
       d:DesignHeight="450" d:DesignWidth="834"
       Title="DatabasePage">
 
-    <Grid x:Name="grdPanes">
+    <Grid x:Name="grdPanes" Background="White">
         <Grid.Resources>
             <Style TargetType="RowDefinition">
                 <Setter Property="Height" Value="1*"/>

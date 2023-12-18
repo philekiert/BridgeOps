@@ -223,7 +223,8 @@ namespace BridgeOpsClient
                 TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
 
                 DateTime start = view.scheduleTime - half;
-                DateTime end = view.scheduleTime + half;
+                // Overshoot so text doesn't cut disappear early when scrolling.
+                DateTime end = view.scheduleTime + half.Add(new TimeSpan(1, 0, 0));
 
                 double incrementX = zoomTimeDisplay;
                 long incrementTicks = ScheduleView.ticks1Hour;
@@ -242,12 +243,15 @@ namespace BridgeOpsClient
                     formattedText[i] = new(i < 10 ? "0" + i.ToString() : i.ToString(),
                                            CultureInfo.CurrentCulture,
                                            FlowDirection.LeftToRight,
-                                           new Typeface("Arial"),
+                                           segoeUI,
                                            12,
                                            Brushes.Black,
                                            VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                 double hourWidth = formattedText[0].Width;
+
+                double firstDateX = double.MaxValue;
+                string firstDateStringOverride = "";
 
                 int hourDisplay = 1;
                 if (zoomTimeDisplay < 12)
@@ -256,19 +260,46 @@ namespace BridgeOpsClient
                     hourDisplay = 2;
                 while (t < end)
                 {
+                    double xInt = (int)x + .5d; // Snap to nearest pixel.
                     if (t.Hour % hourDisplay == 0)
                     {
-                        double xInt = (int)x + .5d; // Snap to nearest pixel.
-                        if (x > 0d && x < ActualWidth)
+                        if (t.Ticks % incrementTicks == 0)
+                            dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 20d));
+                    }
+                    if (t.Hour == 0)
+                    {
+                        if (xInt >= 1)
                         {
-                            if (t.Ticks % incrementTicks == 0)
-                                dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), .5d));
+                            FormattedText date = new($"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}",
+                                       CultureInfo.CurrentCulture,
+                                       FlowDirection.LeftToRight,
+                                       segoeUI,
+                                       12,
+                                       Brushes.Black,
+                                       VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                            dc.DrawText(date, new Point(xInt, 0));
+                            if (xInt < firstDateX)
+                                firstDateX = xInt;
                         }
+                        else
+                            firstDateStringOverride = $"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}";
                     }
 
                     t = t.AddTicks(incrementTicks);
                     x += incrementX;
                 }
+
+                FormattedText dateEdge = new(firstDateStringOverride == "" ?
+                                                $"{start.DayOfWeek} {start.Day}/{start.Month}/{start.Year}" :
+                                                firstDateStringOverride,
+                                             CultureInfo.CurrentCulture,
+                                             FlowDirection.LeftToRight,
+                                             segoeUI,
+                                             12,
+                                             Brushes.Black,
+                                             VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                if (firstDateX > dateEdge.Width + 20)
+                    dc.DrawText(dateEdge, new Point(1, 0));
             }
         }
     }
