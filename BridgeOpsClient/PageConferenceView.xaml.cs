@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xaml;
 
 namespace BridgeOpsClient
 {
@@ -202,48 +203,72 @@ namespace BridgeOpsClient
 
     public class ScheduleRuler : Canvas
     {
-        public ScheduleView view;
+        public ScheduleView? view;
 
         // OnRender() has some repeated code from ScheduleView, but I have kept the draw code for the ruler separate
         // due to not wanting to redraw the ruler unless we have to. The function still makes use of some public
         // members from ScheduleView.
         protected override void OnRender(DrawingContext dc)
         {
-            double zoomTimeDisplay = view.DisplayTimeZoom();
-
-            // Get number of intervals for half the width of the view.
-            double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
-            double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
-            int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
-            int viewHalfDays = (int)(viewHalfHours / 24);
-
-            TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
-
-            DateTime start = view.scheduleTime - half;
-            DateTime end = view.scheduleTime + half;
-
-            double incrementX = zoomTimeDisplay;
-            long incrementTicks = ScheduleView.ticks1Hour;
-
-            // Get the start time, rounded down to the nearest increment.
-            DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
-
-            // Cast this to (int) if you want it dead on the pixel.
-            double x = view.TimeToX(t, zoomTimeDisplay) + .5f;
-
-            FormattedText formattedText = new FormattedText("!", CultureInfo.CurrentCulture, FlowDirection.LeftToRight, new Typeface("Arial"), 14, Brushes.Black);
-
-            while (t < end)
+            if (view != null)
             {
-                double xInt = (int)x + .5d; // Snap to nearest pixel.
-                if (x > 0d && x < ActualWidth)
-                {
-                    if (t.Ticks % incrementTicks == 0)
-                        dc.DrawText(formattedText, new Point(xInt, .5d));
-                }
+                double zoomTimeDisplay = view.DisplayTimeZoom();
 
-                t = t.AddTicks(incrementTicks);
-                x += incrementX;
+                // Get number of intervals for half the width of the view.
+                double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
+                double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
+                int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
+                int viewHalfDays = (int)(viewHalfHours / 24);
+
+                TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+
+                DateTime start = view.scheduleTime - half;
+                DateTime end = view.scheduleTime + half;
+
+                double incrementX = zoomTimeDisplay;
+                long incrementTicks = ScheduleView.ticks1Hour;
+
+                // Get the start time, rounded down to the nearest increment.
+                DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
+
+                // Cast this to (int) if you want it dead on the pixel.
+                double x = view.TimeToX(t, zoomTimeDisplay) + .5f;
+
+                // Irritating to have to do this, but I don't want to create a new formatted text ever draw, and the
+                // text property doesn't have a setter that I can see.
+                FormattedText[] formattedText = new FormattedText[24];
+                Typeface segoeUI = new Typeface("Segoe UI");
+                for (int i = 0; i < 24; ++i)
+                    formattedText[i] = new(i < 10 ? "0" + i.ToString() : i.ToString(),
+                                           CultureInfo.CurrentCulture,
+                                           FlowDirection.LeftToRight,
+                                           new Typeface("Arial"),
+                                           12,
+                                           Brushes.Black,
+                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+                double hourWidth = formattedText[0].Width;
+
+                int hourDisplay = 1;
+                if (zoomTimeDisplay < 12)
+                    hourDisplay = 4;
+                else if (zoomTimeDisplay < 24)
+                    hourDisplay = 2;
+                while (t < end)
+                {
+                    if (t.Hour % hourDisplay == 0)
+                    {
+                        double xInt = (int)x + .5d; // Snap to nearest pixel.
+                        if (x > 0d && x < ActualWidth)
+                        {
+                            if (t.Ticks % incrementTicks == 0)
+                                dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), .5d));
+                        }
+                    }
+
+                    t = t.AddTicks(incrementTicks);
+                    x += incrementX;
+                }
             }
         }
     }
