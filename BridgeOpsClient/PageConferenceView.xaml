@@ -69,7 +69,8 @@
             </Grid.ColumnDefinitions>
             <local:ScheduleView x:Name="schView" Grid.Column="0" Background="White"
               MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
-              MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"/>
+              MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
+              PreviewMouseWheel="schView_PreviewMouseWheel"/>
             <ScrollBar x:Name="scrollBar" Grid.Column="1"
                        Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
         </Grid>

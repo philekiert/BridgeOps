@@ -51,28 +51,22 @@ namespace BridgeOpsClient
 
         private void btnTimeZoomOut_Click(object sender, RoutedEventArgs e)
         {
-            schView.zoomTime -= schView.zoomTimeSensitivity;
-            if (schView.zoomTime != schView.zoomTimeMinimum && schView.zoomTime < schView.zoomTimeMinimum)
-                schView.zoomTime = schView.zoomTimeMinimum;
+            schView.ZoomTime(-2);
         }
 
         private void btnTimeZoomIn_Click(object sender, RoutedEventArgs e)
         {
-            schView.zoomTime += schView.zoomTimeSensitivity;
-            if (schView.zoomTime != schView.zoomTimeMaximum && schView.zoomTime > schView.zoomTimeMaximum)
-                schView.zoomTime = schView.zoomTimeMaximum;
+            schView.ZoomTime(2);
         }
 
         private void btnResourceZoomOut_Click(object sender, RoutedEventArgs e)
         {
-            if (schView.zoomResource != schView.zoomResourceMinimum)
-                schView.zoomResource -= schView.zoomResourceSensitivity;
+            schView.ZoomResource(-1);
         }
 
         private void btnResourceZoomIn_Click(object sender, RoutedEventArgs e)
         {
-            if (schView.zoomResource != schView.zoomResourceMaximum)
-                schView.zoomResource += schView.zoomResourceSensitivity;
+            schView.ZoomResource(1);
         }
 
         void WindowResized(object sender, SizeChangedEventArgs e)
@@ -150,13 +144,19 @@ namespace BridgeOpsClient
         bool dragging = false; // Switched on in MouseDown() inside the grid, switched off in MouseUp() anywhere.
         private void schView_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            dragging = true;
-            ((IInputElement)sender).CaptureMouse();
+            if (e.ChangedButton == MouseButton.Middle ||
+                e.ChangedButton == MouseButton.Left)
+            {
+                dragging = true;
+                ((IInputElement)sender).CaptureMouse();
+            }
         }
 
         private void schView_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (dragging)
+            if (dragging &&
+                (e.ChangedButton == MouseButton.Middle ||
+                 e.ChangedButton == MouseButton.Left))
             {
                 dragging = false;
                 ((IInputElement)sender).ReleaseMouseCapture();
@@ -239,6 +239,35 @@ namespace BridgeOpsClient
         {
             schView.scheduleTime = schView.scheduleTime.AddDays(1);
         }
+
+        private void schView_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (CtrlDown())
+            {
+                if (ShiftDown())
+                    schView.ZoomResource(e.Delta > 0 ? 1 : -1);
+                else
+                    schView.ZoomTime(e.Delta > 0 ? 1 : -1);
+                RedrawGrid();
+                RedrawRuler();
+            }
+            else
+            {
+                if (ShiftDown())
+                    schView.scheduleTime = schView.scheduleTime.AddTicks(
+                        (long)((66.66d * (e.Delta > 0 ? -ScheduleView.ticks1Hour : ScheduleView.ticks1Hour)) /
+                        schView.zoomTimeCurrent));
+                else
+                {
+                    schView.ScrollResource(e.Delta > 0 ? -.333d : .333d);
+                    UpdateScrollBar();
+                }
+            }
+        }
+
+        private bool CtrlDown() { return Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl); }
+        private bool AltDown() { return Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt); }
+        private bool ShiftDown() { return Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift); }
     }
 
     public class ScheduleRuler : Canvas
@@ -325,12 +354,12 @@ namespace BridgeOpsClient
                     double xInt = (int)x + .5d; // Snap to nearest pixel.
                     if (t.Hour % hourDisplay == 0 && t.Minute == 0)
                     {
-                            dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 20d));
+                        dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 20d));
                     }
                     else if (t.Minute % 15 == 0 && hourDisplay == 1)
                     {
-                            dc.DrawText(formattedTextLight[(t.Minute / 15 - 1)],
-                                                           new Point(xInt - (minuteWidth * .5d), 20d + minuteYmod));
+                        dc.DrawText(formattedTextLight[(t.Minute / 15 - 1)],
+                                                       new Point(xInt - (minuteWidth * .5d), 20d + minuteYmod));
                     }
                     if (t.Hour == 0 && t.Minute == 0)
                     {
@@ -379,7 +408,7 @@ namespace BridgeOpsClient
         public double zoomTimeCurrent = 10d; // Used for smooth Lerp()ing.
         public int zoomTimeMinimum = 10;
         public int zoomTimeMaximum = 210;
-        public int zoomTimeSensitivity = 20;
+        public int zoomTimeSensitivity = 10;
         public int zoomResource = 40;
         public double zoomResourceCurrent = 40d; // Used for smooth Lerp()ing.
         public int zoomResourceMinimum = 20;
@@ -572,6 +601,21 @@ namespace BridgeOpsClient
             else
                 cursor = new Point(x, y);
         }
+        public void ZoomTime(int strength)
+        {
+            zoomTime += zoomTimeSensitivity * strength;
+            zoomTime = Math.Clamp(zoomTime, zoomTimeMinimum, zoomTimeMaximum);
+        }
+        public void ZoomResource(int strength)
+        {
+            zoomResource += zoomResourceSensitivity * strength;
+            zoomResource = Math.Clamp(zoomResource, zoomResourceMinimum, zoomResourceMaximum);
+        }
+        public void ScrollResource(double strength)
+        {
+            scrollResource += zoomResourceCurrent * strength;
+            EnforceResourceScrollLimits();
+        }
 
         public void EnforceResourceScrollLimits()
         {
@@ -583,7 +627,8 @@ namespace BridgeOpsClient
 
         //   H E L P E R   F U N C T I O N S
 
-        // Make zoom feel more sensitive when zoomed in, and less sensitive when zoomed out.
+        // These Display functions are because the values used by Render() want to be slightly different from the
+        // actual values.
         public double DisplayTimeZoom()
         {
             // Here reside the mathematical flailings of a mathematically inept programmer. My have a curve of
