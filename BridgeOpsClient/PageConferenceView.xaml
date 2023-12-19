@@ -10,11 +10,11 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="42" />
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="42"/>
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="0" VerticalAlignment="Top">
             <Grid.Resources>
                 <Style TargetType="Button" x:Key="ToolbarButton" >
                     <Setter Property="Width" Value="20"/>
@@ -27,6 +27,8 @@
                 </Style>
             </Grid.Resources>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
@@ -52,6 +54,10 @@
                     </Style>
                 </DatePicker.Resources>
             </DatePicker>
+            <Button Grid.Column="5" Content="&lt;" x:Name="btnDayPrevious" Click="btnDayPrevious_Click"
+                    Style="{StaticResource ToolbarButton}"/>
+            <Button Grid.Column="6" Content="&gt;" x:Name="btnDayNext" Click="btnDayNext_Click"
+                    Style="{StaticResource ToolbarButton}"/>
         </Grid>
         <Grid Grid.Row="1" Background="White">
             <local:ScheduleRuler x:Name="schRuler"/>

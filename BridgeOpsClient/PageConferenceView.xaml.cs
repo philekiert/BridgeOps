@@ -229,6 +229,16 @@ namespace BridgeOpsClient
         {
             schView.SetCursor(-1, -1);
         }
+
+        private void btnDayPrevious_Click(object sender, RoutedEventArgs e)
+        {
+            schView.scheduleTime = schView.scheduleTime.AddDays(-1);
+        }
+
+        private void btnDayNext_Click(object sender, RoutedEventArgs e)
+        {
+            schView.scheduleTime = schView.scheduleTime.AddDays(1);
+        }
     }
 
     public class ScheduleRuler : Canvas
@@ -590,7 +600,7 @@ namespace BridgeOpsClient
             curve = -curve + 1;
 
             // Bring it all together.
-            double zoomTimeDisplay = x * (x * .2d + .8d) * curve * (zoomTimeMaximum - zoomTimeMinimum);
+            double zoomTimeDisplay = x * (x * .8d + .2d) * curve * (zoomTimeMaximum - zoomTimeMinimum);
             zoomTimeDisplay += zoomTimeMinimum;
 
             return zoomTimeDisplay;
