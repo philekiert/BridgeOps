@@ -147,8 +147,11 @@ namespace BridgeOpsClient
             // Double Click
             if (e.ClickCount == 2)
             {
-                DateTime time = schView.GetDateTimeFromX(e.GetPosition(schView).X);
+                DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
                 int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
+
+                NewConference newConf = new(resource, time);
+                newConf.Show();
             }
 
             // Drag
@@ -373,12 +376,12 @@ namespace BridgeOpsClient
                     double xInt = (int)x + .5d; // Snap to nearest pixel.
                     if (t.Hour % hourDisplay == 0 && t.Minute == 0)
                     {
-                        dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 20d));
+                        dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 22d));
                     }
                     else if (t.Minute % 15 == 0 && hourDisplay == 1)
                     {
                         dc.DrawText(formattedTextLight[(t.Minute / 15 - 1)],
-                                                       new Point(xInt - (minuteWidth * .5d), 20d + minuteYmod));
+                                                       new Point(xInt - (minuteWidth * .5d), 22d + minuteYmod));
                     }
                     if (t.Hour == 0 && t.Minute == 0)
                     {
@@ -592,14 +595,7 @@ namespace BridgeOpsClient
                     y *= zoomResourceCurrent;
                     y -= scroll;
                     DateTime xDT = GetDateTimeFromX(cursor.Value.X, zoomTimeDisplay);
-                    if (zoomTimeDisplay < 25)
-                        xDT = SnapDateTime(xDT, 60);
-                    else if (zoomTimeDisplay < 75)
-                        xDT = SnapDateTime(xDT, 15);
-                    else if (zoomTimeDisplay < 200)
-                        xDT = SnapDateTime(xDT, 5);
-                    else
-                        xDT = SnapDateTime(xDT, 1);
+                    xDT = SnapDateTime(xDT, zoomTimeDisplay);
                     x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
 
                     dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
@@ -733,14 +729,26 @@ namespace BridgeOpsClient
                                                      (dif.Minutes / 60d) +
                                                      (dif.Seconds / 3600d));
         }
-        public DateTime SnapDateTime(DateTime dt, int minutes)
+        public DateTime SnapDateTime(DateTime dt)
         {
-            // Nudge dt forwards half of minutes in order to snap to nearest rather than floor.
-            dt = dt.AddMinutes(minutes / 2);
-            if (minutes % 1f != 0)
-                dt = dt.AddSeconds((minutes % 1f) * 60);
+            return SnapDateTime(dt, DisplayTimeZoom());
+        }
+        public DateTime SnapDateTime(DateTime dt, double zoomTimeDisplay)
+        {
+            int minsSnap = 1;
+            if (zoomTimeDisplay < 30)
+                minsSnap = 60;
+            else if (zoomTimeDisplay < 90)
+                minsSnap = 15;
+            else if (zoomTimeDisplay < 220)
+                minsSnap = 5;
 
-            long minutesInTicks = minutes * 600_000_000L;
+            // Nudge dt forwards half of minutes in order to snap to nearest rather than floor.
+            dt = dt.AddMinutes(minsSnap / 2);
+            if (minsSnap % 1f != 0)
+                dt = dt.AddSeconds((minsSnap % 1f) * 60);
+
+            long minutesInTicks = minsSnap * 600_000_000L;
             return new DateTime(dt.Ticks - (dt.Ticks % minutesInTicks));
         }
 

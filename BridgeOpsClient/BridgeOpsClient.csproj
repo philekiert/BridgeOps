@@ -27,6 +27,9 @@
     <Compile Update="NewEntries\NewConferenceType.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="NewEntries\NewConference.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="NewEntries\NewResource.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

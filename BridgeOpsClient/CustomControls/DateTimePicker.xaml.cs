@@ -30,5 +30,12 @@ namespace BridgeOpsClient.CustomControls
             else
                 return ((DateTime)datePicker.SelectedDate).Add(time);
         }
+
+        public void SetDateTime(DateTime dt)
+        {
+            datePicker.SelectedDate = dt.Date;
+            timePicker.txtHour.Text = dt.Hour < 10 ? "0" + dt.Hour.ToString() : dt.Hour.ToString();
+            timePicker.txtMinute.Text = dt.Minute < 10 ? "0" + dt.Minute.ToString() : dt.Minute.ToString();
+        }
     }
 }

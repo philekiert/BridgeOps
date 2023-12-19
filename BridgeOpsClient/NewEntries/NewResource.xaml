@@ -19,6 +19,9 @@
                 <Style TargetType="TextBox">
                     <Setter Property="Margin" Value="10 5 10 5" />
                 </Style>
+                <Style TargetType="custom:DateTimePicker">
+                    <Setter Property="Margin" Value="10 0 0 0" />
+                </Style>
             </Grid.Resources>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
