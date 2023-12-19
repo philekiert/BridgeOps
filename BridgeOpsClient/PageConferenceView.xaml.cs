@@ -24,7 +24,33 @@ namespace BridgeOpsClient
     {
         DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);
 
-        public static int resourceCount = 20;
+        public struct ResourceInfo
+        {
+            public int id;
+            public string name;
+            public DateTime start;
+            public DateTime end;
+            public int capacity;
+            
+            public ResourceInfo(int id, string name, DateTime start, DateTime end, int capacity)
+            {
+                this.id = id;
+                this.name = name;
+                this.start = start;
+                this.end = end;
+                this.capacity = capacity;
+            }
+        }
+        // All resources are stored here, regardless of resources visibility (not yet implemented as of 19/12/2023).
+        public static List<ResourceInfo> resources = new();
+        public static void SetResources()
+        {
+            capacity = 0;
+            foreach (ResourceInfo ri in resources)
+                capacity += ri.capacity;
+        }
+
+        public static int capacity = 20;
         float smoothZoomSpeed = 1.6f;
 
         public PageConferenceView()
@@ -151,11 +177,11 @@ namespace BridgeOpsClient
                 int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
 
                 NewConference newConf = new(resource, time);
-                newConf.Show();
+                try { newConf.Show(); } catch { }
             }
-
+            
             // Drag
-            if (e.ChangedButton == MouseButton.Middle ||
+            else if (e.ChangedButton == MouseButton.Middle ||
                 e.ChangedButton == MouseButton.Left)
             {
                 dragging = true;
@@ -502,10 +528,10 @@ namespace BridgeOpsClient
             penCursor.Freeze();
             penStylus.Freeze();
 
-            double maxLineHeight = PageConferenceView.resourceCount * zoomResourceDisplay + .5f;
+            double maxLineHeight = PageConferenceView.capacity * zoomResourceDisplay + .5f;
             if (maxLineHeight > ActualHeight)
                 maxLineHeight = ActualHeight;
-            int maxLines = PageConferenceView.resourceCount + 1;
+            int maxLines = PageConferenceView.capacity + 1;
 
             // Time
 
@@ -647,8 +673,8 @@ namespace BridgeOpsClient
 
         public void EnforceResourceScrollLimits()
         {
-            if (scrollResource > 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight)
-                scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight;
+            if (scrollResource > 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight)
+                scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight;
             if (scrollResource < 0) scrollResource = 0;
         }
 
@@ -681,30 +707,30 @@ namespace BridgeOpsClient
         public double DisplayResourceScroll()
         {
             double scroll = scrollResource;
-            if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight)
-                scroll = 1 + (zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight;
+            if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight)
+                scroll = 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight;
             if (scroll < 0) scroll = 0;
             return (int)scroll;
         }
 
         public double ScrollMax()
         {
-            return ((zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight) + 1;
+            return ((zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight) + 1;
         }
         public double ScrollPercent()
         {
-            return scrollResource / (((zoomResourceCurrent * PageConferenceView.resourceCount) - ActualHeight) + 1);
+            return scrollResource / (((zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight) + 1);
         }
         public double ViewPercent()
         {
-            double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.resourceCount) + 1);
+            double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.capacity) + 1);
             return ret > 1 ? 1 : ret;
         }
 
         public int GetResourceFromY(double y)
         {
             int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
-            return resource < PageConferenceView.resourceCount ? resource : -1;
+            return resource < PageConferenceView.capacity ? resource : -1;
         }
         public double GetYfromResource(int resource)
         {

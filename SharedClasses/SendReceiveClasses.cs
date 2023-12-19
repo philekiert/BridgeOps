@@ -596,18 +596,26 @@ namespace SendReceiveClasses
             nameChanged = false;
         }
 
+        private void Prepare()
+        {
+            if (name != null)
+                name = SqlAssist.AddQuotes(SqlAssist.SecureValue(name));
+        }
+
         public string SqlInsert()
         {
-            return "INSERT INTO ConferenceType (" + Glo.Tab.CONFERENCE_TYPE_NAME + ") VALUES ('" + name + "');";
+            Prepare();
+            return "INSERT INTO ConferenceType (" + Glo.Tab.CONFERENCE_TYPE_NAME + ") VALUES (" + name + ");";
         }
 
         public string SqlUpdate()
         {
+            Prepare();
             List<string> setters = new();
             if (nameChanged && name != null)
             {
                 return SqlAssist.Update("ConferenceType",
-                                        Glo.Tab.CONFERENCE_TYPE_NAME + " = '" + SqlAssist.SecureValue(name) + "'",
+                                        Glo.Tab.CONFERENCE_TYPE_NAME + " = " + name ,
                                         Glo.Tab.CONFERENCE_TYPE_ID, typeID);
             }
             else
@@ -693,16 +701,24 @@ namespace SendReceiveClasses
             this.capacity = capacity;
         }
 
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (name != null)
+                name = SqlAssist.AddQuotes(SqlAssist.SecureValue(name));
+        }
+
         public string SqlInsert()
         {
+            Prepare();
             return SqlAssist.InsertInto("Resource",
                                         SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
                                                             Glo.Tab.RESOURCE_FROM,
                                                             Glo.Tab.RESOURCE_TO,
                                                             Glo.Tab.RESOURCE_CAPACITY),
                                         SqlAssist.ValConcat(name,
-                                                            SqlAssist.DateTimeToSQLType(availableFrom),
-                                                            SqlAssist.DateTimeToSQLType(availableTo),
+                                                            SqlAssist.AddQuotes(SqlAssist.DateTimeToSQLType(availableFrom)),
+                                                            SqlAssist.AddQuotes(SqlAssist.DateTimeToSQLType(availableTo)),
                                                             capacity.ToString()));
         }
     }

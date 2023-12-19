@@ -54,8 +54,9 @@ namespace BridgeOpsClient
             }
 
             nr.name = txtResourceName.Text.Length > 0 ? txtResourceName.Text : null;
-            nr.availableFrom = timeAvailableFrom.GetDateTime();
-            nr.availableTo = timeAvailableFrom.GetDateTime();
+            nr.availableFrom = from;
+            nr.availableTo = to;
+            nr.capacity = capacity;
 
             if (App.SendInsert(Glo.CLIENT_NEW_RESOURCE, nr))
                 Close();

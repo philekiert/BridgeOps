@@ -139,8 +139,13 @@ namespace BridgeOpsClient
 
         public void ToggleLogInOut(bool loggedIn)
         {
-            menuUserLogIn.IsEnabled = loggedIn;
-            menuUserLogOut.IsEnabled = !loggedIn;
+            // This can fail if only the login window is visible, no big deal and no need to report.
+            try
+            {
+                menuUserLogIn.IsEnabled = !loggedIn;
+                menuUserLogOut.IsEnabled = loggedIn;
+            }
+            catch { }
         }
 
         /* This is surely needlessly verbose, will optimise later if time allows. Removing and re-adding the columns

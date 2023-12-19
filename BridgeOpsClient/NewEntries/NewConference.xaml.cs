@@ -19,6 +19,8 @@ namespace BridgeOpsClient
 {
     public partial class NewConference : Window
     {
+        string[]? typeList = null;
+
         public NewConference(int resource, DateTime start)
         {
             InitializeComponent();
@@ -27,6 +29,14 @@ namespace BridgeOpsClient
             cmbResource.Text = (resource + 1).ToString();
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
+
+            typeList = App.SelectColumnPrimary("ConferenceType", Glo.Tab.CONFERENCE_TYPE_NAME);
+            if (typeList == null)
+            {
+                MessageBox.Show("Could not pull conference type list from server.");
+                Close();
+            }
+            cmbResource.ItemsSource = typeList;
         }
     }
 }

@@ -283,6 +283,56 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool PullResourceInformation()
+        {
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (SelectAll("Resource", out columnNames, out rows))
+            {
+                try
+                {
+                    int ids = columnNames.IndexOf(Glo.Tab.RESOURCE_ID);
+                    int names = columnNames.IndexOf(Glo.Tab.RESOURCE_NAME);
+                    int startTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_FROM);
+                    int endTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_TO);
+                    int capacities = columnNames.IndexOf(Glo.Tab.RESOURCE_CAPACITY);
+
+                    if (ids == -1 || names == -1 || startTimes == -1 || endTimes == -1 || capacities == -1)
+                        return false;
+
+                    foreach (List<object?> row in rows)
+                    {
+                        if (row[ids] != null &&
+                            row[names] != null &&
+                            row[startTimes] != null &&
+                            row[endTimes] != null &&
+                            row[capacities] != null)
+                        {
+#pragma warning disable CS8602
+#pragma warning disable CS8604
+#pragma warning disable CS8605
+                            PageConferenceView.resources.Add(new PageConferenceView.ResourceInfo((int)row[ids],
+                                                                                                 row[names].ToString(),
+                                                                                                 (DateTime)row[startTimes],
+                                                                                                 (DateTime)row[endTimes],
+                                                                                                 (int)row[capacities]));
+#pragma warning restore CS8602
+#pragma warning restore CS8604
+#pragma warning restore CS8605
+                        }
+                    }
+                    PageConferenceView.SetResources();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
+
         public static bool SendInsert(byte fncByte, object toSerialise)
         {
             return SendInsert(fncByte, toSerialise, out _);
@@ -683,7 +733,13 @@ namespace BridgeOpsClient
                 {
                     if (rows[n][i] != null)
                     {
-                        if (columnTypes[i] == "DateTime")
+                        if (columnTypes[i].StartsWith("Int"))
+                        {
+                            int result;
+                            int.TryParse(rows[n][i].ToString(), out result);
+                            rows[n][i] = result;
+                        }
+                        else if (columnTypes[i] == "DateTime")
                         {
                             DateTime dt;
                             DateTime.TryParse(rows[n][i].ToString(), out dt);
