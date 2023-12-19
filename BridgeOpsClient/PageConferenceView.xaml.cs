@@ -268,6 +268,17 @@ namespace BridgeOpsClient
         private bool CtrlDown() { return Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl); }
         private bool AltDown() { return Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt); }
         private bool ShiftDown() { return Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift); }
+
+        private void btnDayToday_Click(object sender, RoutedEventArgs e)
+        {
+            schView.scheduleTime = new DateTime(DateTime.Now.Year,
+                                                DateTime.Now.Month,
+                                                DateTime.Now.Day,
+                                                schView.scheduleTime.Hour,
+                                                schView.scheduleTime.Minute,
+                                                schView.scheduleTime.Second,
+                                                schView.scheduleTime.Millisecond);
+        }
     }
 
     public class ScheduleRuler : Canvas
@@ -603,6 +614,11 @@ namespace BridgeOpsClient
         }
         public void ZoomTime(int strength)
         {
+            ZoomTime(strength, ActualWidth * .5d);
+        }
+        public void ZoomTime(int strength, double xCentre)
+        {
+
             zoomTime += zoomTimeSensitivity * strength;
             zoomTime = Math.Clamp(zoomTime, zoomTimeMinimum, zoomTimeMaximum);
         }
@@ -645,7 +661,7 @@ namespace BridgeOpsClient
             curve = -curve + 1;
 
             // Bring it all together.
-            double zoomTimeDisplay = x * (x * .8d + .2d) * curve * (zoomTimeMaximum - zoomTimeMinimum);
+            double zoomTimeDisplay = x * (x * .6d + .4d) * curve * (zoomTimeMaximum - zoomTimeMinimum);
             zoomTimeDisplay += zoomTimeMinimum;
 
             return zoomTimeDisplay;
@@ -682,6 +698,10 @@ namespace BridgeOpsClient
         {
             double y = resource * zoomResourceCurrent;
             return y - DisplayResourceScroll();
+        }
+        public DateTime GetDateTimeFromX(double x)
+        {
+            return GetDateTimeFromX(x, DisplayTimeZoom());
         }
         public DateTime GetDateTimeFromX(double x, double zoom)
         {

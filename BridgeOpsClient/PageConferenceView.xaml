@@ -34,6 +34,7 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" Content="-" x:Name="btnTimeZoomOut" Click="btnTimeZoomOut_Click"
                     Style="{StaticResource ToolbarButton}"/>
@@ -54,9 +55,11 @@
                     </Style>
                 </DatePicker.Resources>
             </DatePicker>
-            <Button Grid.Column="5" Content="&lt;" x:Name="btnDayPrevious" Click="btnDayPrevious_Click"
+            <Button Grid.Column="5" Content="^" Padding="0 2 0 0" x:Name="btnDayToday" Click="btnDayToday_Click"
                     Style="{StaticResource ToolbarButton}"/>
-            <Button Grid.Column="6" Content="&gt;" x:Name="btnDayNext" Click="btnDayNext_Click"
+            <Button Grid.Column="6" Content="&lt;" x:Name="btnDayPrevious" Click="btnDayPrevious_Click"
+                    Style="{StaticResource ToolbarButton}"/>
+            <Button Grid.Column="7" Content="&gt;" x:Name="btnDayNext" Click="btnDayNext_Click"
                     Style="{StaticResource ToolbarButton}"/>
         </Grid>
         <Grid Grid.Row="1" Background="White">
@@ -68,9 +71,9 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <local:ScheduleView x:Name="schView" Grid.Column="0" Background="White"
-              MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
-              MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
-              PreviewMouseWheel="schView_PreviewMouseWheel"/>
+                                MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
+                                MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
+                                PreviewMouseWheel="schView_PreviewMouseWheel"/>
             <ScrollBar x:Name="scrollBar" Grid.Column="1"
                        Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
         </Grid>
