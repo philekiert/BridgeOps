@@ -293,13 +293,13 @@ namespace BridgeOpsClient
                                            CultureInfo.CurrentCulture,
                                            FlowDirection.LeftToRight,
                                            segoeUI,
-                                           10,
+                                           9,
                                            Brushes.LightSlateGray,
                                            VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                 double hourWidth = formattedText[0].Width;
                 double minuteWidth = formattedTextLight[0].Width;
-                double minuteYmod = formattedText[0].Height - formattedTextLight[0].Height;
+                double minuteYmod = (formattedText[0].Height - formattedTextLight[0].Height) - 1;
 
 
                 double firstDateX = double.MaxValue;
@@ -366,12 +366,12 @@ namespace BridgeOpsClient
 
         public bool smoothZoom = true;
         public int zoomTime = 10; // How many pixels an hour can be reduced to.
-        public double zoomTimeCurrent = 10f; // Used for smooth Lerp()ing.
+        public double zoomTimeCurrent = 10d; // Used for smooth Lerp()ing.
         public int zoomTimeMinimum = 10;
-        public int zoomTimeMaximum = 200;
-        public int zoomTimeSensitivity = 10;
-        public int zoomResource = 80;
-        public double zoomResourceCurrent = 80f; // Used for smooth Lerp()ing.
+        public int zoomTimeMaximum = 210;
+        public int zoomTimeSensitivity = 20;
+        public int zoomResource = 40;
+        public double zoomResourceCurrent = 40d; // Used for smooth Lerp()ing.
         public int zoomResourceMinimum = 20;
         public int zoomResourceMaximum = 200;
         public int zoomResourceSensitivity = 20;
@@ -525,23 +525,26 @@ namespace BridgeOpsClient
             if (cursor != null)
             {
                 double y = GetResourceFromY(cursor.Value.Y);
-                y *= zoomResourceCurrent;
-                y -= scroll;
-                DateTime xDT = GetDateTimeFromX(cursor.Value.X, zoomTimeDisplay);
-                if (zoomTimeDisplay < 25)
-                    xDT = SnapDateTime(xDT, 60);
-                else if (zoomTimeDisplay < 75)
-                    xDT = SnapDateTime(xDT, 15);
-                else if (zoomTimeDisplay < 200)
-                    xDT = SnapDateTime(xDT, 5);
-                else
-                    xDT = SnapDateTime(xDT, 1);
-                x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
+                if (y >= 0)
+                {
+                    y *= zoomResourceCurrent;
+                    y -= scroll;
+                    DateTime xDT = GetDateTimeFromX(cursor.Value.X, zoomTimeDisplay);
+                    if (zoomTimeDisplay < 25)
+                        xDT = SnapDateTime(xDT, 60);
+                    else if (zoomTimeDisplay < 75)
+                        xDT = SnapDateTime(xDT, 15);
+                    else if (zoomTimeDisplay < 200)
+                        xDT = SnapDateTime(xDT, 5);
+                    else
+                        xDT = SnapDateTime(xDT, 1);
+                    x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
 
-                dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
-                                       new Point(x, y + zoomResourceDisplay));
-                dc.DrawLine(penCursor, new Point(x, -5d),
-                                       new Point(x, .5d));
+                    dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
+                                           new Point(x, y + zoomResourceDisplay));
+                    dc.DrawLine(penCursor, new Point(x, -5d),
+                                           new Point(x, .5d));
+                }
             }
         }
 
@@ -573,9 +576,21 @@ namespace BridgeOpsClient
         // Make zoom feel more sensitive when zoomed in, and less sensitive when zoomed out.
         public double DisplayTimeZoom()
         {
-            double zoomTimeDisplay = (zoomTimeCurrent - zoomTimeMinimum) / (zoomTimeMaximum - zoomTimeMinimum);
-            zoomTimeDisplay = (1f - Math.Cos(zoomTimeDisplay * Math.PI * .5d));
-            zoomTimeDisplay *= zoomTimeMaximum - zoomTimeMinimum;
+            // Here reside the mathematical flailings of a mathematically inept programmer. My have a curve of
+            // sensitivity while zooming in and out, while maintaining some anchor points.
+
+            // Convert X to a value between 0 and 1, where 0 is the minimum and 1 is the maximum.
+            double x = (zoomTimeCurrent - zoomTimeMinimum) / (zoomTimeMaximum - zoomTimeMinimum);
+            double xForCurve = x * .4d + .55d;
+            // Make it into a curve to simulate higher sensitivity when zoomed in.
+            double curve = Math.Sqrt(1d - (xForCurve * xForCurve));
+            // Soften the curve.
+            curve -= (curve - (1 - xForCurve)) * .7f;
+            // Rotate the curve.
+            curve = -curve + 1;
+
+            // Bring it all together.
+            double zoomTimeDisplay = x * (x * .2d + .8d) * curve * (zoomTimeMaximum - zoomTimeMinimum);
             zoomTimeDisplay += zoomTimeMinimum;
 
             return zoomTimeDisplay;
@@ -605,8 +620,8 @@ namespace BridgeOpsClient
 
         public int GetResourceFromY(double y)
         {
-            y += DisplayResourceScroll();
-            return (int)(y / zoomResourceCurrent);
+            int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
+            return resource < PageConferenceView.resourceCount ? resource : -1;
         }
         public double GetYfromResource(int resource)
         {
