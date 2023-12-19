@@ -144,6 +144,14 @@ namespace BridgeOpsClient
         bool dragging = false; // Switched on in MouseDown() inside the grid, switched off in MouseUp() anywhere.
         private void schView_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            // Double Click
+            if (e.ClickCount == 2)
+            {
+                DateTime time = schView.GetDateTimeFromX(e.GetPosition(schView).X);
+                int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
+            }
+
+            // Drag
             if (e.ChangedButton == MouseButton.Middle ||
                 e.ChangedButton == MouseButton.Left)
             {
@@ -478,6 +486,9 @@ namespace BridgeOpsClient
             Brush brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
             Pen penCursor = new Pen(brsCursor, 1);
 
+            Brush brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
+            Pen penStylus = new Pen(brsStylus, 1);
+
 
             // Freez()ing Pens increases draw speed dramatically. Freez()ing the Brushes helps a bit, but Freez()ing
             // the Pens seems to implicitly catch the Brushes as well to draw outrageously fast.
@@ -486,6 +497,7 @@ namespace BridgeOpsClient
             penScheduleLineHour.Freeze();
             penScheduleLineDay.Freeze();
             penCursor.Freeze();
+            penStylus.Freeze();
 
             double maxLineHeight = PageConferenceView.resourceCount * zoomResourceDisplay + .5f;
             if (maxLineHeight > ActualHeight)
@@ -596,6 +608,10 @@ namespace BridgeOpsClient
                                            new Point(x, .5d));
                 }
             }
+
+            // Draw the stylus.
+            dc.DrawLine(penStylus, new Point(ActualWidth * .5d, -3d),
+                                   new Point(ActualWidth * .5d, 4d));
         }
 
         public void Drag(double xDif, double yDif)
