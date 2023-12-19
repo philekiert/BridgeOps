@@ -25,13 +25,13 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
-            cmbResource.IsEditable = true;
-            cmbResource.Text = (resource + 1).ToString();
+            // TODO: READ RESOURCE NAME AND CARRY INTO THIS WINDOW
+
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
 
             typeList = App.SelectColumnPrimary("ConferenceType", Glo.Tab.CONFERENCE_TYPE_NAME);
-            if (typeList == null)
+            if (typeList == null || typeList.Length == 0)
             {
                 MessageBox.Show("Could not pull conference type list from server.");
                 Close();
