@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Windows;
+using System.Windows.Automation.Text;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
@@ -24,14 +27,19 @@ namespace BridgeOpsClient
     {
         DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);
 
-        public struct ResourceInfo
+        public class ResourceInfo
         {
             public int id;
             public string name;
             public DateTime start;
             public DateTime end;
             public int capacity;
-            
+            // Unused in the list of resources, but use to pass the selected row to the New Conference.
+            private int selectedRow = 0;
+            private int selectedRowTotal = 0;
+            public int SelectedRow { get { return selectedRow; } }
+            public int SelectedRowTotal { get { return selectedRowTotal; } }
+
             public ResourceInfo(int id, string name, DateTime start, DateTime end, int capacity)
             {
                 this.id = id;
@@ -39,18 +47,50 @@ namespace BridgeOpsClient
                 this.start = start;
                 this.end = end;
                 this.capacity = capacity;
+                selectedRow = 0;
+            }
+            public void SetSelectedRow(int selected, int selectedTotal)
+            {
+                selectedRow = Math.Clamp(selected, 0, capacity);
+                selectedRowTotal = Math.Clamp(selectedTotal, 0, totalCapacity);
             }
         }
         // All resources are stored here, regardless of resources visibility (not yet implemented as of 19/12/2023).
         public static List<ResourceInfo> resources = new();
+        public static List<string> resourceRowNames = new();
+        // This is a list of indices, linking displayed rows to resources to allow the user customise the display.
+        public static List<int> resourcesOrder = new();
         public static void SetResources()
         {
-            capacity = 0;
+            resourceRowNames.Clear();
+            resourcesOrder.Clear();
+            totalCapacity = 0;
             foreach (ResourceInfo ri in resources)
-                capacity += ri.capacity;
+            {
+                resourcesOrder.Add(resourcesOrder.Count);
+                for (int i = 1; i <= ri.capacity; ++i)
+                {
+                    resourceRowNames.Add(ri.name + " " + (totalCapacity + i));
+
+                }
+                totalCapacity += ri.capacity;
+            }
+        }
+        public static ResourceInfo? GetResourceFromSelectedRow(int row)
+        {
+            int resourceStart = 0;
+            for (int i = 0; i < resourcesOrder.Count; ++i)
+            {
+                if (resourceStart + resources[resourcesOrder[i]].capacity >= row)
+                {
+                    resources[resourcesOrder[i]].SetSelectedRow(row - resourceStart, row);
+                    return resources[resourcesOrder[i]];
+                }
+            }
+            return null;
         }
 
-        public static int capacity = 20;
+        public static int totalCapacity = 0;
         float smoothZoomSpeed = 1.6f;
 
         public PageConferenceView()
@@ -61,12 +101,18 @@ namespace BridgeOpsClient
             tmrRender.Interval = new TimeSpan(10000);
             tmrRender.Start();
 
+            schResources.view = schView;
             schRuler.view = schView;
+            schRuler.res = schResources;
         }
 
         void RedrawRuler()
         {
             schRuler.InvalidateVisual();
+        }
+        void RedrawResources()
+        {
+            schResources.InvalidateVisual();
         }
         void RedrawGrid()
         {
@@ -105,8 +151,11 @@ namespace BridgeOpsClient
         {
             // Smooth zoom (prefer 60Hz).
             float deltaTime = (float)((double)(Environment.TickCount - lastFrame) / 60f);
-            bool viewChanged = false;
-            bool rulerChanged = false;
+            
+            // Horizotal Change will affect only the ruler, vertical change will affect only the resource pane, and
+            // the schedule view will be affected by both.
+            bool horizontalChange = false;
+            bool verticalChange = false;
 
             if (schView.zoomTimeCurrent != schView.zoomTime)
             {
@@ -115,10 +164,10 @@ namespace BridgeOpsClient
                                                              smoothZoomSpeed * deltaTime, 1.2d);
                 else
                     schView.zoomTimeCurrent = schView.zoomTime;
-                rulerChanged = true;
-                viewChanged = true;
+
+                horizontalChange = true;
             }
-            if (!viewChanged && schView.zoomResourceCurrent != schView.zoomResource)
+            if (!verticalChange && schView.zoomResourceCurrent != schView.zoomResource)
             {
                 double old = schView.zoomResourceCurrent;
                 if (schView.smoothZoom)
@@ -136,33 +185,34 @@ namespace BridgeOpsClient
 
                 UpdateScrollBar();
 
-                viewChanged = true;
+                verticalChange = true;
             }
 
-            if (!(viewChanged && rulerChanged) && schView.scheduleTime != schView.lastScheduleTime)
+            if (!(verticalChange && horizontalChange) && schView.scheduleTime != schView.lastScheduleTime)
             {
-                viewChanged = true;
-                rulerChanged = true;
+                verticalChange = true;
+                horizontalChange = true;
             }
 
-            if (!viewChanged && schView.scrollResource != schView.lastScrollResource)
+            if (!verticalChange && schView.scrollResource != schView.lastScrollResource)
             {
-                viewChanged = true;
-                // Without a ruler update here, it sometimes doesn't update when scrolling vertically and horizontally
-                // at the same time. I can't figure out why, and to be honest it kind of makes having the ruler
-                // separate from the schedule view a bit pointless, but it's too much to change now on time
+                verticalChange = true;
+                // Without a horizontal update here, it sometimes doesn't update when scrolling vertically and
+                // horizontally at the same time. I can't figure out why, and to be honest it kind of makes having the
+                // ruler separate from the schedule view often a bit pointless, but it's too much to change now on time
                 // constraints.
-                rulerChanged = true;
+                horizontalChange = true;
             }
 
-            if (!viewChanged && cursorMoved)
+            if (!horizontalChange && cursorMoved)
             {
                 cursorMoved = false;
-                viewChanged = true;
+                horizontalChange = true;
             }
 
-            if (viewChanged) RedrawGrid();
-            if (rulerChanged) RedrawRuler();
+            if (verticalChange) RedrawResources();
+            if (horizontalChange) RedrawRuler();
+            if (verticalChange || horizontalChange) RedrawGrid();
 
             lastFrame = Environment.TickCount64;
         }
@@ -175,11 +225,10 @@ namespace BridgeOpsClient
             {
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
                 int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
-
-                NewConference newConf = new(resource, time);
+                NewConference newConf = new(GetResourceFromSelectedRow(resource), time);
                 try { newConf.Show(); } catch { }
             }
-            
+
             // Drag
             else if (e.ChangedButton == MouseButton.Middle ||
                 e.ChangedButton == MouseButton.Left)
@@ -321,13 +370,14 @@ namespace BridgeOpsClient
     public class ScheduleRuler : Canvas
     {
         public ScheduleView? view;
+        public ScheduleResources? res;
 
         // OnRender() has some repeated code from ScheduleView, but I have kept the draw code for the ruler separate
         // due to not wanting to redraw the ruler unless we have to. The function still makes use of some public
         // members from ScheduleView.
         protected override void OnRender(DrawingContext dc)
         {
-            if (view != null)
+            if (view != null && res != null)
             {
                 double zoomTimeDisplay = view.DisplayTimeZoom();
 
@@ -362,7 +412,7 @@ namespace BridgeOpsClient
                 // Cast this to (int) if you want it dead on the pixel.
                 double x = view.TimeToX(t, zoomTimeDisplay) + .5f;
 
-                // Irritating to have to do this, but I don't want to create a new formatted text ever draw, and the
+                // Irritating to have to do this, but I don't want to create a new formatted text every draw, and the
                 // text property doesn't have a setter that I can see.
                 FormattedText[] formattedText = new FormattedText[24];
                 Typeface segoeUI = new Typeface("Segoe UI");
@@ -385,8 +435,9 @@ namespace BridgeOpsClient
                                            VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                 double hourWidth = formattedText[0].Width;
+                double hourHeight = formattedTextLight[0].Height;
                 double minuteWidth = formattedTextLight[0].Width;
-                double minuteYmod = (formattedText[0].Height - formattedTextLight[0].Height) - 1;
+                double minuteYmod = (formattedText[0].Height - hourHeight) - 1;
 
 
                 double firstDateX = double.MaxValue;
@@ -400,32 +451,42 @@ namespace BridgeOpsClient
                 while (t < end)
                 {
                     double xInt = (int)x + .5d; // Snap to nearest pixel.
-                    if (t.Hour % hourDisplay == 0 && t.Minute == 0)
+                    if (xInt > -(hourWidth * .5d))
                     {
-                        dc.DrawText(formattedText[t.Hour], new Point(xInt - (hourWidth * .5d), 22d));
-                    }
-                    else if (t.Minute % 15 == 0 && hourDisplay == 1)
-                    {
-                        dc.DrawText(formattedTextLight[(t.Minute / 15 - 1)],
-                                                       new Point(xInt - (minuteWidth * .5d), 22d + minuteYmod));
-                    }
-                    if (t.Hour == 0 && t.Minute == 0)
-                    {
-                        if (xInt >= 2)
+                        // Hour markers
+                        if (xInt < ActualWidth + hourWidth * .5d)
                         {
-                            FormattedText date = new($"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}",
-                                       CultureInfo.CurrentCulture,
-                                       FlowDirection.LeftToRight,
-                                       segoeUI,
-                                       12,
-                                       Brushes.Black,
-                                       VisualTreeHelper.GetDpi(this).PixelsPerDip);
-                            dc.DrawText(date, new Point(xInt, 0));
-                            if (xInt < firstDateX)
-                                firstDateX = xInt;
+                            if (t.Hour % hourDisplay == 0 && t.Minute == 0)
+                            {
+                                dc.DrawText(formattedText[t.Hour],
+                                            new Point(xInt - (hourWidth * .5d), 22d));
+                            }
+                            else if (t.Minute % 15 == 0 && hourDisplay == 1)
+                            {
+                                dc.DrawText(formattedTextLight[(t.Minute / 15 - 1)],
+                                            new Point(xInt - (minuteWidth * .5d), 22d + minuteYmod));
+                            }
                         }
-                        else
-                            firstDateStringOverride = $"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}";
+
+                        // Day markers
+                        if (t.Hour == 0 && t.Minute == 0 && xInt < ActualWidth - 1d)
+                        {
+                            if (xInt >= 2)
+                            {
+                                FormattedText date = new($"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}",
+                                           CultureInfo.CurrentCulture,
+                                           FlowDirection.LeftToRight,
+                                           segoeUI,
+                                           12,
+                                           Brushes.Black,
+                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                                dc.DrawText(date, new Point(xInt, 0));
+                                if (xInt < firstDateX)
+                                    firstDateX = xInt;
+                            }
+                            else
+                                firstDateStringOverride = $"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}";
+                        }
                     }
 
                     t = t.AddTicks(incrementTicks);
@@ -443,6 +504,93 @@ namespace BridgeOpsClient
                                              VisualTreeHelper.GetDpi(this).PixelsPerDip);
                 if (firstDateX > dateEdge.Width + 20)
                     dc.DrawText(dateEdge, new Point(2, 0));
+
+                // Mask overflowing hour markers on the left-hand side. I tried this with the Z index, but that caused
+                // the resource names to overflow onto the schedule view. This way round it's slightly more manageable.
+                double xMask = res.ActualWidth;
+                dc.DrawRectangle(Brushes.White, null, new Rect(-xMask, 0, xMask, ActualHeight));
+
+            }
+        }
+    }
+
+    public class ScheduleResources : Canvas
+    {
+        public ScheduleView? view;
+
+        Typeface segoeUI = new Typeface("Segoe UI");
+
+        Brush brsHighlight;
+        Brush brsDivider;
+        Pen penDivider;
+        public ScheduleResources()
+        {
+            brsHighlight = new SolidColorBrush(Color.FromArgb(20, 0, 0, 0));
+            brsDivider = new SolidColorBrush(Color.FromArgb(255, 120, 120, 120));
+            penDivider = new Pen(brsDivider, 1);
+
+
+            penDivider.Freeze();
+        }
+
+        // OnRender() has some repeated code from ScheduleView, but I have kept the draw code for the resources
+        // separate due to not wanting to redraw the ruler unless we have to. The function still makes use of some
+        // public members from ScheduleView.
+        protected override void OnRender(DrawingContext dc)
+        {
+            if (view != null)
+            {
+                // Background
+                dc.DrawRectangle(Brushes.White,
+                                 new Pen(Brushes.LightGray, 1),
+                                 new Rect(-.5d, .5d, ActualWidth + 1, ActualHeight - 1d));
+
+                // maxLineDepth is worked out slightly differently to ScheduleView. We add zoomResourceCurrent because
+                // we may want to draw one additional row if the top and bottom rows are only partially visible.
+                double maxLineDepth = view.MaxLineDepth(view.zoomResourceCurrent) + view.zoomResourceCurrent;
+                // Resources (drawn last as these lines want to overlay the time lines).
+                double scroll = view.DisplayResourceScroll();
+                for (double y = 0; y < maxLineDepth; y += view.zoomResourceCurrent)
+                {
+                    double yPix = (y + .5f) - (scroll % view.zoomResourceCurrent);
+                    // Wrap around if the line falls off the top.
+                    if (yPix < -(view.zoomResourceCurrent - 1))
+                        yPix += ActualHeight + (view.zoomResourceCurrent - (ActualHeight % view.zoomResourceCurrent));
+                    dc.DrawLine(penDivider, new Point(.5f, yPix), new Point(ActualWidth, yPix));
+
+                    int row = view.GetResourceFromY(yPix);
+                    PageConferenceView.ResourceInfo? resource = PageConferenceView.GetResourceFromSelectedRow(row);
+                    if (resource != null)
+                    {
+                        FormattedText formattedText = new(resource.name + " " + (resource.SelectedRow + 1).ToString(),
+                                                          CultureInfo.CurrentCulture,
+                                                          FlowDirection.LeftToRight,
+                                                          segoeUI,
+                                                          12,
+                                                          Brushes.Black,
+                                                          VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                        dc.DrawText(formattedText, new Point(5, yPix + 2));
+
+                        // If text went over the line at the top of the screen, redraw the grey border on top.
+                        if (yPix + 2 < 0)
+                            dc.DrawLine(new Pen(Brushes.LightGray, 1), new Point(.5d, .5d), new Point(ActualWidth, .5d));
+                    }
+                }
+
+                // Highlight cursor resource.
+                if (view.cursor != null)
+                {
+                    double y = view.GetResourceFromY(view.cursor.Value.Y);
+
+                    if (y >= 0)
+                    {
+                        y *= view.zoomResourceCurrent;
+                        y -= scroll;
+
+                        dc.DrawRectangle(brsHighlight, null, new Rect(0, y, ActualWidth, view.zoomResourceCurrent));
+                    }
+
+                }
             }
         }
     }
@@ -452,8 +600,8 @@ namespace BridgeOpsClient
         public double gridHeight = 0;
 
         public bool smoothZoom = true;
-        public int zoomTime = 10; // How many pixels an hour can be reduced to.
-        public double zoomTimeCurrent = 10d; // Used for smooth Lerp()ing.
+        public int zoomTime = 70; // How many pixels an hour can be reduced to.
+        public double zoomTimeCurrent = 70d; // Used for smooth Lerp()ing.
         public int zoomTimeMinimum = 10;
         public int zoomTimeMaximum = 210;
         public int zoomTimeSensitivity = 10;
@@ -478,162 +626,171 @@ namespace BridgeOpsClient
 
         public Point? cursor = null;
 
-        protected override void OnRender(DrawingContext dc)
+        // These brushes remain the same forever, so declare, initialise and freeze.
+        Brush brsCursor;
+        Pen penCursor;
+        Brush brsStylus;
+        Pen penStylus;
+        public ScheduleView()
         {
-            // Background
-            dc.DrawRectangle(Brushes.White, new Pen(Brushes.LightGray, 1), new Rect(.5d, .5d, ActualWidth - 1d, ActualHeight - 1d));
-
-            // Reduce zoom sensitivity the further out you get.
-            double zoomTimeDisplay = DisplayTimeZoom();
-            double zoomResourceDisplay = zoomResourceCurrent;
-
-            // Prepare shades and brushes.
-
-            double shadeFive = (zoomTimeDisplay - 65) / 30f;
-            MathHelper.Clamp(ref shadeFive, 0f, 1f);
-            shadeFive *= 255f;
-            double shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
-            MathHelper.Clamp(ref shadeQuarter, 0f, 1f);
-            shadeQuarter *= 255f;
-            double shadeHour = zoomTimeDisplay / 40f;
-            MathHelper.Clamp(ref shadeHour, .45f, 1f);
-            shadeHour *= 255f;
-
-            Brush brsScheduleLineFive = new SolidColorBrush(Color.FromArgb((byte)shadeFive,
-                                                                           240, 240, 240));
-            Brush brsScheduleLineQuarter = new SolidColorBrush(Color.FromArgb((byte)shadeQuarter,
-                                                                              225, 225, 225));
-            Brush brsScheduleLineHour = new SolidColorBrush(Color.FromArgb((byte)shadeHour,
-                                                                           180, 180, 180));
-            Brush brsScheduleLineDay = new SolidColorBrush(Color.FromRgb(120, 120, 120));
-
-            Pen penScheduleLineFive = new Pen(brsScheduleLineFive, 1);
-            Pen penScheduleLineQuarter = new Pen(brsScheduleLineQuarter, 1);
-            Pen penScheduleLineHour = new Pen(brsScheduleLineHour, 1);
-            Pen penScheduleLineDay = new Pen(brsScheduleLineDay, 1);
-
-            Brush brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
-            Pen penCursor = new Pen(brsCursor, 1);
-
-            Brush brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
-            Pen penStylus = new Pen(brsStylus, 1);
-
-
-            // Freez()ing Pens increases draw speed dramatically. Freez()ing the Brushes helps a bit, but Freez()ing
-            // the Pens seems to implicitly catch the Brushes as well to draw outrageously fast.
-            penScheduleLineFive.Freeze();
-            penScheduleLineQuarter.Freeze();
-            penScheduleLineHour.Freeze();
-            penScheduleLineDay.Freeze();
+            brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+            penCursor = new Pen(brsCursor, 1);
+            brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
+            penStylus = new Pen(brsStylus, 1);
             penCursor.Freeze();
             penStylus.Freeze();
+        }
 
-            double maxLineHeight = PageConferenceView.capacity * zoomResourceDisplay + .5f;
-            if (maxLineHeight > ActualHeight)
-                maxLineHeight = ActualHeight;
-            int maxLines = PageConferenceView.capacity + 1;
+        protected override void OnRender(DrawingContext dc)
+        {
+            if (ActualWidth > 0)
+            {
+                // Background
+                dc.DrawRectangle(Brushes.White, new Pen(Brushes.LightGray, 1),
+                                 new Rect(0d, .5d, ActualWidth - .5d, ActualHeight - .5d));
 
-            // Time
+                // Reduce zoom sensitivity the further out you get.
+                double zoomTimeDisplay = DisplayTimeZoom();
+                double zoomResourceDisplay = zoomResourceCurrent;
 
-            // Get number of intervals for half the width of the view.
-            double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
-            double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
-            int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
-            int viewHalfDays = (int)(viewHalfHours / 24);
+                // Calculate how far down lines should be drawn in case of only a few resource rows.
+                double maxLineDepth = MaxLineDepth(zoomResourceDisplay);
 
-            TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+                // Prepare shades and brushes.
 
-            DateTime start = scheduleTime - half;
-            DateTime end = scheduleTime + half;
+                double shadeFive = (zoomTimeDisplay - 65) / 30f;
+                MathHelper.Clamp(ref shadeFive, 0f, 1f);
+                shadeFive *= 255f;
+                double shadeQuarter = (zoomTimeDisplay - 20f) / 30f;
+                MathHelper.Clamp(ref shadeQuarter, 0f, 1f);
+                shadeQuarter *= 255f;
+                double shadeHour = zoomTimeDisplay / 40f;
+                MathHelper.Clamp(ref shadeHour, .45f, 1f);
+                shadeHour *= 255f;
 
-            double incrementX;
-            long incrementTicks;
-            if (shadeFive < minShade)
-                if (shadeQuarter < minShade)
-                    if (shadeHour < minShade)
-                    {
-                        incrementX = zoomTimeDisplay / 24d;
-                        incrementTicks = ticks1Day;
-                    }
+                Brush brsScheduleLineFive = new SolidColorBrush(Color.FromArgb((byte)shadeFive,
+                                                                               240, 240, 240));
+                Brush brsScheduleLineQuarter = new SolidColorBrush(Color.FromArgb((byte)shadeQuarter,
+                                                                                  225, 225, 225));
+                Brush brsScheduleLineHour = new SolidColorBrush(Color.FromArgb((byte)shadeHour,
+                                                                               180, 180, 180));
+                Brush brsScheduleLineDay = new SolidColorBrush(Color.FromRgb(120, 120, 120));
+
+                Pen penScheduleLineFive = new Pen(brsScheduleLineFive, 1);
+                Pen penScheduleLineQuarter = new Pen(brsScheduleLineQuarter, 1);
+                Pen penScheduleLineHour = new Pen(brsScheduleLineHour, 1);
+                Pen penScheduleLineDay = new Pen(brsScheduleLineDay, 1);
+
+
+                // Freez()ing Pens increases draw speed dramatically. Freez()ing the Brushes helps a bit, but Freez()ing
+                // the Pens seems to implicitly catch the Brushes as well to draw outrageously fast.
+                penScheduleLineFive.Freeze();
+                penScheduleLineQuarter.Freeze();
+                penScheduleLineHour.Freeze();
+                penScheduleLineDay.Freeze();
+
+                // Time
+
+                // Get number of intervals for half the width of the view.
+                double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
+                double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
+                int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
+                int viewHalfDays = (int)(viewHalfHours / 24);
+
+                TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+
+                DateTime start = scheduleTime - half;
+                DateTime end = scheduleTime + half;
+
+                double incrementX;
+                long incrementTicks;
+                if (shadeFive < minShade)
+                    if (shadeQuarter < minShade)
+                        if (shadeHour < minShade)
+                        {
+                            incrementX = zoomTimeDisplay / 24d;
+                            incrementTicks = ticks1Day;
+                        }
+                        else
+                        {
+                            incrementX = zoomTimeDisplay;
+                            incrementTicks = ticks1Hour;
+                        }
                     else
                     {
-                        incrementX = zoomTimeDisplay;
-                        incrementTicks = ticks1Hour;
+                        incrementX = zoomTimeDisplay / 4d;
+                        incrementTicks = ticks15Min;
                     }
                 else
                 {
-                    incrementX = zoomTimeDisplay / 4d;
-                    incrementTicks = ticks15Min;
+                    incrementX = zoomTimeDisplay / 12d;
+                    incrementTicks = ticks5Min;
                 }
-            else
-            {
-                incrementX = zoomTimeDisplay / 12d;
-                incrementTicks = ticks5Min;
-            }
 
-            // Get the start time, rounded down to the nearest increment.
-            DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
+                // Get the start time, rounded down to the nearest increment.
+                DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
 
-            // Cast this to (int) if you want it dead on the pixel.
-            double x = TimeToX(t, zoomTimeDisplay) + .5f;
+                // Cast this to (int) if you want it dead on the pixel.
+                double x = TimeToX(t, zoomTimeDisplay) + .5f;
 
-            while (t < end)
-            {
-                double xInt = (int)x + .5d; // Snap to nearest pixel.
-                if (x > 0d && x < ActualWidth)
+                while (t < end)
                 {
-                    if (t.Ticks % ticks1Day == 0)
-                        dc.DrawLine(penScheduleLineDay, new Point(xInt, .5f),
-                                                         new Point(xInt, maxLineHeight));
-                    else if (t.Ticks % ticks1Hour == 0)
-                        dc.DrawLine(penScheduleLineHour, new Point(xInt, .5f),
-                                                            new Point(xInt, maxLineHeight));
-                    else if (t.Ticks % ticks15Min == 0)
-                        dc.DrawLine(penScheduleLineQuarter, new Point(xInt, .5f),
-                                                         new Point(xInt, maxLineHeight));
-                    else // has to be 5 minutes
-                        dc.DrawLine(penScheduleLineFive, new Point(xInt, .5f),
-                                                        new Point(xInt, maxLineHeight));
+                    double xInt = (int)x + .5d; // Snap to nearest pixel.
+                    if (x > 0d && x < ActualWidth)
+                    {
+                        if (t.Ticks % ticks1Day == 0)
+                            dc.DrawLine(penScheduleLineDay, new Point(xInt, .5f),
+                                                             new Point(xInt, maxLineDepth));
+                        else if (t.Ticks % ticks1Hour == 0)
+                            dc.DrawLine(penScheduleLineHour, new Point(xInt, .5f),
+                                                                new Point(xInt, maxLineDepth));
+                        else if (t.Ticks % ticks15Min == 0)
+                            dc.DrawLine(penScheduleLineQuarter, new Point(xInt, .5f),
+                                                             new Point(xInt, maxLineDepth));
+                        else // has to be 5 minutes
+                            dc.DrawLine(penScheduleLineFive, new Point(xInt, .5f),
+                                                            new Point(xInt, maxLineDepth));
+                    }
+
+                    t = t.AddTicks(incrementTicks);
+                    x += incrementX;
                 }
 
-                t = t.AddTicks(incrementTicks);
-                x += incrementX;
-            }
-
-            // Resources (drawn last as these lines want to overlay the time lines).
-            double scroll = DisplayResourceScroll();
-            for (double y = 0; y < maxLineHeight; y += zoomResourceDisplay)
-            {
-                double yPix = (y + .5f) - (scroll % zoomResourceDisplay);
-                // Wrap around if the line falls off the top.
-                if (yPix < 0)
-                    yPix += ActualHeight + (zoomResourceDisplay - (ActualHeight % zoomResourceDisplay));
-                dc.DrawLine(penScheduleLineDay, new Point(.5f, yPix),
-                                                new Point(ActualWidth, yPix));
-            }
-
-            // Draw the cursor.
-            if (cursor != null)
-            {
-                double y = GetResourceFromY(cursor.Value.Y);
-                if (y >= 0)
+                // Resources (drawn last as these lines want to overlay the time lines).
+                double scroll = DisplayResourceScroll();
+                for (double y = 0; y < maxLineDepth; y += zoomResourceDisplay)
                 {
-                    y *= zoomResourceCurrent;
-                    y -= scroll;
-                    DateTime xDT = GetDateTimeFromX(cursor.Value.X, zoomTimeDisplay);
-                    xDT = SnapDateTime(xDT, zoomTimeDisplay);
-                    x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
-
-                    dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
-                                           new Point(x, y + zoomResourceDisplay));
-                    dc.DrawLine(penCursor, new Point(x, -5d),
-                                           new Point(x, .5d));
+                    double yPix = (y + .5f) - (scroll % zoomResourceDisplay);
+                    // Wrap around if the line falls off the top.
+                    if (yPix < 0)
+                        yPix += ActualHeight + (zoomResourceDisplay - (ActualHeight % zoomResourceDisplay));
+                    dc.DrawLine(penScheduleLineDay, new Point(.5f, yPix),
+                                                    new Point(ActualWidth, yPix));
                 }
-            }
 
-            // Draw the stylus.
-            dc.DrawLine(penStylus, new Point(ActualWidth * .5d, -3d),
-                                   new Point(ActualWidth * .5d, 4d));
+                // Draw the cursor.
+                if (cursor != null)
+                {
+                    double y = GetResourceFromY(cursor.Value.Y);
+                    if (y >= 0)
+                    {
+                        y *= zoomResourceCurrent;
+                        y -= scroll;
+                        DateTime xDT = GetDateTimeFromX(cursor.Value.X, zoomTimeDisplay);
+                        xDT = SnapDateTime(xDT, zoomTimeDisplay);
+                        x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
+
+                        dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
+                                               new Point(x, y + zoomResourceDisplay));
+                        dc.DrawLine(penCursor, new Point(x, -5d),
+                                               new Point(x, .5d));
+                    }
+                }
+
+                // Draw the stylus.
+                dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
+                                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
+            }
         }
 
         public void Drag(double xDif, double yDif)
@@ -673,8 +830,8 @@ namespace BridgeOpsClient
 
         public void EnforceResourceScrollLimits()
         {
-            if (scrollResource > 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight)
-                scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight;
+            if (scrollResource > 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight)
+                scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight;
             if (scrollResource < 0) scrollResource = 0;
         }
 
@@ -707,30 +864,40 @@ namespace BridgeOpsClient
         public double DisplayResourceScroll()
         {
             double scroll = scrollResource;
-            if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight)
-                scroll = 1 + (zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight;
+            if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight)
+                scroll = 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight;
             if (scroll < 0) scroll = 0;
             return (int)scroll;
+        }
+        
+        public double MaxLineDepth(double zoomResourceDisplay)
+        {
+            // This method calculates how far down lines should be drawn in case of the screen not being filled with
+            // resource rows.
+            double maxLineDepth = PageConferenceView.totalCapacity * zoomResourceDisplay + .5f;
+            if (maxLineDepth > ActualHeight)
+                maxLineDepth = ActualHeight;
+            return maxLineDepth;
         }
 
         public double ScrollMax()
         {
-            return ((zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight) + 1;
+            return ((zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight) + 1;
         }
         public double ScrollPercent()
         {
-            return scrollResource / (((zoomResourceCurrent * PageConferenceView.capacity) - ActualHeight) + 1);
+            return scrollResource / (((zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight) + 1);
         }
         public double ViewPercent()
         {
-            double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.capacity) + 1);
+            double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.totalCapacity) + 1);
             return ret > 1 ? 1 : ret;
         }
 
         public int GetResourceFromY(double y)
         {
             int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
-            return resource < PageConferenceView.capacity ? resource : -1;
+            return resource < PageConferenceView.totalCapacity ? resource : -1;
         }
         public double GetYfromResource(int resource)
         {

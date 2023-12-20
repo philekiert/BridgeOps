@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,7 +22,7 @@ namespace BridgeOpsClient
     {
         string[]? typeList = null;
 
-        public NewConference(int resource, DateTime start)
+        public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
         {
             InitializeComponent();
 
@@ -30,13 +31,23 @@ namespace BridgeOpsClient
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
 
+            // Populate available types
             typeList = App.SelectColumnPrimary("ConferenceType", Glo.Tab.CONFERENCE_TYPE_NAME);
             if (typeList == null || typeList.Length == 0)
             {
                 MessageBox.Show("Could not pull conference type list from server.");
                 Close();
             }
-            cmbResource.ItemsSource = typeList;
+            cmbType.ItemsSource = typeList;
+            cmbType.SelectedIndex = 0;
+
+            // Populate available resources and select whichever one the user clicked on in the schedule view.
+            cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
+            if (resource == null)
+                MessageBox.Show("Could not determine resource from selected row, please set manually.");
+            else
+                cmbResource.SelectedIndex = resource.SelectedRowTotal;
+
         }
     }
 }

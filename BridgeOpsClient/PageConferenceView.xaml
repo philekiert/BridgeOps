@@ -11,7 +11,6 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
-            <RowDefinition Height="44"/>
             <RowDefinition />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" VerticalAlignment="Top">
@@ -62,20 +61,40 @@
             <Button Grid.Column="7" Content="&gt;" x:Name="btnDayNext" Click="btnDayNext_Click"
                     Style="{StaticResource ToolbarButton}"/>
         </Grid>
-        <Grid Grid.Row="1" Background="White">
-            <local:ScheduleRuler x:Name="schRuler"/>
-        </Grid>
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="1" x:Name="grdScheduleView">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" MinWidth="5" MaxWidth="300"/>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <local:ScheduleView x:Name="schView" Grid.Column="0" Background="White"
-                                MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
-                                MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
-                                PreviewMouseWheel="schView_PreviewMouseWheel"/>
-            <ScrollBar x:Name="scrollBar" Grid.Column="1"
-                       Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
+            <Grid Grid.Column="0" Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="44"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Canvas Background="White"/>
+                <local:ScheduleResources Grid.Row="1" x:Name="schResources"/>
+            </Grid>
+            <Grid Grid.Column="1" Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="44"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <local:ScheduleRuler Grid.Row="0" x:Name="schRuler"/>
+                <local:ScheduleView x:Name="schView" Grid.Row="1" Background="White"
+                                    MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
+                                    MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
+                                    PreviewMouseWheel="schView_PreviewMouseWheel"/>
+            </Grid>
+            <Grid Grid.Column="2" Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="44"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <ScrollBar x:Name="scrollBar" Grid.Row="1"
+                           Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
+            </Grid>
+            <GridSplitter Grid.Column="0" Width="5"/>
         </Grid>
     </Grid>
 </Page>

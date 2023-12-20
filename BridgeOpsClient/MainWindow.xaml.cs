@@ -26,7 +26,7 @@ namespace BridgeOpsClient
 {
     public partial class MainWindow : Window
     {
-        public const int CONF_PANE_MIN_WIDTH = 400;
+        public const int CONF_PANE_MIN_WIDTH = 500;
         public const int DATA_PANE_MIN_WIDTH = 818;
         private void SetMinWidth(int option)
         {
