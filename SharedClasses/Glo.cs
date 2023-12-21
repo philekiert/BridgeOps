@@ -100,7 +100,7 @@ public static class Glo
         public const string CONFERENCE_TYPE_NAME = "Type_Name";
 
         public const string CONFERENCE_ID = "Conference_ID";
-        public const string CONFERENCE_TYPE = "Type";
+        public const string CONFERENCE_TYPE = "Type_ID";
         public const string CONFERENCE_TITLE = "Title";
         public const string CONFERENCE_START = "Start_Time";
         public const string CONFERENCE_END = "End_Time";

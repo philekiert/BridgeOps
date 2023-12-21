@@ -406,7 +406,8 @@ public class DatabaseCreator
             resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID) );";
             conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
-                          ", CONSTRAINT fk_ConfType FOREIGN KEY (Type) REFERENCES ConferenceType (Type_ID)" +
+                          ", CONSTRAINT fk_ConfResource FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID)" +
+                          ", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
                           ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE SET NULL );";
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
             conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
