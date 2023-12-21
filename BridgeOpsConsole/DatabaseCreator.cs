@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static FieldDefs;
@@ -82,6 +83,15 @@ public class DatabaseCreator
 
             bool stillReadingPrimaryKeys = true;
 
+            void UpdateForeignKeys(string currentKey, string newType)
+            {
+                foreach (KeyValuePair<string, Definition> kvp in fieldDefs.defs)
+                {
+                    if (kvp.Key.EndsWith(currentKey))
+                        kvp.Value.type = newType;
+                }
+            }
+
             foreach (string line in lines)
             {
                 if (!line.StartsWith("# ") && line.Length >= 6)
@@ -121,6 +131,8 @@ public class DatabaseCreator
                                     {
                                         ++valuesChanged;
                                         def.type = "CHAR(" + val + ")";
+                                        if (stillReadingPrimaryKeys)
+                                            UpdateForeignKeys(key, def.type);
                                     }
                                     readSuccess = true;
                                 }
@@ -135,6 +147,8 @@ public class DatabaseCreator
                                     {
                                         ++valuesChanged;
                                         def.type = "VARCHAR(" + val + ")";
+                                        if (stillReadingPrimaryKeys)
+                                            UpdateForeignKeys(key, def.type);
                                     }
                                     readSuccess = true;
                                 }
@@ -145,6 +159,8 @@ public class DatabaseCreator
                                 {
                                     ++valuesChanged;
                                     def.type = val;
+                                    if (stillReadingPrimaryKeys)
+                                        UpdateForeignKeys(key, def.type);
                                 }
                                 readSuccess = true;
                             }
@@ -397,7 +413,7 @@ public class DatabaseCreator
 
             // Entity Table Strings
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
-                            ", CONSTRAINT fk_ParentOrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID)  );";
+                            ", CONSTRAINT fk_ParentOrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) );";
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
             login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
                      ", CONSTRAINT nq_Username UNIQUE (Username) );";
@@ -480,8 +496,8 @@ public class DatabaseCreator
             //SendCommandSQL(junctionOrgChangeContacts);
             //Writer.Message("Creating Organisation Change Engineers junction table...");
             //SendCommandSQL(junctionOrgChangeEngineers);
-            Writer.Message("Creating Conference Resource junction table...");
-            SendCommandSQL(junctionConfResource);
+            //Writer.Message("Creating Conference Resource junction table...");
+            //SendCommandSQL(junctionConfResource);
 
             Writer.Message("\nApplying column additions...");
             foreach (ColumnAddition addition in columnAdditions)

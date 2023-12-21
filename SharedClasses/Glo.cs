@@ -97,8 +97,8 @@ public static class Glo
         public const string ASSET_ID = "Asset_ID";
 
         public const string CONFERENCE_TYPE_ID = "Type_ID";
+        public const string ORGANISATION_RESOURCE_ROW = "Resource_Row";
         public const string CONFERENCE_TYPE_NAME = "Type_Name";
-
         public const string CONFERENCE_ID = "Conference_ID";
         public const string CONFERENCE_TYPE = "Type_ID";
         public const string CONFERENCE_TITLE = "Title";

@@ -45,6 +45,7 @@ public class FieldDefs
         public bool canOverride;
         public bool primaryKey;
         public bool autoIncrement;
+        public List<string>? primaryKeyLinks; // If the primary key is reference by foreign keys, track this.
 
         public Definition(int categoryLength, string columnName, string type,
                           bool canOverride, bool primaryKey, bool autoIncrement)
@@ -56,6 +57,18 @@ public class FieldDefs
             this.canOverride = canOverride;
             this.primaryKey = primaryKey;
             this.autoIncrement = autoIncrement;
+        }
+        public Definition(int categoryLength, string columnName, string type,
+                          bool canOverride, bool primaryKey, bool autoIncrement, List<string> primaryKeyLinks)
+        {
+            this.categoryLength = categoryLength;
+            this.columnName = columnName;
+            this.type = type;
+            typeDefault = type;
+            this.canOverride = canOverride;
+            this.primaryKey = primaryKey;
+            this.autoIncrement = autoIncrement;
+            this.primaryKeyLinks = primaryKeyLinks;
         }
     }
 
@@ -72,6 +85,7 @@ public class FieldDefs
     public string typeLoginID = "SMALLINT UNSIGNED";
     public string typeAssetID = "VARCHAR(10)";
     public string typeResourceID = "SMALLINT UNSIGNED";
+    public string typeResourceCapacity = "INT UNSIGNED";
     public string typeConfID = "INT UNSIGNED";
     public string typeRecurrenceID = "INT UNSIGNED";
     public string typeConfTypeID = "SMALLINT UNSIGNED";
@@ -85,8 +99,8 @@ public class FieldDefs
 
         // Organisation
         defs.Add("Organisation ID", new Definition(12, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
-        defs.Add("Organisation Parent ID", new Definition(12, Glo.Tab.PARENT_ID, typeOrgID, false, false, false));
-        defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, "VARCHAR(7)", true, false, false));
+        defs.Add("Organisation Organisation ID", new Definition(12, Glo.Tab.PARENT_ID, typeOrgID, false, false, false));
+        defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, true, false, false));
         defs.Add("Organisation Notes", new Definition(12, "Notes", "TEXT", false, false, false));
 
         // Contact
@@ -109,12 +123,13 @@ public class FieldDefs
         defs.Add("Resource Name", new Definition(8, Glo.Tab.RESOURCE_NAME, "VARCHAR(20)", true, false, false));
         defs.Add("Resource Available From", new Definition(8, Glo.Tab.RESOURCE_FROM, "DATETIME", false, false, false));
         defs.Add("Resource Available To", new Definition(8, Glo.Tab.RESOURCE_TO, "DATETIME", false, false, false));
-        defs.Add("Resource Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY, "SMALLINT UNSIGNED", true, false, false));
+        defs.Add("Resource Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY, typeResourceCapacity, false, false, false));
 
         // Conference
         defs.Add("Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, true));
         defs.Add("Conference Resource ID", new Definition(10, Glo.Tab.RESOURCE_ID, typeResourceID, false, false, false));
-        defs.Add("Conference Type", new Definition(10, Glo.Tab.CONFERENCE_TYPE, typeConfTypeID, false, false, false));
+        defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.ORGANISATION_RESOURCE_ROW, typeResourceID, false, false, false));
+        defs.Add("Conference Conference Type ID", new Definition(10, Glo.Tab.CONFERENCE_TYPE, typeConfTypeID, false, false, false));
         defs.Add("Conference Title", new Definition(10, Glo.Tab.CONFERENCE_TITLE, "VARCHAR(50)", true, false, false));
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
@@ -152,14 +167,14 @@ public class FieldDefs
         defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
         defs.Add("Organisation Change ID", new Definition(19, Glo.Tab.CHANGE_ID, typeOrgChangeID, false, true, true));
         defs.Add("Organisation Change Time", new Definition(19, Glo.Tab.CHANGE_TIME, "DATETIME", false, false, false));
-        defs.Add("Organisation Change Login_ID", new Definition(19, Glo.Tab.LOGIN_ID, typeLoginID, false, false, false));
+        defs.Add("Organisation Change Login ID", new Definition(19, Glo.Tab.LOGIN_ID, typeLoginID, false, false, false));
         defs.Add("Organisation Change Reason", new Definition(19, Glo.Tab.CHANGE_REASON, "VARCHAR(200)", true, false, false));
         List<string> additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         List<Definition> additionsValues = new List<Definition>();
         foreach (var d in defs)
             if (Category(d) == "Organisation")
             {
-                if (d.Value.columnName != "Organisation_ID") // Already stated above, makes up part of the composite key.
+                if (d.Value.columnName != Glo.Tab.ORGANISATION_ID) // Already stated above, makes up part of the composite key.
                 {
                     // All of these should have canOverride set to false.
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
@@ -172,17 +187,17 @@ public class FieldDefs
             defs.Add("Organisation Change / " + additionsKeys[d], additionsValues[d]);
 
         // Asset Change Snapshot
-        defs.Add("Asset Change Asset ID", new Definition(12, "Asset_ID", typeAssetID, false, true, false));
-        defs.Add("Asset Change ID", new Definition(12, "Change_ID", typeAssetChangeID, false, true, true));
+        defs.Add("Asset Change Asset ID", new Definition(12, Glo.Tab.ASSET_ID, typeAssetID, false, true, false));
+        defs.Add("Asset Change ID", new Definition(12, Glo.Tab.CHANGE_ID, typeAssetChangeID, false, true, true));
         defs.Add("Asset Change Time", new Definition(12, "Time", "DATETIME", false, false, false));
-        defs.Add("Asset Change Login_ID", new Definition(12, Glo.Tab.LOGIN_ID, typeLoginID, false, false, false));
+        defs.Add("Asset Change Login ID", new Definition(12, Glo.Tab.LOGIN_ID, typeLoginID, false, false, false));
         defs.Add("Asset Change Reason", new Definition(12, Glo.Tab.CHANGE_REASON, "VARCHAR(200)", true, false, false));
         additionsKeys = new List<string>(); // Can't add to Dictionary while iterating through it!
         additionsValues = new List<Definition>();
         foreach (var d in defs)
             if (Category(d) == "Asset")
             {
-                if (d.Value.columnName != "Asset_ID") // Already stated above, makes up part of the composite key.
+                if (d.Value.columnName != Glo.Tab.ASSET_ID) // Already stated above, makes up part of the composite key.
                 {
                     // All of these should have canOverride set to false. Bool must come first due to the way Agent.ClientSelectHistory() works.
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
@@ -198,8 +213,8 @@ public class FieldDefs
         // ----- MANY-TO-MANY JUNCTION TABLES ----- //
 
         // Organisation Contacts
-        defs.Add("Organisation Contacts Organisation ID", new Definition(21, "Organisation_ID", typeOrgID, false, true, false));
-        defs.Add("Organisation Contacts Contact ID", new Definition(21, "Contact_ID", typeContactID, false, true, false));
+        defs.Add("Organisation Contacts Organisation ID", new Definition(21, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
+        defs.Add("Organisation Contacts Contact ID", new Definition(21, Glo.Tab.CONTACT_ID, typeContactID, false, true, false));
 
         // Organisation Engineers
         //defs.Add("Organisation Engineers Organisation ID", new Definition(22, "Organisation_ID", typeOrgID, false, true, false));
@@ -216,10 +231,8 @@ public class FieldDefs
         //defs.Add("Organisation Change Engineers Contact ID", new Definition(29, "Contact_ID", typeContactID, false, true, false));
 
         // Conference Resources
-        defs.Add("Conference Resource Conference", new Definition(19, "Conference_ID", typeConfID, false, true, false));
-        defs.Add("Conference Resource Resource", new Definition(19, "Resource_ID", typeResourceID, false, true, false));
-
-
+        //defs.Add("Conference Resource Conference", new Definition(19, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, false));
+        //defs.Add("Conference Resource Resource", new Definition(19, Glo.Tab.CONFERENCE_ID, typeResourceID, false, true, false));
     }
     public string TableName(string defKey)
     {
