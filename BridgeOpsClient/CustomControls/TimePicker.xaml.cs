@@ -17,6 +17,14 @@ namespace BridgeOpsClient.CustomControls
 {
     public partial class TimePicker : UserControl
     {
+        private int maxHours = 23;
+        private int maxMinutes = 59;
+        public void SetMaxValues(int hours, int minutes)
+        {
+            maxHours = Math.Clamp(hours, 0, 99);
+            maxMinutes = Math.Clamp(minutes, 0, 59);
+        }
+
         public TimePicker()
         {
             InitializeComponent();
@@ -31,35 +39,22 @@ namespace BridgeOpsClient.CustomControls
             return new TimeSpan(hour, minute, 0);
         }
 
-        private void txt_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            int value;
-            if (!int.TryParse(e.Text, out value))
-                e.Handled = true; // Disallow and cancel if this would make the text alphanumeric.
-            // Restrict to 0-59.
-            if (value > 59)
-            {
-                e.Handled = true;
-                ((TextBox)sender).Text = "59";
-            }
-            else if (value < 0)
-            {
-                // Restrict to 59.
-                e.Handled = true;
-                ((TextBox)sender).Text = "0";
-            }
-        }
+        private void txtMinutes_TextChanged(object sender, TextChangedEventArgs e)
+        { EnforceValueRestriction((TextBox)sender, maxHours); }
 
-        private void txt_TextChanged(object sender, TextChangedEventArgs e)
+        private void txtHours_TextChanged(object sender, TextChangedEventArgs e)
+        { EnforceValueRestriction((TextBox)sender, maxHours); }
+
+        private void EnforceValueRestriction(TextBox textBox, int max)
         {
             int value;
-            if (int.TryParse(((TextBox)sender).Text, out value))
+            if (int.TryParse(textBox.Text, out value))
             {
                 // Shouldn't trigger if the user has erased both characters.
-                if (value > 59)
-                    ((TextBox)sender).Text = "59";
+                if (value > max)
+                    textBox.Text = max.ToString();
                 else if (value < 0)
-                    ((TextBox)sender).Text = "00";
+                    textBox.Text = "00";
             }
         }
 
@@ -67,7 +62,6 @@ namespace BridgeOpsClient.CustomControls
         {
             while (((TextBox)sender).Text.Length < 2)
                 ((TextBox)sender).Text = '0' + ((TextBox)sender).Text;
-
         }
     }
 }

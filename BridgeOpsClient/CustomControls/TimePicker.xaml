@@ -12,11 +12,11 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <TextBox x:Name="txtHour" Grid.Column="0" MaxLength="2" Width="20" HorizontalContentAlignment="Center"
-                 Text="00" PreviewTextInput="txt_PreviewTextInput" TextChanged="txt_TextChanged"
+                 Text="00" TextChanged="txtHours_TextChanged"
                  LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0" />
         <Label Content=":" Grid.Column="1" Margin="2 0 2 0" />
         <TextBox x:Name="txtMinute" Grid.Column="2" MaxLength="2" Width="20" HorizontalContentAlignment="Center"
-                 Text="00" PreviewTextInput="txt_PreviewTextInput" TextChanged="txt_TextChanged"
+                 Text="00" TextChanged="txtMinutes_TextChanged"
                  LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0" />
     </Grid>
 </UserControl>
