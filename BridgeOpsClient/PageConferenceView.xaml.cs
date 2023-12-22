@@ -69,22 +69,24 @@ namespace BridgeOpsClient
             {
                 resourcesOrder.Add(resourcesOrder.Count);
                 for (int i = 1; i <= ri.capacity; ++i)
-                {
-                    resourceRowNames.Add(ri.name + " " + (totalCapacity + i));
-
-                }
+                    resourceRowNames.Add(ri.name + " " + i);
                 totalCapacity += ri.capacity;
             }
         }
         public static ResourceInfo? GetResourceFromSelectedRow(int row)
         {
             int resourceStart = 0;
-            for (int i = 0; i < resourcesOrder.Count; ++i)
+            if (row >= 0)
             {
-                if (resourceStart + resources[resourcesOrder[i]].capacity >= row)
+                for (int i = 0; i < resourcesOrder.Count; ++i)
                 {
-                    resources[resourcesOrder[i]].SetSelectedRow(row - resourceStart, row);
-                    return resources[resourcesOrder[i]];
+                    if (row < resourceStart + resources[resourcesOrder[i]].capacity)
+                    {
+                        resources[resourcesOrder[i]].SetSelectedRow(row - resourceStart, row);
+                        return resources[resourcesOrder[i]];
+                    }
+                    else
+                        resourceStart += resources[resourcesOrder[i]].capacity;
                 }
             }
             return null;
@@ -225,8 +227,11 @@ namespace BridgeOpsClient
             {
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
                 int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
-                NewConference newConf = new(GetResourceFromSelectedRow(resource), time);
-                try { newConf.Show(); } catch { }
+                if (resource != -1)
+                {
+                    NewConference newConf = new(GetResourceFromSelectedRow(resource), time);
+                    try { newConf.Show(); } catch { }
+                }
             }
 
             // Drag
@@ -364,6 +369,11 @@ namespace BridgeOpsClient
                                                 schView.scheduleTime.Minute,
                                                 schView.scheduleTime.Second,
                                                 schView.scheduleTime.Millisecond);
+        }
+
+        private void scrollBar_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateScrollBar();
         }
     }
 
@@ -529,7 +539,6 @@ namespace BridgeOpsClient
             brsDivider = new SolidColorBrush(Color.FromArgb(255, 120, 120, 120));
             penDivider = new Pen(brsDivider, 1);
 
-
             penDivider.Freeze();
         }
 
@@ -546,8 +555,9 @@ namespace BridgeOpsClient
                                  new Rect(-.5d, .5d, ActualWidth + 1, ActualHeight - 1d));
 
                 // maxLineDepth is worked out slightly differently to ScheduleView. We add zoomResourceCurrent because
-                // we may want to draw one additional row if the top and bottom rows are only partially visible.
-                double maxLineDepth = view.MaxLineDepth(view.zoomResourceCurrent) + view.zoomResourceCurrent;
+                // we may want to draw one additional row if the top and bottom rows are only partially visible, but
+                // we don't wrap around as that would sometimes cause the incorrect text to be renderred at the top.
+                double maxLineDepth = (view.MaxLineDepth(view.zoomResourceCurrent) + view.zoomResourceCurrent) - 1d;
                 // Resources (drawn last as these lines want to overlay the time lines).
                 double scroll = view.DisplayResourceScroll();
                 for (double y = 0; y < maxLineDepth; y += view.zoomResourceCurrent)
@@ -589,7 +599,6 @@ namespace BridgeOpsClient
 
                         dc.DrawRectangle(brsHighlight, null, new Rect(0, y, ActualWidth, view.zoomResourceCurrent));
                     }
-
                 }
             }
         }
@@ -635,7 +644,7 @@ namespace BridgeOpsClient
         {
             brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
             penCursor = new Pen(brsCursor, 1);
-            brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
+            brsStylus = new SolidColorBrush(Color.FromRgb(0, 0, 0));
             penStylus = new Pen(brsStylus, 1);
             penCursor.Freeze();
             penStylus.Freeze();
@@ -730,7 +739,6 @@ namespace BridgeOpsClient
                 // Get the start time, rounded down to the nearest increment.
                 DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
 
-                // Cast this to (int) if you want it dead on the pixel.
                 double x = TimeToX(t, zoomTimeDisplay) + .5f;
 
                 while (t < end)
@@ -834,7 +842,6 @@ namespace BridgeOpsClient
                 scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight;
             if (scrollResource < 0) scrollResource = 0;
         }
-
 
         //   H E L P E R   F U N C T I O N S
 

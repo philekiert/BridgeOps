@@ -92,7 +92,8 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <ScrollBar x:Name="scrollBar" Grid.Row="1"
-                           Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"/>
+                           Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
+                           SizeChanged="scrollBar_SizeChanged"/>
             </Grid>
             <GridSplitter Grid.Column="0" Width="5"/>
         </Grid>
