@@ -37,15 +37,19 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Label Content="Type" Grid.Row="0" Grid.Column="0" x:Name="lblType" />
                 <ComboBox Grid.Row="0" Grid.Column="1" x:Name="cmbType" Margin="10 2 10 2"/>
-                <Label Content="Start" Grid.Row="1" Grid.Column="0" x:Name="lblStart"/>
-                <custom:DateTimePicker Grid.Row="1" Grid.Column="1" x:Name="dtpStart"/>
-                <Label Content="End" Grid.Row="2" Grid.Column="0" x:Name="lblEnd"/>
-                <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="dtpEnd"/>
-                <Label Content="Resource" Grid.Row="3" Grid.Column="0" x:Name="lblResource"/>
-                <ComboBox Grid.Row="3" Grid.Column="1" x:Name="cmbResource" Margin="10 2 10 2"/>
+                <Label Content="Buffer" Grid.Row="1" Grid.Column="0" x:Name="lblBuffer"/>
+                <custom:TimePicker Grid.Row="1" Grid.Column="1" x:Name="tmpBuffer"
+                                   HorizontalAlignment="Right" Margin="0 0 10 0"/>
+                <Label Content="Start" Grid.Row="2" Grid.Column="0" x:Name="lblStart"/>
+                <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="dtpStart"/>
+                <Label Content="End" Grid.Row="3" Grid.Column="0" x:Name="lblEnd"/>
+                <custom:DateTimePicker Grid.Row="3" Grid.Column="1" x:Name="dtpEnd"/>
+                <Label Content="Resource" Grid.Row="4" Grid.Column="0" x:Name="lblResource"/>
+                <ComboBox Grid.Row="4" Grid.Column="1" x:Name="cmbResource" Margin="10 2 10 2"/>
             </Grid>
             <Button x:Name="btnAdd" Grid.Row="4" Content="Add"
                     Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"/>
