@@ -153,7 +153,7 @@ namespace BridgeOpsClient
         {
             // Smooth zoom (prefer 60Hz).
             float deltaTime = (float)((double)(Environment.TickCount - lastFrame) / 60f);
-            
+
             // Horizotal Change will affect only the ruler, vertical change will affect only the resource pane, and
             // the schedule view will be affected by both.
             bool horizontalChange = false;
@@ -566,7 +566,8 @@ namespace BridgeOpsClient
                     // Wrap around if the line falls off the top.
                     if (yPix < -(view.zoomResourceCurrent - 1))
                         yPix += ActualHeight + (view.zoomResourceCurrent - (ActualHeight % view.zoomResourceCurrent));
-                    dc.DrawLine(penDivider, new Point(.5f, yPix), new Point(ActualWidth, yPix));
+                    if (yPix >= 0)
+                        dc.DrawLine(penDivider, new Point(.5f, yPix), new Point(ActualWidth, yPix));
 
                     int row = view.GetResourceFromY(yPix);
                     PageConferenceView.ResourceInfo? resource = PageConferenceView.GetResourceFromSelectedRow(row);
@@ -579,6 +580,7 @@ namespace BridgeOpsClient
                                                           12,
                                                           Brushes.Black,
                                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                        if (yPix > -formattedText.Height)
                         dc.DrawText(formattedText, new Point(5, yPix + 2));
 
                         // If text went over the line at the top of the screen, redraw the grey border on top.
@@ -597,7 +599,15 @@ namespace BridgeOpsClient
                         y *= view.zoomResourceCurrent;
                         y -= scroll;
 
-                        dc.DrawRectangle(brsHighlight, null, new Rect(0, y, ActualWidth, view.zoomResourceCurrent));
+                        double height = view.zoomResourceCurrent;
+
+                        if (y < 0)
+                        {
+                            height += y;
+                            y = 0;
+                        }
+
+                        dc.DrawRectangle(brsHighlight, null, new Rect(0, y, ActualWidth, height));
                     }
                 }
             }
@@ -876,7 +886,7 @@ namespace BridgeOpsClient
             if (scroll < 0) scroll = 0;
             return (int)scroll;
         }
-        
+
         public double MaxLineDepth(double zoomResourceDisplay)
         {
             // This method calculates how far down lines should be drawn in case of the screen not being filled with

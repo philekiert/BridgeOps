@@ -26,8 +26,6 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
-            // TODO: READ RESOURCE NAME AND CARRY INTO THIS WINDOW
-
             tmpBuffer.SetMaxValues(99, 59);
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
