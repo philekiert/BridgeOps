@@ -93,7 +93,7 @@ namespace BridgeOpsClient
         }
 
         public static int totalCapacity = 0;
-        float smoothZoomSpeed = 1.6f;
+        float smoothZoomSpeed = .25f;
 
         public PageConferenceView()
         {
@@ -152,7 +152,7 @@ namespace BridgeOpsClient
         void TimerUpdate(object? sender, EventArgs e)
         {
             // Smooth zoom (prefer 60Hz).
-            float deltaTime = (float)((double)(Environment.TickCount - lastFrame) / 60f);
+            float deltaTime = (float)((Environment.TickCount64 - lastFrame) / 16.6666f);
 
             // Horizotal Change will affect only the ruler, vertical change will affect only the resource pane, and
             // the schedule view will be affected by both.
@@ -163,7 +163,7 @@ namespace BridgeOpsClient
             {
                 if (schView.smoothZoom)
                     MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime,
-                                                             smoothZoomSpeed * deltaTime, 1.2d);
+                                                             smoothZoomSpeed * deltaTime, .2d);
                 else
                     schView.zoomTimeCurrent = schView.zoomTime;
 
@@ -174,7 +174,7 @@ namespace BridgeOpsClient
                 double old = schView.zoomResourceCurrent;
                 if (schView.smoothZoom)
                     MathHelper.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
-                                                                     smoothZoomSpeed * deltaTime, 1.2d);
+                                                                     smoothZoomSpeed * deltaTime, .2d);
                 else
                     schView.zoomResourceCurrent = schView.zoomResource;
 
@@ -359,7 +359,7 @@ namespace BridgeOpsClient
         private bool CtrlDown() { return Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl); }
         private bool AltDown() { return Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt); }
         private bool ShiftDown() { return Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift); }
-
+        
         private void btnDayToday_Click(object sender, RoutedEventArgs e)
         {
             schView.scheduleTime = new DateTime(DateTime.Now.Year,
