@@ -11,12 +11,12 @@
         <TabItem Header="Asset">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" x:Name="lblViewingChange"
                        Content="Viewing change" Background="#F56" Height="0" Padding="5 1"/>
@@ -39,12 +39,12 @@
                     <Label Content="Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID" />
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgID" Margin="10 2 10 2"/>
                 </Grid>
-                <custom:DataInputTable x:Name="ditAsset" Grid.Row="2"/>
+                <custom:DataInputTable x:Name="ditAsset" Grid.Row="2" MaxHeight="405" Margin="10 10 0 10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
                Margin="10,0,10,0" Height="26"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
-                 Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"
-                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
+                         Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
+                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
                 <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>

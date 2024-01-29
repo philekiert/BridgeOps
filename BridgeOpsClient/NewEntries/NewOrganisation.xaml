@@ -11,12 +11,12 @@
         <TabItem Header="Organisation">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" x:Name="lblViewingChange"
                        Content="Viewing change" Background="#F56" Height="0" Padding="5 1"/>
@@ -42,9 +42,9 @@
                     <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>
                     <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo" />
                 </Grid>
-                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2"/>
+                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="405" Margin="10 10 0 10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
-               Margin="10,0,10,0" Height="26"/>
+                       Margin="10,0,10,0" Height="26"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
                          Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
                          VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
@@ -54,11 +54,11 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnAdd" Click="btnAdd_Click" />
+                            x:Name="btnAdd" Click="btnAdd_Click" />
                     <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden"/>
+                            x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden"/>
                     <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnDelete" Click="btnDelete_Click"  Visibility="Hidden"/>
+                            x:Name="btnDelete" Click="btnDelete_Click"  Visibility="Hidden"/>
                 </Grid>
             </Grid>
         </TabItem>

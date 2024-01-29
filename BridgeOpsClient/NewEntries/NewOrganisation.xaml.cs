@@ -27,7 +27,7 @@ namespace BridgeOpsClient
         string? originalParent = "";
         string? originalDialNo = "";
         string? originalNotes = "";
-        public NewOrganisation()
+        public NewOrganisation() // New organisation.
         {
             InitializeComponent();
             InitialiseFields();
@@ -45,6 +45,7 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
             this.id = id;
+            Title = "Organisation " + id;
 
             txtOrgID.Text = id;
             txtOrgID.IsReadOnly = true;
@@ -52,8 +53,8 @@ namespace BridgeOpsClient
             // Sort out contact and asset tables.
             PopulateAssets();
             PopulateContacts();
-        }
-        public NewOrganisation(string id, string record)
+        } // Edit existing record.
+        public NewOrganisation(string id, string record) // History lookup.
         {
             InitializeComponent();
             InitialiseFields();
@@ -62,6 +63,7 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Hidden;
             btnDelete.Visibility = Visibility.Hidden;
             this.id = id;
+            Title = "Organisation " + id + " Change";
 
             txtOrgID.Text = id;
             txtOrgID.IsReadOnly = true;
@@ -434,7 +436,8 @@ namespace BridgeOpsClient
                 NewOrganisation viewOrg = new(id, dtgChangeLog.GetCurrentlySelectedCell(1));
                 viewOrg.PopulateExistingData(data);
                 viewOrg.lblViewingChange.Height = 20;
-                viewOrg.lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
+                string date = dtgChangeLog.GetCurrentlySelectedCell(1);
+                viewOrg.lblViewingChange.Content = "Viewing change at " + date;
                 viewOrg.Show();
             }
         }

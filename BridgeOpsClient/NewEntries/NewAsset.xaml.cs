@@ -33,8 +33,6 @@ namespace BridgeOpsClient
         }
         public NewAsset(string id)
         {
-            this.id = id;
-
             InitializeComponent();
             InitialiseFields();
 
@@ -42,6 +40,8 @@ namespace BridgeOpsClient
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
+            this.id = id;
+            Title = "Asset " + id;
 
             txtAssetID.Text = id;
             txtAssetID.IsReadOnly = true;
@@ -55,6 +55,7 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Hidden;
             btnDelete.Visibility = Visibility.Hidden;
             this.id = id;
+            Title = "Asset " + id + " Change";
 
             txtAssetID.Text = id;
             txtAssetID.IsReadOnly = true;

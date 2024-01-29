@@ -130,11 +130,9 @@ namespace BridgeOpsClient
 
                     return true;
                 }
-                else
-                    return false;
             }
-            else
-                return false;
+
+            return false;
         }
 
         public static void SessionInvalidated()
@@ -484,7 +482,6 @@ namespace BridgeOpsClient
                           new List<string> { likeColumn }, new List<string> { likeValue },
                           out columnNames, out rows);
         }
-
         public static bool Select(string table, List<string> select,
                                   List<string> likeColumns, List<string> likeValues,
                                   out List<string?> columnNames, out List<List<object?>> rows)
