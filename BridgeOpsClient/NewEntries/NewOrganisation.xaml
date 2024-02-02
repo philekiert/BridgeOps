@@ -9,7 +9,7 @@
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <TabControl>
         <TabItem Header="Organisation">
-            <Grid>
+            <Grid>  
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -23,7 +23,7 @@
                 <Grid Grid.Row="1">
                     <Grid.Resources>
                         <Style TargetType="TextBox">
-                            <Setter Property="Margin" Value="10 5 10 5" />
+                            <Setter Property="Margin" Value="10 5 10 5"/>
                         </Style>
                     </Grid.Resources>
                     <Grid.ColumnDefinitions>
@@ -35,19 +35,23 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-                    <Label Content="Organisation ID" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID" />
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgID" />
-                    <Label Content="Parent Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2" />
+                    <Label Content="Organisation ID" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgID"
+                             TextChanged="ValueChanged" />
+                    <Label Content="Parent Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2"
+                              SelectionChanged="ValueChanged"/>
                     <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo" />
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo"
+                             TextChanged="ValueChanged"/>
                 </Grid>
                 <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="405" Margin="10 10 0 10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
                        Margin="10,0,10,0" Height="26"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
                          Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
-                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
+                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                         TextChanged="ValueChanged"/>
                 <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -56,7 +60,7 @@
                     <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                             x:Name="btnAdd" Click="btnAdd_Click" />
                     <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden"/>
+                            x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden" IsEnabled="False"/>
                     <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                             x:Name="btnDelete" Click="btnDelete_Click"  Visibility="Hidden"/>
                 </Grid>

@@ -103,6 +103,7 @@ namespace BridgeOpsClient
             ditAsset.Populate(data.GetRange(3, data.Count - 3));
             if (edit)
                 ditAsset.RememberStartingValues();
+            ditAsset.ValueChangedHandler = AnyInteraction;
 #pragma warning restore CS8602
         }
 
@@ -192,7 +193,7 @@ namespace BridgeOpsClient
                 asset.additionalVals = vals;
 
                 // Add the known fields if changed.
-                if (cmbOrgID.Text != originalOrgID)
+                if ((string?)cmbOrgID.SelectedItem != originalOrgID)
                 {
                     asset.organisationID = cmbOrgID.Text;
                     asset.organisationIdChanged = true;
@@ -278,6 +279,20 @@ namespace BridgeOpsClient
                 viewAsset.lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
                 viewAsset.Show();
             }
+        }
+
+        // Check for changes whenever the screen something is with.
+        private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
+        public bool AnyInteraction()
+        {
+            if (!IsLoaded)
+                return false;
+
+            string currentOrgID = cmbOrgID.SelectedItem == null ? "" : (string)cmbOrgID.SelectedItem;
+            btnEdit.IsEnabled = originalOrgID != currentOrgID ||
+                                originalNotes != txtNotes.Text ||
+                                ditAsset.CheckForValueChanges();
+            return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
     }
 }

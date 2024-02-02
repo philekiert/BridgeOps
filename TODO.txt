@@ -1,5 +1,4 @@
-
-Housekeeping
-------------
-
-- Saving a record without making changes results in an error message due to there being no rows affected in the database.
+Bugs
+You can open a deleted record in the database section if you don't refresh the list.
+Contacts are slow to save when created from menu, but are fine when saving from Organisation. Could be something to do with the ID feeding back to the organisation screen.
+You cannot update a combobox, because it gets sent as null and skipped. Updating Organisation and asset Parent Org only works because it sets it to "", when it shouldn't.

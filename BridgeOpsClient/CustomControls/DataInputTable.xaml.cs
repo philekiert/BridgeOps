@@ -90,6 +90,9 @@ namespace BridgeOpsClient.CustomControls
                         DatePicker dtpInput = new();
                         dtpInput.SetValue(Grid.ColumnProperty, 1);
                         dtpInput.SetValue(Grid.RowProperty, i);
+#pragma warning disable CS8622
+                        dtpInput.SelectedDateChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
                         grdMain.Children.Add(dtpInput);
                     }
                     else
@@ -102,6 +105,9 @@ namespace BridgeOpsClient.CustomControls
                             txtInput.SetValue(Grid.RowProperty, i);
                             if (ColumnRecord.IsTypeString(col.Value))
                                 txtInput.MaxLength = col.Value.restriction;
+#pragma warning disable CS8622
+                            txtInput.TextChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
                             // else must be an INT type and will be checked against restriction in ScoopValues().
                             grdMain.Children.Add(txtInput);
                         }
@@ -112,9 +118,12 @@ namespace BridgeOpsClient.CustomControls
                             cmbInput.SetValue(Grid.ColumnProperty, 1);
                             cmbInput.SetValue(Grid.RowProperty, i);
                             List<string> options = col.Value.allowed.ToList();
-                            options.Insert(0, " "); // Wedge a blank option at the beginning.
+                            options.Insert(0, ""); // Wedge a blank option at the beginning.
                             cmbInput.ItemsSource = options;
                             cmbInput.SelectedIndex = 0;
+#pragma warning disable CS8622
+                            cmbInput.SelectionChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
                             grdMain.Children.Add(cmbInput);
                         }
                     }
@@ -171,11 +180,27 @@ namespace BridgeOpsClient.CustomControls
         public void RememberStartingValues()
         {
             ScoopValues();
-            if (!ExtractValues(out _, out startingValues))
-                MessageBox.Show("Some data appears to  be missing or corrupted. " +
-                                "Editing should fix this, " +
-                                "but be careful to make sure all known data is present before saving.");
+            ExtractValues(out _, out startingValues);
         }
+        public bool CheckForValueChanges()
+        {
+            ScoopValues();
+            List<string?> currentValues;
+            ExtractValues(out _, out currentValues);
+
+            for (int n = 0; n < startingValues.Count; ++n)
+                if (currentValues[n] != startingValues[n])
+                    return true;
+
+            return false;
+        }
+        private void GenericValueChangedHandler(object sender, EventArgs e)
+        {
+            if (ValueChangedHandler != null)
+                ValueChangedHandler();
+        }
+        public Func<bool>? ValueChangedHandler;
+
 
         public List<string> disallowed = new();
         // Update all columns, return false if any values are invalid. Error messages can be found in disallowed List.
@@ -209,10 +234,13 @@ namespace BridgeOpsClient.CustomControls
                     }
                     else if (t == typeof(ComboBox))
                     {
-                        if (((ComboBox)child).SelectedItem == null)
+                        ComboBox temp = (ComboBox)child;
+                        if (temp.SelectedItem == null)
                             cv.value = null;
                         else
-                            cv.value = ((ComboBox)child).Text;
+                            cv.value = (string?)temp.SelectedItem;
+                        if (cv.value == "")
+                            cv.value = null;
                     }
                     else if (t == typeof(DatePicker))
                     {

@@ -19,7 +19,8 @@
                Margin="10,0,10,0" Height="26"/>
         <TextBox x:Name="txtNotes" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top"
                  Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"
-                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
+                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                 TextChanged="ValueChanged"/>
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -28,7 +29,7 @@
             <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnAdd" Click="btnAdd_Click" />
             <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden"/>
+                    x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"/>
             <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
         </Grid>

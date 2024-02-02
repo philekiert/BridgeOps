@@ -76,7 +76,6 @@ namespace BridgeOpsClient
 
         private void InitialiseFields()
         {
-
             ditOrganisation.Initialise(ColumnRecord.organisation, "Organisation");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
@@ -137,9 +136,12 @@ namespace BridgeOpsClient
             originalDialNo = txtDialNo.Text;
             originalNotes = txtNotes.Text;
 
+            ditOrganisation.ValueChangedHandler = AnyInteraction; // Must be set before Populate().
             ditOrganisation.Populate(data.GetRange(4, data.Count - 4));
             if (edit)
                 ditOrganisation.RememberStartingValues();
+
+            btnEdit.IsEnabled = false;
 #pragma warning restore CS8602
         }
 
@@ -218,7 +220,7 @@ namespace BridgeOpsClient
                 org.additionalVals = vals;
 
                 // Add the known fields if changed.
-                if (cmbOrgParentID.Text != originalParent)
+                if ((string?)cmbOrgParentID.SelectedItem != originalParent)
                 {
                     org.parentOrgID = cmbOrgParentID.Text;
                     org.parentOrgIdChanged = true;
@@ -344,6 +346,7 @@ namespace BridgeOpsClient
         {
             NewContact newContact = new();
             newContact.requireIdBack = true;
+            newContact.isDialog = true;
 
             bool? completed = newContact.ShowDialog();
 
@@ -440,6 +443,21 @@ namespace BridgeOpsClient
                 viewOrg.lblViewingChange.Content = "Viewing change at " + date;
                 viewOrg.Show();
             }
+        }
+
+        // Check for changes whenever the screen something is with.
+        private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
+        public bool AnyInteraction()
+        {
+            if (!IsLoaded)
+                return false;
+
+            string currentParent = cmbOrgParentID.SelectedItem == null ? "" : (string)cmbOrgParentID.SelectedItem;
+            btnEdit.IsEnabled = originalParent != currentParent ||
+                                originalDialNo != txtDialNo.Text ||
+                                originalNotes != txtNotes.Text ||
+                                ditOrganisation.CheckForValueChanges();
+            return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -21,6 +22,7 @@ namespace BridgeOpsClient
         bool edit = false;
         public string id = "";
         public bool requireIdBack = false; // Set by caller on load.
+        public bool isDialog = false;
         string? originalNotes = "";
         public NewContact()
         {
@@ -38,6 +40,8 @@ namespace BridgeOpsClient
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
+
+            ditContact.ValueChangedHandler = AnyInteraction;
         }
 
         private void InitialiseFields()
@@ -93,7 +97,8 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id))
                 {
-                    DialogResult = true;
+                    if (isDialog)
+                        DialogResult = true;
                     Close();
                 }
                 else
@@ -177,6 +182,15 @@ namespace BridgeOpsClient
                 Close();
             else
                 MessageBox.Show("Could not delete contact.");
+        }
+
+        // Check for changes whenever the screen something is with.
+        private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
+        public bool AnyInteraction()
+        {
+            btnEdit.IsEnabled = originalNotes != txtNotes.Text ||
+                                ditContact.CheckForValueChanges();
+            return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
     }
 }

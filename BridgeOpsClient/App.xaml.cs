@@ -144,12 +144,14 @@ namespace BridgeOpsClient
 
         public static bool EditOrganisation(string id)
         {
-            string[]? organisationList = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
-            if (organisationList == null)
+            string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
+            if (organisationArray == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
                 return false;
             }
+            List<string> organisationList = organisationArray.ToList();
+            organisationList.Insert(0, "");
 
             List<string?> columnNames;
             List<List<object?>> rows;
@@ -182,12 +184,14 @@ namespace BridgeOpsClient
 
         public static bool EditAsset(string id)
         {
-            string[]? organisationList = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
-            if (organisationList == null)
+            string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
+            if (organisationArray == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
                 return false;
             }
+            List<string> organisationList = organisationArray.ToList();
+            organisationList.Insert(0, "");
 
             List<string?> columnNames;
             List<List<object?>> rows;
