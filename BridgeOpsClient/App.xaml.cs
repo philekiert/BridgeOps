@@ -122,14 +122,14 @@ namespace BridgeOpsClient
                     sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
                                                           sd.username)));
                     sr.ReadString(stream); // Empty the pipe.
-
-                    sd.sessionID = "";
-
-                    if (Current.MainWindow != null)
-                        ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
-
-                    return true;
                 }
+
+                // No real need for an error if connection is lost and the logout 'fails'. An error will present when
+                // the user tries to log in again.
+                sd.sessionID = "";
+
+                if (Current.MainWindow != null)
+                    ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
             }
 
             return false;

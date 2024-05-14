@@ -1160,7 +1160,7 @@ namespace SendReceiveClasses
 
         public static string Setter(string column, string? value)
         {
-            if (value == null)
+            if (value == null || value == "''")
                 return SecureColumn(column) + " = NULL";
             else
                 return SecureColumn(column) + " = " + value;

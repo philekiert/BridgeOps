@@ -132,7 +132,7 @@ namespace BridgeOpsClient
 
             // Store the original values to check if any changes have been made to the data. The same takes place
             // in the data input table.
-            originalParent = cmbOrgParentID.Text;
+            originalParent = cmbOrgParentID.Text == null ? "" : cmbOrgParentID.Text;
             originalDialNo = txtDialNo.Text;
             originalNotes = txtNotes.Text;
 
@@ -445,7 +445,7 @@ namespace BridgeOpsClient
             }
         }
 
-        // Check for changes whenever the screen something is with.
+        // Check for changes whenever the user interacts with a control.
         private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
         public bool AnyInteraction()
         {

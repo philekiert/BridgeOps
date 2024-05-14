@@ -9,7 +9,7 @@
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
     <TabControl>
         <TabItem Header="Organisation">
-            <Grid>  
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>

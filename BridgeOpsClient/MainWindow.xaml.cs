@@ -52,7 +52,10 @@ namespace BridgeOpsClient
             frameData.Content = new PageDatabase(this);
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
 
-            btnConfPane_Click(new bool(), new RoutedEventArgs());
+            // Set default view here:
+            //btnConfPane_Click(new bool(), new RoutedEventArgs()); // Conference View
+            btnDataPane_Click(new bool(), new RoutedEventArgs()); // Data View
+            //btnMixedPane_Click(new bool(), new RoutedEventArgs()); // Mixed View
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
@@ -152,6 +155,7 @@ namespace BridgeOpsClient
          * was the only way I could get it all to work. */
         double oldConfWidth = 1;
         double oldDataWidth = 1;
+
         private void btnConfPane_Click(object sender, RoutedEventArgs e)
         {
             if (frameData.Visibility == Visibility.Visible)

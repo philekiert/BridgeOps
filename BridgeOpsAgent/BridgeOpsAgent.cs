@@ -558,6 +558,8 @@ internal class BridgeOpsAgent
 
                 if (com.ExecuteNonQuery() == 0)
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                else if (com.Parameters["@ID"].Value.GetType() == typeof(DBNull))
+                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW);

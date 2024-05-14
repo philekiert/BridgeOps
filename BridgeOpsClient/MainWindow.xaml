@@ -15,11 +15,17 @@
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0">
-            <MenuItem Header="User">
+            <MenuItem Header="File">
                 <MenuItem Header="Log In" IsEnabled="False"
                           x:Name="menuUserLogIn" Click="menuUserLogIn_Click" />
                 <MenuItem Header="Log Out" IsEnabled="True"
                           x:Name="menuUserLogOut" Click="menuUserLogOut_Click" />
+                <!--<Separator/>-->
+                <!--<MenuItem Header="Settings" IsEnabled="False"
+                          x:Name="menuSettings" Click=""/>
+                <Separator/>
+                <MenuItem Header="Exit" IsEnabled="True"
+                          x:Name="menuExit" Click=""/>-->
             </MenuItem>
             <MenuItem Header="Database">
                 <MenuItem Header="New">
