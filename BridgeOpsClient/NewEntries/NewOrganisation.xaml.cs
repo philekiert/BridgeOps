@@ -264,8 +264,8 @@ namespace BridgeOpsClient
 
             if (App.SelectHistory("OrganisationChange", id, out columnNames, out rows))
                 dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
-                                   { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
-                                   Glo.Tab.CHANGE_ID);
+                                    { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
+                                    Glo.Tab.CHANGE_ID);
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)

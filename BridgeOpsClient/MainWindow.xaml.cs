@@ -140,6 +140,12 @@ namespace BridgeOpsClient
                 MessageBox.Show("Not logged in.");
         }
 
+        private void menuSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow settingsWindow = new();
+            settingsWindow.ShowDialog();
+        }
+
         private void menuExit_Click(object sender, RoutedEventArgs e)
         {
             // No need for cleanup as this is handled in App.ApplicationExit().

@@ -21,8 +21,8 @@
                 <MenuItem Header="Log Out" IsEnabled="True"
                           x:Name="menuUserLogOut" Click="menuUserLogOut_Click" />
                 <Separator/>
-                <MenuItem Header="Settings" IsEnabled="False"
-                          x:Name="menuSettings"/>
+                <MenuItem Header="Settings" IsEnabled="True"
+                          x:Name="menuSettings" Click="menuSettings_Click"/>
                 <Separator/>
                 <MenuItem Header="Exit" IsEnabled="True"
                           x:Name="menuExit" Click="menuExit_Click"/>
