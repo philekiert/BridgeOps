@@ -140,6 +140,12 @@ namespace BridgeOpsClient
                 MessageBox.Show("Not logged in.");
         }
 
+        private void menuExit_Click(object sender, RoutedEventArgs e)
+        {
+            // No need for cleanup as this is handled in App.ApplicationExit().
+            Close();
+        }
+
         public void ToggleLogInOut(bool loggedIn)
         {
             // This can fail if only the login window is visible, no big deal and no need to report.
