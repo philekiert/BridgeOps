@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace BridgeOpsClient
 {
@@ -18,6 +19,7 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
             InitialiseFields();
+            GetCheckBoxArray();
         }
         public NewUser(int id)
         {
@@ -25,6 +27,7 @@ namespace BridgeOpsClient
 
             InitializeComponent();
             InitialiseFields();
+            GetCheckBoxArray();
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -41,6 +44,17 @@ namespace BridgeOpsClient
 
             // I don't think there's any reason to implement friendly names for user accounts. If they're added, they
             // just won't do anything, and I think that's fine.
+        }
+
+        CheckBox[,] permissionsGrid = new CheckBox[4, 6];
+        bool[] createPermissions = new bool[6];
+        bool[] editPermissions = new bool[6];
+        bool[] deletePermissions = new bool[6];
+        private void GetCheckBoxArray()
+        {
+            foreach (UIElement checkBox in grdPermissions.Children)
+                if (checkBox is CheckBox)
+                    permissionsGrid[Grid.GetColumn(checkBox) - 1, Grid.GetRow(checkBox) - 1] = (CheckBox)checkBox;
         }
 
 #pragma warning disable CS8602
@@ -93,7 +107,6 @@ namespace BridgeOpsClient
             nl.loginID = id;
             nl.username = txtUsername.Text;
             nl.password = txtPassword.Text;
-            //nl.type = type
 
             if (App.SendInsert(Glo.CLIENT_NEW_LOGIN, nl))
                 Close();
@@ -188,6 +201,35 @@ namespace BridgeOpsClient
                 grdPermissions.Visibility = Visibility.Collapsed;
             else
                 grdPermissions.Visibility = Visibility.Visible;
+        }
+
+        // Handle the All column when switching boxes on and off.
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            int gridX = Grid.GetColumn((CheckBox)sender) - 1;
+            int gridY = Grid.GetRow((CheckBox)sender) - 1;
+
+            if (gridX == 3)
+            {
+                bool toSet = true;
+                if (permissionsGrid[0, gridY].IsChecked == true &&
+                    permissionsGrid[1, gridY].IsChecked == true &&
+                    permissionsGrid[2, gridY].IsChecked == true)
+                    toSet = false;
+                permissionsGrid[0, gridY].IsChecked = toSet;
+                permissionsGrid[1, gridY].IsChecked = toSet;
+                permissionsGrid[2, gridY].IsChecked = toSet;
+            }
+            else
+            {
+                if (permissionsGrid[0, gridY].IsChecked == true &&
+                    permissionsGrid[1, gridY].IsChecked == true &&
+                    permissionsGrid[2, gridY].IsChecked == true)
+                    permissionsGrid[3, gridY].IsChecked = true;
+                else
+                    permissionsGrid[3, gridY].IsChecked = false;
+
+            }
         }
     }
 }

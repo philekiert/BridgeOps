@@ -1,3 +1,5 @@
+using System;
+
 public static class Glo
 {
     // Communication
@@ -119,5 +121,25 @@ public static class Glo
         public const string LOGIN_DELETE_PERMISSIONS = "Delete_Permissions";
 
         public const string NOTES = "Notes";
+    }
+
+
+    // Handy Functions
+    public static class Fun
+    {
+        public static bool[] GetPermissionsArray(int bits)
+        {
+            bool[] permissions = new bool[6];
+            for (int n = 0; n < 6; ++n)
+                permissions[n] = (bits & (1 << n)) != 0;
+            return permissions;
+        }
+        public static int GetPermissionsInt(bool[] bits)
+        {
+            int permissions = 0;
+            for (int n = 0; n < 6; ++n)
+                permissions += 1 << n;
+            return permissions;
+        }
     }
 }
