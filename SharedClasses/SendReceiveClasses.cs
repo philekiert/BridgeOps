@@ -729,23 +729,30 @@ namespace SendReceiveClasses
         public int loginID;
         public string username;
         public string password;
-        public int type;
+        public int createPermissions;
+        public int editPermissions;
+        public int deletePermissions;
 
-        public Login(string sessionID, int loginID, string username, string password, int type)
+        public Login(string sessionID, int loginID, string username, string password,
+                     int createPermissions, int editPermissions, int deletePermissions)
         {
             this.sessionID = sessionID;
             this.loginID = loginID;
             this.username = username;
             this.password = password;
-            this.type = type;
+            this.createPermissions = createPermissions;
+            this.editPermissions = editPermissions;
+            this.deletePermissions = deletePermissions;
         }
 
         public string SqlInsert()
         {
             return "INSERT INTO Login (" + Glo.Tab.LOGIN_USERNAME + ", " + Glo.Tab.LOGIN_PASSWORD + ", " +
-                                           Glo.Tab.LOGIN_TYPE + ") VALUES ('" +
+                                           Glo.Tab.LOGIN_CREATE_PERMISSIONS + ") VALUES ('" +
                                            username + "', HASHBYTES('SHA2_512', '" + password + "'), " +
-                                           type.ToString() + "');";
+                                           createPermissions.ToString() + ", " +
+                                           editPermissions.ToString() + ", " +
+                                           deletePermissions.ToString() + ");";
         }
     }
 
