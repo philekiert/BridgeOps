@@ -30,5 +30,11 @@ namespace BridgeOpsClient
             if (App.SelectAll("Login", out columnNames, out rows))
                 dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID);
         }
+
+        private void btnUserAdd_Click(object sender, RoutedEventArgs e)
+        {
+            NewUser newUser = new();
+            newUser.ShowDialog();
+        }
     }
 }

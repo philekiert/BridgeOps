@@ -77,9 +77,6 @@ public static class Glo
     public const string SMALLINT = "SMALLINT";
     public const string TINYINT = "TINYINT";
 
-    public const int USER_ADMIN = 0;
-    public const int USER_NON_ADMIN = 1;
-
     // Column Names
     public static class Tab
     {
@@ -117,7 +114,9 @@ public static class Glo
         public const string LOGIN_ID = "Login_ID";
         public const string LOGIN_USERNAME = "Username";
         public const string LOGIN_PASSWORD = "Password";
-        public const string LOGIN_TYPE = "Type";
+        public const string LOGIN_CREATE_PERMISSIONS = "Create_Permissions";
+        public const string LOGIN_EDIT_PERMISSIONS = "Edit_Permissions";
+        public const string LOGIN_DELETE_PERMISSIONS = "Delete_Permissions";
 
         public const string NOTES = "Notes";
     }

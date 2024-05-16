@@ -6,32 +6,89 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="New Contact" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+        Title="New User" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        UseLayoutRounding="True">
     <Grid>
+        <Grid.Resources>
+            <Style TargetType="TextBox">
+                <Setter Property="Margin" Value="10 5 10 5"/>
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
-        <custom:DataInputTable x:Name="ditContact" Grid.Row="0"/>
-        <Label Grid.Row="1" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
-               Margin="10,0,10,0" Height="26"/>
-        <TextBox x:Name="txtNotes" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top"
-                 Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"
-                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
-                 TextChanged="ValueChanged"/>
-        <Grid Grid.Row="3">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" />
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" Margin="10,5,10,5"/>
+        <Label Content="Password" Grid.Row="1" Grid.Column="0" x:Name="lblPassword" />
+        <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword" Margin="10,5,10,5"/>
+        <Label Content="Confirm Password" Grid.Row="2" Grid.Column="0" x:Name="lblPasswordConfirm" />
+        <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm" Margin="10,5,10,5"/>
+        <Label Content="Administrator" Grid.Row="3" Grid.Column="0" x:Name="lblAdministrator" />
+        <CheckBox Grid.Row="3" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkAdmin" Click="chkAdmin_Clicked"/>
+        <Grid Grid.Row="4" Grid.ColumnSpan="2" x:Name="grdPermissions">
+            <Grid.Resources>
+                <Style TargetType="CheckBox">
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                    <Setter Property="Padding" Value="Auto"/>
+                </Style>
+            </Grid.Resources>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnAdd" Click="btnAdd_Click" />
-            <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"/>
-            <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
+            <Label Content="Create" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center"/>
+            <Label Content="Edit" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center"/>
+            <Label Content="Delete" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Center"/>
+            <Label Content="Records" Grid.Row="1" Grid.Column="0" x:Name="lblRecords"/>
+            <CheckBox Grid.Row="1" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkRecordsCreate"/>
+            <CheckBox Grid.Row="1" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkRecordsEdit"/>
+            <CheckBox Grid.Row="1" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkRecordsDelete"/>
+            <Label Content="Conferences" Grid.Row="2" Grid.Column="0" x:Name="lblConferenceTypes"/>
+            <CheckBox Grid.Row="2" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkConferenceCreate"/>
+            <CheckBox Grid.Row="2" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkConferenceEdit"/>
+            <CheckBox Grid.Row="2" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkConferenceDelete"/>
+            <Label Content="Resources" Grid.Row="3" Grid.Column="0" x:Name="lblResources"/>
+            <CheckBox Grid.Row="3" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkResourcesCreate"/>
+            <CheckBox Grid.Row="3" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkResourcesEdit"/>
+            <CheckBox Grid.Row="3" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkResourcesDelete"/>
+            <Label Content="Conference Types" Grid.Row="4" Grid.Column="0" x:Name="lblConfTypes"/>
+            <CheckBox Grid.Row="4" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkConfTypesCreate"/>
+            <CheckBox Grid.Row="4" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkConfTypesEdit"/>
+            <CheckBox Grid.Row="4" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkConfTypesDelete"/>
+            <Label Content="Reports" Grid.Row="5" Grid.Column="0" x:Name="lblReports"/>
+            <CheckBox Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkReportsCreate"/>
+            <CheckBox Grid.Row="5" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkReportsEdit"/>
+            <CheckBox Grid.Row="5" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkReportsDelete"/>
+            <Label Content="User Account Management" Grid.Row="6" Grid.Column="0" x:Name="lblUserAccountManagement"/>
+            <CheckBox Grid.Row="6" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementCreate"/>
+            <CheckBox Grid.Row="6" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementEdit"/>
+            <CheckBox Grid.Row="6" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
         </Grid>
+        <Button Grid.Row="5" Grid.Column="0" Content="Add" Margin="10,10,0,15" HorizontalAlignment="Left" Width="70"
+                    x:Name="btnAdd" Click="btnAdd_Click" />
+        <Button Grid.Row="5" Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                    x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"/>
+        <Button Grid.Row="5" Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                    x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
     </Grid>
 </Window>
