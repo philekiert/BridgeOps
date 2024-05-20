@@ -35,7 +35,7 @@ public static class ColumnRecord
     }
     public static string GetPrintName(string key, Column col)
     {
-        if (col.friendlyName != "")
+        if (col.friendlyName != null && col.friendlyName != "")
             return col.friendlyName.Replace('_', ' ');
         else
             return key.Replace('_', ' ');

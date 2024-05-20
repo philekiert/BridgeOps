@@ -487,6 +487,11 @@ namespace BridgeOpsClient
                           out columnNames, out rows);
         }
         public static bool Select(string table, List<string> select,
+                                  out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            return Select(table, select, new(), new(), out columnNames, out rows);
+        }
+        public static bool Select(string table, List<string> select,
                                   List<string> likeColumns, List<string> likeValues,
                                   out List<string?> columnNames, out List<List<object?>> rows)
         {
@@ -745,6 +750,12 @@ namespace BridgeOpsClient
                             DateTime dt;
                             DateTime.TryParse(rows[n][i].ToString(), out dt);
                             rows[n][i] = dt;
+                        }
+                        else if (columnTypes[i] == "Boolean")
+                        {
+                            bool result;
+                            bool.TryParse(rows[n][i].ToString(), out result);
+                            rows[n][i] = result;
                         }
                     }
                 }

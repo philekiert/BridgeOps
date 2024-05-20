@@ -27,9 +27,20 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            //App.Select("Login", new List<string>() { Glo.Tab.LOGIN_USERNAME, Glo.Tab.}
-            if (App.SelectAll("Login", out columnNames, out rows))
+            if (App.Select("Login", new List<string>() { Glo.Tab.LOGIN_USERNAME, Glo.Tab.LOGIN_ADMIN },
+                out columnNames, out rows))
+            {
+                columnNames[1] = "Type";
+
+                foreach (List<object?> row in rows)
+                {
+                    object? userType = row[1];
+                    if (userType != null && userType.GetType() == typeof(bool))
+                        row[1] = (bool)userType ? "Administrator" : "User";
+                }
+
                 dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID);
+            }
         }
 
         private void btnUserAdd_Click(object sender, RoutedEventArgs e)
