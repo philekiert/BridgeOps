@@ -27,6 +27,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
+            //App.Select("Login", new List<string>() { Glo.Tab.LOGIN_USERNAME, Glo.Tab.}
             if (App.SelectAll("Login", out columnNames, out rows))
                 dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID);
         }

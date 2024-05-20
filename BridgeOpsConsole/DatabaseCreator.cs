@@ -278,6 +278,8 @@ public class DatabaseCreator
                                 Console.WriteLine("");
                                 Writer.Affirmative("Database deleted.");
                             }
+                            else
+                                Writer.Message("\nIs the database in use by another application, possibly the agent?");
                         }
                         catch (Exception e)
                         {
