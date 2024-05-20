@@ -9,10 +9,17 @@ namespace BridgeOpsClient
     public partial class NewUser : Window
     {
         bool edit = false;
+        public bool didSomething = false;
         public int id = 0;
         string originalUsername = "";
         string originalPassword = "";
-        int originalType = 0;
+        bool originalAdmin = false;
+        int originalCreate = 0;
+        int originalEdit = 0;
+        int originalDelete = 0;
+        int currentCreate = 0;
+        int currentEdit = 0;
+        int currentDelete = 0;
 
         string? originalNotes = "";
         public NewUser()
@@ -98,7 +105,7 @@ namespace BridgeOpsClient
                 MessageBox.Show("You must input a value for Username ID");
                 return;
             }
-            else if (txtPassword != txtPasswordConfirm)
+            else if (txtPassword.Text != txtPasswordConfirm.Text)
             {
                 MessageBox.Show("Passwords do not match.");
                 return;
@@ -107,9 +114,27 @@ namespace BridgeOpsClient
             nl.loginID = id;
             nl.username = txtUsername.Text;
             nl.password = txtPassword.Text;
+            if (chkAdmin.IsChecked != null && chkAdmin.IsChecked == true)
+            {
+                nl.admin = true;
+                nl.createPermissions = 255;
+                nl.editPermissions = 255;
+                nl.deletePermissions = 255;
+            }
+            else
+            {
+                nl.admin = false;
+                UpdateWriteEditDelete();
+                nl.createPermissions = currentCreate;
+                nl.editPermissions = currentEdit;
+                nl.deletePermissions = currentDelete;
+            }
 
             if (App.SendInsert(Glo.CLIENT_NEW_LOGIN, nl))
+            {
+                didSomething = true;
                 Close();
+            }
             else
             {
                 // There shouldn't be any errors with insert on this one, as everything is either text or null.
@@ -229,6 +254,24 @@ namespace BridgeOpsClient
                 else
                     permissionsGrid[3, gridY].IsChecked = false;
 
+            }
+        }
+        private void UpdateWriteEditDelete()
+        {
+            for (int x = 0; x < 3; ++x) // No need to go over the "All" box.
+            {
+                int permissions = 0;
+                for (int y = 0; y < 6; ++y)
+                {
+                    if (permissionsGrid[x, y].IsChecked == true)
+                        permissions += 1 << y;
+                }
+                if (x == 0)
+                    currentCreate = permissions;
+                else if (x == 1)
+                    currentEdit = permissions;
+                else
+                    currentDelete = permissions;
             }
         }
     }

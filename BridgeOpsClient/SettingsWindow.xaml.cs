@@ -47,6 +47,13 @@ namespace BridgeOpsClient
         {
             NewUser newUser = new();
             newUser.ShowDialog();
+            if (newUser.didSomething)
+                PopulateUserList();
+        }
+
+        private void dtgUsers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+
         }
     }
 }
