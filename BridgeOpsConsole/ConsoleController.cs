@@ -136,8 +136,8 @@ public class ConsoleController
                    "Generate default values and output to \"" + Glo.PATH_CONFIG_FILES +
                    Glo.CONFIG_TYPE_OVERRIDES + "\". File path is relevant to the path of this executable.");
         AddCommand("reset type verrides", ValType.None, menu, ResetTypeOverrides,
-                   "Reset type overrides to default values.");
-        AddCommand("view current values", ValType.None, menu, ViewCurrentValuesWithOverrides,
+                   "Reset type overrides to default types.");
+        AddCommand("view current types", ValType.None, menu, ViewCurrentValuesWithOverrides,
                    "View the list of columns in their respective tables with the currently loaded overrides. Does " +
                    "not include column additions.");
         AddCommand("load column additions", ValType.None, menu, LoadColumnAdditions,

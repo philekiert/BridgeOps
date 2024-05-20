@@ -729,17 +729,19 @@ namespace SendReceiveClasses
         public int loginID;
         public string username;
         public string password;
+        public bool admin;
         public int createPermissions;
         public int editPermissions;
         public int deletePermissions;
 
-        public Login(string sessionID, int loginID, string username, string password,
+        public Login(string sessionID, int loginID, string username, string password, bool admin,
                      int createPermissions, int editPermissions, int deletePermissions)
         {
             this.sessionID = sessionID;
             this.loginID = loginID;
             this.username = username;
             this.password = password;
+            this.admin = admin;
             this.createPermissions = createPermissions;
             this.editPermissions = editPermissions;
             this.deletePermissions = deletePermissions;
@@ -748,8 +750,12 @@ namespace SendReceiveClasses
         public string SqlInsert()
         {
             return "INSERT INTO Login (" + Glo.Tab.LOGIN_USERNAME + ", " + Glo.Tab.LOGIN_PASSWORD + ", " +
-                                           Glo.Tab.LOGIN_CREATE_PERMISSIONS + ") VALUES ('" +
+                                           Glo.Tab.LOGIN_ADMIN + ", " +
+                                           Glo.Tab.LOGIN_CREATE_PERMISSIONS + ", " +
+                                           Glo.Tab.LOGIN_EDIT_PERMISSIONS + ", " +
+                                           Glo.Tab.LOGIN_DELETE_PERMISSIONS + ") VALUES ('" +
                                            username + "', HASHBYTES('SHA2_512', '" + password + "'), " +
+                                           (admin ? "1" : "0") + ", " +
                                            createPermissions.ToString() + ", " +
                                            editPermissions.ToString() + ", " +
                                            deletePermissions.ToString() + ");";
