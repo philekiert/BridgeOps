@@ -191,11 +191,11 @@ namespace BridgeOpsClient
             if (currentID != "")
             {
                 if (cmbTable.Text == "Organisation")
-                    App.EditOrganisation(dtgResults.GetCurrentlySelectedID());
+                    App.EditOrganisation(currentID);
                 if (cmbTable.Text == "Asset")
-                    App.EditAsset(dtgResults.GetCurrentlySelectedID());
+                    App.EditAsset(currentID);
                 if (cmbTable.Text == "Contact")
-                    App.EditContact(dtgResults.GetCurrentlySelectedID());
+                    App.EditContact(currentID);
             }
         }
 

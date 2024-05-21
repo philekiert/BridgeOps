@@ -27,7 +27,9 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.Select("Login", new List<string>() { Glo.Tab.LOGIN_USERNAME, Glo.Tab.LOGIN_ADMIN },
+            if (App.Select("Login", new List<string>() { Glo.Tab.LOGIN_ID,
+                                                         Glo.Tab.LOGIN_USERNAME,
+                                                         Glo.Tab.LOGIN_ADMIN },
                 out columnNames, out rows))
             {
                 columnNames[1] = "Type";
@@ -39,7 +41,7 @@ namespace BridgeOpsClient
                         row[1] = (bool)userType ? "Administrator" : "User";
                 }
 
-                dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID);
+                dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID, "Login_ID");
             }
         }
 
@@ -53,7 +55,41 @@ namespace BridgeOpsClient
 
         private void dtgUsers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-
+            string currentID = dtgUsers.GetCurrentlySelectedID();
+            if (currentID != "")
+            {
+                int id;
+                if (int.TryParse(currentID, out id))
+                {
+                    List<string?> columnNames;
+                    List<List<object?>> rows;
+                    if (App.Select("Login",
+                                   new() { "*" },
+                                   new() { Glo.Tab.LOGIN_ID },
+                                   new() { id.ToString() },
+                                   out columnNames, out rows))
+                    {
+                        if (rows.Count > 0)
+                        {
+                            // We expect data for every field. If the count is different, the operation must have failed.
+                            if (rows[0].Count == ColumnRecord.login.Count)
+                            {
+                                NewUser user = new NewUser(id);
+                                user.Populate(rows[0]);
+                                user.ShowDialog();
+                                if (user.didSomething)
+                                    PopulateUserList();
+                            }
+                            else
+                                MessageBox.Show("Incorrect number of fields received.");
+                        }
+                        else
+                            MessageBox.Show("Could no longer retrieve record.");
+                    }
+                }
+                else
+                    MessageBox.Show("User ID invalid.");
+            }
         }
     }
 }

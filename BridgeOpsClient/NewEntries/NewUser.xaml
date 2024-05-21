@@ -29,9 +29,9 @@
         <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" />
         <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" Margin="10,5,10,5"/>
         <Label Content="Password" Grid.Row="1" Grid.Column="0" x:Name="lblPassword" />
-        <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword" Margin="10,5,10,5"/>
+        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword" Margin="10,5,10,5"/>
         <Label Content="Confirm Password" Grid.Row="2" Grid.Column="0" x:Name="lblPasswordConfirm" />
-        <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm" Margin="10,5,10,5"/>
+        <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm" Margin="10,5,10,5"/>
         <Label Content="Administrator" Grid.Row="3" Grid.Column="0" x:Name="lblAdministrator" />
         <CheckBox Grid.Row="3" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkAdmin" Click="chkAdmin_Clicked"/>
         <Grid Grid.Row="4" Grid.ColumnSpan="2" x:Name="grdPermissions">
@@ -93,11 +93,11 @@
             <CheckBox Grid.Row="6" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
             <CheckBox Grid.Row="6" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementAll"/>
         </Grid>
-        <Button Grid.Row="5" Grid.Column="0" Content="Add" Margin="10,10,0,15" HorizontalAlignment="Left" Width="70"
+        <Button Grid.Row="5" Grid.Column="0" Content="Add" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnAdd" Click="btnAdd_Click" />
-        <Button Grid.Row="5" Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+        <Button Grid.Row="5" Grid.Column="0" Content="Save" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"/>
-        <Button Grid.Row="5" Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+        <Button Grid.Row="5" Grid.Column="1" Content="Delete" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
     </Grid>
 </Window>

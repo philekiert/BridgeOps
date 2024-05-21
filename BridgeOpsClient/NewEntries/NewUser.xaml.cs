@@ -40,6 +40,8 @@ namespace BridgeOpsClient
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
+            if (id == 1)
+                btnDelete.IsEnabled = false;
         }
 
         private void InitialiseFields()
@@ -54,9 +56,6 @@ namespace BridgeOpsClient
         }
 
         CheckBox[,] permissionsGrid = new CheckBox[4, 6];
-        bool[] createPermissions = new bool[6];
-        bool[] editPermissions = new bool[6];
-        bool[] deletePermissions = new bool[6];
         private void GetCheckBoxArray()
         {
             foreach (UIElement checkBox in grdPermissions.Children)
@@ -64,35 +63,39 @@ namespace BridgeOpsClient
                     permissionsGrid[Grid.GetColumn(checkBox) - 1, Grid.GetRow(checkBox) - 1] = (CheckBox)checkBox;
         }
 
+#pragma warning disable CS8601
 #pragma warning disable CS8602
+#pragma warning disable CS8605
         public void Populate(List<object?> data)
         {
             // EDIT
             // This method will not be called if the data has a different Count than expected.
-            //if (data[1] != null)
-            //    txtUsername.Text = data[0].ToString();
-            //if (data[2] != null)
-            //    txtUsername.Text = data[0].ToString();
-            //if (data[1] != null)
-            //    txtUsername.Text = data[0].ToString();
-
-            // Store the original values to check if any changes have been made for the data. The same takes place
-            // in the data input table.
-            originalUsername = txtUsername.Text == null ? "" : txtUsername.Text;
-            originalPassword = txtPassword.Text == null ? "" : txtPassword.Text;
-
-            // Need a function that converts the int to individual bools.
-            //originalAdmin = chkAdmin.IsChecked == null ? false : (bool)chkAdmin.IsChecked;
-            //originalRecordAddEdit = chkRecordsAddEdit.IsChecked == null ? false : (bool)chkRecordsAddEdit.IsChecked;
-            //originalRecordDelete = chkRecordsDelete.IsChecked == null ? false : (bool)chkRecordsDelete.IsChecked;
-            //originalResourceAddEdit = chkResourcesAddEdit.IsChecked == null ? false : (bool)chkResourcesAddEdit.IsChecked;
-            //originalResourceDelete = chkResourcesDelete.IsChecked == null ? false : (bool)chkResourcesDelete.IsChecked;
-            //originalConferenceTypeAddEdit = chkConfTypesAddEdit.IsChecked == null ? false : (bool)chkConfTypesAddEdit.IsChecked;
-            //originalConferenceTypeDelete = chkConferenceTypesDelete.IsChecked == null ? false : (bool)chkConferenceTypesDelete.IsChecked;
-            //originalReportAddEditDelete = chkReportsAddEditDelete.IsChecked == null ? false : (bool)chkReportsAddEditDelete.IsChecked;
-            //originalAccountManagement = chkUserAccountManagement.IsChecked == null ? false : (bool)chkUserAccountManagement.IsChecked;
+            if (data[1] != null && data[1].ToString() != null)
+            {
+                originalUsername = data[1].ToString();
+                txtUsername.Text = originalUsername;
+            }
+            if (data[3] != null && data[3].GetType() == typeof(bool))
+            {
+                chkAdmin.IsChecked = true;
+                originalAdmin = false;
+            }
+            if (data[4] != null && data[4].GetType() == typeof(int) &&
+                data[5] != null && data[5].GetType() == typeof(int) &&
+                data[6] != null && data[6].GetType() == typeof(int))
+            {
+                originalCreate = (int)data[4];
+                originalEdit = (int)data[5];
+                originalDelete = (int)data[6];
+                currentCreate = originalCreate;
+                currentEdit = originalEdit;
+                currentDelete = originalDelete;
+                ApplyWriteEditDelete();
+            }
         }
+#pragma warning restore CS8601
 #pragma warning restore CS8602
+#pragma warning restore CS8605
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
@@ -105,7 +108,7 @@ namespace BridgeOpsClient
                 MessageBox.Show("You must input a value for Username ID");
                 return;
             }
-            else if (txtPassword.Text != txtPasswordConfirm.Text)
+            else if (txtPassword.Password != txtPasswordConfirm.Password)
             {
                 MessageBox.Show("Passwords do not match.");
                 return;
@@ -113,7 +116,7 @@ namespace BridgeOpsClient
 
             nl.loginID = id;
             nl.username = txtUsername.Text;
-            nl.password = txtPassword.Text;
+            nl.password = txtPassword.Password;
             if (chkAdmin.IsChecked != null && chkAdmin.IsChecked == true)
             {
                 nl.admin = true;
@@ -204,10 +207,13 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            //if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, id, false))
-            //    Close();
-            //else
-            //    MessageBox.Show("Could not delete contact.");
+            if (App.SendDelete("Login", Glo.Tab.LOGIN_ID, id.ToString(), false))
+            {
+                didSomething = true;
+                Close();
+            }
+            else
+                MessageBox.Show("Could not delete contact.");
         }
 
         // Check for changes whenever the screen something is with.
@@ -272,6 +278,27 @@ namespace BridgeOpsClient
                     currentEdit = permissions;
                 else
                     currentDelete = permissions;
+            }
+        }
+        private void ApplyWriteEditDelete()
+        {
+            for (int x = 0; x < 3; ++x)
+            {
+                int permissions = currentCreate;
+                if (x == 1)
+                    permissions = currentEdit;
+                else if (x == 2)
+                    permissions = currentDelete;
+
+                for (int y = 0; y < 6; ++y)
+                {
+                    permissionsGrid[x, y].IsChecked = (permissions & (1 << y)) != 0;
+                    // Check All box if all others are checked.
+                    if (x == 2)
+                        permissionsGrid[3, y].IsChecked = (permissionsGrid[0, y].IsChecked == true &&
+                                                           permissionsGrid[1, y].IsChecked == true &&
+                                                           permissionsGrid[2, y].IsChecked == true);
+                }
             }
         }
     }

@@ -111,10 +111,10 @@ public class FieldDefs
         defs.Add("Login ID", new Definition(5, Glo.Tab.LOGIN_ID, typeLoginID, false, true, true));
         defs.Add("Login Username", new Definition(5, Glo.Tab.LOGIN_USERNAME, "VARCHAR(30)", true, false, false));
         defs.Add("Login Password", new Definition(5, Glo.Tab.LOGIN_PASSWORD, "BINARY(64)", false, false, false));
+        defs.Add("Login Admin", new Definition(5, Glo.Tab.LOGIN_ADMIN, "BOOLEAN", false, false, false));
         defs.Add("Login Create Permissions", new Definition(5, Glo.Tab.LOGIN_CREATE_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
         defs.Add("Login Edit Permissions", new Definition(5, Glo.Tab.LOGIN_EDIT_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
         defs.Add("Login Delete Permissions", new Definition(5, Glo.Tab.LOGIN_DELETE_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
-        defs.Add("Login Admin", new Definition(5, Glo.Tab.LOGIN_ADMIN, "BOOLEAN", false, false, false));
 
         // Asset
         defs.Add("Asset ID", new Definition(5, Glo.Tab.ASSET_ID, typeAssetID, false, true, false));

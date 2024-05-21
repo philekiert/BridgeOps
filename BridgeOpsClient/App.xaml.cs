@@ -739,7 +739,7 @@ namespace BridgeOpsClient
                 {
                     if (rows[n][i] != null)
                     {
-                        if (columnTypes[i].StartsWith("Int"))
+                        if (columnTypes[i].StartsWith("Int") || columnTypes[i].StartsWith("Byte"))
                         {
                             int result;
                             int.TryParse(rows[n][i].ToString(), out result);
