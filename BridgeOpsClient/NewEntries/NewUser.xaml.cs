@@ -12,16 +12,15 @@ namespace BridgeOpsClient
         public bool didSomething = false;
         public int id = 0;
         string originalUsername = "";
-        string originalPassword = "";
         bool originalAdmin = false;
         int originalCreate = 0;
         int originalEdit = 0;
         int originalDelete = 0;
+        bool originalEnabled = true;
         int currentCreate = 0;
         int currentEdit = 0;
         int currentDelete = 0;
 
-        string? originalNotes = "";
         public NewUser()
         {
             InitializeComponent();
@@ -36,12 +35,21 @@ namespace BridgeOpsClient
             InitialiseFields();
             GetCheckBoxArray();
 
-            edit = true;
+            edit = true;    
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
+            btnEdit.IsEnabled = false;
             btnDelete.Visibility = Visibility.Visible;
             if (id == 1)
+            {
+                btnEdit.IsEnabled = false;
                 btnDelete.IsEnabled = false;
+            }
+
+            lblPassword.Visibility = Visibility.Collapsed;
+            txtPassword.Visibility = Visibility.Collapsed;
+            lblPasswordConfirm.Visibility = Visibility.Collapsed;
+            txtPasswordConfirm.Visibility = Visibility.Collapsed;
         }
 
         private void InitialiseFields()
@@ -77,8 +85,8 @@ namespace BridgeOpsClient
             }
             if (data[3] != null && data[3].GetType() == typeof(bool))
             {
-                chkAdmin.IsChecked = true;
-                originalAdmin = false;
+                originalAdmin = (bool)data[3];
+                chkAdmin.IsChecked = originalAdmin;
             }
             if (data[4] != null && data[4].GetType() == typeof(int) &&
                 data[5] != null && data[5].GetType() == typeof(int) &&
@@ -92,16 +100,58 @@ namespace BridgeOpsClient
                 currentDelete = originalDelete;
                 ApplyWriteEditDelete();
             }
+            if (data[7] != null && data[7].GetType() == typeof(bool))
+            {
+                originalEnabled = (bool)data[7];
+                chkEnabled.IsChecked = originalEnabled;
+            }
+
+            if (originalAdmin)
+                grdPermissions.Visibility = Visibility.Collapsed;
+
+            if (id == 1)
+            {
+                txtUsername.IsEnabled = false;
+                chkAdmin.IsEnabled = false;
+                grdPermissions.Visibility = Visibility.Collapsed;
+            }
         }
 #pragma warning restore CS8601
 #pragma warning restore CS8602
 #pragma warning restore CS8605
 
+        private Login GetLoginFromForm()
+        {
+            Login login = new Login();
+
+            login.sessionID = App.sd.sessionID;
+
+            login.loginID = id;
+            login.username = txtUsername.Text;
+            login.password = txtPassword.Password;
+            if (chkAdmin.IsChecked != null && chkAdmin.IsChecked == true)
+            {
+                login.admin = true;
+                login.createPermissions = 63;
+                login.editPermissions = 63;
+                login.deletePermissions = 63;
+            }
+            else
+            {
+                login.admin = false;
+                UpdateCurrentEditDelete();
+                login.createPermissions = currentCreate;
+                login.editPermissions = currentEdit;
+                login.deletePermissions = currentDelete;
+            }
+            if (chkEnabled.IsChecked != null)
+                login.enabled = (bool)chkEnabled.IsChecked;
+
+            return login;
+        }
+
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            Login nl = new Login();
-
-            nl.sessionID = App.sd.sessionID;
 
             if (txtUsername.Text == "")
             {
@@ -114,95 +164,36 @@ namespace BridgeOpsClient
                 return;
             }
 
-            nl.loginID = id;
-            nl.username = txtUsername.Text;
-            nl.password = txtPassword.Password;
-            if (chkAdmin.IsChecked != null && chkAdmin.IsChecked == true)
-            {
-                nl.admin = true;
-                nl.createPermissions = 255;
-                nl.editPermissions = 255;
-                nl.deletePermissions = 255;
-            }
-            else
-            {
-                nl.admin = false;
-                UpdateWriteEditDelete();
-                nl.createPermissions = currentCreate;
-                nl.editPermissions = currentEdit;
-                nl.deletePermissions = currentDelete;
-            }
 
-            if (App.SendInsert(Glo.CLIENT_NEW_LOGIN, nl))
+            if (App.SendInsert(Glo.CLIENT_NEW_LOGIN, GetLoginFromForm()))
             {
                 didSomething = true;
                 Close();
             }
             else
-            {
-                // There shouldn't be any errors with insert on this one, as everything is either text or null.
                 MessageBox.Show("Could not create new user.");
-            }
         }
 
         private void btnEdit_Click(object sender, RoutedEventArgs e)
         {
-            //int idInt;
-            //if (!int.TryParse(id, out idInt))
-            //{
-            //    // This should never trigger as the ID cannot be adjusted, but just to be diligent...
-            //    MessageBox.Show("Customer ID is invalid, cannot edit record.");
-            //    return;
-            //}
-            //if (ditContact.ScoopValues())
-            //{
-            //    Contact contact = new Contact();
-            //    contact.sessionID = App.sd.sessionID;
-            //    contact.contactID = idInt;
-            //    List<string> cols;
-            //    List<string?> vals;
-            //    ditContact.ExtractValues(out cols, out vals);
+            if (txtUsername.Text == "")
+            {
+                MessageBox.Show("You must input a value for Username ID");
+                return;
+            }
+            else if (txtPassword.Password != txtPasswordConfirm.Password)
+            {
+                MessageBox.Show("Passwords do not match.");
+                return;
+            }
 
-            //    // Remove any values equal to their starting value.
-            //    List<int> toRemove = new();
-            //    for (int i = 0; i < vals.Count; ++i)
-            //        if (ditContact.startingValues[i] == vals[i])
-            //            toRemove.Add(i);
-            //    int mod = 0; // Each one we remove, we need to take into account that the list is now 1 less.
-            //    foreach (int i in toRemove)
-            //    {
-            //        cols.RemoveAt(i - mod);
-            //        vals.RemoveAt(i - mod);
-            //        ++mod;
-            //    }
-
-            //    // Obtain types and determine whether or not quotes will be needed.
-            //    contact.additionalNeedsQuotes = new();
-            //    foreach (string c in cols)
-            //        contact.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
-
-            //    contact.additionalCols = cols;
-            //    contact.additionalVals = vals;
-
-            //    // Add the known fields if changed.
-            //    if (txtNotes.Text != originalNotes)
-            //    {
-            //        contact.notes = txtNotes.Text;
-            //        contact.notesChanged = true;
-            //    }
-
-            //    if (App.SendUpdate(Glo.CLIENT_UPDATE_CONTACT, contact))
-            //        Close();
-            //    else
-            //        MessageBox.Show("Could not edit contact.");
-            //}
-            //else
-            //{
-            //    string message = "One or more values caused an unknown error to occur.";
-            //    if (ditContact.disallowed.Count > 0)
-            //        message = ditContact.disallowed[0];
-            //    MessageBox.Show(message);
-            //}
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_LOGIN, GetLoginFromForm()))
+            {
+                didSomething = true;
+                Close();
+            }
+            else
+                MessageBox.Show("Could not update user.");
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -216,14 +207,18 @@ namespace BridgeOpsClient
                 MessageBox.Show("Could not delete contact.");
         }
 
-        // Check for changes whenever the screen something is with.
+        // Check for changes whenever the user interacts with a control.
         private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
-        public bool AnyInteraction()
+        public void AnyInteraction()
         {
-            // EDIT !!!
-            //btnEdit.IsEnabled = originalNotes != txtNotes.Text ||
-            //                    ditContact.CheckForValueChanges();
-            return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
+            UpdateCurrentEditDelete();
+
+            btnEdit.IsEnabled = originalUsername != txtUsername.Text ||
+                                originalAdmin != chkAdmin.IsChecked ||
+                                chkAdmin.IsChecked == false && (originalCreate != currentCreate ||
+                                                                originalEdit != currentEdit ||
+                                                                originalDelete != currentDelete) ||
+                                originalEnabled != chkEnabled.IsChecked;
         }
 
         private void chkAdmin_Clicked(object sender, RoutedEventArgs e)
@@ -232,6 +227,8 @@ namespace BridgeOpsClient
                 grdPermissions.Visibility = Visibility.Collapsed;
             else
                 grdPermissions.Visibility = Visibility.Visible;
+
+            AnyInteraction();
         }
 
         // Handle the All column when switching boxes on and off.
@@ -259,10 +256,11 @@ namespace BridgeOpsClient
                     permissionsGrid[3, gridY].IsChecked = true;
                 else
                     permissionsGrid[3, gridY].IsChecked = false;
-
             }
+
+            AnyInteraction();
         }
-        private void UpdateWriteEditDelete()
+        private void UpdateCurrentEditDelete()
         {
             for (int x = 0; x < 3; ++x) // No need to go over the "All" box.
             {

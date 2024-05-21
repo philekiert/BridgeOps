@@ -122,7 +122,7 @@ namespace BridgeOpsClient
             if (!int.TryParse(id, out idInt))
             {
                 // This should never trigger as the ID cannot be adjusted, but just to be diligent...
-                MessageBox.Show("Customer ID is invalid, cannot edit record.");
+                MessageBox.Show("Contact ID is invalid, cannot edit record.");
                 return;
             }
             if (ditContact.ScoopValues())

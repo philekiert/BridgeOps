@@ -774,8 +774,8 @@ internal class BridgeOpsAgent
             else if (target == Glo.CLIENT_UPDATE_LOGIN)
             {
                 Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                //    com.CommandText = newRow.SqlUpdate();
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    com.CommandText = newRow.SqlUpdate();
             }
 
             if (!sessionValid)

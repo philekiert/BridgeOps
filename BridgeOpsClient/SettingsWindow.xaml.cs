@@ -32,13 +32,13 @@ namespace BridgeOpsClient
                                                          Glo.Tab.LOGIN_ADMIN },
                 out columnNames, out rows))
             {
-                columnNames[1] = "Type";
+                columnNames[2] = "Type";
 
                 foreach (List<object?> row in rows)
                 {
-                    object? userType = row[1];
+                    object? userType = row[2];
                     if (userType != null && userType.GetType() == typeof(bool))
-                        row[1] = (bool)userType ? "Administrator" : "User";
+                        row[2] = (bool)userType ? "Administrator" : "User";
                 }
 
                 dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID, "Login_ID");

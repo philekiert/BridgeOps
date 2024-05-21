@@ -120,6 +120,7 @@ public static class Glo
         public const string LOGIN_CREATE_PERMISSIONS = "Create_Permissions";
         public const string LOGIN_EDIT_PERMISSIONS = "Edit_Permissions";
         public const string LOGIN_DELETE_PERMISSIONS = "Delete_Permissions";
+        public const string LOGIN_ENABLED = "Enabled";
 
         public const string NOTES = "Notes";
     }

@@ -615,7 +615,7 @@ namespace SendReceiveClasses
             if (nameChanged && name != null)
             {
                 return SqlAssist.Update("ConferenceType",
-                                        Glo.Tab.CONFERENCE_TYPE_NAME + " = " + name ,
+                                        Glo.Tab.CONFERENCE_TYPE_NAME + " = " + name,
                                         Glo.Tab.CONFERENCE_TYPE_ID, typeID);
             }
             else
@@ -733,9 +733,10 @@ namespace SendReceiveClasses
         public int createPermissions;
         public int editPermissions;
         public int deletePermissions;
+        public bool enabled;
 
         public Login(string sessionID, int loginID, string username, string password, bool admin,
-                     int createPermissions, int editPermissions, int deletePermissions)
+                     int createPermissions, int editPermissions, int deletePermissions, bool enabled)
         {
             this.sessionID = sessionID;
             this.loginID = loginID;
@@ -745,20 +746,53 @@ namespace SendReceiveClasses
             this.createPermissions = createPermissions;
             this.editPermissions = editPermissions;
             this.deletePermissions = deletePermissions;
+            this.enabled = enabled;
+        }
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            username = SqlAssist.AddQuotes(SqlAssist.SecureValue(username));
+            password = SqlAssist.HashBytes(password);
         }
 
         public string SqlInsert()
         {
-            return "INSERT INTO Login (" + Glo.Tab.LOGIN_USERNAME + ", " + Glo.Tab.LOGIN_PASSWORD + ", " +
-                                           Glo.Tab.LOGIN_ADMIN + ", " +
-                                           Glo.Tab.LOGIN_CREATE_PERMISSIONS + ", " +
-                                           Glo.Tab.LOGIN_EDIT_PERMISSIONS + ", " +
-                                           Glo.Tab.LOGIN_DELETE_PERMISSIONS + ") VALUES ('" +
-                                           username + "', HASHBYTES('SHA2_512', '" + password + "'), " +
-                                           (admin ? "1" : "0") + ", " +
-                                           createPermissions.ToString() + ", " +
-                                           editPermissions.ToString() + ", " +
-                                           deletePermissions.ToString() + ");";
+            Prepare();
+
+
+            return SqlAssist.InsertInto("Login",
+                                        SqlAssist.ColConcat(Glo.Tab.LOGIN_USERNAME,
+                                                            Glo.Tab.LOGIN_PASSWORD,
+                                                            Glo.Tab.LOGIN_ADMIN,
+                                                            Glo.Tab.LOGIN_CREATE_PERMISSIONS,
+                                                            Glo.Tab.LOGIN_EDIT_PERMISSIONS,
+                                                            Glo.Tab.LOGIN_DELETE_PERMISSIONS,
+                                                            Glo.Tab.LOGIN_ENABLED),
+                                        SqlAssist.ValConcat(username,
+                                                            password,
+                                                            admin ? "1" : "0",
+                                                            createPermissions.ToString(),
+                                                            editPermissions.ToString(),
+                                                            deletePermissions.ToString(),
+                                                            enabled ? "1" : "0"));
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new() { SqlAssist.Setter(Glo.Tab.LOGIN_USERNAME, username),
+                                           SqlAssist.Setter(Glo.Tab.LOGIN_ADMIN, admin ? "1" : "0"),
+                                           SqlAssist.Setter(Glo.Tab.LOGIN_CREATE_PERMISSIONS,
+                                                            createPermissions.ToString()),
+                                           SqlAssist.Setter(Glo.Tab.LOGIN_EDIT_PERMISSIONS,
+                                                            editPermissions.ToString()),
+                                           SqlAssist.Setter(Glo.Tab.LOGIN_DELETE_PERMISSIONS,
+                                                            deletePermissions.ToString()),
+                                           SqlAssist.Setter(Glo.Tab.LOGIN_ENABLED, enabled ? "1" : "0") };
+
+            return SqlAssist.Update("Login", string.Join(", ", setters), Glo.Tab.LOGIN_ID, loginID.ToString());
         }
     }
 
@@ -1171,9 +1205,14 @@ namespace SendReceiveClasses
             else return "";
         }
 
+        public static string HashBytes(string str)
+        {
+            return "HASHBYTES('SHA2_512', '" + str + "')";
+        }
+
         public static string Setter(string column, string? value)
         {
-            if (value == null || value == "''")
+            if (value == null || value == "" || value == "''")
                 return SecureColumn(column) + " = NULL";
             else
                 return SecureColumn(column) + " = " + value;

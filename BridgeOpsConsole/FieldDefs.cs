@@ -115,6 +115,7 @@ public class FieldDefs
         defs.Add("Login Create Permissions", new Definition(5, Glo.Tab.LOGIN_CREATE_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
         defs.Add("Login Edit Permissions", new Definition(5, Glo.Tab.LOGIN_EDIT_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
         defs.Add("Login Delete Permissions", new Definition(5, Glo.Tab.LOGIN_DELETE_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
+        defs.Add("Login Enabled", new Definition(5, Glo.Tab.LOGIN_ENABLED, "BOOLEAN", false, false, false));
 
         // Asset
         defs.Add("Asset ID", new Definition(5, Glo.Tab.ASSET_ID, typeAssetID, false, true, false));
