@@ -59,6 +59,7 @@ public static class Glo
     public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 3;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
+    public const string CLIENT_LOGIN_REJECT_USER_DISABLED = "I used to be an adventurer like you";
     public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent
     public const string CLIENT_LOGIN_REJECT_IP_DUPLICATE = "IP already connected"; // Currently unused by agent
     public const string CLIENT_LOGIN_REJECT_IP_UNKNOWN = "IP unknown";

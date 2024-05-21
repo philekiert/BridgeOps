@@ -441,13 +441,19 @@ internal class BridgeOpsAgent
             SqlDataReader reader = sqlCommand.ExecuteReader();
             if (reader.Read())
             {
-                Type t = reader.GetFieldType(0);
                 int loginID = Convert.ToInt32(reader.GetValue(0)); // Has to be an int if anything was returned at all.
                 // Assuming login was successful, kick out any sessions with clashing IPs or usernames.
                 if (userAlreadyLoggedIn != "")
                     clientSessions.Remove(userAlreadyLoggedIn);
                 if (ipAlreadyConnected != "" && ipAlreadyConnected != userAlreadyLoggedIn)
                     clientSessions.Remove(ipAlreadyConnected);
+
+                object enabled = reader.GetValue(7);
+                if (!(bool)(reader.GetValue(7)))
+                {
+                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_DISABLED);
+                    return;
+                }
 
                 // Generate a random unique session ID.
                 string key;

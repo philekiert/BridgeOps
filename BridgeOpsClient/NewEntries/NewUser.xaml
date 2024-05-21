@@ -19,13 +19,13 @@
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition/>
             <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="120"/>
+            <ColumnDefinition Width="230"/>
         </Grid.ColumnDefinitions>
         <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" />
         <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" Margin="10,5,10,5" TextChanged="ValueChanged"/>
@@ -53,7 +53,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="160"/>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="44"/>

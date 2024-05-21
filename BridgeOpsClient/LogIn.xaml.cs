@@ -24,14 +24,22 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             this.mainWindow = mainWindow;
+
+            txtUsername.Focus();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Auto login for dev purposes.
-            txtUsername.Text = "admin";
-            txtPassword.Text = "admin";
-            btnLogIn_Click(btnLogIn, new());
+            //txtUsername.Text = "admin";
+            //txtPassword.Text = "admin";
+            //btnLogIn_Click(btnLogIn, new());
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                btnLogIn_Click(sender, new RoutedEventArgs());
         }
 
         private void btnLogIn_Click(object sender, RoutedEventArgs e)
@@ -72,6 +80,8 @@ namespace BridgeOpsClient
                     MessageBox.Show("IP address already associated with active session. Please try again in a " +
                                     "minute. If the problem does not resolve itself, contact the software " +
                                     "administrator.");
+                else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DISABLED)
+                    MessageBox.Show("Account disabled, please speak to your administrator.");
                 else
                     MessageBox.Show("Could not connect to Agent.");
             }

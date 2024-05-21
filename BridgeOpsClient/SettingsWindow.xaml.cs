@@ -29,7 +29,8 @@ namespace BridgeOpsClient
 
             if (App.Select("Login", new List<string>() { Glo.Tab.LOGIN_ID,
                                                          Glo.Tab.LOGIN_USERNAME,
-                                                         Glo.Tab.LOGIN_ADMIN },
+                                                         Glo.Tab.LOGIN_ADMIN,
+                                                         Glo.Tab.LOGIN_ENABLED},
                 out columnNames, out rows))
             {
                 columnNames[2] = "Type";
@@ -39,6 +40,9 @@ namespace BridgeOpsClient
                     object? userType = row[2];
                     if (userType != null && userType.GetType() == typeof(bool))
                         row[2] = (bool)userType ? "Administrator" : "User";
+                    object? userEnabled = row[3];
+                    if (userEnabled != null && userEnabled.GetType() == typeof(bool))
+                        row[3] = (bool)userEnabled ? "Yes" : "No";
                 }
 
                 dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID, "Login_ID");
