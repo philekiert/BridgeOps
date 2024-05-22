@@ -199,6 +199,29 @@ namespace SendReceiveClasses
         }
     }
 
+    struct PasswordResetRequest
+    {
+        public string sessionID;
+        public int loginID;
+        public string password;
+        public string newPassword;
+
+        public PasswordResetRequest(string sessionID, int loginID, string password, string newPassword)
+        {
+            this.sessionID = sessionID;
+            this.loginID = loginID;
+            this.password = password;
+            this.newPassword = newPassword;
+        }
+
+        public string SqlUpdate()
+        {
+            return SqlAssist.Update("Login", SqlAssist.Setter(Glo.Tab.LOGIN_PASSWORD,
+                                                              SqlAssist.HashBytes(newPassword)),
+                                             Glo.Tab.LOGIN_ID, loginID.ToString());
+        }
+    }
+
 
     //   D A T A B A S E   I N T E R A C T I O N
 

@@ -27,6 +27,9 @@ namespace BridgeOpsClient
     {
         public static bool IsLoggedIn { get { return sd.sessionID != ""; } }
 
+        public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
+        public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action";
+
         public App()
         {
             // Set current working directory.
@@ -87,7 +90,7 @@ namespace BridgeOpsClient
             try
             {
                 if (stream == null)
-                    throw new Exception("NetworkStream could not be connected");
+                    throw new Exception(NO_NETWORK_STREAM);
                 stream.WriteByte(Glo.CLIENT_LOGIN);
                 sr.WriteAndFlush(stream, send);
 
@@ -95,6 +98,9 @@ namespace BridgeOpsClient
 
                 if (result.StartsWith(Glo.CLIENT_LOGIN_ACCEPT))
                 {
+                    if (!int.TryParse(sr.ReadString(stream), out sd.loginID))
+                        return "";
+
                     sd.username = loginReq.username;
                     sd.sessionID = result.Replace(Glo.CLIENT_LOGIN_ACCEPT, "");
 
@@ -767,6 +773,7 @@ namespace BridgeOpsClient
     public class SessionDetails
     {
         public string sessionID = "";
+        public int loginID = -1;
         public string username = "";
 
         public int portInbound = 0; // Inbound to server.

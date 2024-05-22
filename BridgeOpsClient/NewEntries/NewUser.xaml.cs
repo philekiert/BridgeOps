@@ -26,10 +26,14 @@ namespace BridgeOpsClient
             InitializeComponent();
             InitialiseFields();
             GetCheckBoxArray();
+
+            btnResetPassword.Visibility = Visibility.Collapsed;
         }
         public NewUser(int id)
         {
             this.id = id;
+
+            this.Title = "Edit User";
 
             InitializeComponent();
             InitialiseFields();
@@ -298,6 +302,12 @@ namespace BridgeOpsClient
                                                            permissionsGrid[2, y].IsChecked == true);
                 }
             }
+        }
+
+        private void btnResetPassword_Click(object sender, RoutedEventArgs e)
+        {
+            PasswordChange pc = new(id, true);
+            pc.ShowDialog();
         }
     }
 }

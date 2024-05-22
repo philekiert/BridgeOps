@@ -140,6 +140,12 @@ namespace BridgeOpsClient
                 MessageBox.Show("Not logged in.");
         }
 
+        private void menuChangePassword_Click(object sender, RoutedEventArgs e)
+        {
+            PasswordChange pc = new(App.sd.loginID, false);
+            pc.ShowDialog();
+        }
+
         private void menuSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow settingsWindow = new();

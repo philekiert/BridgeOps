@@ -17,6 +17,7 @@ using System.Data;
 using System.Threading.Channels;
 using System.Reflection.PortableExecutable;
 using System.Xml.Schema;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 
 internal class BridgeOpsAgent
 {
@@ -28,13 +29,37 @@ internal class BridgeOpsAgent
         public string username;
         public string ip;
         public int loginID;
-        public ClientSession(string username, string ip, int loginID)
-        { this.username = username; this.ip = ip; this.loginID = loginID; }
+        public List<bool[]> permissions;
+        public bool[] createPermissions;
+        public bool[] editPermissions;
+        public bool[] deletePermissions;
+        public ClientSession(string username, string ip, int loginID,
+                             int createPermissions, int editPermissions, int deletePermissions)
+        {
+            this.username = username;
+            this.ip = ip;
+            this.loginID = loginID;
+            this.createPermissions = Glo.Fun.GetPermissionsArray(createPermissions);
+            this.editPermissions = Glo.Fun.GetPermissionsArray(editPermissions);
+            this.deletePermissions = Glo.Fun.GetPermissionsArray(deletePermissions);
+
+            permissions = new() { this.createPermissions, this.editPermissions, this.deletePermissions };
+        }
     }
     static Dictionary<string, ClientSession> clientSessions = new Dictionary<string, ClientSession>();
     static bool CheckSessionValidity(string id)
     {
         return clientSessions.ContainsKey(id);
+    }
+    static bool CheckSessionPermission(ClientSession session, int category, int intent)
+    {
+        return session.permissions[intent][category];
+    }
+    static SqlCommand PullUpUserFromPassword(string username, string password, SqlConnection sqlConnect)
+    {
+        return new SqlCommand(string.Format("SELECT * FROM Login WHERE (Username = '{0}' AND " +
+                                            "Password = HASHBYTES('SHA2_512', '{1}'));",
+                                            username, password), sqlConnect);
     }
     // If you need to check the quickly condition, but need the bool outside of scope.
     static bool CheckSessionValidity(string id, out bool result)
@@ -186,8 +211,7 @@ internal class BridgeOpsAgent
     private static void SqlServerNudge()
     {
         // If the database is inactive for more than a few minutes, we see a very slight delay to the next query. This
-        // causes logins to fail for some inexplicable reason when developing on one machine. You can probably get rid
-        // of this function at some point in the future.
+        // causes logins to fail for some inexplicable reason when developing on one machine.
 
         SqlConnection sqlConnect = new SqlConnection(connectionString);
         while (true)
@@ -291,6 +315,8 @@ internal class BridgeOpsAgent
                     ClientLogin(stream, sqlConnect, (IPEndPoint?)client.Client.RemoteEndPoint);
                 else if (fncByte == Glo.CLIENT_LOGOUT)
                     ClientSessionLogout(stream);
+                else if (fncByte == Glo.CLIENT_PASSWORD_RESET)
+                    ClientPasswordReset(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_NEW_ORGANISATION ||
                          fncByte == Glo.CLIENT_NEW_CONTACT ||
                          fncByte == Glo.CLIENT_NEW_ASSET ||
@@ -434,9 +460,7 @@ internal class BridgeOpsAgent
             }
 
             await taskSqlConnect;
-            SqlCommand sqlCommand = new SqlCommand(string.Format("SELECT * FROM Login WHERE (Username = '{0}' AND " +
-                                                   "Password = HASHBYTES('SHA2_512', '{1}'));",
-                                                   loginReq.username, loginReq.password), sqlConnect);
+            SqlCommand sqlCommand = PullUpUserFromPassword(loginReq.username, loginReq.password, sqlConnect);
 
             SqlDataReader reader = sqlCommand.ExecuteReader();
             if (reader.Read())
@@ -465,12 +489,73 @@ internal class BridgeOpsAgent
                 }
                 while (clientSessions.ContainsKey(key));
 
-                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID));
+                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID,
+                                                          (byte)reader.GetValue(4),
+                                                          (byte)reader.GetValue(5),
+                                                          (byte)reader.GetValue(6)));
 
                 sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
+                sr.WriteAndFlush(stream, loginID.ToString());
             }
             else // Username or password incorrect.
                 sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_INVALID);
+        }
+        catch (Exception e)
+        {
+            LogError(e);
+        }
+        finally
+        {
+            sqlConnect.Close();
+        }
+    }
+
+    private static async void ClientPasswordReset(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        SqlCommand com;
+
+
+        try
+        {
+            Task taskSqlConnect = sqlConnect.OpenAsync();
+
+            PasswordResetRequest req = sr.Deserialise<PasswordResetRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            // Must be here if the above code works.
+            ClientSession session = clientSessions[req.sessionID];
+
+            // Confirm that the request is from a session with the correct permissions, or is owned by the account
+            // whos password is being changed.
+            if (req.loginID != session.loginID &&
+                !CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                return;
+            }
+
+            await taskSqlConnect;
+
+            // If the session isn't admin, check to see if the original password was correct.
+            if (!CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
+            {
+                com = PullUpUserFromPassword(session.username, req.password, sqlConnect);
+                SqlDataReader reader = com.ExecuteReader();
+                if (!reader.Read())
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                    return;
+                }
+                reader.Close();
+            }
+            // If we're still good to go, set the new password.
+            com = new SqlCommand(req.SqlUpdate(), sqlConnect);
+            com.ExecuteNonQuery();
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)
         {
@@ -793,9 +878,8 @@ internal class BridgeOpsAgent
             try
             {
                 com.ExecuteNonQuery();
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             }
-            catch
+            finally
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             }

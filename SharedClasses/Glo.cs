@@ -24,20 +24,21 @@ public static class Glo
     public const int CLIENT_PULL_COLUMN_RECORD = 0;
     public const int CLIENT_LOGIN = 1;
     public const int CLIENT_LOGOUT = 2;
-    public const int CLIENT_NEW_LOGIN = 3;
-    public const int CLIENT_NEW_ORGANISATION = 4;
-    public const int CLIENT_NEW_CONTACT = 5;
-    public const int CLIENT_NEW_ASSET = 6;
-    public const int CLIENT_NEW_CONFERENCE_TYPE = 7;
-    public const int CLIENT_NEW_CONFERENCE = 8;
-    public const int CLIENT_NEW_RESOURCE = 9;
-    public const int CLIENT_UPDATE_LOGIN = 10;
-    public const int CLIENT_UPDATE_ORGANISATION = 11;
-    public const int CLIENT_UPDATE_CONTACT = 12;
-    public const int CLIENT_UPDATE_ASSET = 13;
-    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 14;
-    public const int CLIENT_UPDATE_CONFERENCE = 15;
-    public const int CLIENT_UPDATE_RESOURCE = 16;
+    public const int CLIENT_PASSWORD_RESET = 3;
+    public const int CLIENT_NEW_LOGIN = 4;
+    public const int CLIENT_NEW_ORGANISATION = 5;
+    public const int CLIENT_NEW_CONTACT = 6;
+    public const int CLIENT_NEW_ASSET = 7;
+    public const int CLIENT_NEW_CONFERENCE_TYPE = 8;
+    public const int CLIENT_NEW_CONFERENCE = 9;
+    public const int CLIENT_NEW_RESOURCE = 10;
+    public const int CLIENT_UPDATE_LOGIN = 11;
+    public const int CLIENT_UPDATE_ORGANISATION = 12;
+    public const int CLIENT_UPDATE_CONTACT = 13;
+    public const int CLIENT_UPDATE_ASSET = 14;
+    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 15;
+    public const int CLIENT_UPDATE_CONFERENCE = 16;
+    public const int CLIENT_UPDATE_RESOURCE = 17;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT = 31;
     public const int CLIENT_SELECT_WIDE = 32;
@@ -54,15 +55,27 @@ public static class Glo
 
     // Operational
     public const int CLIENT_SESSION_INVALID = 0;
-    public const int CLIENT_REQUEST_FAILED = 1;
-    public const int CLIENT_REQUEST_SUCCESS = 2;
-    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 3;
+    public const int CLIENT_INSUFFICIENT_PERMISSIONS = 1;
+    public const int CLIENT_REQUEST_FAILED = 2;
+    public const int CLIENT_REQUEST_SUCCESS = 3;
+    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 4;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DISABLED = "I used to be an adventurer like you";
     public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent
     public const string CLIENT_LOGIN_REJECT_IP_DUPLICATE = "IP already connected"; // Currently unused by agent
     public const string CLIENT_LOGIN_REJECT_IP_UNKNOWN = "IP unknown";
+
+    // Permissions
+    public const int PERMISSION_CREATE = 0;
+    public const int PERMISSION_EDIT = 1;
+    public const int PERMISSION_DELETE = 2;
+    public const int PERMISSION_RECORDS = 0; // Keep at zero, and subsequent values in order.
+    public const int PERMISSION_CONFERENCES = 1;
+    public const int PERMISSION_RESOURCES = 2;
+    public const int PERMISSION_CONFERENCE_TYPES = 3;
+    public const int PERMISSION_REPORTS = 4;
+    public const int PERMISSION_USER_ACC_MGMT = 5;
 
     public const string CLIENT_LOGOUT_ACCEPT = "Safe travels";
 
