@@ -8,7 +8,6 @@ namespace BridgeOpsClient
 {
     public partial class NewUser : Window
     {
-        bool edit = false;
         public bool didSomething = false;
         public int id = 0;
         string originalUsername = "";
@@ -39,7 +38,6 @@ namespace BridgeOpsClient
             InitialiseFields();
             GetCheckBoxArray();
 
-            edit = true;    
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;
             btnEdit.IsEnabled = false;
@@ -136,9 +134,9 @@ namespace BridgeOpsClient
             if (chkAdmin.IsChecked != null && chkAdmin.IsChecked == true)
             {
                 login.admin = true;
-                login.createPermissions = 63;
-                login.editPermissions = 63;
-                login.deletePermissions = 63;
+                login.createPermissions = Glo.PERMISSIONS_MAX_VALUE;
+                login.editPermissions = Glo.PERMISSIONS_MAX_VALUE;
+                login.deletePermissions = Glo.PERMISSIONS_MAX_VALUE;
             }
             else
             {

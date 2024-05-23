@@ -537,11 +537,13 @@ public class DatabaseCreator
 
             Writer.Message("\nCreating admin login...");
             SendCommandSQL(string.Format("INSERT INTO Login (Username, Password, Admin, {0}, {1}, {2}, {3}) " +
-                                         "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 1, 63, 63, 63, 1);",
+                                         "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 1, " +
+                                                  "{4}, {4}, {4}, 1);",
                                          Glo.Tab.LOGIN_CREATE_PERMISSIONS,
                                          Glo.Tab.LOGIN_EDIT_PERMISSIONS,
                                          Glo.Tab.LOGIN_DELETE_PERMISSIONS,
-                                         Glo.Tab.LOGIN_ENABLED));
+                                         Glo.Tab.LOGIN_ENABLED,
+                                         Glo.PERMISSIONS_MAX_VALUE));
 
 
             //---- CREATE TYPE RESTRICTIONS FILE ----// (For use by Client in determining what to display/allow in UI)

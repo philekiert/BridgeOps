@@ -119,26 +119,55 @@ namespace BridgeOpsClient
 
         public static bool LogOut()
         {
-            if (IsLoggedIn)
+            return LogOut(sd.username);
+        }
+
+        public static bool LogOut(string username) // Used for logging out either self or others.
+        {
+            try
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-                if (stream != null)
+                if (IsLoggedIn)
                 {
-                    stream.WriteByte(Glo.CLIENT_LOGOUT);
-                    sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
-                                                          sd.username)));
-                    sr.ReadString(stream); // Empty the pipe.
+                    NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+
+                    if (stream != null)
+                    {
+                        stream.WriteByte(Glo.CLIENT_LOGOUT);
+                        sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
+                                                              username)));
+                        if (username == sd.username)
+                        {
+                            sr.ReadString(stream); // Empty the pipe.
+
+                            // No real need for an error if connection is lost and the logout 'fails'. An error will
+                            // present when the user tries to log in again.
+                            sd.sessionID = "";
+
+                            if (Current.MainWindow != null)
+                                ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
+                        }
+                        else
+                        {
+                            string response = sr.ReadString(stream);
+                            if (response == Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND)
+                                MessageBox.Show("Could not find this user's session.");
+                            else if (response == Glo.CLIENT_LOGOUT_ACCEPT)
+                                MessageBox.Show("User logged out successfully");
+                            else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString())
+                                MessageBox.Show("You do not have the required permissions for this action");
+                            else
+                                throw new Exception();
+                        }
+                    }
                 }
 
-                // No real need for an error if connection is lost and the logout 'fails'. An error will present when
-                // the user tries to log in again.
-                sd.sessionID = "";
-
-                if (Current.MainWindow != null)
-                    ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
+                return true;
             }
-
-            return false;
+            catch
+            {
+                MessageBox.Show("Something went wrong.");
+                return false;
+            }
         }
 
         public static void SessionInvalidated()

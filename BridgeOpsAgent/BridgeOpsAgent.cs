@@ -317,6 +317,8 @@ internal class BridgeOpsAgent
                     ClientSessionLogout(stream);
                 else if (fncByte == Glo.CLIENT_PASSWORD_RESET)
                     ClientPasswordReset(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_LOGGEDIN_LIST)
+                    ClientLoggedInUserList(stream);
                 else if (fncByte == Glo.CLIENT_NEW_ORGANISATION ||
                          fncByte == Glo.CLIENT_NEW_CONTACT ||
                          fncByte == Glo.CLIENT_NEW_ASSET ||
@@ -567,18 +569,78 @@ internal class BridgeOpsAgent
         }
     }
 
+    private static void ClientLoggedInUserList(NetworkStream stream)
+    {
+        try
+        {
+            if (CheckSessionValidity(sr.ReadString(stream)))
+            {
+                List<object[]> users = new();
+                foreach (KeyValuePair<string, ClientSession> session in clientSessions)
+                    users.Add(new object[] { session.Value.loginID, session.Value.username });
+                sr.WriteAndFlush(stream, sr.Serialise(users));
+            }
+        }
+        catch (Exception e)
+        {
+            LogError(e);
+        }
+    }
+
     private static void ClientSessionLogout(NetworkStream stream)
     {
-        string sessionDetails = sr.ReadString(stream);
-        LogoutRequest logoutReq = sr.Deserialise<LogoutRequest>(sessionDetails);
-
-        if (clientSessions.ContainsKey(logoutReq.sessionID))
+        try
         {
-            clientSessions.Remove(logoutReq.sessionID);
-            sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
+            string sessionDetails = sr.ReadString(stream);
+            LogoutRequest logoutReq = sr.Deserialise<LogoutRequest>(sessionDetails);
+
+            if (clientSessions.ContainsKey(logoutReq.sessionID))
+            {
+                ClientSession thisSession = clientSessions[logoutReq.sessionID];
+                if (clientSessions[logoutReq.sessionID].username == logoutReq.username)
+                {
+                    // Users may log themselves out without restriction.
+                    clientSessions.Remove(logoutReq.sessionID);
+                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
+                    return;
+                }
+
+                // If a user is logging out another user, they must have the required permissions.
+                if (CheckSessionPermission(thisSession, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
+                {
+                    string sessionToLogOut = "";
+                    foreach (KeyValuePair<string, ClientSession> session in clientSessions)
+                    {
+                        if (session.Value.username == logoutReq.username)
+                        {
+                            sessionToLogOut = session.Key;
+                            break;
+                        }
+                    }
+
+                    if (sessionToLogOut == "")
+                    {
+                        sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND);
+                        return;
+                    }
+
+                    clientSessions.Remove(sessionToLogOut);
+                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
+                    return;
+                }
+                else
+                {
+                    sr.WriteAndFlush(stream, Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString());
+                    return;
+                }
+            }
+            else
+                sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_INVALID);
         }
-        else
-            sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_INVALID);
+        catch (Exception e)
+        {
+            LogError(e);
+        }
 
     }
 

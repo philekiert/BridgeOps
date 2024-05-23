@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,10 +23,13 @@ namespace BridgeOpsClient
             PopulateUserList();
         }
 
+        List<string?> columnNames = new();
+        List<List<object?>> rows = new();
+        Dictionary<int, int> dctID = new(); // Used to store indices of user rows for "logged in" display.
+
         private void PopulateUserList()
         {
-            List<string?> columnNames;
-            List<List<object?>> rows;
+            dctID.Clear();
 
             if (App.Select("Login", new List<string>() { Glo.Tab.LOGIN_ID,
                                                          Glo.Tab.LOGIN_USERNAME,
@@ -33,20 +37,54 @@ namespace BridgeOpsClient
                                                          Glo.Tab.LOGIN_ENABLED},
                 out columnNames, out rows))
             {
+                columnNames.Add("Status");
                 columnNames[2] = "Type";
 
-                foreach (List<object?> row in rows)
+                for (int n = 0; n < rows.Count; ++n)
                 {
-                    object? userType = row[2];
+                    // The row needs extending by 1 in order to add a column to the SqlDataGrid.
+                    rows[n].Add("Inactive");
+
+                    object? userType = rows[n][2];
                     if (userType != null && userType.GetType() == typeof(bool))
-                        row[2] = (bool)userType ? "Administrator" : "User";
-                    object? userEnabled = row[3];
+                        rows[n][2] = (bool)userType ? "Administrator" : "User";
+                    object? userEnabled = rows[n][3];
                     if (userEnabled != null && userEnabled.GetType() == typeof(bool))
-                        row[3] = (bool)userEnabled ? "Yes" : "No";
+                        rows[n][3] = (bool)userEnabled ? "Yes" : "No";
+
+                    object? userID = rows[n][0];
+                    if (userID != null)
+                        dctID.Add(((int)userID), n);
                 }
+
+                DisplayLoggedInUsers();
 
                 dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID, "Login_ID");
             }
+        }
+
+        private void DisplayLoggedInUsers()
+        {
+            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+            try
+            {
+                if (stream == null)
+                    throw new Exception(App.NO_NETWORK_STREAM);
+                stream.WriteByte(Glo.CLIENT_LOGGEDIN_LIST);
+                App.sr.WriteAndFlush(stream, App.sd.sessionID);
+                List<object[]>? loggedIn = App.sr.Deserialise<List<object[]>>(App.sr.ReadString(stream));
+
+                if (loggedIn != null)
+                    foreach (object[]? o in loggedIn)
+                        if (o != null)
+                        {
+                            int index;
+                            if (int.TryParse(o[0].ToString(), out index))
+
+                                rows[dctID[index]][4] = "Logged In";
+                        }
+            }
+            catch { }
         }
 
         private void btnUserAdd_Click(object sender, RoutedEventArgs e)
@@ -94,6 +132,12 @@ namespace BridgeOpsClient
                 else
                     MessageBox.Show("User ID invalid.");
             }
+        }
+
+        private void btnUserLogOut_Click(object sender, RoutedEventArgs e)
+        {
+            App.LogOut(dtgUsers.GetCurrentlySelectedCell(1));
+            PopulateUserList();
         }
     }
 }

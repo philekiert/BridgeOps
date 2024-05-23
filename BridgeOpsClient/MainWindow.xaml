@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
-        Title="" Height="800" Width="800">
+        Title="Bridge Management Software" Height="800" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
@@ -32,16 +32,16 @@
             <MenuItem Header="Database">
                 <MenuItem Header="New">
                     <MenuItem Header="Organisation" x:Name="menuDatabaseNewOrganisation"
-                              Click="menuDatabaseNewOrganisation_Click" />
+                              Click="menuDatabaseNewOrganisation_Click"/>
                     <MenuItem Header="Asset" x:Name="menuDatabaseNewAsset"
-                              Click="menuDatabaseNewAsset_Click" />
+                              Click="menuDatabaseNewAsset_Click"/>
                     <MenuItem Header="Contact" x:Name="menuDatabaseNewContact"
-                              Click="menuDatabaseNewContact_Click" />
-                    <Separator />
+                              Click="menuDatabaseNewContact_Click"/>
+                    <Separator/>
                     <MenuItem Header="Resource" x:Name="menuDatabaseNewResource"
-                              Click="menuDatabaseNewResource_Click" />
+                              Click="menuDatabaseNewResource_Click"/>
                     <MenuItem Header="Conference Type" x:Name="menuDatabaseNewConferenceType"
-                              Click="menuDatabaseNewConferenceType_Click" />
+                              Click="menuDatabaseNewConferenceType_Click"/>
                 </MenuItem>
             </MenuItem>
         </Menu>
