@@ -409,6 +409,23 @@ internal class BridgeOpsAgent
         }
     }
 
+    private static void ConsoleResetAdminPassword(NamedPipeServerStream server, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            SqlCommand comm = new("UPDATE " +
+                                 $"SET {Glo.Tab.LOGIN_PASSWORD} = {SqlAssist.HashBytes("admin")} " +
+                                 $"WHERE {Glo.Tab.LOGIN_ID} = 1;",
+                                 sqlConnect);
+            comm.ExecuteNonQuery();
+        }
+        catch (Exception e)
+        {
+            LogError(e);
+        }
+    }
+
 
     //   C L I E N T   R E Q U E S T   F U N C T I O N S
 

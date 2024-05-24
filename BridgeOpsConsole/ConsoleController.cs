@@ -190,6 +190,8 @@ public class ConsoleController
                    "Check to see if agent is running.");
         AddCommand("logout", ValType.String, menu, LogoutUser,
                    "End session for specified user.");
+        AddCommand("reset admin password", ValType.None, menu, ResetAdminPassword,
+                   "Reset the admin password to 'admin'.");
 
         // Network
         menu = MENU_NETWORK;
@@ -973,6 +975,20 @@ public class ConsoleController
         else
             Writer.Negative("Agent process is not currently running. Type \"start\" to begin.");
 
+        return 0;
+    }
+
+    // SECURITY RISK, REMOVE FOR DEPLOYMENT NOT ON AN AIR-GAPPED NETWORK.
+    private int ResetAdminPassword()
+    {
+        string command = "UPDATE Login " +
+                        $"SET {Glo.Tab.LOGIN_PASSWORD} = {SqlAssist.HashBytes("admin")} " +
+                        $"WHERE {Glo.Tab.LOGIN_ID} = 1;";
+        if (dbCreate.SendCommandSQL(command))
+            Writer.Affirmative("Admin password successfully reset.");
+        else
+            Writer.Affirmative("Something went wrong, check connection to SQL datbase " +
+                               "and try restarting the console.");
         return 0;
     }
 
