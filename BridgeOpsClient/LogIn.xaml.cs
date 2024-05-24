@@ -19,13 +19,15 @@ namespace BridgeOpsClient
     {
         MainWindow mainWindow;
 
+        bool networkSettings = false;
+
         public LogIn(MainWindow mainWindow)
         {
             InitializeComponent();
 
             this.mainWindow = mainWindow;
 
-            txtUsername.Focus();
+            txtUsername.Focus(); 
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -40,11 +42,36 @@ namespace BridgeOpsClient
         {
             if (e.Key == Key.Enter)
                 btnLogIn_Click(sender, new RoutedEventArgs());
+
+            ToggleNetworkSettings(sender, e);
+        }
+
+        private void ToggleNetworkSettings(object sender, EventArgs e)
+        {
+            if ((Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) &&
+                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) &&
+                (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt)))
+            {
+                networkSettings = true;
+                btnLogIn.Content = "Network Settings";
+            }
+            else
+            {
+                networkSettings = false;
+                btnLogIn.Content = "Log In";
+            }
         }
 
         private void btnLogIn_Click(object sender, RoutedEventArgs e)
         {
             // Server IP Address
+            if (networkSettings)
+            {
+                NetworkSettings settings = new NetworkSettings();
+                settings.ShowDialog();
+                ToggleNetworkSettings(sender, e);
+                return;
+            }
 
             string result = App.LogIn(txtUsername.Text, pwdPassword.Password);
             // Function automatically stores the session ID in App if logged in successfully.
@@ -86,6 +113,8 @@ namespace BridgeOpsClient
                     MessageBox.Show("Account disabled, please speak to your administrator.");
                 else
                     MessageBox.Show("Could not connect to Agent.");
+
+                ToggleNetworkSettings(sender, e);
             }
 
             if (mainWindow.IsLoaded)
