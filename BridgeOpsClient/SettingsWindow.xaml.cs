@@ -99,6 +99,9 @@ namespace BridgeOpsClient
 
         private void dtgUsers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            if (!App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT])
+                return;
+
             string currentID = dtgUsers.GetCurrentlySelectedID();
             if (currentID != "")
             {

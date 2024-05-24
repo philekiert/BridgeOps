@@ -124,7 +124,6 @@ namespace BridgeOpsClient
         {
             return LogOut(sd.loginID);
         }
-
         public static bool LogOut(int loginID) // Used for logging out either self or others.
         {
             try
@@ -400,8 +399,10 @@ namespace BridgeOpsClient
                     else if (response == Glo.CLIENT_SESSION_INVALID)
                     {
                         SessionInvalidated();
-                        returnID = "";
-                        return false;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        MessageBox.Show(PERMISSION_DENIED);
                     }
                 }
                 returnID = "";
@@ -433,7 +434,10 @@ namespace BridgeOpsClient
                     else if (response == Glo.CLIENT_SESSION_INVALID)
                     {
                         SessionInvalidated();
-                        return false;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        MessageBox.Show(PERMISSION_DENIED);
                     }
                 }
                 return false;
@@ -466,7 +470,10 @@ namespace BridgeOpsClient
                     else if (response == Glo.CLIENT_SESSION_INVALID)
                     {
                         SessionInvalidated();
-                        return false;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        MessageBox.Show(PERMISSION_DENIED);
                     }
                 }
                 return false;
@@ -629,7 +636,10 @@ namespace BridgeOpsClient
                     else if (response == Glo.CLIENT_SESSION_INVALID)
                     {
                         SessionInvalidated();
-                        return false;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        MessageBox.Show(PERMISSION_DENIED);
                     }
                 }
                 return false;
