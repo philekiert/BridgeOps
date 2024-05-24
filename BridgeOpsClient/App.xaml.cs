@@ -162,6 +162,14 @@ namespace BridgeOpsClient
                         }
                     }
                 }
+                if (Current.MainWindow != null)
+                {
+                    // Thought about making this while (!IsLoggedIn) in case the user closes the login window, but
+                    // decided it might be useful for the user to get back to the app if they accidentally clicked
+                    // the button, need to copy some unsaved work, then become disconnected for some reason.
+                    LogIn logIn = new LogIn((MainWindow)Current.MainWindow);
+                    logIn.ShowDialog();
+                }
 
                 return true;
             }
@@ -176,7 +184,7 @@ namespace BridgeOpsClient
         {
             sd.sessionID = ""; // Tells the app that it's no longer logged in.
             ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
-            MessageBox.Show("Session is no longer valid, please log back in.");
+            MessageBox.Show("Session is no longer valid. Please copy any unsaved work, then log out and back in.");
         }
 
         public static bool EditOrganisation(string id)
@@ -811,7 +819,6 @@ namespace BridgeOpsClient
             }
         }
 
-
     }
 
     public class SessionDetails
@@ -820,6 +827,7 @@ namespace BridgeOpsClient
         public int loginID = -1;
         public string username = "";
 
+        public byte[] ipAddress = new byte[] { 127, 0, 0, 1 };
         public int portInbound = 0; // Inbound to server.
         public int portOutbound = 0; // Outbound from server.
 
@@ -828,7 +836,7 @@ namespace BridgeOpsClient
         public bool[] editPermissions = new bool[6];
         public bool[] deletePermissions = new bool[6];
 
-        public IPAddress serverIP = new IPAddress(new byte[] { 127, 0, 0, 1 });
-        public IPEndPoint ServerEP { get { return new IPEndPoint(serverIP, portInbound); } }
+        public IPAddress ServerIP { get { return new IPAddress(ipAddress); } }
+        public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, portInbound); } }
     }
 }

@@ -44,6 +44,8 @@ namespace BridgeOpsClient
 
         private void btnLogIn_Click(object sender, RoutedEventArgs e)
         {
+            // Server IP Address
+
             string result = App.LogIn(txtUsername.Text, pwdPassword.Password);
             // Function automatically stores the session ID in App if logged in successfully.
             if (result == Glo.CLIENT_LOGIN_ACCEPT)
