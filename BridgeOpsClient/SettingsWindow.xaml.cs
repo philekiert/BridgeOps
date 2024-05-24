@@ -21,6 +21,16 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
             PopulateUserList();
+
+            bool editPermission = App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT];
+            if (!editPermission)
+            {
+                btnUserLogOut.IsEnabled = false;
+            }
+            if (!App.sd.createPermissions[Glo.PERMISSION_USER_ACC_MGMT])
+            {
+                btnUserAdd.IsEnabled = false;
+            }
         }
 
         List<string?> columnNames = new();
@@ -87,14 +97,6 @@ namespace BridgeOpsClient
             catch { }
         }
 
-        private void btnUserAdd_Click(object sender, RoutedEventArgs e)
-        {
-            NewUser newUser = new();
-            newUser.ShowDialog();
-            if (newUser.didSomething)
-                PopulateUserList();
-        }
-
         private void dtgUsers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string currentID = dtgUsers.GetCurrentlySelectedID();
@@ -134,10 +136,34 @@ namespace BridgeOpsClient
             }
         }
 
+        private void btnUsersRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateUserList();
+        }
+
+        private void btnUserAdd_Click(object sender, RoutedEventArgs e)
+        {
+            NewUser newUser = new();
+            newUser.ShowDialog();
+            if (newUser.didSomething)
+                PopulateUserList();
+        }
+
         private void btnUserLogOut_Click(object sender, RoutedEventArgs e)
         {
-            App.LogOut(dtgUsers.GetCurrentlySelectedCell(1));
-            PopulateUserList();
+            int loginID;
+            if (int.TryParse(dtgUsers.GetCurrentlySelectedID(), out loginID))
+            {
+                if (loginID == App.sd.loginID)
+                {
+                    MessageBox.Show("You cannot log yourself out from here.");
+                    return;
+                }
+                App.LogOut(loginID);
+                PopulateUserList();
+            }
+            else
+                MessageBox.Show("Couldn't discern user ID from row.");
         }
     }
 }

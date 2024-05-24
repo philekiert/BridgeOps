@@ -24,12 +24,25 @@ namespace BridgeOpsClient
         string id = "";
         string? originalOrgID = "";
         string? originalNotes = "";
+
+        private void ApplyPermissions()
+        {
+            if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
+                btnAdd.IsEnabled = false;
+            if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
+                btnEdit.IsEnabled = false;
+            if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
+                btnDelete.IsEnabled = false;
+        }
+
         public NewAsset()
         {
             InitializeComponent();
             InitialiseFields();
 
             tabChangeLog.IsEnabled = false;
+
+            ApplyPermissions();
         }
         public NewAsset(string id)
         {
@@ -45,6 +58,8 @@ namespace BridgeOpsClient
 
             txtAssetID.Text = id;
             txtAssetID.IsReadOnly = true;
+
+            ApplyPermissions();
         }
         public NewAsset(string id, string record)
         {
@@ -63,6 +78,8 @@ namespace BridgeOpsClient
             ToggleFieldsEnabled(false);
 
             tabChangeLog.IsEnabled = false;
+
+            ApplyPermissions();
         }
 
         private void InitialiseFields()

@@ -67,6 +67,11 @@ internal class BridgeOpsAgent
         result = clientSessions.ContainsKey(id);
         return result;
     }
+    static bool CheckSessionPermission(ClientSession session, int category, int intent, out bool result)
+    {
+        result = CheckSessionPermission(session, category, intent);
+        return result;
+    }
 
     // Multiple threads may try to access this at once, so hold them up if stopnecessary.
     private static bool currentlyWriting = false;
@@ -314,7 +319,7 @@ internal class BridgeOpsAgent
                 else if (fncByte == Glo.CLIENT_LOGIN)
                     ClientLogin(stream, sqlConnect, (IPEndPoint?)client.Client.RemoteEndPoint);
                 else if (fncByte == Glo.CLIENT_LOGOUT)
-                    ClientSessionLogout(stream);
+                    ClientLogout(stream);
                 else if (fncByte == Glo.CLIENT_PASSWORD_RESET)
                     ClientPasswordReset(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LOGGEDIN_LIST)
@@ -491,12 +496,19 @@ internal class BridgeOpsAgent
                 }
                 while (clientSessions.ContainsKey(key));
 
+                byte createPermissions = (byte)reader.GetValue(4);
+                byte editPermissions = (byte)reader.GetValue(5);
+                byte deletePermissions = (byte)reader.GetValue(6);
+
                 clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID,
-                                                          (byte)reader.GetValue(4),
-                                                          (byte)reader.GetValue(5),
-                                                          (byte)reader.GetValue(6)));
+                                                          createPermissions,
+                                                          editPermissions,
+                                                          deletePermissions));
 
                 sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
+                stream.WriteByte(createPermissions);
+                stream.WriteByte(editPermissions);
+                stream.WriteByte(deletePermissions);
                 sr.WriteAndFlush(stream, loginID.ToString());
             }
             else // Username or password incorrect.
@@ -512,6 +524,7 @@ internal class BridgeOpsAgent
         }
     }
 
+    // Permission restricted.
     private static async void ClientPasswordReset(NetworkStream stream, SqlConnection sqlConnect)
     {
         SqlCommand com;
@@ -587,7 +600,8 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSessionLogout(NetworkStream stream)
+    // Permission restricted.
+    private static void ClientLogout(NetworkStream stream)
     {
         try
         {
@@ -597,7 +611,7 @@ internal class BridgeOpsAgent
             if (clientSessions.ContainsKey(logoutReq.sessionID))
             {
                 ClientSession thisSession = clientSessions[logoutReq.sessionID];
-                if (clientSessions[logoutReq.sessionID].username == logoutReq.username)
+                if (clientSessions[logoutReq.sessionID].loginID == logoutReq.loginID)
                 {
                     // Users may log themselves out without restriction.
                     clientSessions.Remove(logoutReq.sessionID);
@@ -611,7 +625,7 @@ internal class BridgeOpsAgent
                     string sessionToLogOut = "";
                     foreach (KeyValuePair<string, ClientSession> session in clientSessions)
                     {
-                        if (session.Value.username == logoutReq.username)
+                        if (session.Value.loginID == logoutReq.loginID)
                         {
                             sessionToLogOut = session.Key;
                             break;
@@ -641,9 +655,9 @@ internal class BridgeOpsAgent
         {
             LogError(e);
         }
-
     }
 
+    // Permission restricted.
     private static void ClientNewInsert(NetworkStream stream, SqlConnection sqlConnect, int target)
     {
         try
@@ -652,53 +666,75 @@ internal class BridgeOpsAgent
             SqlCommand com = new SqlCommand("", sqlConnect);
 
             bool sessionValid = false;
+            bool permission = false;
+            int create = Glo.PERMISSION_CREATE;
 
             if (target == Glo.CLIENT_NEW_ORGANISATION)
             {
                 Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
             }
             else if (target == Glo.CLIENT_NEW_ASSET)
             {
                 Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
             }
             else if (target == Glo.CLIENT_NEW_CONTACT)
             {
                 Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_CONFERENCE_TYPE)
             {
                 ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_CONFERENCE)
             {
                 Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_RESOURCE)
             {
                 Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RESOURCES, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert();
             }
             else if (target == Glo.CLIENT_NEW_LOGIN)
             {
                 Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT, create,
+                    out permission))
                     com.CommandText = newRow.SqlInsert();
             }
 
             if (!sessionValid)
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+            
+            if (!permission)
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                 return;
             }
 
@@ -879,6 +915,7 @@ internal class BridgeOpsAgent
         }
     }
 
+    // Permission restricted.
     private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect, int target)
     {
         try
@@ -887,39 +924,51 @@ internal class BridgeOpsAgent
             SqlCommand com = new SqlCommand("", sqlConnect);
 
             bool sessionValid = false;
+            bool permission = false;
+            int edit = Glo.PERMISSION_EDIT;
 
             if (target == Glo.CLIENT_UPDATE_ORGANISATION)
             {
                 Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    out permission))
                     com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
             }
             else if (target == Glo.CLIENT_UPDATE_ASSET)
             {
                 Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    out permission))
                     com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
             }
             else if (target == Glo.CLIENT_UPDATE_CONTACT)
             {
                 Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    out permission))
                     com.CommandText = newRow.SqlUpdate();
             }
             else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
             {
                 ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
+                    out permission))
                     com.CommandText = newRow.SqlUpdate();
             }
             else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
             {
+                // Make sure, when you get around to implementing this, that you check for permissions (as above).
                 Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
                 //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                 //    com.CommandText = newRow.SqlUpdate();
             }
             else if (target == Glo.CLIENT_UPDATE_RESOURCE)
             {
+                // Make sure, when you get around to implementing this, that you check for permissions (as above).
                 Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
                 //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                 //    com.CommandText = newRow.SqlUpdate();
@@ -927,13 +976,21 @@ internal class BridgeOpsAgent
             else if (target == Glo.CLIENT_UPDATE_LOGIN)
             {
                 Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
+                    out permission))
                     com.CommandText = newRow.SqlUpdate();
             }
 
             if (!sessionValid)
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            if (!permission)
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                 return;
             }
 
@@ -958,6 +1015,7 @@ internal class BridgeOpsAgent
         }
     }
 
+    // Permission restricted.
     private static void ClientDelete(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
@@ -967,6 +1025,26 @@ internal class BridgeOpsAgent
             if (!CheckSessionValidity(req.sessionID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            // Determine whether or not the user has the required permission, given the table name.
+            int category = -1;
+            if (req.table == "Organisation" || req.table == "Asset" || req.table == "Contact")
+                category = Glo.PERMISSION_RECORDS;
+            if (req.table == "Conference")
+                category = Glo.PERMISSION_CONFERENCES;
+            if (req.table == "Resource")
+                category = Glo.PERMISSION_RESOURCES;
+            if (req.table == "ConferenceType")
+                category = Glo.PERMISSION_CONFERENCE_TYPES;
+            if (req.table == "Login")
+                category = Glo.PERMISSION_USER_ACC_MGMT;
+
+            if (category == -1 ||
+                !CheckSessionPermission(clientSessions[req.sessionID], category, Glo.PERMISSION_DELETE))
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                 return;
             }
 
@@ -989,6 +1067,7 @@ internal class BridgeOpsAgent
         }
     }
 
+    // Permission restricted.
     private static void ClientLinkContact(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
@@ -998,6 +1077,12 @@ internal class BridgeOpsAgent
             if (!CheckSessionValidity(req.sessionID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            if (!CheckSessionPermission(clientSessions[req.sessionID], Glo.PERMISSION_RECORDS, Glo.PERMISSION_EDIT))
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                 return;
             }
 

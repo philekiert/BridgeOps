@@ -24,10 +24,23 @@ namespace BridgeOpsClient
         public bool requireIdBack = false; // Set by caller on load.
         public bool isDialog = false;
         string? originalNotes = "";
+
+        private void ApplyPermissions()
+        {
+            if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
+                btnAdd.IsEnabled = false;
+            if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
+                btnEdit.IsEnabled = false;
+            if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
+                btnDelete.IsEnabled = false;
+        }
+
         public NewContact()
         {
             InitializeComponent();
             InitialiseFields();
+
+            ApplyPermissions();
         }
         public NewContact(string id)
         {
@@ -42,6 +55,8 @@ namespace BridgeOpsClient
             btnDelete.Visibility = Visibility.Visible;
 
             ditContact.ValueChangedHandler = AnyInteraction;
+
+            ApplyPermissions();
         }
 
         private void InitialiseFields()

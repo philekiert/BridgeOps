@@ -47,6 +47,15 @@ namespace BridgeOpsClient
                 btnEdit.IsEnabled = false;
                 btnDelete.IsEnabled = false;
             }
+            if (!App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT])
+            {
+                btnEdit.IsEnabled = false;
+                btnResetPassword.IsEnabled = false;
+            }
+            if (!App.sd.deletePermissions[Glo.PERMISSION_USER_ACC_MGMT])
+            {
+                btnDelete.IsEnabled = false;
+            }
 
             lblPassword.Visibility = Visibility.Collapsed;
             txtPassword.Visibility = Visibility.Collapsed;
@@ -215,12 +224,13 @@ namespace BridgeOpsClient
         {
             UpdateCurrentEditDelete();
 
-            btnEdit.IsEnabled = originalUsername != txtUsername.Text ||
-                                originalAdmin != chkAdmin.IsChecked ||
-                                chkAdmin.IsChecked == false && (originalCreate != currentCreate ||
-                                                                originalEdit != currentEdit ||
-                                                                originalDelete != currentDelete) ||
-                                originalEnabled != chkEnabled.IsChecked;
+            btnEdit.IsEnabled = (originalUsername != txtUsername.Text ||
+                                 originalAdmin != chkAdmin.IsChecked ||
+                                 chkAdmin.IsChecked == false && (originalCreate != currentCreate ||
+                                                                 originalEdit != currentEdit ||
+                                                                 originalDelete != currentDelete) ||
+                                 originalEnabled != chkEnabled.IsChecked)
+                                 && App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT];
         }
 
         private void chkAdmin_Clicked(object sender, RoutedEventArgs e)

@@ -98,10 +98,13 @@ namespace BridgeOpsClient
 
                 if (result.StartsWith(Glo.CLIENT_LOGIN_ACCEPT))
                 {
+                    sd.createPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+                    sd.editPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+                    sd.deletePermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+
                     if (!int.TryParse(sr.ReadString(stream), out sd.loginID))
                         return "";
 
-                    sd.username = loginReq.username;
                     sd.sessionID = result.Replace(Glo.CLIENT_LOGIN_ACCEPT, "");
 
                     return Glo.CLIENT_LOGIN_ACCEPT;
@@ -119,10 +122,10 @@ namespace BridgeOpsClient
 
         public static bool LogOut()
         {
-            return LogOut(sd.username);
+            return LogOut(sd.loginID);
         }
 
-        public static bool LogOut(string username) // Used for logging out either self or others.
+        public static bool LogOut(int loginID) // Used for logging out either self or others.
         {
             try
             {
@@ -134,8 +137,8 @@ namespace BridgeOpsClient
                     {
                         stream.WriteByte(Glo.CLIENT_LOGOUT);
                         sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
-                                                              username)));
-                        if (username == sd.username)
+                                                              loginID)));
+                        if (loginID == sd.loginID)
                         {
                             sr.ReadString(stream); // Empty the pipe.
 
@@ -797,6 +800,8 @@ namespace BridgeOpsClient
 #pragma warning restore CS8602
             }
         }
+
+
     }
 
     public class SessionDetails
@@ -807,6 +812,11 @@ namespace BridgeOpsClient
 
         public int portInbound = 0; // Inbound to server.
         public int portOutbound = 0; // Outbound from server.
+
+        // Permissions are enforced in the application, but crucially also in the agent.
+        public bool[] createPermissions = new bool[6];
+        public bool[] editPermissions = new bool[6];
+        public bool[] deletePermissions = new bool[6];
 
         public IPAddress serverIP = new IPAddress(new byte[] { 127, 0, 0, 1 });
         public IPEndPoint ServerEP { get { return new IPEndPoint(serverIP, portInbound); } }

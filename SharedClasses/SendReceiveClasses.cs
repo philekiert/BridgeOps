@@ -190,12 +190,12 @@ namespace SendReceiveClasses
     struct LogoutRequest
     {
         public string sessionID;
-        public string username;
+        public int loginID;
 
-        public LogoutRequest(string sessionID, string username)
+        public LogoutRequest(string sessionID, int loginID)
         {
             this.sessionID = sessionID;
-            this.username = username;
+            this.loginID = loginID;
         }
     }
 

@@ -56,6 +56,17 @@ namespace BridgeOpsClient
             //btnConfPane_Click(new bool(), new RoutedEventArgs()); // Conference View
             btnDataPane_Click(new bool(), new RoutedEventArgs()); // Data View
             //btnMixedPane_Click(new bool(), new RoutedEventArgs()); // Mixed View
+
+            GreyOutPermissions();
+        }
+
+        public void GreyOutPermissions()
+        {
+            menuDatabaseNewOrganisation.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
+            menuDatabaseNewAsset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
+            menuDatabaseNewContact.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
+            menuDatabaseNewConferenceType.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCE_TYPES];
+            menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)

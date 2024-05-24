@@ -85,6 +85,9 @@ namespace BridgeOpsClient
                 else
                     MessageBox.Show("Could not connect to Agent.");
             }
+
+            if (mainWindow.IsLoaded)
+                mainWindow.GreyOutPermissions();
         }
     }
 }

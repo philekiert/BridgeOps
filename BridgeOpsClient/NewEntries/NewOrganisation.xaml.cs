@@ -27,6 +27,26 @@ namespace BridgeOpsClient
         string? originalParent = "";
         string? originalDialNo = "";
         string? originalNotes = "";
+        public void ApplyPermissions()
+        {
+            if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
+            {
+                btnAdd.IsEnabled = false;
+                btnAssetNew.IsEnabled = false;
+                btnContactsNew.IsEnabled = false;
+            }
+            if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
+            {
+                btnEdit.IsEnabled = false;
+                btnAssetAdd.IsEnabled = false;
+                btnAssetRemove.IsEnabled = false;
+            }
+            if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
+            {
+                btnDelete.IsEnabled = false;
+            }
+        }
+
         public NewOrganisation() // New organisation.
         {
             InitializeComponent();
@@ -34,6 +54,8 @@ namespace BridgeOpsClient
 
             tabAssetsContacts.IsEnabled = false;
             tabChangeLog.IsEnabled = false;
+
+            ApplyPermissions();
         }
         public NewOrganisation(string id)
         {
@@ -53,6 +75,8 @@ namespace BridgeOpsClient
             // Sort out contact and asset tables.
             PopulateAssets();
             PopulateContacts();
+
+            ApplyPermissions();
         } // Edit existing record.
         public NewOrganisation(string id, string record) // History lookup.
         {
@@ -72,6 +96,8 @@ namespace BridgeOpsClient
 
             tabAssetsContacts.IsEnabled = false;
             tabChangeLog.IsEnabled = false;
+
+            ApplyPermissions();
         }
 
         private void InitialiseFields()
