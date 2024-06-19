@@ -40,36 +40,19 @@ namespace BridgeOpsClient
             else
                 Environment.CurrentDirectory = currentDir;
 
-            // Get the port numbers, if present.
+            // Apply network settings.
             try
             {
-                string[] networkConfig = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK);
-                foreach (string s in networkConfig)
-                {
-                    if (s.Length > Glo.NETWORK_SETTINGS_LENGTH && !s.StartsWith("# "))
-                    {
-                        int iVal;
-                        if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_INBOUND))
-                        {
-                            if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
-                                                         s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
-                                iVal >= 1025 && iVal <= 65535)
-                                sd.portInbound = iVal;
-                        }
-                        else if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_OUTBOUND))
-                        {
-                            if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
-                                                         s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
-                                iVal >= 1025 && iVal <= 65535)
-                                sd.portOutbound = iVal;
-                        }
-                    }
-                }
+                sd.SetIP(BridgeOpsClient.Properties.Settings.Default.serverAddress);
+                sd.portInbound = BridgeOpsClient.Properties.Settings.Default.portInbound;
+                sd.portOutbound = BridgeOpsClient.Properties.Settings.Default.portOutbound;
             }
             catch
             {
-                MessageBox.Show("network-config.txt not found. Using default settings.");
-                return;
+                MessageBox.Show("Something went wrong when applying the network settings. Using defaults.");
+                sd.SetIP("127.0.0.1");
+                sd.portInbound = 52343;
+                sd.portOutbound = 52344;
             }
         }
 
@@ -838,5 +821,16 @@ namespace BridgeOpsClient
 
         public IPAddress ServerIP { get { return new IPAddress(ipAddress); } }
         public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, portInbound); } }
+
+        public bool SetIP(string strIP)
+        {
+            IPAddress? adrIp;
+            if (IPAddress.TryParse(strIP, out adrIp))
+            {
+                ipAddress = adrIp.GetAddressBytes();
+                return true;
+            }
+            return false;
+        }
     }
 }
