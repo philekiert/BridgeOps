@@ -811,8 +811,8 @@ namespace BridgeOpsClient
         public string username = "";
 
         public byte[] ipAddress = new byte[] { 127, 0, 0, 1 };
-        public int portInbound = 0; // Inbound to server.
-        public int portOutbound = 0; // Outbound from server.
+        public int portOutbound = 0; // Outbound to the server.
+        public int portInbound = 0; // Inbound from the server.
 
         // Permissions are enforced in the application, but crucially also in the agent.
         public bool[] createPermissions = new bool[6];
@@ -820,7 +820,7 @@ namespace BridgeOpsClient
         public bool[] deletePermissions = new bool[6];
 
         public IPAddress ServerIP { get { return new IPAddress(ipAddress); } }
-        public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, portInbound); } }
+        public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, portOutbound); } }
 
         public bool SetIP(string strIP)
         {

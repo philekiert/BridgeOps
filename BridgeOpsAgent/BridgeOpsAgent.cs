@@ -136,7 +136,7 @@ internal class BridgeOpsAgent
 
         return valuesSet;
     }
-    private static IPAddress thisIP = new IPAddress(new byte[] { 127, 0, 0, 1 });
+    private static IPAddress thisIP = new IPAddress(new byte[] { 0, 0, 0, 0 });
     private static IPEndPoint thisEP = new IPEndPoint(thisIP, portInbound);
     private static TcpListener listener = new TcpListener(thisEP);
 

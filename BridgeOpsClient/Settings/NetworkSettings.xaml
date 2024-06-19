@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         Title="Network Settings" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        UseLayoutRounding="True">
+        UseLayoutRounding="True" KeyDown="Window_KeyDown">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -23,15 +23,18 @@
         <Label x:Name="lblIPAddress" Content="IP Address" Grid.Row ="0" Grid.Column="0"/>
         <TextBox x:Name="txtIPAddress" Grid.Row ="0" Grid.Column="1" MaxLength="15"
                  Margin="10 5 10 7" Width="140"/>
-        <Button x:Name="btnIPDefault" Margin="0 5 10 7" Grid.Row="0" Grid.Column="2" Content=" Default " Click="btnIPDefault_Click"/>
-        <Label x:Name="lblPortInbound" Content="Inbound Port" Grid.Row ="1" Grid.Column="0"/>
-        <TextBox x:Name="txtPortInbound" Grid.Row ="1" Grid.Column="1" 
+        <Button x:Name="btnIPDefault" Margin="0 5 10 7" Grid.Row="0" Grid.Column="2" Content=" Default "
+                Click="btnIPDefault_Click"/>
+        <Label x:Name="lblPortOutbound" Content="Outbound Port" Grid.Row ="1" Grid.Column="0"/>
+        <TextBox x:Name="txtPortOutbound" Grid.Row ="1" Grid.Column="1"
                  Margin="10 5 10 7"/>
-        <Button x:Name="btnInboundDefault" Margin="0 5 10 7" Grid.Row="1" Grid.Column="2" Content=" Default " Click="btnInboundDefault_Click"/>
-        <Label x:Name="lblPortOutbound" Content="Outbound Port" Grid.Row ="2" Grid.Column="0"/>
-        <TextBox x:Name="txtPortOutbound" Grid.Row ="2" Grid.Column="1"
+        <Button x:Name="btnOutboundDefault" Margin="0 5 10 7" Grid.Row="1" Grid.Column="2" Content=" Default "
+                Click="btnOutboundDefault_Click"/>
+        <Label x:Name="lblPortInbound" Content="Inbound Port" Grid.Row ="2" Grid.Column="0"/>
+        <TextBox x:Name="txtPortInbound" Grid.Row ="2" Grid.Column="1" 
                  Margin="10 5 10 7"/>
-        <Button x:Name="btnOutboundDefault" Margin="0 5 10 7" Grid.Row="2" Grid.Column="2" Content=" Default " Click="btnOutboundDefault_Click"/>
+        <Button x:Name="btnInboundDefault" Margin="0 5 10 7" Grid.Row="2" Grid.Column="2" Content=" Default "
+                Click="btnInboundDefault_Click"/>
         <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="3" Grid.ColumnSpan="3"
                 Margin="10 10 10 10" Width="70" Click="btnConfirm_Click"/>
     </Grid>
