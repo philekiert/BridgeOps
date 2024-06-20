@@ -48,6 +48,7 @@ public static class Glo
     public const int CLIENT_LINKED_CONTACT_SELECT = 41;
     public const int CLIENT_SELECT_HISTORY = 42;
     public const int CLIENT_SELECT_HISTORICAL_RECORD = 43;
+    public const int CLIENT_TABLE_MODIFICATION = 50;
 
 
     // Console/Agent Function Specifiers

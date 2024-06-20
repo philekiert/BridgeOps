@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.Metrics;
 using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
@@ -225,19 +226,146 @@ namespace SendReceiveClasses
 
     //   D A T A B A S E   I N T E R A C T I O N
 
-    struct ColumnAddition
+    struct TableModification
     {
-        public string tableName;
-        public string columnName;
-        public string columnType;
-        public string[] columnAllowed;
+        public enum Intent { Addition, Removal, Modification }
 
-        public ColumnAddition(string tableName, string columnName, string columnType, string[] columnAllowed)
+        public string sessionID;
+        public Intent intent;
+        public string table;
+        public string column;
+        public string? columnRename;
+        public string? columnType;
+        public List<string> allowed;
+
+        // Removal
+        public TableModification(string sessionID, string table, string column)
         {
-            this.tableName = tableName;
-            this.columnName = columnName;
+            this.sessionID = sessionID;
+            intent = Intent.Removal;
+            this.table = table;
+            this.column = column;
+            columnRename = null;
+            columnType = null;
+            allowed = new();
+        }
+
+        // Addition
+        public TableModification(string sessionID, string table, string column,
+                                 string columnType, List<string> allowed)
+        {
+            this.sessionID = sessionID;
+            intent = Intent.Addition;
+            this.table = table;
+            this.column = column;
+            columnRename = null;
             this.columnType = columnType;
-            this.columnAllowed = columnAllowed;
+            this.allowed = allowed;
+        }
+
+        // Modification
+        public TableModification(string sessionID, string table, string column,
+                                 string? columnRename, string? columnType, List<string> allowed, bool wipeAllowed)
+        {
+            this.sessionID = sessionID;
+            intent = Intent.Modification;
+            this.table = table;
+            this.column = column;
+            this.columnRename = columnRename;
+            this.columnType = columnType;
+            this.allowed = allowed;
+        }
+
+        private void Prepare()
+        {
+            // SecureColumn() should suffice here for table names and types.
+            table = SqlAssist.SecureColumn(table);
+            column = SqlAssist.SecureColumn(column);
+
+            if (columnRename != null)
+                columnRename = SqlAssist.SecureColumn(columnRename);
+
+            if (columnType != null)
+                columnType = SqlAssist.SecureColumn(columnType);
+
+            for (int n = 0; n < allowed.Count; ++n)
+                allowed[n] = SqlAssist.AddQuotes(SqlAssist.SecureColumn(allowed[n]));
+        }
+
+        public string SqlCommand()
+        {
+            Prepare();
+
+            string command;
+
+            if (intent == Intent.Addition)
+            {
+                command = $"ALTER TABLE {table} ";
+                command += $"ADD {column} {(columnType == "BOOLEAN" ? "BIT" : columnType)}";
+                if (allowed != null)
+                {
+                    command += $" CONSTRAINT chk_{table}{column}" +
+                               $" CHECK ({column} IN ('{string.Join("\',\'", allowed)}'))";
+                }
+                command += ";";
+            }
+            else if (intent == Intent.Removal)
+            {
+                command = $"ALTER TABLE {table} DROP {column};";
+            }
+            else // if (intent == Intent.Modification)
+            {
+                bool droppedConstraint = false;
+                List<string> commands = new();
+                if (columnRename != null)
+                {
+                    commands.Add($"ALTER TABLE {table} RENAME COLUMN {column} TO {columnRename};");
+                }
+                if (allowed.Count == 0)
+                {
+                    commands.Add($"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                                 $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
+                                  "BEGIN " +
+                                 $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
+                                  "END;");
+                    droppedConstraint = true;
+                }
+                if (columnType != null)
+                {
+                    commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType};");
+                    if (!droppedConstraint)
+                    {
+                        // The constraint needs to be dropped and remade due to the column being renamed.
+                        commands.Add($"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                                     $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
+                                      "BEGIN " +
+                                     $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
+                                      "END;");
+                        droppedConstraint = true;
+                    }
+                }
+                if (allowed.Count > 0)
+                {
+                    if (!droppedConstraint)
+                    {
+                        commands.Add($"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                                     $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
+                                      "BEGIN " +
+                                     $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
+                                      "END;");
+                    }
+                    commands.Add($"ALTER TABLE {table}" +
+                                 $"CHECK ({(columnRename == null ? column : columnRename)} " +
+                                 $"IN ('{string.Join("\',\'", allowed)}'));");
+                }
+
+                if (commands.Count == 1)
+                    command = commands[0];
+                else
+                    command = "BEGIN TRANSACTION; " + string.Join(" ", commands) + "COMMIT TRANSACTION;";
+            }
+
+            return command;
         }
     }
 

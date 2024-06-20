@@ -29,16 +29,18 @@ internal class BridgeOpsAgent
         public string username;
         public string ip;
         public int loginID;
+        public bool admin;
         public List<bool[]> permissions;
         public bool[] createPermissions;
         public bool[] editPermissions;
         public bool[] deletePermissions;
-        public ClientSession(string username, string ip, int loginID,
+        public ClientSession(string username, string ip, int loginID, bool admin,
                              int createPermissions, int editPermissions, int deletePermissions)
         {
             this.username = username;
             this.ip = ip;
             this.loginID = loginID;
+            this.admin = admin;
             this.createPermissions = Glo.Fun.GetPermissionsArray(createPermissions);
             this.editPermissions = Glo.Fun.GetPermissionsArray(editPermissions);
             this.deletePermissions = Glo.Fun.GetPermissionsArray(deletePermissions);
@@ -356,6 +358,8 @@ internal class BridgeOpsAgent
                     ClientSelectHistory(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_HISTORICAL_RECORD)
                     ClientBuildHistoricalRecord(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_TABLE_MODIFICATION)
+                    ClientColumnModification(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -513,11 +517,12 @@ internal class BridgeOpsAgent
                 }
                 while (clientSessions.ContainsKey(key));
 
+                bool admin = (bool)reader.GetValue(3);
                 byte createPermissions = (byte)reader.GetValue(4);
                 byte editPermissions = (byte)reader.GetValue(5);
                 byte deletePermissions = (byte)reader.GetValue(6);
 
-                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID,
+                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID, admin,
                                                           createPermissions,
                                                           editPermissions,
                                                           deletePermissions));
@@ -1268,6 +1273,43 @@ internal class BridgeOpsAgent
         finally
         {
             if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    // Permission restricted.
+    private static void ClientColumnModification(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            TableModification req = sr.Deserialise<TableModification>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            if (!clientSessions[req.sessionID].admin)
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlCommand());
+
+            if (com.ExecuteNonQuery() == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            LogError(e);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
                 sqlConnect.Close();
         }
     }
