@@ -28,6 +28,9 @@ namespace BridgeOpsClient
         PageDatabase containingPage;
         Frame containingFrame;
 
+        // Values need to be stored for multi-field searches.
+        List<string> fieldValues = new();
+
         public PageDatabaseView(PageDatabase containingPage, Frame containingFrame)
         {
             InitializeComponent();
@@ -55,15 +58,20 @@ namespace BridgeOpsClient
 
             cmbColumn.Items.Clear();
             dtgResults.Wipe();
+            fieldValues.Clear();
+
+            btnClear.IsEnabled = false;
 
             foreach (KeyValuePair<string, ColumnRecord.Column> kvp in table)
             {
-                // Any anything that's TEXT type. Could add date and int search in the future, but it's just not urgent
+                // Anything that's TEXT type. Could add date and int search in the future, but it's just not urgent
                 // as you can just sort by date or int in the results.
                 if (ColumnRecord.IsTypeString(kvp.Value))
                 {
-                    string name = ColumnRecord.GetPrintName(kvp);
-                    cmbColumn.Items.Add(name);
+                    ComboBoxItem item = new ComboBoxItem();
+                    item.Content = ColumnRecord.GetPrintName(kvp);
+                    cmbColumn.Items.Add(item);
+                    fieldValues.Add("");
                 }
             }
 
@@ -76,7 +84,6 @@ namespace BridgeOpsClient
         struct Row
         {
             public List<object?> items { get; set; }
-
             public Row(List<object?> items)
             {
                 this.items = items;
@@ -86,28 +93,6 @@ namespace BridgeOpsClient
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PopulateColumnComboBox();
-        }
-
-        private void btnListAll_Click(object sender, RoutedEventArgs e)
-        {
-            Dictionary<string, ColumnRecord.Column> tableColDefs;
-            if (cmbTable.Text == "Organisation")
-                tableColDefs = ColumnRecord.organisation;
-            else if (cmbTable.Text == "Asset")
-                tableColDefs = ColumnRecord.asset;
-            else // if == "Contact"
-                tableColDefs = ColumnRecord.contact;
-
-            // Error message is displayed by App.SelectAll() if something goes wrong.
-            List<string?> columnNames;
-            List<List<object?>> rows;
-            if (App.SelectAll(cmbTable.Text, out columnNames, out rows))
-            {
-                if (cmbTable.Text == "Contact")
-                    dtgResults.Update(tableColDefs, columnNames, rows, Glo.Tab.CONTACT_ID);
-                else
-                    dtgResults.Update(tableColDefs, columnNames, rows);
-            }
         }
 
         private void btnSearch_Click(object sender, RoutedEventArgs e)
@@ -135,13 +120,24 @@ namespace BridgeOpsClient
                 MessageBox.Show("Please select a column to search.");
                 return;
             }
+
+            List<string> selectColumns = new();
+            List<string> selectValues = new();
+            for (int n = 0; n < fieldValues.Count; ++n)
+            {
+                if (fieldValues[n] != "")
+                {
+                    selectColumns.Add(nameReversals[(string)((ComboBoxItem)cmbColumn.Items[n]).Content]);
+                    selectValues.Add(fieldValues[n]);
+                }
+            }
+
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.Select(cmbTable.Text,
                            new List<string> { "*" },
-                           new List<string> { nameReversals[cmbColumn.Text] },
-                           new List<string> { txtSearch.Text },
+                           selectColumns, selectValues,
                            out columnNames, out rows))
                 dtgResults.Update(tableColDefs, columnNames, rows);
         }
@@ -182,6 +178,44 @@ namespace BridgeOpsClient
         {
             if (e.Key == Key.Enter)
                 WideSearch();
+        }
+
+        // Highlight fields with values, and reload those values when selecting fields.
+        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            fieldValues[cmbColumn.SelectedIndex] = txtSearch.Text;
+            ((ComboBoxItem)cmbColumn.Items[cmbColumn.SelectedIndex]).FontWeight = txtSearch.Text == "" ?
+                                                                                  FontWeights.Normal :
+                                                                                  FontWeights.Bold;
+
+            // Only enabled btnClear when there's actually text to clear.
+            for (int n = 0; n < fieldValues.Count; ++n)
+                if (fieldValues[n] != "")
+                {
+                    btnClear.IsEnabled = true;
+                    return;
+                }
+            btnClear.IsEnabled = false;
+        }
+        private void cmbColumn_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbColumn.SelectedIndex != -1)
+                txtSearch.Text = fieldValues[cmbColumn.SelectedIndex];
+        }
+
+        // Wipe all stored field search strings.
+        private void btnClear_Click(object sender, RoutedEventArgs e)
+        {
+            for (int n = 0; n < fieldValues.Count; ++n)
+            {
+                if (fieldValues[n] != "")
+                {
+                    fieldValues[n] = "";
+                    ((ComboBoxItem)cmbColumn.Items[n]).FontWeight = FontWeights.Normal;
+                }
+            }
+
+            txtSearch.Text = "";
         }
 
         // Bring up selected organisation on double-click.

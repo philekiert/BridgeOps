@@ -17,27 +17,28 @@
         <Grid>
             <!-- Search bar -->
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="cmbTable" Grid.Row="0" Grid.Column="0" Margin="10 10 10 10" Width="100"
                       SelectionChanged="cmbTable_SelectionChanged">
                 <ComboBoxItem Content="Organisation" />
-                <ComboBoxItem Content="Asset" />
-                <ComboBoxItem Content="Contact" />
+                <ComboBoxItem Content="Asset"/>
+                <ComboBoxItem Content="Contact"/>
             </ComboBox>
-            <Button x:Name="btnListAll" Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" Width="50"
-                    Content="List All" Click="btnListAll_Click"/>
-            <ComboBox x:Name="cmbColumn" Grid.Row="0" Grid.Column="2" Margin="10 10 10 10" Width="150"/>
+            <ComboBox x:Name="cmbColumn" Grid.Row="0" Grid.Column="1" Margin="10 10 0 10" Width="150"
+                      SelectionChanged="cmbColumn_SelectionChanged"/>
+            <Button x:Name="btnClear" Grid.Row="0" Grid.Column="2" Margin="-1 10 10 10" Width="71"
+                    Content="Clear Fields" Click="btnClear_Click"/>
             <TextBox x:Name="txtSearch" Grid.Row="0" Grid.Column="3"
                      Padding="0 2 0 0" Margin="10 10 10 10" Width="200"
-                     KeyDown="txtSearch_KeyDown"/>
+                     KeyDown="txtSearch_KeyDown" TextChanged="txtSearch_TextChanged"/>
             <Button x:Name="btnSearch" Grid.Row="0" Grid.Column="4" Margin="10 10 10 10" Width="50"
                     Content="Search" Click="btnSearch_Click"/>
             <Button x:Name="btnWideSearch" Grid.Row="0" Grid.Column="5" Margin="0 10 10 10" Width="80"

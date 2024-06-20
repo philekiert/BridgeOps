@@ -49,7 +49,8 @@ namespace BridgeOpsClient
             }
             catch
             {
-                MessageBox.Show("Something went wrong when applying the network settings. Using defaults.");
+                MessageBox.Show("Something went wrong when applying the network settings. " +
+                                "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).");
                 sd.SetIP("127.0.0.1");
                 sd.portInbound = 52343;
                 sd.portOutbound = 52344;
