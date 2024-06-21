@@ -24,6 +24,8 @@ internal class BridgeOpsAgent
     static UnicodeEncoding unicodeEncoding = new UnicodeEncoding();
     static SendReceive sr = new SendReceive();
 
+    static bool columnRecordIntact = false;
+
     struct ClientSession
     {
         public string username;
@@ -142,19 +144,141 @@ internal class BridgeOpsAgent
     private static IPEndPoint thisEP = new IPEndPoint(thisIP, portInbound);
     private static TcpListener listener = new TcpListener(thisEP);
 
-    private static void GetColumnRecordFromFile()
+    static bool updatingColumnRecord = false;
+    // This function has a prior implementation in DatabaseCreator, need to reduce that to just this one at some point.
+    private static bool RebuildColumnRecord(SqlConnection sqlConnect)
+    {
+        try
+        {
+            if (sqlConnect.State != ConnectionState.Open)
+                sqlConnect.Open();
+
+            // Get a list of columns and their allowed values.
+            SqlCommand sqlCommand = new SqlCommand("SELECT t.[name], con.[definition] " +
+                                                   "FROM sys.check_constraints con " +
+                                                       "LEFT OUTER JOIN sys.objects t " +
+                                                           "ON con.parent_object_id = t.object_id " +
+                                                       "LEFT OUTER JOIN sys.all_columns col " +
+                                                           "ON con.parent_column_id = col.column_id " +
+                                                           "AND con.parent_object_id = col.object_id", sqlConnect);
+
+            SqlDataReader reader = sqlCommand.ExecuteReader(CommandBehavior.Default);
+            Dictionary<string, string[]> checkConstraints = new Dictionary<string, string[]>();
+            while (reader.Read())
+            {
+                try
+                {
+                    // Line will read like something along the lines of "([Fruit]='Banana' OR [Fruit]='Apple')"
+                    string table = reader.GetString(0);
+                    string constraint = reader.GetString(1);
+                    string column = constraint.Substring(2, constraint.IndexOf(']') - 2);
+                    // SQL Server either lists or holds the constraints in the wrong order, so reverse here.
+                    string[] possVals = constraint.Split(" OR [");
+                    Array.Reverse(possVals);
+                    for (int n = 0; n < possVals.Length; ++n)
+                    {
+                        possVals[n] = possVals[n].Substring(possVals[n].IndexOf('\'') + 1);
+                        possVals[n] = possVals[n].Remove(possVals[n].LastIndexOf('\''));
+                    }
+
+                    // The key makes it easy to match the constraints up to their columns in the following section.
+                    checkConstraints.Add(table + column, possVals);
+                }
+                catch { /* Just ignore the exception and press on, but there shouldn't ever be any */ }
+            }
+            reader.Close();
+
+            // Get the max lengths of varchars. TEXT will later be limited to 65535 for compatibility with MySQL.
+            sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
+                                        "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS;", sqlConnect);
+            reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
+
+            List<string[]> columns = new List<string[]>();
+            while (reader.Read())
+            {
+                string length = "";
+                if (!reader.IsDBNull(3))
+                {
+                    int lengthInt = reader.GetInt32(3);
+                    // Limit TEXT length to 65535, as SQL Server returns this value as bytes allowed, not characters.
+                    length = (lengthInt > 65535 ? 65535 : lengthInt).ToString();
+                }
+                columns.Add(new string[] { reader.GetString(0), reader.GetString(1), reader.GetString(2), length });
+            }
+            reader.Close();
+
+            string fileText = "!!! NEVER, EVER, EVER EDIT THIS FILE !!!\n";
+
+            foreach (string[] column in columns)
+            {
+                fileText += column[0] + "[C]" + column[1] + "[R]";
+                if (column[3] == "") // int
+                    fileText += column[2].ToUpper();
+                else // char or varchar
+                    fileText += column[3];
+                if (checkConstraints.ContainsKey(column[0] + column[1]))
+                {
+                    foreach (string s in checkConstraints[column[0] + column[1]])
+                    {
+                        fileText += "[A]";
+                        fileText += s;
+                    }
+                }
+                fileText += '\n';
+            }
+
+            // Add friendly names, if present and valid.
+            List<string> friendlyNames = new List<string>();
+            if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES))
+            {
+                fileText += "-\n"; // This signals the start of friendly names when read by Client.
+                friendlyNames = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES).ToList();
+                for (int n = 0; n < friendlyNames.Count; ++n)
+                {
+                    if (friendlyNames[n].Length >= 8 && !friendlyNames[n].StartsWith('#'))
+                    {
+                        string[] split = friendlyNames[n].Split(";;");
+                        if (split.Length == 3 && split[0].Length > 0 || split[1].Length > 0 || split[2].Length > 0)
+                            if (split[0] == "Organisation" || split[0] == "Contact" ||
+                                split[0] == "Asset" || split[0] == "Conference")
+                                fileText += friendlyNames[n] + '\n';
+                    }
+                }
+            }
+
+            if (fileText.EndsWith('\n'))
+                fileText = fileText.Remove(fileText.Length - 1);
+
+            // Automatically generates the file if one isn't present.
+            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText);
+            return false;
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't create type restrictions file. See error:", e);
+            return false;
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+    private static bool GetColumnRecordFromFile()
     {
         try
         {
             if (!ColumnRecord.Initialise(File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD)))
                 throw new Exception("Column record file may be corrupted. Restore from console.");
+            else
+                return true;
         }
         catch (Exception e)
         {
             LogError("Column record could not be initialised, see error:", e);
+            return false;
         }
     }
-
 
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string connectionString = "server=localhost\\SQLEXPRESS;" +
@@ -166,12 +290,9 @@ internal class BridgeOpsAgent
 
     private static void Main(string[] args)
     {
-        // Get the column record.
-        GetColumnRecordFromFile();
-
         // Test sending a command to the database to see if it works. If it doesn't, keep trying every 5 seconds.
         bool successfulSqlConnection = false;
-        while (!successfulSqlConnection)
+        while (!successfulSqlConnection || !columnRecordIntact)
         {
             SqlConnection sqlConnect = new SqlConnection(connectionString);
 
@@ -183,6 +304,11 @@ internal class BridgeOpsAgent
                 sqlCommand.ExecuteNonQuery();
                 // If we got this far in the try/catch, we're in business.
                 successfulSqlConnection = true;
+
+                // Catches its own exception and logs its own error.
+                columnRecordIntact = RebuildColumnRecord(sqlConnect);
+                // Get the column record.
+                columnRecordIntact = GetColumnRecordFromFile();
             }
             catch (Exception e)
             {
@@ -191,7 +317,7 @@ internal class BridgeOpsAgent
             }
             finally
             {
-                if (sqlConnect.State == System.Data.ConnectionState.Open)
+                if (sqlConnect.State == ConnectionState.Open)
                     sqlConnect.Close();
             }
         }
@@ -433,22 +559,37 @@ internal class BridgeOpsAgent
 
     //   C L I E N T   R E Q U E S T   F U N C T I O N S
 
+    // Multiple threads may be pulling the column record at once, so this action can't be tracked as a bool. Instead,
+    // increment and decrement the count, and the agent will only attempt to update the record if the value is 0.
+    static int pullingColumnRecord = 0;
     private static void ClientPullColumnRecord(NetworkStream stream)
     {
+        while (updatingColumnRecord)
+            Thread.Sleep(10);
+
+        ++pullingColumnRecord;
+
         try
         {
             if (!CheckSessionValidity(sr.ReadString(stream)))
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
             else
             {
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+                if (columnRecordIntact)
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                    sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+                }
+                else
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             }
         }
         catch (Exception e)
         {
             LogError("Could not read or send type restrictions file. See error: ", e);
         }
+
+        --pullingColumnRecord;
     }
 
     private static async void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
@@ -528,6 +669,7 @@ internal class BridgeOpsAgent
                                                           deletePermissions));
 
                 sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
+                stream.WriteByte((byte)(admin ? 1 : 0));
                 stream.WriteByte(createPermissions);
                 stream.WriteByte(editPermissions);
                 stream.WriteByte(deletePermissions);
@@ -753,7 +895,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
             }
-            
+
             if (!permission)
             {
                 stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
@@ -1280,6 +1422,10 @@ internal class BridgeOpsAgent
     // Permission restricted.
     private static void ClientColumnModification(NetworkStream stream, SqlConnection sqlConnect)
     {
+        while (pullingColumnRecord != 0 || updatingColumnRecord)
+            Thread.Sleep(10);
+        updatingColumnRecord = true;
+
         try
         {
             sqlConnect.Open();
@@ -1301,7 +1447,13 @@ internal class BridgeOpsAgent
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             else
+            {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+
+                // Update the column record. Error message printed in both functions if this fials.
+                columnRecordIntact = RebuildColumnRecord(sqlConnect);
+                columnRecordIntact = GetColumnRecordFromFile();
+            }
         }
         catch (Exception e)
         {
@@ -1311,6 +1463,7 @@ internal class BridgeOpsAgent
         {
             if (sqlConnect.State == System.Data.ConnectionState.Open)
                 sqlConnect.Close();
+            updatingColumnRecord = false;
         }
     }
 }
