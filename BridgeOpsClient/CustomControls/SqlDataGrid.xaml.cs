@@ -44,6 +44,10 @@ namespace BridgeOpsClient.CustomControls
         // I have allowed more than one dictionary to be fed to this array, because sometimes you want a select result
         // that joins two tables. The downside is that tables sharing column names need to use the same type and
         // friendly name. I can't see this being an issue, but note it for future reference.
+        public void Update(List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
+        {
+            Update(new List<Dictionary<string, ColumnRecord.Column>>(), columnNames, rows, omitColumns);
+        }
         public void Update(Dictionary<string, ColumnRecord.Column> tableColDefs,
                            List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
@@ -70,7 +74,15 @@ namespace BridgeOpsClient.CustomControls
             foreach (string? s in columnNames)
             {
                 DataGridTextColumn header = new();
-                header.MaxWidth = 256;
+                if (maxLengthOverrides.ContainsKey(s))
+                {
+                    if (maxLengthOverrides[s] == -1)
+                        header.MaxWidth = float.PositiveInfinity;
+                    else
+                        header.MaxWidth = maxLengthOverrides[s];
+                }
+                else
+                    header.MaxWidth = 256;
                 if (s == null)
                     header.Header = "";
                 else
@@ -121,12 +133,14 @@ namespace BridgeOpsClient.CustomControls
             dtg.ItemsSource = rowsBinder;
         }
 
+        public Dictionary<string, int> maxLengthOverrides = new();
+
         public string GetCurrentlySelectedID()
         {
             return GetCurrentlySelectedCell(0);
         }
         public string GetCurrentlySelectedCell(int column)
-            {
+        {
             if (dtg.SelectedItem == null)
                 return "";
             Row selectedRow = (Row)dtg.SelectedItem;

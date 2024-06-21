@@ -13,6 +13,9 @@
             <Style TargetType="TextBox">
                 <Setter Property="Margin" Value="10 5 10 5"/>
             </Style>
+            <Style TargetType="PasswordBox">
+                <Setter Property="Margin" Value="10 5 10 5"/>
+            </Style>
         </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -29,12 +32,13 @@
             <ColumnDefinition Width="230"/>
         </Grid.ColumnDefinitions>
         <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" />
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" Margin="10,5,10,5" TextChanged="ValueChanged"/>
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" TextChanged="ValueChanged"/>
         <Label Content="Password" Grid.Row="1" Grid.Column="0" x:Name="lblPassword" />
-        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword" Margin="10,5,10,5"/>
+        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword"/>
         <Label Content="Confirm Password" Grid.Row="2" Grid.Column="0" x:Name="lblPasswordConfirm" />
-        <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm" Margin="10,5,10,5"/>
-        <Button Grid.Row="3" Content="Reset Password" Margin="5 10 10 10" x:Name="btnResetPassword" Click="btnResetPassword_Click"/>
+        <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm"/>
+        <Button Grid.Row="3" Content="Reset Password" Margin="5 10 10 10" x:Name="btnResetPassword"
+                Click="btnResetPassword_Click"/>
         <Label Content="Administrator" Grid.Row="4" Grid.Column="0" x:Name="lblAdministrator" />
         <CheckBox Grid.Row="4" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkAdmin" Click="chkAdmin_Clicked"/>
         <Grid Grid.Row="5" Grid.ColumnSpan="2" x:Name="grdPermissions" Margin="0 0 0 20">

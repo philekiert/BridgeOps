@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-
 public static class ColumnRecord
 {
+    public static object lockColumnRecord = new();
     // Add to this as development continues.
     public struct Column
     {

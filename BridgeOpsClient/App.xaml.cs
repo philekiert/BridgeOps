@@ -82,6 +82,7 @@ namespace BridgeOpsClient
 
                 if (result.StartsWith(Glo.CLIENT_LOGIN_ACCEPT))
                 {
+                    sd.admin = stream.ReadByte() == 0 ? false : true;
                     sd.createPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
                     sd.editPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
                     sd.deletePermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
@@ -283,34 +284,37 @@ namespace BridgeOpsClient
 
         public static bool PullColumnRecord()
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (ColumnRecord.lockColumnRecord)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
-                    sr.WriteAndFlush(stream, sd.sessionID);
-                    if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                    if (stream != null)
                     {
-                        ColumnRecord.Initialise(sr.ReadString(stream));
-                        return true;
+                        stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            ColumnRecord.Initialise(sr.ReadString(stream));
+                            return true;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Could not pull column record.");
+                            return false;
+                        }
                     }
                     else
-                    {
-                        MessageBox.Show("Could not pull column record.");
                         return false;
-                    }
                 }
-                else
+                catch
+                {
                     return false;
-            }
-            catch
-            {
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 
@@ -814,6 +818,8 @@ namespace BridgeOpsClient
         public byte[] ipAddress = new byte[] { 127, 0, 0, 1 };
         public int portOutbound = 0; // Outbound to the server.
         public int portInbound = 0; // Inbound from the server.
+
+        public bool admin = false;
 
         // Permissions are enforced in the application, but crucially also in the agent.
         public bool[] createPermissions = new bool[6];

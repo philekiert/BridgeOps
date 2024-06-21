@@ -24,18 +24,22 @@ namespace BridgeOpsClient
 
             bool editPermission = App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT];
             if (!editPermission)
-            {
                 btnUserLogOut.IsEnabled = false;
-            }
             if (!App.sd.createPermissions[Glo.PERMISSION_USER_ACC_MGMT])
-            {
                 btnUserAdd.IsEnabled = false;
-            }
+
+            if (!App.sd.admin)
+                tabDatabaseLayout.IsEnabled = false;
+            else
+                PopulateColumnList();
         }
 
         List<string?> columnNames = new();
         List<List<object?>> rows = new();
         Dictionary<int, int> dctID = new(); // Used to store indices of user rows for "logged in" display.
+
+
+        //   U S E R   L I S T
 
         private void PopulateUserList()
         {
@@ -167,6 +171,72 @@ namespace BridgeOpsClient
             }
             else
                 MessageBox.Show("Couldn't discern user ID from row.");
+        }
+
+
+        //   C O L U M N   L I S T
+
+        private void PopulateColumnList()
+        {
+            lock (ColumnRecord.lockColumnRecord)
+            {
+                List<List<object?>> rows = new();
+
+                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.organisation)
+                {
+                    List<object?> row = new() { "Organisation",
+                                                col.Key,
+                                                col.Value.friendlyName,
+                                                col.Value.type,
+                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
+                                                string.Join("; ", col.Value.allowed) };
+                    rows.Add(row);
+                }
+
+                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.contact)
+                {
+                    List<object?> row = new() { "Contact",
+                                                col.Key,
+                                                col.Value.friendlyName,
+                                                col.Value.type,
+                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
+                                                string.Join("; ", col.Value.allowed) };
+                    rows.Add(row);
+                }
+
+                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.asset)
+                {
+                    List<object?> row = new() { "Asset",
+                                                col.Key,
+                                                col.Value.friendlyName,
+                                                col.Value.type,
+                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
+                                                string.Join("; ", col.Value.allowed) };
+                    rows.Add(row);
+                }
+
+                dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
+
+                dtgColumns.Update(new List<string?>() { "Table", "Column", "Friendly Name",
+                                                        "Type", "Max", "Allowed" }, rows);
+            }
+        }
+
+        private void btnColumnsRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            App.PullColumnRecord();
+            PopulateColumnList();
+        }
+
+        private void dtgColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void btnColumnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            NewColumn newColumn = new NewColumn();
+            newColumn.ShowDialog();
         }
     }
 }

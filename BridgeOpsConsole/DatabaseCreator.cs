@@ -654,14 +654,13 @@ public class DatabaseCreator
                 fileText = fileText.Remove(fileText.Length - 1);
 
             // Automatically generates the file if one isn't present.
-            if (!Directory.Exists(Glo.PATH_CONFIG_FILES))
-                Directory.CreateDirectory(Glo.PATH_CONFIG_FILES);
             File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText);
-            Writer.Affirmative("Type restrictions file written successfully.");
+            Writer.Affirmative("Column records file written successfully.");
         }
         catch (Exception e)
+
         {
-            Writer.Message("Couldn't create type restrictions file. See error:", ConsoleColor.Red);
+            Writer.Message("Couldn't create column records file. See error:", ConsoleColor.Red);
             Writer.Message(e.Message, ConsoleColor.Red);
         }
         finally

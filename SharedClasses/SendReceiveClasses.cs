@@ -362,7 +362,7 @@ namespace SendReceiveClasses
                 if (commands.Count == 1)
                     command = commands[0];
                 else
-                    command = "BEGIN TRANSACTION; " + string.Join(" ", commands) + "COMMIT TRANSACTION;";
+                    command = "BEGIN TRANSACTION; " + string.Join(" ", commands) + " COMMIT TRANSACTION;";
             }
 
             return command;
