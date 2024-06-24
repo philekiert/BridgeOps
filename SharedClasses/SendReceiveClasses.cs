@@ -310,7 +310,7 @@ namespace SendReceiveClasses
                 if (allowed.Count > 0)
                 {
                     command += $" CONSTRAINT chk_{table}{column}" +
-                               $" CHECK ({column} IN ('{string.Join("\',\'", allowed)}'))";
+                               $" CHECK ({column} IN ({string.Join(", ", allowed)}))";
                 }
                 command += ";";
             }
@@ -890,7 +890,7 @@ namespace SendReceiveClasses
         public int editPermissions;
         public int deletePermissions;
         public bool enabled;
-
+        
         public Login(string sessionID, int loginID, string username, string password, bool admin,
                      int createPermissions, int editPermissions, int deletePermissions, bool enabled)
         {

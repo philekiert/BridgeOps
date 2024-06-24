@@ -618,8 +618,13 @@ public class DatabaseCreator
             foreach (string[] column in columns)
             {
                 fileText += column[0] + "[C]" + column[1] + "[R]";
-                if (column[3] == "" || column[2] == "TEXT") // int or text
+                if (column[3] == "") // int or text
                     fileText += column[2].ToUpper();
+                else if (column[2].ToUpper() == "TEXT")
+                {
+                    fileText += "TEXT";
+                    column[3] = ""; // No need to track limit for TEXT as it's always the same.
+                }
                 else // varchar (char is not used by the application)
                     fileText += column[3];
                 if (checkConstraints.ContainsKey(column[0] + column[1]))

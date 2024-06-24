@@ -249,7 +249,10 @@ namespace BridgeOpsClient
             NewColumn newColumn = new NewColumn();
             newColumn.ShowDialog();
             if (newColumn.changeMade)
+            {
+                App.PullColumnRecord();
                 PopulateColumnList();
+            }
         }
     }
 }

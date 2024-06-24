@@ -65,14 +65,68 @@ namespace BridgeOpsClient
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
+            if (!ConfirmAllowedValues())
+                return;
+
             List<string> allowed = new();
-            if (txtAllowed.Text.Length > 0)
-                txtAllowed.Text.Split("\r\n").ToList();
+            if (txtAllowed.Text.Length > 0 && cmbType.Text == "TEXT")
+                allowed = txtAllowed.Text.Split("\r\n").ToList();
 
             SendReceiveClasses.TableModification mod = new(App.sd.sessionID,
-                                                            cmbTable.Text, txtColumnName.Text, cmbType.Text, allowed);
+                                                           cmbTable.Text, txtColumnName.Text, cmbType.Text, allowed);
+            SwitchToVARCHAR(ref mod);
             SendToServer(mod);
+        }
 
+        private void SwitchToVARCHAR(ref SendReceiveClasses.TableModification mod)
+        {
+            // Make sure that 
+            if (mod.columnType != "TEXT")
+                return;
+
+            int limit;
+            int.TryParse(txtLimit.Text, out limit);
+            if (limit < 1)
+                limit = 1;
+            if (limit <= 8000)
+                mod.columnType = $"VARCHAR({limit})";
+        }
+
+        private bool ConfirmAllowedValues()
+        {
+            if (txtColumnName.IsEnabled == true && txtColumnName.Text.Length == 0)
+            {
+                MessageBox.Show("Must input a column name.");
+                return false;
+            }
+            //if (txtFriendlyName.IsEnabled == true && )
+            //{
+            //    MessageBox.Show("");
+            //    return false;
+            //}
+            if (cmbType.IsEnabled == true && cmbType.SelectedIndex == -1)
+            {
+                MessageBox.Show("Must select a column type.");
+                return false;
+            }
+            if (txtLimit.IsEnabled == true)
+            {
+                int limit;
+                if (int.TryParse(txtLimit.Text, out limit))
+                {
+                    if (limit < 1)
+                    {
+                        MessageBox.Show("Max value must be greater than 0.");
+                        return false;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Invalid max value.");
+                    return false;
+                }
+            }
+            return true;
         }
 
         public bool changeMade = false;
@@ -114,6 +168,15 @@ namespace BridgeOpsClient
             finally
             {
                 if (stream != null) stream.Close();
+            }
+        }
+
+        private void txtLimit_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            int val;
+            if (int.TryParse(txtLimit.Text, out val))
+            {
+                //if (val == )
             }
         }
     }
