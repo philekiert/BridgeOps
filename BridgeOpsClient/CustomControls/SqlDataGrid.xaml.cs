@@ -74,7 +74,7 @@ namespace BridgeOpsClient.CustomControls
             foreach (string? s in columnNames)
             {
                 DataGridTextColumn header = new();
-                if (maxLengthOverrides.ContainsKey(s))
+                if (s != null && maxLengthOverrides.ContainsKey(s))
                 {
                     if (maxLengthOverrides[s] == -1)
                         header.MaxWidth = float.PositiveInfinity;

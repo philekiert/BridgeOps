@@ -188,8 +188,7 @@ internal class BridgeOpsAgent
             }
             reader.Close();
 
-            // Get the max lengths of varchars. TEXT will later be limited to 65535 for compatibility with MySQL.
-            // Correction on the above, compatibility with MySQL has been scrapped, so I'm removing that ^ limitation.
+            // Get the max lengths of varchars. TEXT will be 
             sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
                                         "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS;", sqlConnect);
             reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
@@ -214,9 +213,9 @@ internal class BridgeOpsAgent
             foreach (string[] column in columns)
             {
                 fileText += column[0] + "[C]" + column[1] + "[R]";
-                if (column[3] == "") // int
+                if (column[3] == "" || column[2] == "TEXT") // int or text
                     fileText += column[2].ToUpper();
-                else // char or varchar
+                else // varchar (char is not used by the application)
                     fileText += column[3];
                 if (checkConstraints.ContainsKey(column[0] + column[1]))
                 {
@@ -253,7 +252,7 @@ internal class BridgeOpsAgent
 
             // Automatically generates the file if one isn't present.
             File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText);
-            return false;
+            return true;
         }
         catch (Exception e)
         {
@@ -1450,11 +1449,13 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             else
             {
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-
                 // Update the column record. Error message printed in both functions if this fials.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 columnRecordIntact = GetColumnRecordFromFile();
+
+                // Don't report success until the column record has been updated, otherwise the client
+                // will attempt to pull the record first.stopst
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             }
         }
         catch (Exception e)

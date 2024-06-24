@@ -257,7 +257,7 @@ public class FieldDefs
                      "\n" +
                      "# Fields cannot be renamed.\n" +
                      "# All values must be placed at the end of a line after a double-space, with no white space afterwards.\n" +
-                     "# Length values must be between 1 and 65535.\n" +
+                     "# VARCHAR length values must be between 1 and 8000.\n" +
                      "# Type values are limited to TINYINT, SMALLINT and INT.\n" +
                      "\n" +
                      "# Primary key value MUST be placed above all others. Any placed out of order will be ignored.\n" +

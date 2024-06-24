@@ -73,6 +73,27 @@ public static class ColumnRecord
 
     public static bool Initialise(string columns)
     {
+        organisation = new();
+        organisationFriendlyNameReversal = new();
+        organisationChange = new();
+        organisationChangeFriendlyNameReversal = new();
+        asset = new();
+        assetFriendlyNameReversal = new();
+        assetChange = new();
+        assetChangeFriendlyNameReversal = new();
+        contact = new();
+        contactFriendlyNameReversal = new();
+        conferenceType = new();
+        conferenceTypeFriendlyNameReversal = new();
+        conference = new();
+        conferenceFriendlyNameReversal = new();
+        conferenceRecurrence = new();
+        conferenceRecurrenceFriendlyNameReversal = new();
+        resource = new();
+        resourceFriendlyNameReversal = new();
+        login = new();
+        loginFriendlyNameReversal = new();
+
         try
         {
             string[] lines = columns.Split('\n');
@@ -109,14 +130,14 @@ public static class ColumnRecord
                 int r;
                 if (int.TryParse(restriction, out r))
                 {
-                    type = "TEXT";
+                    type = "VARCHAR";
                     max = r;
                 }
                 else if (type == "TINYINT")
                     max = 255;
                 else if (type == "SMALLINT")
                     max = 32_767;
-                else if (type == "INT")
+                else if (type == "INT" || type == "TEXT")
                     max = 2_147_483_647;
                 // else max remains 0 for dates.
 
