@@ -235,6 +235,7 @@ namespace SendReceiveClasses
         public string table;
         public string column;
         public string? columnRename;
+        public string? friendly;
         public string? columnType;
         public List<string> allowed;
 
@@ -246,6 +247,7 @@ namespace SendReceiveClasses
             this.table = table;
             this.column = column;
             columnRename = null;
+            friendly = null;
             columnType = null;
             allowed = new();
         }
@@ -259,19 +261,22 @@ namespace SendReceiveClasses
             this.table = table;
             this.column = column;
             columnRename = null;
+            friendly = null;
             this.columnType = columnType;
             this.allowed = allowed;
         }
 
         // Modification
         public TableModification(string sessionID, string table, string column,
-                                 string? columnRename, string? columnType, List<string> allowed, bool wipeAllowed)
+                                 string? columnRename, string? friendly,
+                                 string? columnType, List<string> allowed, bool wipeAllowed)
         {
             this.sessionID = sessionID;
             intent = Intent.Modification;
             this.table = table;
             this.column = column;
             this.columnRename = columnRename;
+            this.friendly = friendly;
             this.columnType = columnType;
             this.allowed = allowed;
         }
@@ -302,7 +307,7 @@ namespace SendReceiveClasses
             {
                 command = $"ALTER TABLE {table} ";
                 command += $"ADD {column} {(columnType == "BOOLEAN" ? "BIT" : columnType)}";
-                if (allowed != null)
+                if (allowed.Count > 0)
                 {
                     command += $" CONSTRAINT chk_{table}{column}" +
                                $" CHECK ({column} IN ('{string.Join("\',\'", allowed)}'))";

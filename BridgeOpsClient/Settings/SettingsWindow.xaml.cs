@@ -215,6 +215,17 @@ namespace BridgeOpsClient
                     rows.Add(row);
                 }
 
+                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.conference)
+                {
+                    List<object?> row = new() { "Conference",
+                                                col.Key,
+                                                col.Value.friendlyName,
+                                                col.Value.type,
+                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
+                                                string.Join("; ", col.Value.allowed) };
+                    rows.Add(row);
+                }
+
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 
                 dtgColumns.Update(new List<string?>() { "Table", "Column", "Friendly Name",
@@ -237,6 +248,8 @@ namespace BridgeOpsClient
         {
             NewColumn newColumn = new NewColumn();
             newColumn.ShowDialog();
+            if (newColumn.changeMade)
+                PopulateColumnList();
         }
     }
 }

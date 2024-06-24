@@ -380,7 +380,7 @@ public class FieldDefs
                         "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT (these cannot accept [allowed] values)" +
                         "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
                         "\n#      Date: DATE (cannot accept [allowed] values)" +
-                        "\n#      Text: VARCHAR(0 - 65535), TINYTEXT, MEDIUMTEXT, TEXT (only VARCHAR can accept [allowed] values)" +
+                        "\n#      Text: VARCHAR(0 - 8000), TEXT (only VARCHAR can accept [allowed] values)" +
                         "\n#      Boolean: BOOLEAN (cannot accept [allowed] values)" +
                         "\n#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +
                         "\n" +

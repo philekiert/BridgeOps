@@ -189,6 +189,7 @@ internal class BridgeOpsAgent
             reader.Close();
 
             // Get the max lengths of varchars. TEXT will later be limited to 65535 for compatibility with MySQL.
+            // Correction on the above, compatibility with MySQL has been scrapped, so I'm removing that ^ limitation.
             sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
                                         "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS;", sqlConnect);
             reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
@@ -201,7 +202,8 @@ internal class BridgeOpsAgent
                 {
                     int lengthInt = reader.GetInt32(3);
                     // Limit TEXT length to 65535, as SQL Server returns this value as bytes allowed, not characters.
-                    length = (lengthInt > 65535 ? 65535 : lengthInt).ToString();
+                    //length = (lengthInt > 65535 ? 65535 : lengthInt).ToString(); (See note above about compatibilty)
+                    length = lengthInt.ToString();
                 }
                 columns.Add(new string[] { reader.GetString(0), reader.GetString(1), reader.GetString(2), length });
             }
@@ -1442,7 +1444,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlCommand());
+            SqlCommand com = new SqlCommand(req.SqlCommand(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);

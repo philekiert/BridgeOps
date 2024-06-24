@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -58,6 +60,60 @@ namespace BridgeOpsClient
                 default: // DATE or BOOLEAN
                     txtLimit.Text = "";
                     break;
+            }
+        }
+
+        private void btnAdd_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> allowed = new();
+            if (txtAllowed.Text.Length > 0)
+                txtAllowed.Text.Split("\r\n").ToList();
+
+            SendReceiveClasses.TableModification mod = new(App.sd.sessionID,
+                                                            cmbTable.Text, txtColumnName.Text, cmbType.Text, allowed);
+            SendToServer(mod);
+
+        }
+
+        public bool changeMade = false;
+        private void SendToServer(SendReceiveClasses.TableModification mod)
+        {
+            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_TABLE_MODIFICATION);
+                    App.sr.WriteAndFlush(stream, App.sr.Serialise(mod));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        changeMade = true;
+                        Close();
+                        return;
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        App.SessionInvalidated();
+                        Close();
+                        return;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        // Shouldn't ever arrive here.
+                        MessageBox.Show("Only admins can make table modifications.");
+                        return;
+                    }
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Could not run table update.");
+                return;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
             }
         }
     }
