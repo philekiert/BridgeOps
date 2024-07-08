@@ -40,6 +40,7 @@
         <Label Grid.Row="3" Grid.Column="0" Content="Type"/>
         <ComboBox Grid.Row="3" Grid.Column="1" Margin="10 2 10 2" x:Name="cmbType"
                   SelectionChanged="cmbType_SelectionChanged">
+            <ComboBoxItem Content="VARCHAR"/>
             <ComboBoxItem Content="TEXT"/>
             <ComboBoxItem Content="TINYINT"/>
             <ComboBoxItem Content="SMALLINT"/>
@@ -49,7 +50,7 @@
             <ComboBoxItem Content="BOOLEAN"/>
         </ComboBox>
         <Label Grid.Row="4" Grid.Column="0" Content="Max"/>
-        <TextBox Grid.Row="4" Grid.Column="1" Width="144" x:Name="txtLimit" MaxLength="10" TextChanged="txtLimit_TextChanged"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Width="144" x:Name="txtLimit" MaxLength="4"/>
         <Label Grid.Row="5" Grid.Column="0" Content="Allowed"/>
         <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txtAllowed" Height="100"
                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible"/>

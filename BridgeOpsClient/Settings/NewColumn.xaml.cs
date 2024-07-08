@@ -32,18 +32,20 @@ namespace BridgeOpsClient
         private void cmbType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string newSel = (string)((ComboBoxItem)cmbType.Items[cmbType.SelectedIndex]).Content;
-            if (newSel != "TEXT")
+            if (newSel != "VARCHAR")
             {
                 txtLimit.IsEnabled = false;
                 txtAllowed.IsEnabled = false;
             }
             switch (newSel)
             {
-                case "TEXT":
+                case "VARCHAR":
                     txtLimit.IsEnabled = true;
                     txtLimit.Text = "";
-                    txtLimit.MaxLength = 5;
                     txtAllowed.IsEnabled = true;
+                    break;
+                case "TEXT":
+                    txtLimit.Text = "2,147,483,647";
                     break;
                 case "TINYINT":
                     txtLimit.Text = "255";
@@ -69,19 +71,19 @@ namespace BridgeOpsClient
                 return;
 
             List<string> allowed = new();
-            if (txtAllowed.Text.Length > 0 && cmbType.Text == "TEXT")
+            if (txtAllowed.Text.Length > 0 && cmbType.Text == "VARCHAR")
                 allowed = txtAllowed.Text.Split("\r\n").ToList();
 
             SendReceiveClasses.TableModification mod = new(App.sd.sessionID,
                                                            cmbTable.Text, txtColumnName.Text, cmbType.Text, allowed);
-            SwitchToVARCHAR(ref mod);
+            VARCHAR(ref mod);
             SendToServer(mod);
         }
 
-        private void SwitchToVARCHAR(ref SendReceiveClasses.TableModification mod)
+        private void VARCHAR(ref SendReceiveClasses.TableModification mod)
         {
             // Make sure that 
-            if (mod.columnType != "TEXT")
+            if (mod.columnType != "VARCHAR")
                 return;
 
             int limit;
@@ -94,6 +96,11 @@ namespace BridgeOpsClient
 
         private bool ConfirmAllowedValues()
         {
+            if (cmbTable.Text == "")
+            {
+                MessageBox.Show("Must select a table.");
+                return false;
+            }
             if (txtColumnName.IsEnabled == true && txtColumnName.Text.Length == 0)
             {
                 MessageBox.Show("Must input a column name.");
@@ -115,6 +122,11 @@ namespace BridgeOpsClient
                 if (int.TryParse(txtLimit.Text, out limit))
                 {
                     if (limit < 1)
+                    {
+                        MessageBox.Show("Max value must be greater than 0.");
+                        return false;
+                    }
+                    if (limit > 8000)
                     {
                         MessageBox.Show("Max value must be greater than 0.");
                         return false;
@@ -158,7 +170,11 @@ namespace BridgeOpsClient
                         MessageBox.Show("Only admins can make table modifications.");
                         return;
                     }
+                    else
+                        MessageBox.Show("Something went wrong.");
                 }
+                else
+                    MessageBox.Show("Could not create network stream.");
             }
             catch
             {
@@ -168,15 +184,6 @@ namespace BridgeOpsClient
             finally
             {
                 if (stream != null) stream.Close();
-            }
-        }
-
-        private void txtLimit_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            int val;
-            if (int.TryParse(txtLimit.Text, out val))
-            {
-                //if (val == )
             }
         }
     }

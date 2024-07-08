@@ -206,13 +206,17 @@ namespace SendReceiveClasses
         public int loginID;
         public string password;
         public string newPassword;
+        public bool userManagementMenu;
 
-        public PasswordResetRequest(string sessionID, int loginID, string password, string newPassword)
+        public PasswordResetRequest(string sessionID, int loginID,
+                                    string password, string newPassword,
+                                    bool userManagementMenu)
         {
             this.sessionID = sessionID;
             this.loginID = loginID;
             this.password = password;
             this.newPassword = newPassword;
+            this.userManagementMenu = userManagementMenu;
         }
 
         public string SqlUpdate()
@@ -313,6 +317,17 @@ namespace SendReceiveClasses
                                $" CHECK ({column} IN ({string.Join(", ", allowed)}))";
                 }
                 command += ";";
+
+                // Create register columns if needed.
+                if (table == "Organisation" || table == "Asset")
+                {
+                    command += $"ALTER TABLE {table}Change ";
+                    command += $"ADD {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} BIT;";
+                    command += $"ALTER TABLE {table}Change ";
+                    command += $"ADD {column} {(columnType == "BOOLEAN" ? "BIT" : columnType)}; ";
+                }
+
+                command = "BEGIN TRANSACTION; " + command + " COMMIT TRANSACTION;";
             }
             else if (intent == Intent.Removal)
             {

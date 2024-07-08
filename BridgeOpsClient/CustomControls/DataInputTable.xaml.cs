@@ -95,6 +95,18 @@ namespace BridgeOpsClient.CustomControls
 #pragma warning restore CS8622
                         grdMain.Children.Add(dtpInput);
                     }
+                    else if (col.Value.type == "BIT" || col.Value.type == "BOOLEAN")
+                    {
+                        ComboBox cmbInput = new();
+                        cmbInput.SetValue(Grid.ColumnProperty, 1);
+                        cmbInput.SetValue(Grid.RowProperty, i);
+                        cmbInput.ItemsSource = new List<string>() { "", "Yes", "No" };
+                        cmbInput.SelectedIndex = 0;
+#pragma warning disable CS8622
+                        cmbInput.SelectionChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
+                        grdMain.Children.Add(cmbInput);
+                    }
                     else
                     {
                         if (col.Value.allowed.Length == 0)
@@ -147,7 +159,12 @@ namespace BridgeOpsClient.CustomControls
                     if (t == typeof(TextBox))
                         ((TextBox)child).Text = d == null ? null : d.ToString();
                     else if (t == typeof(ComboBox))
-                        ((ComboBox)child).Text = d == null ? null : d.ToString();
+                    {
+                        if (d != null && d.GetType() == typeof(bool))
+                            ((ComboBox)child).Text = (bool)d ? "Yes" : "No";
+                        else
+                            ((ComboBox)child).Text = d == null ? null : d.ToString();
+                    }
                     else if (t == typeof(DatePicker))
                         ((DatePicker)child).SelectedDate = d == null ? null : (DateTime)d;
                 }
@@ -226,10 +243,11 @@ namespace BridgeOpsClient.CustomControls
                         else // Some sort of INT and needs checking against restriction.
                         {
                             int value;
-                            bool isNumber = int.TryParse(input, out value);
-                            if (isNumber || value < 0 || value > cv.restriction)
+                            if (!int.TryParse(input, out value) || value < 0 || value > cv.restriction)
                                 disallowed.Add(cv.name.Replace('_', ' ') + " must be a whole number lower than " +
                                                cv.restriction.ToString() + ";");
+                            else
+                                cv.value = input;
                         }
                     }
                     else if (t == typeof(ComboBox))
@@ -238,7 +256,17 @@ namespace BridgeOpsClient.CustomControls
                         if (temp.SelectedItem == null)
                             cv.value = null;
                         else
-                            cv.value = (string?)temp.SelectedItem;
+                        {
+                            string? val = (string?)temp.SelectedItem;
+                            if (cv.type == "BIT" || cv.type == "BOOLEAN")
+                            {
+                                if (val == "Yes") cv.value = "1";
+                                else if (val == "No") cv.value = "0";
+                                else cv.value = "";
+                            }
+                            else
+                                cv.value = (string?)temp.SelectedItem;
+                        }
                         if (cv.value == "")
                             cv.value = null;
                     }

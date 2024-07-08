@@ -63,9 +63,9 @@ public static class ColumnRecord
     public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
     public static bool IsTypeString(string type)
-    { return type == "TEXT"; }
+    { return type == "TEXT" || type == "VARCHAR"; }
     public static bool IsTypeString(Column col)
-    { return col.type == "TEXT"; }
+    { return col.type == "TEXT" || col.type == "VARCHAR"; }
     public static bool IsTypeInt(string type)
     { return type == "INT"; }
     public static bool IsTypeInt(Column col)
