@@ -375,7 +375,7 @@ public class FieldDefs
                         "\n#    be displayed." +
                         "\n#  - Do not end any column names with 'Register', as this could interfere with some operations, including " +
                         "\n#    database creation." +
-                        "\n#  - Only the [allowed] section is optional and can be ommitted." +
+                        "\n#  - Only the [allowed] section is optional and can be omitted." +
                         "\n#  - [type] is restricted to the following values:" +
                         "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT (these cannot accept [allowed] values)" +
                         "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
