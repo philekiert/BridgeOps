@@ -373,7 +373,7 @@ public class FieldDefs
                         "\n#  - Spaces in the column name will be replaced with underscores in the database, and conversely, underscores" +
                         "\n#    will be replaced with spaces when displayed in the client software. For this reason, underscores cannot" +
                         "\n#    be displayed." +
-                        "\n#  - Do not end any column names with 'Register', as this could interfere with some operations, including " +
+                        "\n#  - Do not end any column names with '_Register', as this could interfere with some operations, including " +
                         "\n#    database creation." +
                         "\n#  - Only the [allowed] section is optional and can be omitted." +
                         "\n#  - [type] is restricted to the following values:" +
