@@ -165,5 +165,11 @@ namespace BridgeOpsClient.CustomControls
                 dtg.Focus(); // Otherwise the item highlight is greyed out.
             }
         }
+
+        // When clicking on cell that overflows past the view, don't automatically scroll to bring it into view.
+        private void dtg_CancelAutoScroll(object sender, RequestBringIntoViewEventArgs e)
+        {
+            e.Handled = true;
+        }
     }
 }

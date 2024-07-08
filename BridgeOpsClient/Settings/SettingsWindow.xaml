@@ -52,9 +52,14 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="Refresh" Width="70" x:Name="btnColumnsRefresh"
-                                HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0" Click="btnColumnsRefresh_Click"/>
+                                HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
+                                Click="btnColumnsRefresh_Click"/>
                         <Button Grid.Column="1" Content="Add" Width="70" x:Name="btnColumnAdd"
-                                HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0" Click="btnColumnAdd_Click"/>
+                                HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
+                                Click="btnColumnAdd_Click"/>
+                        <Button Grid.Column="2" Content="Remove" Width="70" x:Name="btnColumnRemove"
+                                HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
+                                Click="btnColumnRemove_Click"/>
                     </Grid>
                 </Grid>
             </TabItem>

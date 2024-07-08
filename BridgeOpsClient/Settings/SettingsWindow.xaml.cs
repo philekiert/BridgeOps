@@ -170,7 +170,7 @@ namespace BridgeOpsClient
                 PopulateUserList();
             }
             else
-                MessageBox.Show("Couldn't discern user ID from row.");
+                MessageBox.Show("You must first select a user to log out.");
         }
 
 
@@ -249,10 +249,67 @@ namespace BridgeOpsClient
             NewColumn newColumn = new NewColumn();
             newColumn.ShowDialog();
             if (newColumn.changeMade)
+                InitiateTableChange();
+        }
+
+        private void btnColumnRemove_Click(object sender, RoutedEventArgs e)
+        {
+            string table = dtgColumns.GetCurrentlySelectedCell(0);
+            string column = dtgColumns.GetCurrentlySelectedCell(1);
+            if (table == "" || column == "")
             {
-                App.PullColumnRecord();
-                PopulateColumnList();
+                MessageBox.Show("You must first select a column to remove.");
+                return;
             }
+
+            SendReceiveClasses.TableModification mod = new(App.sd.sessionID, table, column);
+
+            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_TABLE_MODIFICATION);
+                    App.sr.WriteAndFlush(stream, App.sr.Serialise(mod));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        InitiateTableChange();
+                        return;
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        App.SessionInvalidated();
+                        return;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        // Shouldn't ever arrive here.
+                        MessageBox.Show("Only admins can make table modifications.");
+                        return;
+                    }
+                    else
+                        MessageBox.Show("Something went wrong.");
+                }
+                else
+                    MessageBox.Show("Could not create network stream.");
+            }
+            catch
+            {
+                MessageBox.Show("Could not run table update.");
+                return;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
+
+        }
+
+        private void InitiateTableChange()
+        {
+            App.PullColumnRecord();
+            PopulateColumnList();
         }
     }
 }

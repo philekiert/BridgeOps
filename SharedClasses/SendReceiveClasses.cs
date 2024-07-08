@@ -307,6 +307,7 @@ namespace SendReceiveClasses
 
             string command;
 
+            // Addition
             if (intent == Intent.Addition)
             {
                 command = $"ALTER TABLE {table} ";
@@ -329,10 +330,28 @@ namespace SendReceiveClasses
 
                 command = "BEGIN TRANSACTION; " + command + " COMMIT TRANSACTION;";
             }
+
+            // Removal
             else if (intent == Intent.Removal)
             {
-                command = $"ALTER TABLE {table} DROP {column};";
+                command = $"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                          $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
+                           "BEGIN " +
+                          $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
+                           "END;";
+                command += $"ALTER TABLE {table} DROP COLUMN {column};";
+
+                // Remove register columns if needed.
+                if (table == "Organisation" || table == "Asset")
+                {
+                    command += $"ALTER TABLE {table}Change DROP COLUMN {column};";
+                    command += $"ALTER TABLE {table}Change DROP COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX};";
+                }
+
+                command = "BEGIN TRANSACTION; " + command + " COMMIT TRANSACTION;";
             }
+
+            // Modification
             else // if (intent == Intent.Modification)
             {
                 bool droppedConstraint = false;
