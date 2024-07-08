@@ -262,6 +262,34 @@ namespace BridgeOpsClient
                 return;
             }
 
+            bool allowed = column != "Notes";
+            if (allowed)
+                allowed = !((table == "Organisation" &&
+                              (column == Glo.Tab.ORGANISATION_ID ||
+                               column == Glo.Tab.PARENT_ID ||
+                               column == Glo.Tab.DIAL_NO)) ||
+                            (table == "Asset" &&
+                              (column == Glo.Tab.ASSET_ID ||
+                               column == Glo.Tab.ORGANISATION_ID)) ||
+                            (table == "Contact" &&
+                              (column == Glo.Tab.CONTACT_ID)) ||
+                            (table == "Conference" &&
+                              (column == Glo.Tab.CONFERENCE_ID ||
+                               column == Glo.Tab.RESOURCE_ID ||
+                               column == Glo.Tab.ORGANISATION_RESOURCE_ROW ||
+                               column == Glo.Tab.CONFERENCE_TYPE ||
+                               column == Glo.Tab.CONFERENCE_TITLE ||
+                               column == Glo.Tab.CONFERENCE_START ||
+                               column == Glo.Tab.CONFERENCE_END ||
+                               column == Glo.Tab.CONFERENCE_BUFFER ||
+                               column == Glo.Tab.ORGANISATION_ID ||
+                               column == Glo.Tab.RECURRENCE_ID)));
+            if (!allowed)
+            {
+                MessageBox.Show("This column is integral to the running of the application, and cannot be removed.");
+                return;
+            }
+
             SendReceiveClasses.TableModification mod = new(App.sd.sessionID, table, column);
 
             NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);

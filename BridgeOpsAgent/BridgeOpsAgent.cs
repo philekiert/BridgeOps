@@ -1448,6 +1448,44 @@ internal class BridgeOpsAgent
                 return;
             }
 
+            // Protect integral table and columns (could be structured better, but I've tried to keep it readable).
+            if (req.intent == TableModification.Intent.Removal)
+            {
+                string column = req.column;
+                string table = req.table;
+                bool allowed = table != "Organisation" &&
+                               table != "Asset" &&
+                               table != "Contact" &&
+                               table != "Conference" &&
+                               column != "Notes";
+                if (allowed)
+                    allowed = !((table == "Organisation" &&
+                                  (column == Glo.Tab.ORGANISATION_ID ||
+                                   column == Glo.Tab.PARENT_ID ||
+                                   column == Glo.Tab.DIAL_NO)) ||
+                                (table == "Asset" &&
+                                  (column == Glo.Tab.ASSET_ID ||
+                                   column == Glo.Tab.ORGANISATION_ID)) ||
+                                (table == "Contact" &&
+                                  (column == Glo.Tab.CONTACT_ID)) ||
+                                (table == "Conference" &&
+                                  (column == Glo.Tab.CONFERENCE_ID ||
+                                   column == Glo.Tab.RESOURCE_ID ||
+                                   column == Glo.Tab.ORGANISATION_RESOURCE_ROW ||
+                                   column == Glo.Tab.CONFERENCE_TYPE ||
+                                   column == Glo.Tab.CONFERENCE_TITLE ||
+                                   column == Glo.Tab.CONFERENCE_START ||
+                                   column == Glo.Tab.CONFERENCE_END ||
+                                   column == Glo.Tab.CONFERENCE_BUFFER ||
+                                   column == Glo.Tab.ORGANISATION_ID ||
+                                   column == Glo.Tab.RECURRENCE_ID)));
+                if (!allowed)
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                    return;
+                }
+            }
+
             SqlCommand com = new SqlCommand(req.SqlCommand(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
