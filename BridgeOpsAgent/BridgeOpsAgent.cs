@@ -699,7 +699,6 @@ internal class BridgeOpsAgent
     {
         SqlCommand com;
 
-
         try
         {
             Task taskSqlConnect = sqlConnect.OpenAsync();
@@ -726,7 +725,8 @@ internal class BridgeOpsAgent
             await taskSqlConnect;
 
             // If the session isn't admin, check to see if the original password was correct.
-            if (!CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
+            if (!CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT) ||
+                !req.userManagementMenu)
             {
                 com = PullUpUserFromPassword(session.username, req.password, sqlConnect);
                 SqlDataReader reader = com.ExecuteReader();

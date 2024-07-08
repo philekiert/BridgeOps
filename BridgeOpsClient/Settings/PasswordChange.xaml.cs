@@ -53,7 +53,7 @@ namespace BridgeOpsClient
                 return;
             }
 
-            PasswordResetRequest req = new(App.sd.sessionID, id, pwdCurrent.Password, pwdNew.Password);
+            PasswordResetRequest req = new(App.sd.sessionID, id, pwdCurrent.Password, pwdNew.Password, adminReset);
 
             NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
             try
@@ -85,6 +85,12 @@ namespace BridgeOpsClient
                 }
             }
             catch { }
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                btnReset_Click(sender, e);
         }
     }
 }
