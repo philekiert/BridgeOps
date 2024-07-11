@@ -1,4 +1,5 @@
 using System;
+using System.Reflection.Metadata;
 
 public static class Glo
 {
@@ -6,6 +7,7 @@ public static class Glo
     public const string PIPE_CONSOLE = "BridgeOpsConsole";
     public const int PORT_INBOUND_DEFAULT = 61_152;
     public const int PORT_OUTBOUND_DEFAULT = 61_153;
+
 
     // Files and Folder Traversal
     public const string PATH_AGENT = "..\\..\\..\\..\\BridgeOpsAgent\\bin\\Debug\\net6.0\\";
@@ -59,8 +61,12 @@ public static class Glo
     public const int CLIENT_SESSION_INVALID = 0;
     public const int CLIENT_INSUFFICIENT_PERMISSIONS = 1;
     public const int CLIENT_REQUEST_FAILED = 2;
-    public const int CLIENT_REQUEST_SUCCESS = 3;
-    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 4;
+    public const int CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW = 3;
+    public const int CLIENT_REQUEST_SUCCESS = 4;
+    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 5;
+    public const int CLIENT_CONFIRM = 6;
+    public const int CLIENT_CONFIRM_MORE_TO_FOLLOW = 7;
+    public const int CLIENT_CANCEL = 8;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DISABLED = "I used to be an adventurer like you";
@@ -160,6 +166,31 @@ public static class Glo
             for (int n = 0; n < 6; ++n)
                 permissions += 1 << n;
             return permissions;
+        }
+
+        public static bool ColumnRemovalAllowed(string table, string column)
+        {
+            return column != "Notes" &&
+                !((table == "Organisation" &&
+                    (column == Glo.Tab.ORGANISATION_ID ||
+                     column == Glo.Tab.PARENT_ID ||
+                     column == Glo.Tab.DIAL_NO)) ||
+                  (table == "Asset" &&
+                    (column == Glo.Tab.ASSET_ID ||
+                     column == Glo.Tab.ORGANISATION_ID)) ||
+                  (table == "Contact" &&
+                    (column == Glo.Tab.CONTACT_ID)) ||
+                  (table == "Conference" &&
+                    (column == Glo.Tab.CONFERENCE_ID ||
+                     column == Glo.Tab.RESOURCE_ID ||
+                     column == Glo.Tab.ORGANISATION_RESOURCE_ROW ||
+                     column == Glo.Tab.CONFERENCE_TYPE ||
+                     column == Glo.Tab.CONFERENCE_TITLE ||
+                     column == Glo.Tab.CONFERENCE_START ||
+                     column == Glo.Tab.CONFERENCE_END ||
+                     column == Glo.Tab.CONFERENCE_BUFFER ||
+                     column == Glo.Tab.ORGANISATION_ID ||
+                     column == Glo.Tab.RECURRENCE_ID)));
         }
     }
 }

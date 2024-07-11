@@ -273,7 +273,7 @@ namespace SendReceiveClasses
         // Modification
         public TableModification(string sessionID, string table, string column,
                                  string? columnRename, string? friendly,
-                                 string? columnType, List<string> allowed, bool wipeAllowed)
+                                 string? columnType, List<string> allowed)
         {
             this.sessionID = sessionID;
             intent = Intent.Modification;
@@ -295,10 +295,23 @@ namespace SendReceiveClasses
                 columnRename = SqlAssist.SecureColumn(columnRename);
 
             if (columnType != null)
+            {
                 columnType = SqlAssist.SecureColumn(columnType);
+                if (columnType == "BOOLEAN")
+                    columnType = "BIT";
+            }
 
             for (int n = 0; n < allowed.Count; ++n)
                 allowed[n] = SqlAssist.AddQuotes(SqlAssist.SecureColumn(allowed[n]));
+        }
+
+        private string DropConstraint(string table, string column)
+        {
+            return $"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                   $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
+                    "BEGIN " +
+                   $"ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column}; " +
+                    "END";
         }
 
         public string SqlCommand()
@@ -311,7 +324,7 @@ namespace SendReceiveClasses
             if (intent == Intent.Addition)
             {
                 command = $"ALTER TABLE {table} ";
-                command += $"ADD {column} {(columnType == "BOOLEAN" ? "BIT" : columnType)}";
+                command += $"ADD {column} {columnType}";
                 if (allowed.Count > 0)
                 {
                     command += $" CONSTRAINT chk_{table}{column}" +
@@ -325,20 +338,16 @@ namespace SendReceiveClasses
                     command += $"ALTER TABLE {table}Change ";
                     command += $"ADD {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} BIT;";
                     command += $"ALTER TABLE {table}Change ";
-                    command += $"ADD {column} {(columnType == "BOOLEAN" ? "BIT" : columnType)}; ";
+                    command += $"ADD {column} {columnType}; ";
                 }
 
-                command = "BEGIN TRANSACTION; " + command + " COMMIT TRANSACTION;";
+                command = SqlAssist.Transaction(command);
             }
 
             // Removal
             else if (intent == Intent.Removal)
             {
-                command = $"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                          $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
-                           "BEGIN " +
-                          $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
-                           "END;";
+                command = DropConstraint(table, column);
                 command += $"ALTER TABLE {table} DROP COLUMN {column};";
 
                 // Remove register columns if needed.
@@ -348,60 +357,76 @@ namespace SendReceiveClasses
                     command += $"ALTER TABLE {table}Change DROP COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX};";
                 }
 
-                command = "BEGIN TRANSACTION; " + command + " COMMIT TRANSACTION;";
+                command = SqlAssist.Transaction(command);
             }
 
             // Modification
             else // if (intent == Intent.Modification)
             {
+                // Any constraints must be dropped and remade, but we obviously only want to do this once.
                 bool droppedConstraint = false;
                 List<string> commands = new();
-                if (columnRename != null)
+                bool renamingColumn = columnRename != null;
+                if (renamingColumn)
                 {
+                    commands.Add(DropConstraint(table, column));
+                    droppedConstraint = true;
+
                     commands.Add($"ALTER TABLE {table} RENAME COLUMN {column} TO {columnRename};");
+
+                    // Rename register columns if needed.
+                    if (table == "Organisation" || table == "Asset")
+                    {
+                        commands.Add($"ALTER TABLE {table}Change " +
+                                     $"RENAME COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} TO " +
+                                     $"{columnRename}{Glo.Tab.CHANGE_REGISTER_SUFFIX};");
+                        commands.Add($"ALTER TABLE {table}Change " +
+                                     $"RENAME COLUMN {column} TO {columnRename};");
+                    }
                 }
-                if (allowed.Count == 0)
+                if (allowed.Count == 0 && !droppedConstraint)
                 {
-                    commands.Add($"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                                 $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
-                                  "BEGIN " +
-                                 $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
-                                  "END;");
+                    commands.Add(DropConstraint(table, column));
                     droppedConstraint = true;
                 }
+
+                // From here onwards, we only want to use the new column name if there is one.
+                if (columnRename != null)
+                    column = columnRename;
+
                 if (columnType != null)
                 {
-                    commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType};");
                     if (!droppedConstraint)
                     {
                         // The constraint needs to be dropped and remade due to the column being renamed.
-                        commands.Add($"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                                     $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
-                                      "BEGIN " +
-                                     $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
-                                      "END;");
+                        commands.Add(DropConstraint(table, column));
                         droppedConstraint = true;
+                    }
+
+                    commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType};");
+
+                    // Change register column types if needed.
+                    if (table == "Organisation" || table == "Asset")
+                    {
+                        commands.Add($"ALTER TABLE {table}Change ALTER COLUMN {column} {columnType};");
+                        commands.Add($"ALTER TABLE {table}Change " +
+                                     $"ALTER COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} {columnType};");
                     }
                 }
                 if (allowed.Count > 0)
                 {
                     if (!droppedConstraint)
-                    {
-                        commands.Add($"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                                     $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
-                                      "BEGIN " +
-                                     $" ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column} " +
-                                      "END;");
-                    }
-                    commands.Add($"ALTER TABLE {table}" +
-                                 $"CHECK ({(columnRename == null ? column : columnRename)} " +
-                                 $"IN ('{string.Join("\',\'", allowed)}'));");
+                        commands.Add(DropConstraint(table, column));
+                    commands.Add($"ALTER TABLE {table} " +
+                                 $"ADD CONSTRAINT chk_{table}{column} " +
+                                 $"CHECK ({column} " +
+                                 $"IN ({string.Join(",", allowed)}));");
                 }
 
                 if (commands.Count == 1)
                     command = commands[0];
                 else
-                    command = "BEGIN TRANSACTION; " + string.Join(" ", commands) + " COMMIT TRANSACTION;";
+                    command = SqlAssist.Transaction(string.Join(" ", commands));
             }
 
             return command;

@@ -62,6 +62,42 @@ public static class ColumnRecord
     public static Dictionary<string, Column> login = new();
     public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
+    public static Column? GetColumn(string table, string column)
+    {
+        try
+        {
+            switch (table)
+            {
+                case "Organisation":
+                    return organisation[column];
+                case "OrganisationChange":
+                    return organisationChange[column];
+                case "Asset":
+                    return asset[column];
+                case "AssetChange":
+                    return assetChange[column];
+                case "Contact":
+                    return contact[column];
+                case "ConferenceType":
+                    return conferenceType[column];
+                case "Conference":
+                    return conference[column];
+                case "ConferenceRecurrence":
+                    return conferenceRecurrence[column];
+                case "Resource":
+                    return resource[column];
+                case "Login":
+                    return login[column];
+                default:
+                    return null;
+            }
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public static bool IsTypeString(string type)
     { return type == "TEXT" || type == "VARCHAR"; }
     public static bool IsTypeString(Column col)

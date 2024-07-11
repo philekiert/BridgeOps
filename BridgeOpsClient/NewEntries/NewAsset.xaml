@@ -19,7 +19,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" x:Name="lblViewingChange"
-                       Content="Viewing change" Background="#F56" Height="0" Padding="5 1"/>
+                       Content="Viewing change" Background="#F45" Height="0" Padding="5 1"/>
                 <Grid Grid.Row="1">
                     <Grid.Resources>
                         <Style TargetType="TextBox">

@@ -26,16 +26,16 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Grid.Column="0" Content="Table" Margin="0 8 0 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 2" x:Name="cmbTable">
+        <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 2" x:Name="cmbTable" SelectionChanged="InputHandler">
             <ComboBoxItem Content="Organisation"/>
             <ComboBoxItem Content="Contact"/>
             <ComboBoxItem Content="Asset"/>
             <ComboBoxItem Content="Conference"/>
         </ComboBox>
         <Label Grid.Row="1" Grid.Column="0" Content="Column Name"/>
-        <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtColumnName" MaxLength="128"/>
+        <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtColumnName" MaxLength="128" TextChanged="InputHandler"/>
         <Label Grid.Row="2" Grid.Column="0" Content="Friendly Name"/>
-        <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtFriendlyName"
+        <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtFriendlyName" TextChanged="InputHandler"
                  MaxLength="128" IsEnabled="False"/>
         <Label Grid.Row="3" Grid.Column="0" Content="Type"/>
         <ComboBox Grid.Row="3" Grid.Column="1" Margin="10 2 10 2" x:Name="cmbType"
@@ -50,10 +50,11 @@
             <ComboBoxItem Content="BOOLEAN"/>
         </ComboBox>
         <Label Grid.Row="4" Grid.Column="0" Content="Max"/>
-        <TextBox Grid.Row="4" Grid.Column="1" Width="144" x:Name="txtLimit" MaxLength="4"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Width="144" x:Name="txtLimit" MaxLength="4" TextChanged="InputHandler"/>
         <Label Grid.Row="5" Grid.Column="0" Content="Allowed"/>
         <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txtAllowed" Height="100"
-                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible"/>
+                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible"
+                 TextChanged="InputHandler"/>
         <Grid Grid.Row="6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -61,10 +62,6 @@
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                             x:Name="btnAdd" Click="btnAdd_Click"/>
-            <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnEdit" Visibility="Hidden" IsEnabled="False"/>
-            <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnDelete" Visibility="Hidden"/>
         </Grid>
     </Grid>
 </Window>

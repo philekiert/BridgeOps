@@ -18,7 +18,8 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <custom:SqlDataGrid x:Name="dtgUsers" Grid.Row="0" MouseDoubleClick="dtgUsers_MouseDoubleClick"/>
+                    <custom:SqlDataGrid x:Name="dtgUsers" Grid.Row="0"
+                                        MouseDoubleClick="dtgUsers_MouseDoubleClick"/>
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -44,7 +45,8 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <custom:SqlDataGrid x:Name="dtgColumns" Grid.Row="0"
-                                        MouseDoubleClick="dtgColumns_MouseDoubleClick"/>
+                                        MouseDoubleClick="dtgColumns_MouseDoubleClick"
+                                        SelectionChanged="dtgColumns_SelectionChanged"/>
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>

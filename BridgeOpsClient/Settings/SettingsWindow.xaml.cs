@@ -182,49 +182,26 @@ namespace BridgeOpsClient
             {
                 List<List<object?>> rows = new();
 
-                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.organisation)
+                void AddTable(string name, Dictionary<string, ColumnRecord.Column> tableRecord)
                 {
-                    List<object?> row = new() { "Organisation",
-                                                col.Key,
-                                                col.Value.friendlyName,
-                                                col.Value.type,
-                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
-                                                string.Join("; ", col.Value.allowed) };
-                    rows.Add(row);
+                    foreach (KeyValuePair<string, ColumnRecord.Column> col in tableRecord)
+                    {
+                        List<object?> row = new() { name,
+                                                    col.Key,
+                                                    col.Value.friendlyName,
+                                                    // Boolean is more widely understood by the user than BIT.
+                                                    col.Value.type == "BIT" ? "BOOLEAN" : col.Value.type,
+                                                    col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
+                                                    string.Join("; ", col.Value.allowed) };
+                        rows.Add(row);
+                    }
                 }
 
-                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.contact)
-                {
-                    List<object?> row = new() { "Contact",
-                                                col.Key,
-                                                col.Value.friendlyName,
-                                                col.Value.type,
-                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
-                                                string.Join("; ", col.Value.allowed) };
-                    rows.Add(row);
-                }
+                AddTable("Organisation", ColumnRecord.organisation);
+                AddTable("Asset", ColumnRecord.asset);
+                AddTable("Contact", ColumnRecord.contact);
+                AddTable("Conference", ColumnRecord.conference);
 
-                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.asset)
-                {
-                    List<object?> row = new() { "Asset",
-                                                col.Key,
-                                                col.Value.friendlyName,
-                                                col.Value.type,
-                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
-                                                string.Join("; ", col.Value.allowed) };
-                    rows.Add(row);
-                }
-
-                foreach (KeyValuePair<string, ColumnRecord.Column> col in ColumnRecord.conference)
-                {
-                    List<object?> row = new() { "Conference",
-                                                col.Key,
-                                                col.Value.friendlyName,
-                                                col.Value.type,
-                                                col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
-                                                string.Join("; ", col.Value.allowed) };
-                    rows.Add(row);
-                }
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 
@@ -241,7 +218,20 @@ namespace BridgeOpsClient
 
         private void dtgColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            string table = dtgColumns.GetCurrentlySelectedCell(0);
+            string column = dtgColumns.GetCurrentlySelectedCell(1);
+            ColumnRecord.Column? col = ColumnRecord.GetColumn(table, column);
+            if (col == null)
+            {
+                MessageBox.Show("Something went wrong.");
+                return;
+            }
 
+            NewColumn newColumn = new(table, column,
+                (ColumnRecord.Column)col);
+            newColumn.ShowDialog();
+            if (newColumn.changeMade)
+                InitiateTableChange();
         }
 
         private void btnColumnAdd_Click(object sender, RoutedEventArgs e)
@@ -262,29 +252,7 @@ namespace BridgeOpsClient
                 return;
             }
 
-            bool allowed = column != "Notes";
-            if (allowed)
-                allowed = !((table == "Organisation" &&
-                              (column == Glo.Tab.ORGANISATION_ID ||
-                               column == Glo.Tab.PARENT_ID ||
-                               column == Glo.Tab.DIAL_NO)) ||
-                            (table == "Asset" &&
-                              (column == Glo.Tab.ASSET_ID ||
-                               column == Glo.Tab.ORGANISATION_ID)) ||
-                            (table == "Contact" &&
-                              (column == Glo.Tab.CONTACT_ID)) ||
-                            (table == "Conference" &&
-                              (column == Glo.Tab.CONFERENCE_ID ||
-                               column == Glo.Tab.RESOURCE_ID ||
-                               column == Glo.Tab.ORGANISATION_RESOURCE_ROW ||
-                               column == Glo.Tab.CONFERENCE_TYPE ||
-                               column == Glo.Tab.CONFERENCE_TITLE ||
-                               column == Glo.Tab.CONFERENCE_START ||
-                               column == Glo.Tab.CONFERENCE_END ||
-                               column == Glo.Tab.CONFERENCE_BUFFER ||
-                               column == Glo.Tab.ORGANISATION_ID ||
-                               column == Glo.Tab.RECURRENCE_ID)));
-            if (!allowed)
+            if (!Glo.Fun.ColumnRemovalAllowed(table, column))
             {
                 MessageBox.Show("This column is integral to the running of the application, and cannot be removed.");
                 return;
@@ -305,6 +273,23 @@ namespace BridgeOpsClient
                         InitiateTableChange();
                         return;
                     }
+                    else if (response == Glo.CLIENT_CONFIRM)
+                    {
+                        if (MessageBox.Show("This column contains data, either current or historical. " +
+                                            "There will be no way to retrieve this data, so it is advisable to back " +
+                                            "up the database before making changes that could result in data loss." +
+                                            "\n\nAre you sure you wish to proceed?",
+                                            "Remove Column", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                        {
+                            stream.WriteByte(Glo.CLIENT_CONFIRM);
+                            if (stream.ReadByte() != Glo.CLIENT_REQUEST_SUCCESS)
+                                throw new Exception();
+                            else
+                                InitiateTableChange();
+                        }
+                        else
+                            stream.WriteByte(Glo.CLIENT_CANCEL);
+                    }
                     else if (response == Glo.CLIENT_SESSION_INVALID)
                     {
                         App.SessionInvalidated();
@@ -316,8 +301,14 @@ namespace BridgeOpsClient
                         MessageBox.Show("Only admins can make table modifications.");
                         return;
                     }
+                    else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                    {
+                        MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
+                                        App.sr.ReadString(stream));
+                        return;
+                    }
                     else
-                        MessageBox.Show("Something went wrong.");
+                        throw new Exception();
                 }
                 else
                     MessageBox.Show("Could not create network stream.");
@@ -338,6 +329,12 @@ namespace BridgeOpsClient
         {
             App.PullColumnRecord();
             PopulateColumnList();
+        }
+
+        private void dtgColumns_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            btnColumnRemove.IsEnabled = Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
+                                                                     dtgColumns.GetCurrentlySelectedCell(1));
         }
     }
 }

@@ -296,10 +296,16 @@ internal class BridgeOpsAgent
 
     private static void Main(string[] args)
     {
+        bool firstRun = true;
+
         // Test sending a command to the database to see if it works. If it doesn't, keep trying every 5 seconds.
         bool successfulSqlConnection = false;
         while (!successfulSqlConnection || !columnRecordIntact)
         {
+            if (!firstRun)
+                Thread.Sleep(5000);
+            firstRun = false;
+
             SqlConnection sqlConnect = new SqlConnection(connectionString);
 
             try
@@ -1448,51 +1454,55 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            // Protect integral table and columns (could be structured better, but I've tried to keep it readable).
-            if (req.intent == TableModification.Intent.Removal)
+            // Protect integral tables and columns (could be structured better, but I've tried to keep it readable).
+            if (req.intent == TableModification.Intent.Removal ||
+                (req.intent == TableModification.Intent.Modification && req.columnType != null))
             {
                 string column = req.column;
                 string table = req.table;
-                bool allowed = table != "Organisation" &&
-                               table != "Asset" &&
-                               table != "Contact" &&
-                               table != "Conference" &&
-                               column != "Notes";
-                if (allowed)
-                    allowed = !((table == "Organisation" &&
-                                  (column == Glo.Tab.ORGANISATION_ID ||
-                                   column == Glo.Tab.PARENT_ID ||
-                                   column == Glo.Tab.DIAL_NO)) ||
-                                (table == "Asset" &&
-                                  (column == Glo.Tab.ASSET_ID ||
-                                   column == Glo.Tab.ORGANISATION_ID)) ||
-                                (table == "Contact" &&
-                                  (column == Glo.Tab.CONTACT_ID)) ||
-                                (table == "Conference" &&
-                                  (column == Glo.Tab.CONFERENCE_ID ||
-                                   column == Glo.Tab.RESOURCE_ID ||
-                                   column == Glo.Tab.ORGANISATION_RESOURCE_ROW ||
-                                   column == Glo.Tab.CONFERENCE_TYPE ||
-                                   column == Glo.Tab.CONFERENCE_TITLE ||
-                                   column == Glo.Tab.CONFERENCE_START ||
-                                   column == Glo.Tab.CONFERENCE_END ||
-                                   column == Glo.Tab.CONFERENCE_BUFFER ||
-                                   column == Glo.Tab.ORGANISATION_ID ||
-                                   column == Glo.Tab.RECURRENCE_ID)));
-                if (!allowed)
+                if (!Glo.Fun.ColumnRemovalAllowed(table, column))
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
                     return;
+                }
+
+                // If the column contains any data (either present or historic), require confirmation.
+
+                bool dataPresent = false;
+                SqlCommand comDataPresent = new SqlCommand($"SELECT TOP 1 {column} FROM {table} " +
+                                                           $"WHERE {column} IS NOT NULL",
+                                                           sqlConnect);
+                SqlDataReader reader = comDataPresent.ExecuteReader();
+                dataPresent = reader.Read();
+                reader.Close();
+                if (!dataPresent && (table == "Organisation" || table == "Asset"))
+                {
+                    comDataPresent = new SqlCommand($"SELECT TOP 1 {column} FROM {table}Change " +
+                                                    $"WHERE {column} IS NOT NULL",
+                                                    sqlConnect);
+                    reader = comDataPresent.ExecuteReader();
+                    if (reader.Read())
+                        dataPresent = true;
+                    reader.Close();
+                }
+
+                if (dataPresent)
+                {
+                    stream.WriteByte(Glo.CLIENT_CONFIRM);
+                    if (stream.ReadByte() != Glo.CLIENT_CONFIRM)
+                        return;
                 }
             }
 
             SqlCommand com = new SqlCommand(req.SqlCommand(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
+            {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            }
             else
             {
-                // Update the column record. Error message printed in both functions if this fials.
+                // Update the column record. Error message printed in both functions if this fails.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 columnRecordIntact = GetColumnRecordFromFile();
 
@@ -1503,6 +1513,12 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, e.Message);
+            }
+
             LogError(e);
         }
         finally

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,9 +19,33 @@ namespace BridgeOpsClient.CustomControls
 {
     public partial class SqlDataGrid : UserControl
     {
+        ScrollViewer? scrollViewer;
         public SqlDataGrid()
         {
             InitializeComponent();
+        }
+
+        private void dtg_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Get the scroll viewer. We need this to prevent horizontal auto-scrolling when the selection changes.
+
+            void FindScrollViewer(DependencyObject obj)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+                {
+                    if (VisualTreeHelper.GetChild(obj, i) is ScrollViewer sv)
+                    {
+                        scrollViewer = sv;
+                        scrollViewer.ScrollChanged += scrollViewer_ScrollChanged;
+                        break;
+                    }
+                    else if (scrollViewer == null)
+                        FindScrollViewer(VisualTreeHelper.GetChild(obj, i));
+
+                }
+            }
+
+            FindScrollViewer(dtg);
         }
 
         public struct Row
@@ -169,7 +194,51 @@ namespace BridgeOpsClient.CustomControls
         // When clicking on cell that overflows past the view, don't automatically scroll to bring it into view.
         private void dtg_CancelAutoScroll(object sender, RequestBringIntoViewEventArgs e)
         {
-            e.Handled = true;
+            //e.Handled = true;
         }
+
+        #region Custom Selection Changed Event
+
+        // Define a custom routed event
+        public static readonly RoutedEvent SelectionChangedEvent = EventManager.RegisterRoutedEvent(
+            "SelectionChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(SqlDataGrid));
+
+        // Provide CLR event wrapper
+        public event RoutedEventHandler SelectionChanged
+        {
+            add { AddHandler(SelectionChangedEvent, value); }
+            remove { RemoveHandler(SelectionChangedEvent, value); }
+        }
+
+        private void dtg_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // When the DataGrid's selection changes, raise the custom event.
+            RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
+
+            dtg.SelectedIndex = dtg.SelectedIndex;
+        }
+
+        #endregion
+
+        #region Prevent Horizontal Auto-Scrolling On Cell Selection
+
+        double previousHorizontalScroll = -1;
+        private void scrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (previousHorizontalScroll != -1 && scrollViewer != null)
+            {
+                scrollViewer.ScrollToHorizontalOffset(previousHorizontalScroll);
+                previousHorizontalScroll = -1;
+                e.Handled = true;
+            }
+        }
+
+        private void dtg_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        {
+            if (scrollViewer != null)
+                previousHorizontalScroll = scrollViewer.HorizontalOffset;
+        }
+
+        #endregion
     }
 }
