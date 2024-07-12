@@ -535,6 +535,18 @@ public class DatabaseCreator
                 }
             }
 
+            Writer.Message("\nCreating Friendly Name table...");
+            SendCommandSQL($"CREATE TABLE FriendlyNames ({Glo.Tab.FRIENDLY_TABLE} VARCHAR(128), " +
+                                                       $"{Glo.Tab.FRIENDLY_COLUMN} VARCHAR(128), " +
+                                                       $"{Glo.Tab.FRIENDLY_NAME} VARCHAR(128));");
+            if (friendlyNames.Count > 0)
+            {
+                Writer.Message("Populating friendly names...");
+                foreach (string[] names in friendlyNames)
+                    if (SendCommandSQL($"INSERT INTO FriendlyNames VALUES ('{names[0]}', '{names[1]}', '{names[2]}');"))
+                        Writer.Affirmative($"{names[1]} -> {names[2]}");
+            }
+
             Writer.Message("\nCreating admin login...");
             SendCommandSQL(string.Format("INSERT INTO Login (Username, Password, Admin, {0}, {1}, {2}, {3}) " +
                                          "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 1, " +
@@ -544,137 +556,10 @@ public class DatabaseCreator
                                          Glo.Tab.LOGIN_DELETE_PERMISSIONS,
                                          Glo.Tab.LOGIN_ENABLED,
                                          Glo.PERMISSIONS_MAX_VALUE));
-
-
-            //---- CREATE TYPE RESTRICTIONS FILE ----// (For use by Client in determining what to display/allow in UI)
-            RestoreColumnRecord();
         }
     }
-    public void RestoreColumnRecord()
-    {
-        try
-        {
-            Writer.Message("\nGathering data from database for column records file...");
-            sqlConnect.Open();
 
-            // Get a list of columns and their allowed values.
-            sqlCommand = new SqlCommand("SELECT t.[name], con.[definition] " +
-                                        "FROM sys.check_constraints con " +
-                                            "LEFT OUTER JOIN sys.objects t " +
-                                                "ON con.parent_object_id = t.object_id " +
-                                            "LEFT OUTER JOIN sys.all_columns col " +
-                                                "ON con.parent_column_id = col.column_id " +
-                                                "AND con.parent_object_id = col.object_id", sqlConnect);
-
-            SqlDataReader reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
-            Dictionary<string, string[]> checkConstraints = new Dictionary<string, string[]>();
-            while (reader.Read())
-            {
-                try
-                {
-                    // Line will read like something along the lines of "([Fruit]='Banana' OR [Fruit]='Apple')"
-                    string table = reader.GetString(0);
-                    string constraint = reader.GetString(1);
-                    string column = constraint.Substring(2, constraint.IndexOf(']') - 2);
-                    // SQL Server either lists or holds the constraints in the wrong order, so reverse here.
-                    string[] possVals = constraint.Split(" OR [");
-                    Array.Reverse(possVals);
-                    for (int n = 0; n < possVals.Length; ++n)
-                    {
-                        possVals[n] = possVals[n].Substring(possVals[n].IndexOf('\'') + 1);
-                        possVals[n] = possVals[n].Remove(possVals[n].LastIndexOf('\''));
-                    }
-
-                    // The key makes it easy to match the constraints up to their columns in the following section.
-                    checkConstraints.Add(table + column, possVals);
-                }
-                catch { /* Just ignore the exception and press on, but there shouldn't ever be any */ }
-            }
-            reader.Close();
-
-            // Get the max lengths of varchars. TEXT will later be limited to 65535 for compatibility with MySQL.
-            // Correction on the above, compatibility with MySQL has been scrapped, so I'm removing that ^ limitation.
-            sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
-                                        "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS;", sqlConnect);
-            reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
-
-            List<string[]> columns = new List<string[]>();
-            while (reader.Read())
-            {
-                string length = "";
-                if (!reader.IsDBNull(3))
-                {
-                    int lengthInt = reader.GetInt32(3);
-                    // Limit TEXT length to 65535, as SQL Server returns this value as bytes allowed, not characters.
-                    //length = (lengthInt > 65535 ? 65535 : lengthInt).ToString(); (See note above about compatibilty)
-                    length = lengthInt.ToString();
-                }
-                columns.Add(new string[] { reader.GetString(0), reader.GetString(1), reader.GetString(2), length });
-            }
-            reader.Close();
-
-            string fileText = "!!! NEVER, EVER, EVER EDIT THIS FILE !!!\n";
-
-            foreach (string[] column in columns)
-            {
-                fileText += column[0] + "[C]" + column[1] + "[R]";
-                if (column[3] == "") // int or text
-                    fileText += column[2].ToUpper();
-                else if (column[2].ToUpper() == "TEXT")
-                {
-                    fileText += "TEXT";
-                    column[3] = ""; // No need to track limit for TEXT as it's always the same.
-                }
-                else // varchar (char is not used by the application)
-                    fileText += column[3];
-                if (checkConstraints.ContainsKey(column[0] + column[1]))
-                {
-                    foreach (string s in checkConstraints[column[0] + column[1]])
-                    {
-                        fileText += "[A]";
-                        fileText += s;
-                    }
-                }
-                fileText += '\n';
-            }
-
-            // Add friendly names, if present and valid.
-            List<string> friendlyNames = new List<string>();
-            if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES))
-            {
-                fileText += "-\n"; // This signals the start of friendly names when read by Client.
-                friendlyNames = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES).ToList();
-                for (int n = 0; n < friendlyNames.Count; ++n)
-                {
-                    if (friendlyNames[n].Length >= 8 && !friendlyNames[n].StartsWith('#'))
-                    {
-                        string[] split = friendlyNames[n].Split(";;");
-                        if (split.Length == 3 && split[0].Length > 0 || split[1].Length > 0 || split[2].Length > 0)
-                            if (split[0] == "Organisation" || split[0] == "Contact" ||
-                                split[0] == "Asset" || split[0] == "Conference")
-                                fileText += friendlyNames[n] + '\n';
-                    }
-                }
-            }
-
-            if (fileText.EndsWith('\n'))
-                fileText = fileText.Remove(fileText.Length - 1);
-
-            // Automatically generates the file if one isn't present.
-            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText);
-            Writer.Affirmative("Column records file written successfully.");
-        }
-        catch (Exception e)
-
-        {
-            Writer.Message("Couldn't create column records file. See error:", ConsoleColor.Red);
-            Writer.Message(e.Message, ConsoleColor.Red);
-        }
-        finally
-        {
-            CloseSQL();
-        }
-    }
+    public List<string[]> friendlyNames = new();
 
     List<ColumnAddition> columnAdditions = new List<ColumnAddition>();
     struct ColumnAddition

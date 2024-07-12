@@ -148,17 +148,14 @@ public class ConsoleController
                    Glo.CONFIG_COLUMN_ADDITIONS + "\". File path is relevant to the path of this executable.");
         AddCommand("wipe column additions", ValType.None, menu, WipeColumnAdditions,
                    "Wipe all loaded column additions. Does not affect the column additions template file.");
-        AddCommand("restore column record", ValType.None, menu, RestoreColumnRecord,
-                   "Restore the column record used by the Client application for limiting values in fields and " +
-                   "registering column additions. Database must first have been created as this process uses the " +
-                   "created database as its reference, and does not consider any config files.");
         AddCommand("create friendly names", ValType.None, menu, CreateFriendlyNames,
                    "Create a new friendly names template file under \"" + Glo.PATH_CONFIG_FILES +
                    Glo.CONFIG_FRIENDLY_NAMES + "\". File path is relevant to the path of this executable.");
-        AddCommand("parse friendly names", ValType.None, menu, ParseFriendlyNames,
-                   "Check to make sure \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES +
-                   "\" is legible for agent. Does not verify stated column names. File path is relevent to the path " +
-                   "of this executable.");
+        AddCommand("load friendly names", ValType.None, menu, LoadFriendlyNames,
+                   "Load friendly names from \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES +
+                   "\". File path is relevent to the path of this executable.");
+        AddCommand("wipe friendly names", ValType.None, menu, WipeFriendlyNaemes,
+                   "Wipe all loaded friendly names. Does not affect the friendly names file.");
         AddCommand("create database", ValType.None, menu, CreateDatabase,
                    "Create a new database on the localhost\\SQLEXPRESS server.");
         AddCommand("delete database", ValType.None, menu, DeleteDatabase,
@@ -384,8 +381,11 @@ public class ConsoleController
         return 0;
     }
 
-    private int ParseFriendlyNames()
+    List<string[]> friendlyNames = new();
+    private int LoadFriendlyNames()
     {
+        dbCreate.friendlyNames.Clear();
+
         if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES))
         {
             string[] lines = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES);
@@ -402,7 +402,10 @@ public class ConsoleController
                         {
                             if (names[0] == "Organisation" || names[0] == "Contact" ||
                                 names[0] == "Asset" || names[0] == "Conference")
+                            {
+                                dbCreate.friendlyNames.Add(names);
                                 Writer.Affirmative("'" + names[1] + "' will display as '" + names[2] + "'");
+                            }
                             else
                                 Writer.Negative("Line " + l + " stated an invalid table name.");
                         }
@@ -438,17 +441,18 @@ public class ConsoleController
                             "\n# Food;;Bananas;;Yellow Fruit" +
                             "\n# Food;;Raisins;;Dried Grapes" +
                             "\n" +
+                            "\n# Only some columns in the Organisation, Asset, Contact and Conference tables are supported." +
+                            "\n" +
                             "\n# This file supercedes the column names stated in " +
                             Glo.CONFIG_COLUMN_ADDITIONS + ".\n\n");
         }
 
         return 0;
     }
-
-    private int RestoreColumnRecord()
+    private int WipeFriendlyNaemes()
     {
-        dbCreate.RestoreColumnRecord();
-
+        dbCreate.friendlyNames = new();
+        Writer.Affirmative("Friendly names list reset.");
         return 0;
     }
 
