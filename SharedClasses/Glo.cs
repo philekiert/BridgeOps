@@ -146,6 +146,10 @@ public static class Glo
         public const string LOGIN_DELETE_PERMISSIONS = "Delete_Permissions";
         public const string LOGIN_ENABLED = "Enabled";
 
+        public const string FRIENDLY_TABLE = "TableName";
+        public const string FRIENDLY_COLUMN = "ColumnName";
+        public const string FRIENDLY_NAME = "FriendlyName";
+
         public const string NOTES = "Notes";
     }
 

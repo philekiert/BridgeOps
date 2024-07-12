@@ -233,24 +233,15 @@ internal class BridgeOpsAgent
                 fileText += '\n';
             }
 
-            // Add friendly names, if present and valid.
-            List<string> friendlyNames = new List<string>();
-            if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES))
-            {
-                fileText += "-\n"; // This signals the start of friendly names when read by Client.
-                friendlyNames = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES).ToList();
-                for (int n = 0; n < friendlyNames.Count; ++n)
-                {
-                    if (friendlyNames[n].Length >= 8 && !friendlyNames[n].StartsWith('#'))
-                    {
-                        string[] split = friendlyNames[n].Split(";;");
-                        if (split.Length == 3 && split[0].Length > 0 || split[1].Length > 0 || split[2].Length > 0)
-                            if (split[0] == "Organisation" || split[0] == "Contact" ||
-                                split[0] == "Asset" || split[0] == "Conference")
-                                fileText += friendlyNames[n] + '\n';
-                    }
-                }
-            }
+            fileText += "-\n";
+
+            // Get any friendly names.
+            sqlCommand = new SqlCommand("SELECT * FROM FriendlyNames;", sqlConnect);
+            reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
+            while (reader.Read())
+                if (reader.GetString(2) != "")
+                    fileText += reader.GetString(0) + ";;" + reader.GetString(1) + ";;" + reader.GetString(2) + "\n";
+            reader.Close();
 
             if (fileText.EndsWith('\n'))
                 fileText = fileText.Remove(fileText.Length - 1);
@@ -1460,7 +1451,8 @@ internal class BridgeOpsAgent
             {
                 string column = req.column;
                 string table = req.table;
-                if (!Glo.Fun.ColumnRemovalAllowed(table, column))
+                if (req.intent == TableModification.Intent.Removal &&
+                    !Glo.Fun.ColumnRemovalAllowed(table, column))
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
                     return;
@@ -1505,6 +1497,9 @@ internal class BridgeOpsAgent
                 // Update the column record. Error message printed in both functions if this fails.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 columnRecordIntact = GetColumnRecordFromFile();
+
+                // Update the friendly name, if needed.
+                List<string[]> friendlyNames = ColumnRecord.GetFriendlyNames();
 
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst

@@ -289,10 +289,10 @@ namespace SendReceiveClasses
         {
             // SecureColumn() should suffice here for table names and types.
             table = SqlAssist.SecureColumn(table);
-            column = SqlAssist.SecureColumn(column);
+            column = SqlAssist.SecureColumn(column).Replace(' ', '_');
 
             if (columnRename != null)
-                columnRename = SqlAssist.SecureColumn(columnRename);
+                columnRename = SqlAssist.SecureColumn(columnRename).Replace(' ', '_');
 
             if (columnType != null)
             {
@@ -302,7 +302,9 @@ namespace SendReceiveClasses
             }
 
             for (int n = 0; n < allowed.Count; ++n)
-                allowed[n] = SqlAssist.AddQuotes(SqlAssist.SecureColumn(allowed[n]));
+                allowed[n] = SqlAssist.AddQuotes(SqlAssist.SecureColumn(allowed[n]))
+                             .Replace("\r\n", "")
+                             .Replace("\n", ""); // If any new lines sneak in, they could break the column record.
         }
 
         private string DropConstraint(string table, string column)
@@ -372,17 +374,25 @@ namespace SendReceiveClasses
                     commands.Add(DropConstraint(table, column));
                     droppedConstraint = true;
 
-                    commands.Add($"ALTER TABLE {table} RENAME COLUMN {column} TO {columnRename};");
+                    commands.Add($"EXEC sp_rename '{table}.{column}', '{columnRename}', 'COLUMN';");
 
                     // Rename register columns if needed.
                     if (table == "Organisation" || table == "Asset")
                     {
-                        commands.Add($"ALTER TABLE {table}Change " +
-                                     $"RENAME COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} TO " +
-                                     $"{columnRename}{Glo.Tab.CHANGE_REGISTER_SUFFIX};");
-                        commands.Add($"ALTER TABLE {table}Change " +
-                                     $"RENAME COLUMN {column} TO {columnRename};");
+                        commands.Add($"EXEC sp_rename '{table}Change." +
+                                     $"{column}{Glo.Tab.CHANGE_REGISTER_SUFFIX}', " +
+                                     $"'{columnRename}{Glo.Tab.CHANGE_REGISTER_SUFFIX}', 'COLUMN';");
+                        commands.Add($"EXEC sp_rename '{table}Change." +
+                                     $"{column}', '{columnRename}', 'COLUMN';");
                     }
+
+                    // SQL Server needs to recognise this rename immediately for some further operations. The type
+                    // change seems to work, but the constraint creation fails using the new column name. Best to
+                    // play it safe by updating the schema consistently regardless of further operations.
+
+                    commands.Add($"ALTER TABLE {table} WITH CHECK CHECK CONSTRAINT ALL;");
+                    if (table == "Organisation" || table == "Asset")
+                        commands.Add($"ALTER TABLE {table}Change WITH CHECK CHECK CONSTRAINT ALL;");
                 }
                 if (allowed.Count == 0 && !droppedConstraint)
                 {
@@ -417,10 +427,26 @@ namespace SendReceiveClasses
                 {
                     if (!droppedConstraint)
                         commands.Add(DropConstraint(table, column));
-                    commands.Add($"ALTER TABLE {table} " +
+                    commands.Add($"EXEC sp_executesql N'ALTER TABLE {table} " +
                                  $"ADD CONSTRAINT chk_{table}{column} " +
                                  $"CHECK ({column} " +
-                                 $"IN ({string.Join(",", allowed)}));");
+                                 $"IN ('{string.Join("','", allowed)}'));'");
+                }
+
+                if (friendly != null)
+                {
+                    commands.Add($"IF EXISTS(SELECT 1 FROM FriendlyNames " +
+                                 $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
+                                 $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}') " +
+                                 "BEGIN " +
+                                 $"UPDATE FriendlyNames SET {Glo.Tab.FRIENDLY_NAME} = '{friendly}' " +
+                                 $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
+                                 $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}';" +
+                                 "END " + 
+                                 $"ELSE " +
+                                 $"BEGIN " + 
+                                 $"INSERT INTO FriendlyNames VALUES ('{table}', '{column}', '{friendly}'); " +
+                                 "END;");
                 }
 
                 if (commands.Count == 1)
@@ -949,7 +975,7 @@ namespace SendReceiveClasses
         public int editPermissions;
         public int deletePermissions;
         public bool enabled;
-        
+
         public Login(string sessionID, int loginID, string username, string password, bool admin,
                      int createPermissions, int editPermissions, int deletePermissions, bool enabled)
         {

@@ -536,9 +536,9 @@ public class DatabaseCreator
             }
 
             Writer.Message("\nCreating Friendly Name table...");
-            SendCommandSQL($"CREATE TABLE FriendlyNames ({Glo.Tab.FRIENDLY_TABLE} VARCHAR(128), " +
-                                                       $"{Glo.Tab.FRIENDLY_COLUMN} VARCHAR(128), " +
-                                                       $"{Glo.Tab.FRIENDLY_NAME} VARCHAR(128));");
+            SendCommandSQL($"CREATE TABLE FriendlyNames ({Glo.Tab.FRIENDLY_TABLE} VARCHAR(128) NOT NULL, " +
+                                                       $"{Glo.Tab.FRIENDLY_COLUMN} VARCHAR(128) NOT NULL, " +
+                                                       $"{Glo.Tab.FRIENDLY_NAME} VARCHAR(128) NOT NULL);");
             if (friendlyNames.Count > 0)
             {
                 Writer.Message("Populating friendly names...");

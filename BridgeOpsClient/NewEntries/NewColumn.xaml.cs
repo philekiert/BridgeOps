@@ -120,11 +120,7 @@ namespace BridgeOpsClient
 
             List<string> allowed = new();
             if (txtAllowed.Text.Length > 0 && cmbType.Text == "VARCHAR")
-            {
                 allowed = txtAllowed.Text.Split("\r\n").ToList();
-                allowed = txtAllowed.Text.Split("\n").ToList();
-                allowed = txt
-            }
 
             if (!edit) // If adding.
             {

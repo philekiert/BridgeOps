@@ -62,6 +62,25 @@ public static class ColumnRecord
     public static Dictionary<string, Column> login = new();
     public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
+    public static List<string[]> GetFriendlyNames()
+    {
+        List<string[]> friendlyNames = new();
+
+        void GetNames(string table, Dictionary<string, Column> dict)
+        {
+            foreach (KeyValuePair<string, Column> col in dict)
+                if (col.Value.friendlyName != "")
+                    friendlyNames.Add(new string[] { table, col.Key, col.Value.friendlyName });
+        }
+
+        GetNames("Organisation", organisation);
+        GetNames("Asset", asset);
+        GetNames("Contact", contact);
+        GetNames("Conference", conference);
+
+        return friendlyNames;
+    }
+
     public static Column? GetColumn(string table, string column)
     {
         try
