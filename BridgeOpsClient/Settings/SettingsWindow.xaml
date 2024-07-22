@@ -52,6 +52,9 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="Refresh" Width="70" x:Name="btnColumnsRefresh"
                                 HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
@@ -60,8 +63,11 @@
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
                                 Click="btnColumnAdd_Click"/>
                         <Button Grid.Column="2" Content="Remove" Width="70" x:Name="btnColumnRemove"
-                                HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
+                                HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
                                 Click="btnColumnRemove_Click"/>
+                        <Button Grid.Column="5" Content="Reorder" Width="92" x:Name="btnReorder"
+                                HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
+                                Click="btnReorder_Click"/>
                     </Grid>
                 </Grid>
             </TabItem>

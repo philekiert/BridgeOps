@@ -336,5 +336,11 @@ namespace BridgeOpsClient
             btnColumnRemove.IsEnabled = Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
                                                                      dtgColumns.GetCurrentlySelectedCell(1));
         }
+
+        private void btnReorder_Click(object sender, RoutedEventArgs e)
+        {
+            ReorderColumns reorderColumns = new();
+            reorderColumns.ShowDialog();
+        }
     }
 }

@@ -62,6 +62,11 @@ public static class ColumnRecord
     public static Dictionary<string, Column> login = new();
     public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
+    public static List<int> organisationOrder = new();
+    public static List<int> assetOrder = new();
+    public static List<int> contactOrder = new();
+    public static List<int> conferenceOrder = new();
+
     public static List<string[]> GetFriendlyNames()
     {
         List<string[]> friendlyNames = new();
@@ -282,6 +287,16 @@ public static class ColumnRecord
                 resourceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
             foreach (KeyValuePair<string, Column> kvp in login)
                 loginFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+
+            // Store the column orders for each table.
+            for (int i = 0; i < organisation.Count; ++i)
+                organisationOrder.Add(i);
+            for (int i = 0; i < asset.Count; ++i)
+                assetOrder.Add(i);
+            for (int i = 0; i < contact.Count; ++i)
+                contactOrder.Add(i);
+            for (int i = 0; i < conference.Count; ++i)
+                conferenceOrder.Add(i);
 
             // Phew!
             return true;

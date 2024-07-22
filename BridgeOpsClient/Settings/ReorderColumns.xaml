@@ -1,0 +1,41 @@
+﻿<Window x:Class="BridgeOpsClient.ReorderColumns"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BridgeOpsClient"
+        mc:Ignorable="d"
+        Title="Reorder Columns" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="280"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+        <Label Grid.Row="0" Grid.Column="0" Content="Table"/>
+        <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 5 10 5" SelectedIndex="0" x:Name="cmbTable"
+                  SelectionChanged="cmbTable_SelectionChanged">
+            <ComboBoxItem Content="Organisation" FontWeight="Normal"/>
+            <ComboBoxItem Content="Asset" FontWeight="Normal"/>
+            <ComboBoxItem Content="Contact" FontWeight="Normal"/>
+            <ComboBoxItem Content="Conference" FontWeight="Normal"/>
+        </ComboBox>
+        <Label Grid.Row="1" Grid.Column="0" Content="Columns"/>
+        <ListView Grid.Row="1" Grid.Column="1" Grid.RowSpan="3" x:Name="lstColumns"
+                  Margin="10 5 10 5" Height="Auto" SelectionChanged="lstColumns_SelectionChanged"/>
+        <Button Grid.Row="2" Grid.Column="0" Content="▲" x:Name="btnUp" FontSize="9"
+                Margin="0,5,0,0" Width="20" Height="20" HorizontalAlignment="Right"
+                IsEnabled="False" Click="btnUp_Click"/>
+        <Button Grid.Row="3" Grid.Column="0" Content="▼" x:Name="btnDown" FontSize="9"
+                Margin="10 -1 0 5" Width="20" Height="20" HorizontalAlignment="Right"
+                IsEnabled="False" Click="btnDown_Click"/>
+        <Button Grid.Row="4" Grid.Column="1" Content="Apply" x:Name="btnApply"
+                Margin="10 10 10 10" Width="60" HorizontalAlignment="Right"/>
+    </Grid>
+</Window>
