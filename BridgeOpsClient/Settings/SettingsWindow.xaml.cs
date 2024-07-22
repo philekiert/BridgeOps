@@ -197,10 +197,10 @@ namespace BridgeOpsClient
                     }
                 }
 
-                AddTable("Organisation", ColumnRecord.organisation);
-                AddTable("Asset", ColumnRecord.asset);
-                AddTable("Contact", ColumnRecord.contact);
-                AddTable("Conference", ColumnRecord.conference);
+                AddTable("Organisation", ColumnRecord.orderedOrganisation);
+                AddTable("Asset", ColumnRecord.orderedAsset);
+                AddTable("Contact", ColumnRecord.orderedContact);
+                AddTable("Conference", ColumnRecord.orderedConference);
 
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };

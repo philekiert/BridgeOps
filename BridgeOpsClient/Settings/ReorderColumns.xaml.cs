@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -60,28 +61,28 @@ namespace BridgeOpsClient
             {
                 table = "Organisation";
                 dictionary = ColumnRecord.organisation;
-                lowerLimit = 4;
+                lowerLimit = Glo.Tab.ORGANISATION_STATIC_COUNT;
                 order = organisationOrder;
             }
             else if (cmbTable.SelectedIndex == 1)
             {
                 table = "Asset";
                 dictionary = ColumnRecord.asset;
-                lowerLimit = 3;
+                lowerLimit = Glo.Tab.ASSET_STATIC_COUNT;
                 order = assetOrder;
             }
             else if (cmbTable.SelectedIndex == 2)
             {
                 table = "Contact";
                 dictionary = ColumnRecord.contact;
-                lowerLimit = 2;
+                lowerLimit = Glo.Tab.CONTACT_STATIC_COUNT;
                 order = contactOrder;
             }
             else
             {
                 table = "Conference";
                 dictionary = ColumnRecord.conference;
-                lowerLimit = 11;
+                lowerLimit = Glo.Tab.CONFERENCE_STATIC_COUNT;
                 order = conferenceOrder;
             }
 
@@ -223,6 +224,15 @@ namespace BridgeOpsClient
                 ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Normal;
                 cmbTable.FontWeight = FontWeights.Normal;
             }
+
+            // To see if anything changed, we can just check to see if any tables are bold.
+            for (int n = 0; n < 4; ++n)
+                if (((ComboBoxItem)cmbTable.Items[n]).FontWeight == FontWeights.Bold)
+                {
+                    btnApply.IsEnabled = true;
+                    return;
+                }
+            btnApply.IsEnabled = false;
         }
 
         bool updatingSelection = false;
@@ -278,6 +288,62 @@ namespace BridgeOpsClient
             ChangeTable();
 
             cmbTable.FontWeight = ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight;
+        }
+
+        public bool changeMade = false;
+        private void btnApply_Click(object sender, RoutedEventArgs e)
+        {
+            // Legal values are checked rigorously by the agent, so we don't need to worry so much about that here.
+            // The button will also not be enabled if there have been no changes.
+
+            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+            try
+            {
+                if (stream != null)
+                {
+                    stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
+
+                    SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
+                                                                        organisationOrder,
+                                                                        assetOrder,
+                                                                        contactOrder,
+                                                                        conferenceOrder);
+
+                    App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    {
+                        changeMade = true;
+                        Close();
+                        return;
+                    }
+                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    {
+                        App.SessionInvalidated();
+                        Close();
+                        return;
+                    }
+                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                    {
+                        // Shouldn't ever arrive here.
+                        MessageBox.Show("Only admins can reorder columns.");
+                        return;
+                    }
+                    else
+                        throw new Exception();
+                }
+                else
+                    MessageBox.Show("Could not create network stream.");
+            }
+            catch
+            {
+                MessageBox.Show("Could not apply new column order.");
+                return;
+            }
+            finally
+            {
+                if (stream != null) stream.Close();
+            }
         }
     }
 }

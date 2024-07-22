@@ -35,7 +35,7 @@
         <Button Grid.Row="3" Grid.Column="0" Content="▼" x:Name="btnDown" FontSize="9"
                 Margin="10 -1 0 5" Width="20" Height="20" HorizontalAlignment="Right"
                 IsEnabled="False" Click="btnDown_Click"/>
-        <Button Grid.Row="4" Grid.Column="1" Content="Apply" x:Name="btnApply"
-                Margin="10 10 10 10" Width="60" HorizontalAlignment="Right"/>
+        <Button Grid.Row="4" Grid.Column="1" Content="Apply" x:Name="btnApply" IsEnabled="False"
+                Margin="10 10 10 15" Width="60" HorizontalAlignment="Right" Click="btnApply_Click"/>
     </Grid>
 </Window>

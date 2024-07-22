@@ -442,9 +442,9 @@ namespace SendReceiveClasses
                                  $"UPDATE FriendlyNames SET {Glo.Tab.FRIENDLY_NAME} = '{friendly}' " +
                                  $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
                                  $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}';" +
-                                 "END " + 
+                                 "END " +
                                  $"ELSE " +
-                                 $"BEGIN " + 
+                                 $"BEGIN " +
                                  $"INSERT INTO FriendlyNames VALUES ('{table}', '{column}', '{friendly}'); " +
                                  "END;");
                 }
@@ -459,22 +459,48 @@ namespace SendReceiveClasses
         }
     }
 
-    struct ColumnOrderRecord
+    struct ColumnOrdering
     {
+        public string sessionID;
         public List<int> organisationOrder = new();
         public List<int> assetOrder = new();
         public List<int> contactOrder = new();
         public List<int> conferenceOrder = new();
 
-        public ColumnOrderRecord(List<int> organisationOrder,
+        public ColumnOrdering(string sessionID,
+                                 List<int> organisationOrder,
                                  List<int> assetOrder,
                                  List<int> contactOrder,
                                  List<int> conferenceOrder)
         {
+            this.sessionID = sessionID;
             this.organisationOrder = organisationOrder;
             this.assetOrder = assetOrder;
             this.contactOrder = contactOrder;
             this.conferenceOrder = conferenceOrder;
+        }
+
+        public string SqlCommand()
+        {
+            string Command(string table, List<int> order)
+            {
+                List<string> setters = new();
+
+                string command = $"UPDATE {table}Order SET ";
+
+                for (int n = 0; n < order.Count; ++n)
+                    command += $"_{n} = {order[n]}, ";
+
+                // Remove the trailing ", " (the command will fail anyway if there are no setters).
+                command = command.Remove(command.Length - 2);
+
+                return command + ";";
+            }
+
+            return SqlAssist.Transaction(new string[] { Command("Organisation", organisationOrder),
+                                                        Command("Asset", assetOrder),
+                                                        Command("Contact", contactOrder),
+                                                        Command("Conference", conferenceOrder) });
         }
     }
 

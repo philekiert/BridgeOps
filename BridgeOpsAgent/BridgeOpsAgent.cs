@@ -160,7 +160,7 @@ internal class BridgeOpsAgent
                                                            "ON con.parent_object_id = t.object_id " +
                                                        "LEFT OUTER JOIN sys.all_columns col " +
                                                            "ON con.parent_column_id = col.column_id " +
-                                                           "AND con.parent_object_id = col.object_id", sqlConnect);
+                                                           "AND con.parent_object_id = col.object_id;", sqlConnect);
 
             SqlDataReader reader = sqlCommand.ExecuteReader(CommandBehavior.Default);
             Dictionary<string, string[]> checkConstraints = new Dictionary<string, string[]>();
@@ -190,8 +190,12 @@ internal class BridgeOpsAgent
 
             // Get the max lengths of varchars. TEXT will be 
             sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
-                                        "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS;", sqlConnect);
-            reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
+                                        "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS " +
+                                        "WHERE TABLE_NAME != 'OrganisationOrder' AND " +
+                                              "TABLE_NAME != 'AssetOrder' AND " +
+                                              "TABLE_NAME != 'ContactOrder' AND " +
+                                              "TABLE_NAME != 'ConferenceOrder';", sqlConnect);
+            reader = sqlCommand.ExecuteReader();
 
             List<string[]> columns = new List<string[]>();
             while (reader.Read())
@@ -210,8 +214,19 @@ internal class BridgeOpsAgent
 
             string fileText = "!!! NEVER, EVER, EVER EDIT THIS FILE !!!\n";
 
+            int[] orderCounts = new int[4]; // Record the column counts for the four tables that require ordering.
+
             foreach (string[] column in columns)
             {
+                if (column[0] == "Organisation")
+                    ++orderCounts[0];
+                else if (column[0] == "Asset")
+                    ++orderCounts[1];
+                else if (column[0] == "Contact")
+                    ++orderCounts[2];
+                else if (column[0] == "Conference")
+                    ++orderCounts[3];
+
                 fileText += column[0] + "[C]" + column[1] + "[R]";
                 if (column[3] == "") // int or text
                     fileText += column[2].ToUpper();
@@ -237,17 +252,41 @@ internal class BridgeOpsAgent
 
             // Get any friendly names.
             sqlCommand = new SqlCommand("SELECT * FROM FriendlyNames;", sqlConnect);
-            reader = sqlCommand.ExecuteReader(System.Data.CommandBehavior.Default);
+            reader = sqlCommand.ExecuteReader();
             while (reader.Read())
                 if (reader.GetString(2) != "")
                     fileText += reader.GetString(0) + ";;" + reader.GetString(1) + ";;" + reader.GetString(2) + "\n";
             reader.Close();
 
-            if (fileText.EndsWith('\n'))
-                fileText = fileText.Remove(fileText.Length - 1);
+            fileText += ">\n";
+
+            // Get the column order;
+            void AddColumnOrder(string table, int columnCount)
+            {
+                --columnCount; // Just to save some calculations in the for loop. Reverted below;
+                string command = "SELECT ";
+                for (int i = 0; i < columnCount; ++i)
+                    command += $"_{i}, ";
+                command += $"_{columnCount} FROM {table}Order;";
+                ++columnCount;
+
+                sqlCommand = new SqlCommand(command, sqlConnect);
+                reader = sqlCommand.ExecuteReader();
+
+                reader.Read();
+                for (int i = 0; i < columnCount; ++i)
+                    fileText += $"{reader.GetInt16(i)},";
+                fileText = fileText.Remove(fileText.Length - 1) + "\n";
+                reader.Close();
+            }
+
+            AddColumnOrder("Organisation", orderCounts[0]);
+            AddColumnOrder("Asset", orderCounts[1]);
+            AddColumnOrder("Contact", orderCounts[2]);
+            AddColumnOrder("Conference", orderCounts[3]);
 
             // Automatically generates the file if one isn't present.
-            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText);
+            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText.Remove(fileText.Length - 1));
             return true;
         }
         catch (Exception e)
@@ -489,6 +528,8 @@ internal class BridgeOpsAgent
                     ClientBuildHistoricalRecord(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_TABLE_MODIFICATION)
                     ClientColumnModification(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_COLUMN_ORDER_UPDATE)
+                    ClientColumnOrderUpdate(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -1489,17 +1530,12 @@ internal class BridgeOpsAgent
             SqlCommand com = new SqlCommand(req.SqlCommand(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
-            {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
-            }
             else
             {
                 // Update the column record. Error message printed in both functions if this fails.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 columnRecordIntact = GetColumnRecordFromFile();
-
-                // Update the friendly name, if needed.
-                List<string[]> friendlyNames = ColumnRecord.GetFriendlyNames();
 
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst
@@ -1513,6 +1549,80 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
                 sr.WriteAndFlush(stream, e.Message);
             }
+
+            LogError(e);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+            updatingColumnRecord = false;
+        }
+    }
+
+    // Permission restricted.
+    private static void ClientColumnOrderUpdate(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        while (pullingColumnRecord != 0 || updatingColumnRecord)
+            Thread.Sleep(10);
+        updatingColumnRecord = true;
+
+        try
+        {
+            sqlConnect.Open();
+            ColumnOrdering req = sr.Deserialise<ColumnOrdering>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            if (!clientSessions[req.sessionID].admin)
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                return;
+            }
+
+            // Reject if the column record isn't intact, or if the order column counts aren't right.
+            if (!columnRecordIntact ||
+                req.organisationOrder.Count != ColumnRecord.organisation.Count ||
+                req.assetOrder.Count != ColumnRecord.asset.Count ||
+                req.contactOrder.Count != ColumnRecord.contact.Count ||
+                req.conferenceOrder.Count != ColumnRecord.conference.Count)
+                throw new Exception("Could not apply new column order. Either the column record " +
+                                    "is no longer intact, or the column counts were incorrect.");
+
+            // Make sure the column numbers look right.
+            void CheckStartingOrderValues(List<int> order, int cutoff)
+            {
+                for (int n = 0; n < Glo.Tab.ORGANISATION_STATIC_COUNT; ++n)
+                    if (req.organisationOrder[n] != n)
+                        throw new Exception("Could not apply new column order. It looks like the user is attempting " +
+                                            "to reorder un-reorderable columns.");
+            }
+            CheckStartingOrderValues(req.organisationOrder, Glo.Tab.ORGANISATION_STATIC_COUNT);
+            CheckStartingOrderValues(req.assetOrder, Glo.Tab.ASSET_STATIC_COUNT);
+            CheckStartingOrderValues(req.contactOrder, Glo.Tab.CONTACT_STATIC_COUNT);
+            CheckStartingOrderValues(req.conferenceOrder, Glo.Tab.CONFERENCE_STATIC_COUNT);
+
+            SqlCommand sqlCommand = new SqlCommand(req.SqlCommand(), sqlConnect);
+            if (sqlCommand.ExecuteNonQuery() != 4)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            else
+            {
+                // Update the column record. Error message printed in both functions if this fails.
+                columnRecordIntact = RebuildColumnRecord(sqlConnect);
+                columnRecordIntact = GetColumnRecordFromFile();
+
+                // Don't report success until the column record has been updated, otherwise the client
+                // will attempt to pull the record first.stopst
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            }
+        }
+        catch (Exception e)
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
 
             LogError(e);
         }

@@ -67,6 +67,11 @@ public static class ColumnRecord
     public static List<int> contactOrder = new();
     public static List<int> conferenceOrder = new();
 
+    public static Dictionary<string, Column> orderedOrganisation = new();
+    public static Dictionary<string, Column> orderedAsset = new();
+    public static Dictionary<string, Column> orderedContact = new();
+    public static Dictionary<string, Column> orderedConference = new();
+
     public static List<string[]> GetFriendlyNames()
     {
         List<string[]> friendlyNames = new();
@@ -84,6 +89,32 @@ public static class ColumnRecord
         GetNames("Conference", conference);
 
         return friendlyNames;
+    }
+
+    public static bool OrderTable(Dictionary<string, Column> dictionary,
+                                  List<int> order,
+                                  Dictionary<string, Column> orderedDictionary)
+    {
+        try
+        {
+            KeyValuePair<string, Column>[] orderedArray = new KeyValuePair<string, Column>[order.Count];
+
+            int i = 0;
+            foreach (KeyValuePair<string, Column> kvp in dictionary)
+            {
+                orderedArray[order[i]] = kvp;
+                ++i;
+            }
+
+            foreach (KeyValuePair<string, Column> kvp in orderedArray)
+                orderedDictionary.Add(kvp.Key, kvp.Value);
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public static Column? GetColumn(string table, string column)
@@ -153,6 +184,16 @@ public static class ColumnRecord
         resourceFriendlyNameReversal = new();
         login = new();
         loginFriendlyNameReversal = new();
+
+        organisationOrder = new();
+        assetOrder = new();
+        contactOrder = new();
+        conferenceOrder = new();
+
+        orderedOrganisation = new();
+        orderedAsset = new();
+        orderedContact = new();
+        conferenceOrder = new();
 
         try
         {
@@ -229,6 +270,13 @@ public static class ColumnRecord
 
             for (; n < lines.Length; ++n) // Won't run if there are no friendly names.
             {
+                if (lines[n] == ">")
+                {
+                    // Proceed on to the column orders.
+                    ++n;
+                    break;
+                }
+
                 string[] friendlySplit = lines[n].Split(";;");
                 // The option is open for the user to specify friendly names using spaces instead of
                 // underscores, so make that uniform here.
@@ -266,6 +314,54 @@ public static class ColumnRecord
                     AddFriendlyName(login);
             }
 
+            for (int o = 0; n < lines.Length && o < 4; ++n, ++o)
+            {
+                string[] indices = lines[n].Split(',');
+                List<int> order;
+                if (o == 0)
+                    order = organisationOrder;
+                else if (o == 1)
+                    order = assetOrder;
+                else if (o == 2)
+                    order = contactOrder;
+                else // if 3
+                    order = conferenceOrder;
+
+                foreach (string s in indices)
+                {
+                    int i;
+                    if (int.TryParse(s, out i))
+                        order.Add(i);
+                }
+            }
+
+            // Check the order integrity.
+            if (organisation.Count != organisationOrder.Count ||
+                asset.Count != assetOrder.Count ||
+                contact.Count != contactOrder.Count ||
+                conference.Count != conferenceOrder.Count)
+                return false;
+
+            for (int i = 0; i < organisationOrder.Count; ++i)
+                if (!organisationOrder.Contains(i))
+                    return false;
+            for (int i = 0; i < assetOrder.Count; ++i)
+                if (!assetOrder.Contains(i))
+                    return false;
+            for (int i = 0; i < contactOrder.Count; ++i)
+                if (!contactOrder.Contains(i))
+                    return false;
+            for (int i = 0; i < conferenceOrder.Count; ++i)
+                if (!conferenceOrder.Contains(i))
+                    return false;
+
+            if (!OrderTable(organisation, organisationOrder, orderedOrganisation) ||
+                !OrderTable(asset, assetOrder, orderedAsset) ||
+                !OrderTable(contact, contactOrder, orderedContact) ||
+                !OrderTable(conference, conferenceOrder, orderedConference))
+                return false;
+
+
             // Populate the friendly name reversal dictionaries.
             foreach (KeyValuePair<string, Column> kvp in organisation)
                 organisationFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
@@ -287,16 +383,6 @@ public static class ColumnRecord
                 resourceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
             foreach (KeyValuePair<string, Column> kvp in login)
                 loginFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-
-            // Store the column orders for each table.
-            for (int i = 0; i < organisation.Count; ++i)
-                organisationOrder.Add(i);
-            for (int i = 0; i < asset.Count; ++i)
-                assetOrder.Add(i);
-            for (int i = 0; i < contact.Count; ++i)
-                contactOrder.Add(i);
-            for (int i = 0; i < conference.Count; ++i)
-                conferenceOrder.Add(i);
 
             // Phew!
             return true;

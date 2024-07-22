@@ -19,7 +19,7 @@ public static class Glo
     public const string CONFIG_COLUMN_ADDITIONS = "column-additions.txt";
     public const string CONFIG_NETWORK = "network-config.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
-    public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";   
+    public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
     public const string LOG_ERROR_AGENT = "agent-error-log.txt";
 
     // Client/Agent Function Specifiers
@@ -51,6 +51,7 @@ public static class Glo
     public const int CLIENT_SELECT_HISTORY = 42;
     public const int CLIENT_SELECT_HISTORICAL_RECORD = 43;
     public const int CLIENT_TABLE_MODIFICATION = 50;
+    public const int CLIENT_COLUMN_ORDER_UPDATE = 51;
 
 
     // Console/Agent Function Specifiers
@@ -149,6 +150,11 @@ public static class Glo
         public const string FRIENDLY_TABLE = "TableName";
         public const string FRIENDLY_COLUMN = "ColumnName";
         public const string FRIENDLY_NAME = "FriendlyName";
+
+        public const int ORGANISATION_STATIC_COUNT = 4;
+        public const int ASSET_STATIC_COUNT = 3;
+        public const int CONTACT_STATIC_COUNT = 2;
+        public const int CONFERENCE_STATIC_COUNT = 11;
 
         public const string NOTES = "Notes";
     }
