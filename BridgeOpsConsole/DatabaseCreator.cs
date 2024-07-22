@@ -547,6 +547,31 @@ public class DatabaseCreator
                         Writer.Affirmative($"{names[1]} -> {names[2]}");
             }
 
+            Writer.Message("\nCreating Column Order Tables");
+            string OrderString(string table)
+            {
+                string commandCreate = $"CREATE TABLE {table}Order (";
+                string commandInsert = $"INSERT INTO {table}Order VALUES (";
+                // 1024 is the max number of columns. This is only for simplifying development, the user will never get
+                // that far. It does, however, mean we need four separate tables as we can't use the first column to
+                // store the relevant table name, but the storage considerations here are negligible.
+                for (int i = 0; i < 1024; ++i)
+                {
+                    commandCreate += $"_{i} SMALLINT NOT NULL, ";
+                    commandInsert += $"0, ";
+                }
+                commandCreate = commandCreate.Remove(commandCreate.Length - 2); // Remove the trailing ", ".
+                commandInsert = commandInsert.Remove(commandInsert.Length - 2); // Remove the trailing ", ".
+                commandCreate += "); ";
+                commandInsert += ");";
+
+                return commandCreate + commandInsert;
+            }
+            SendCommandSQL(OrderString("Organisation"));
+            SendCommandSQL(OrderString("Asset"));
+            SendCommandSQL(OrderString("Contact"));
+            SendCommandSQL(OrderString("Conference"));
+
             Writer.Message("\nCreating admin login...");
             SendCommandSQL(string.Format("INSERT INTO Login (Username, Password, Admin, {0}, {1}, {2}, {3}) " +
                                          "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 1, " +

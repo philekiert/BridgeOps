@@ -459,6 +459,25 @@ namespace SendReceiveClasses
         }
     }
 
+    struct ColumnOrderRecord
+    {
+        public List<int> organisationOrder = new();
+        public List<int> assetOrder = new();
+        public List<int> contactOrder = new();
+        public List<int> conferenceOrder = new();
+
+        public ColumnOrderRecord(List<int> organisationOrder,
+                                 List<int> assetOrder,
+                                 List<int> contactOrder,
+                                 List<int> conferenceOrder)
+        {
+            this.organisationOrder = organisationOrder;
+            this.assetOrder = assetOrder;
+            this.contactOrder = contactOrder;
+            this.conferenceOrder = conferenceOrder;
+        }
+    }
+
     struct Organisation
     {
         public string sessionID;
