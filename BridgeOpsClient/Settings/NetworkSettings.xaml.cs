@@ -56,7 +56,7 @@ namespace BridgeOpsClient
 
             Properties.Settings.Default.Save();
 
-            App.sd.SetIP(txtIPAddress.Text);
+            App.sd.SetServerIP(txtIPAddress.Text);
             App.sd.portOutbound = outbound;
             App.sd.portInbound = inbound;
 

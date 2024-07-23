@@ -43,19 +43,92 @@ namespace BridgeOpsClient
             // Apply network settings.
             try
             {
-                sd.SetIP(BridgeOpsClient.Properties.Settings.Default.serverAddress);
+                sd.SetServerIP(BridgeOpsClient.Properties.Settings.Default.serverAddress);
                 sd.portInbound = BridgeOpsClient.Properties.Settings.Default.portInbound;
                 sd.portOutbound = BridgeOpsClient.Properties.Settings.Default.portOutbound;
+                try
+                {
+                    sd.InitialiseListener();
+                    listenerThread = new Thread(new ThreadStart(ListenForServer));
+                    listenerThread.Start();
+                }
+                catch
+                {
+                    MessageBox.Show("Could not initiate TCP listener. Please check network adapter is enabled and " +
+                                    "reload the application.");
+                    Environment.Exit(1);
+                }
             }
             catch
             {
                 MessageBox.Show("Something went wrong when applying the network settings. " +
                                 "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).");
-                sd.SetIP("127.0.0.1");
+                sd.SetServerIP("127.0.0.1");
                 sd.portInbound = 52343;
                 sd.portOutbound = 52344;
             }
         }
+
+        public static Thread? listenerThread;
+        private static void ListenForServer()
+        {
+            sd.InitialiseListener();
+
+            if (sd.listener == null)
+            {
+                listenerThread = null;
+                return;
+            }
+            else
+            {
+                try
+                {
+                    sd.listener.Start();
+
+                    // Start an ASync Accept.
+                    IAsyncResult result = sd.listener.BeginAcceptTcpClient(HandleServerListenAccept, sd.listener);
+                    autoResetEvent.WaitOne();
+                    autoResetEvent.Reset();
+                }
+                catch
+                {
+                    listenerThread = null;
+                }
+            }
+        }
+        private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+        private static void HandleServerListenAccept(IAsyncResult result)
+        {
+            if (result.AsyncState != null)
+            {
+                TcpListener listener = (TcpListener)result.AsyncState;
+                TcpClient client = listener.EndAcceptTcpClient(result);
+
+                NetworkStream stream = client.GetStream();
+                autoResetEvent.Set();
+
+                try
+                {
+                    int fncByte = stream.ReadByte();
+                    if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
+                    {
+                        if (!PullColumnRecord())
+                            MessageBox.Show("The column record is out of date, but a new one could not be pulled. " +
+                                            "Logging out.");
+                    }
+                }
+                catch
+                {
+                    // Haven't decided what to do here yet.
+                }
+                finally
+                {
+                    if (client.Connected)
+                        client.Close();
+                }
+            }
+        }
+
 
         public static SendReceive sr = new SendReceive();
         public static SessionDetails sd = new SessionDetails();
@@ -147,7 +220,7 @@ namespace BridgeOpsClient
                         }
                     }
                 }
-                if (Current.MainWindow != null)
+                if (Current.MainWindow != null && loginID == sd.loginID)
                 {
                     // Thought about making this while (!IsLoggedIn) in case the user closes the login window, but
                     // decided it might be useful for the user to get back to the app if they accidentally clicked
@@ -282,10 +355,16 @@ namespace BridgeOpsClient
             return true;
         }
 
+        static bool pullInProgress = false;
         public static bool PullColumnRecord()
         {
+            if (pullInProgress)
+                return true; // One may already be underway, in which case, no need to bother.
+
             lock (ColumnRecord.lockColumnRecord)
             {
+                pullInProgress = true;
+
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 try
                 {
@@ -314,6 +393,7 @@ namespace BridgeOpsClient
                 finally
                 {
                     if (stream != null) stream.Close();
+                    pullInProgress = false;
                 }
             }
         }
@@ -834,9 +914,12 @@ namespace BridgeOpsClient
         public int loginID = -1;
         public string username = "";
 
-        public byte[] ipAddress = new byte[] { 127, 0, 0, 1 };
+        static public byte[] thisIpAddress = new byte[] { 0, 0, 0, 0 };
+        public byte[] serverIpAddress = new byte[] { 127, 0, 0, 1 };
         public int portOutbound = 0; // Outbound to the server.
         public int portInbound = 0; // Inbound from the server.
+
+        public TcpListener? listener;
 
         public bool admin = false;
 
@@ -845,18 +928,33 @@ namespace BridgeOpsClient
         public bool[] editPermissions = new bool[6];
         public bool[] deletePermissions = new bool[6];
 
-        public IPAddress ServerIP { get { return new IPAddress(ipAddress); } }
+        public IPAddress ThisIP { get { return new IPAddress(thisIpAddress); } }
+        public IPEndPoint ThisEP { get { return new IPEndPoint(ThisIP, portInbound); } }
+        public IPAddress ServerIP { get { return new IPAddress(serverIpAddress); } }
         public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, portOutbound); } }
 
-        public bool SetIP(string strIP)
+        public bool SetServerIP(string strIP)
         {
             IPAddress? adrIp;
             if (IPAddress.TryParse(strIP, out adrIp))
             {
-                ipAddress = adrIp.GetAddressBytes();
+                serverIpAddress = adrIp.GetAddressBytes();
                 return true;
             }
             return false;
+        }
+
+        public bool InitialiseListener()
+        {
+            try
+            {
+                listener = new TcpListener(ThisIP, portInbound);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

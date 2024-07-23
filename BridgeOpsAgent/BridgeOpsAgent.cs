@@ -94,7 +94,7 @@ internal class BridgeOpsAgent
         LogError("", e);
     }
 
-    // Network Configuraiton
+    // Network Configuration
     private static int portInbound = Glo.PORT_INBOUND_DEFAULT;
     private static int portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
     private static int LoadNetworkConfig()
@@ -462,7 +462,8 @@ internal class BridgeOpsAgent
 
             // Start an ASync Accept.
             IAsyncResult result = listener.BeginAcceptTcpClient(HandleClientListenAccept, listener);
-            // Do not accept any 
+            // [seems I accidentally deleted the end of the comment below, need to remember what this does...]
+            // Do not accept any
             autoResetEvent.WaitOne();
             autoResetEvent.Reset();
         }

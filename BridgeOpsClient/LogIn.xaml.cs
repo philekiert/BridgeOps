@@ -79,11 +79,12 @@ namespace BridgeOpsClient
             {
                 if (App.PullColumnRecord())
                 {
-                    Close();
                     // If Main window hasn't opened yet, the buttons will be null. If they aren't and MainWindow is
                     // still starting up, it will toggle the buttons correctly itself.
                     if (mainWindow.menuUserLogIn != null)
                         mainWindow.ToggleLogInOut(true);
+
+                    Close();
                 }
                 else
                 {
