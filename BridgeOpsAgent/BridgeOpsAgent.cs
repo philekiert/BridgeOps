@@ -315,6 +315,34 @@ internal class BridgeOpsAgent
             return false;
         }
     }
+    private static void SendColumnRecordChangeNotification(string? initiatorClientID)
+    {
+        foreach (var kvp in clientSessions)
+        {
+            // Skip the requestor, as they'll be making their own request.
+            //if (initiatorClientID != null && kvp.Key == initiatorClientID)
+            //    continue;
+
+            try
+            {
+                IPAddress? clientIP;
+                IPAddress.TryParse(kvp.Value.ip, out clientIP);
+                if (clientIP == null)
+                    continue; // This will never be the case, this is just to keep Visual Studio happy.
+
+                NetworkStream? stream = sr.NewClientNetworkStream(new IPEndPoint(clientIP, portOutbound));
+                if (stream == null)
+                    throw new Exception($"Could not create network stream for {kvp.Value.ip}.");
+
+                // This will trigger the client to return with a column record pull request the usual way. 
+                stream.WriteByte(Glo.SERVER_COLUMN_RECORD_UPDATED);
+            }
+            catch (Exception e)
+            {
+                LogError(e);
+            }
+        }
+    }
 
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string connectionString = "server=localhost\\SQLEXPRESS;" +
@@ -1571,6 +1599,9 @@ internal class BridgeOpsAgent
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+
+                // All clients will now request an updated column record.
+                SendColumnRecordChangeNotification(req.sessionID);
             }
         }
         catch (Exception e)
@@ -1648,6 +1679,9 @@ internal class BridgeOpsAgent
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+
+                // All clients will now request an updated column record.
+                SendColumnRecordChangeNotification(req.sessionID);
             }
         }
         catch (Exception e)

@@ -172,9 +172,9 @@ namespace BridgeOpsClient
                     return result;
                 }
             }
-            catch
+            catch (Exception e)
             {
-                return "";
+                return e.Message;
             }
         }
 
