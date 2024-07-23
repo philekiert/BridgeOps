@@ -102,7 +102,12 @@ public static class ColumnRecord
             int i = 0;
             foreach (KeyValuePair<string, Column> kvp in dictionary)
             {
-                orderedArray[order[i]] = kvp;
+                for (int n = 0; n < orderedArray.Length; ++n)
+                    if (order[n] == i)
+                    {
+                        orderedArray[n] = kvp;
+                        break;
+                    }
                 ++i;
             }
 
@@ -152,6 +157,46 @@ public static class ColumnRecord
             return null;
         }
     }
+    public static int GetColumnIndex(string table, string column)
+    {
+        var dictionary = GetDictionary(table, false);
+        if (dictionary == null)
+            return -1;
+        int i = 0;
+        foreach (var kvp in dictionary)
+        {
+            if (kvp.Key == column)
+                return i;
+            ++i;
+        }
+        return -1;
+    }
+    public static Dictionary<string, Column>? GetDictionary(string table, bool ordered)
+    {
+        if (table == "Organisation")
+            return ordered ? orderedOrganisation : organisation;
+        else if (table == "Asset")
+            return ordered ? orderedAsset : asset;
+        else if (table == "Contact")
+            return ordered ? orderedContact : contact;
+        else if (table == "Conference")
+            return ordered ? orderedConference : conference;
+        else
+            return null;
+    }
+    public static List<int>? GetOrder(string table)
+    {
+        if (table == "Organisation")
+            return organisationOrder;
+        else if (table == "Asset")
+            return assetOrder;
+        else if (table == "Contact")
+            return contactOrder;
+        else if (table == "Conference")
+            return conferenceOrder;
+        else
+            return null;
+    }
 
     public static bool IsTypeString(string type)
     { return type == "TEXT" || type == "VARCHAR"; }
@@ -193,7 +238,7 @@ public static class ColumnRecord
         orderedOrganisation = new();
         orderedAsset = new();
         orderedContact = new();
-        conferenceOrder = new();
+        orderedConference = new();
 
         try
         {

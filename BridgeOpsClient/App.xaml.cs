@@ -536,6 +536,16 @@ namespace BridgeOpsClient
                                   List<string> likeColumns, List<string> likeValues,
                                   out List<string?> columnNames, out List<List<object?>> rows)
         {
+            // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
+            // the columns must be stated in the correct order when populating the DataInputTable.
+            var dictionary = ColumnRecord.GetDictionary(table, true);
+            if (dictionary != null)
+            {
+                select.Clear();
+                foreach (var col in dictionary)
+                    select.Add(col.Key);
+            }
+
             using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
             {
                 try
@@ -577,13 +587,22 @@ namespace BridgeOpsClient
         public static bool SelectWide(string table, string value,
                                       out List<string?> columnNames, out List<List<object?>> rows)
         {
+            // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
+            // the columns must be stated in the correct order when populating the DataInputTable.
+            var dictionary = ColumnRecord.GetDictionary(table, true);
+            List<string> select = new();
+            if (dictionary != null)
+                foreach (var col in dictionary)
+                    select.Add(col.Key);
+
             using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
             {
                 try
                 {
                     if (stream != null)
                     {
-                        SelectWideRequest req = new(sd.sessionID, new List<string>() { "*" }, table, value);
+                        SelectWideRequest req = new(sd.sessionID, dictionary == null ? new() { "*" } : select,
+                                                    table, value);
                         stream.WriteByte(Glo.CLIENT_SELECT_WIDE);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         int response = stream.ReadByte();

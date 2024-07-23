@@ -96,7 +96,7 @@ namespace BridgeOpsClient
             if (ColumnRecord.asset["Notes"].friendlyName != "")
                 lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
 
-            ditAsset.Initialise(ColumnRecord.asset, "Asset");
+            ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
         }
 
         public void Populate(List<object?> data)

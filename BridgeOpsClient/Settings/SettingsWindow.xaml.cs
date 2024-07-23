@@ -202,7 +202,6 @@ namespace BridgeOpsClient
                 AddTable("Contact", ColumnRecord.orderedContact);
                 AddTable("Conference", ColumnRecord.orderedConference);
 
-
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 
                 dtgColumns.Update(new List<string?>() { "Table", "Column", "Friendly Name",
@@ -341,6 +340,8 @@ namespace BridgeOpsClient
         {
             ReorderColumns reorderColumns = new();
             reorderColumns.ShowDialog();
+            if (reorderColumns.changeMade)
+                InitiateTableChange();
         }
     }
 }

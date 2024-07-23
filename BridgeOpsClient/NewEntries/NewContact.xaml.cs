@@ -68,7 +68,7 @@ namespace BridgeOpsClient
             if (ColumnRecord.contact["Notes"].friendlyName != "")
                 lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
 
-            ditContact.Initialise(ColumnRecord.contact, "Contact");
+            ditContact.Initialise(ColumnRecord.orderedContact, "Contact");
         }
 
 #pragma warning disable CS8602

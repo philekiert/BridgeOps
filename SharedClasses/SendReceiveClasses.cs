@@ -313,7 +313,7 @@ namespace SendReceiveClasses
                    $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
                     "BEGIN " +
                    $"ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column}; " +
-                    "END";
+                    "END ";
         }
 
         public string SqlCommand()
@@ -343,6 +343,8 @@ namespace SendReceiveClasses
                     command += $"ADD {column} {columnType}; ";
                 }
 
+                // Column orders are handled in the agent code, and the SQL command is added in a nested transaction.
+
                 command = SqlAssist.Transaction(command);
             }
 
@@ -358,6 +360,8 @@ namespace SendReceiveClasses
                     command += $"ALTER TABLE {table}Change DROP COLUMN {column};";
                     command += $"ALTER TABLE {table}Change DROP COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX};";
                 }
+
+                // Column orders are handled in the agent code, and the SQL command is added in a nested transaction.
 
                 command = SqlAssist.Transaction(command);
             }
@@ -467,11 +471,10 @@ namespace SendReceiveClasses
         public List<int> contactOrder = new();
         public List<int> conferenceOrder = new();
 
-        public ColumnOrdering(string sessionID,
-                                 List<int> organisationOrder,
-                                 List<int> assetOrder,
-                                 List<int> contactOrder,
-                                 List<int> conferenceOrder)
+        public ColumnOrdering(string sessionID, List<int> organisationOrder,
+                                                List<int> assetOrder,
+                                                List<int> contactOrder,
+                                                List<int> conferenceOrder)
         {
             this.sessionID = sessionID;
             this.organisationOrder = organisationOrder;

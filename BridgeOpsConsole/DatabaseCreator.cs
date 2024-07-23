@@ -558,7 +558,7 @@ public class DatabaseCreator
                 for (int i = 0; i < 1024; ++i)
                 {
                     commandCreate += $"_{i} SMALLINT NOT NULL, ";
-                    commandInsert += $"0, ";
+                    commandInsert += $"{i}, ";
                 }
                 commandCreate = commandCreate.Remove(commandCreate.Length - 2); // Remove the trailing ", ".
                 commandInsert = commandInsert.Remove(commandInsert.Length - 2); // Remove the trailing ", ".

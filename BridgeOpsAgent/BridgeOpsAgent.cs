@@ -1486,17 +1486,44 @@ internal class BridgeOpsAgent
                 return;
             }
 
+            string orderUpdateCommand = "";
+
             // Protect integral tables and columns (could be structured better, but I've tried to keep it readable).
             if (req.intent == TableModification.Intent.Removal ||
                 (req.intent == TableModification.Intent.Modification && req.columnType != null))
             {
                 string column = req.column;
                 string table = req.table;
-                if (req.intent == TableModification.Intent.Removal &&
-                    !Glo.Fun.ColumnRemovalAllowed(table, column))
+                if (req.intent == TableModification.Intent.Removal)
                 {
-                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
-                    return;
+                    if (!Glo.Fun.ColumnRemovalAllowed(table, column))
+                    {
+                        stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                        return;
+                    }
+
+                    // Fix the column order as required if removing a column.
+                    var order = ColumnRecord.GetOrder(req.table);
+                    if (order == null)
+                        throw new("Error discerning the correct table dictionary being affected by removal.");
+
+                    int oldColIndex = ColumnRecord.GetColumnIndex(req.table, req.column);
+
+                    // Remove the current column's index, and decrement anything higher.
+                    for (int i = 0; i < order.Count; ++i)
+                        if (order[i] == oldColIndex)
+                            order.RemoveAt(i);
+                        else if (order[i] > oldColIndex)
+                            --order[i];
+                    // Paste over the crack left at the end by the removal. Without this, when get bugs later when
+                    // making additions.
+                    order.Add(order.Count);
+
+                    ColumnOrdering colOrder = new ColumnOrdering("", ColumnRecord.organisationOrder,
+                                                                     ColumnRecord.assetOrder,
+                                                                     ColumnRecord.contactOrder,
+                                                                     ColumnRecord.conferenceOrder);
+                    orderUpdateCommand = colOrder.SqlCommand();
                 }
 
                 // If the column contains any data (either present or historic), require confirmation.
@@ -1527,7 +1554,10 @@ internal class BridgeOpsAgent
                 }
             }
 
-            SqlCommand com = new SqlCommand(req.SqlCommand(), sqlConnect);
+            SqlCommand com = new(orderUpdateCommand == "" ?
+                                         req.SqlCommand() :
+                                         SqlAssist.Transaction(orderUpdateCommand, req.SqlCommand()),
+                                 sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
