@@ -38,6 +38,9 @@ namespace BridgeOpsClient
                 MinWidth = DATA_PANE_MIN_WIDTH + 16;
         }
 
+        public static List<PageConferenceView> pageConferenceViews = new();
+        public static PageDatabase? pageDatabase;
+
         public MainWindow()
         {
             // Request login credentials on startup.
@@ -50,6 +53,7 @@ namespace BridgeOpsClient
 
             frameConf.Content = new PageConferenceView();
             frameData.Content = new PageDatabase(this);
+
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
 
             // Set default view here:
@@ -208,7 +212,9 @@ namespace BridgeOpsClient
                 grdConfData.ColumnDefinitions.Add(col);
 
                 if (frameConf.Content is PageConferenceView pcv)
+                {
                     pcv.scrollBar.Margin = new Thickness(0);
+                }
             }
         }
 

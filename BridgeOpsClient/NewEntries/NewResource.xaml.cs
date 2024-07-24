@@ -22,6 +22,9 @@ namespace BridgeOpsClient
         public NewResource()
         {
             InitializeComponent();
+
+            timeAvailableFrom.SetDateTime(new DateTime(2024, 7, 1));
+            timeAvailableTo.SetDateTime(new DateTime(2024, 7, 31));
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)

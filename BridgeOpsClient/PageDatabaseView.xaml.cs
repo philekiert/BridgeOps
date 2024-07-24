@@ -46,15 +46,15 @@ namespace BridgeOpsClient
             txtSearch.Focus();
         }
 
-        private void PopulateColumnComboBox()
+        public void PopulateColumnComboBox()
         {
             Dictionary<string, ColumnRecord.Column> table;
             if (cmbTable.SelectedIndex == 0)
-                table = ColumnRecord.organisation;
+                table = ColumnRecord.orderedOrganisation;
             else if (cmbTable.SelectedIndex == 1)
-                table = ColumnRecord.asset;
+                table = ColumnRecord.orderedAsset;
             else
-                table = ColumnRecord.contact;
+                table = ColumnRecord.orderedContact;
 
             cmbColumn.Items.Clear();
             dtgResults.Wipe();

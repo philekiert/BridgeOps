@@ -20,7 +20,7 @@ namespace BridgeOpsClient
         MainWindow containingWindow;
 
         // Store the views for easy toggling of +/- buttons.
-        List<PageDatabaseView> views = new();
+        public static List<PageDatabaseView> views = new();
 
         // Set up the page with only one frame - the user can then add more if needed.
         public int paneCount = 0;

@@ -85,10 +85,13 @@ namespace BridgeOpsClient
                 {
                     sd.listener.Start();
 
-                    // Start an ASync Accept.
-                    IAsyncResult result = sd.listener.BeginAcceptTcpClient(HandleServerListenAccept, sd.listener);
-                    autoResetEvent.WaitOne();
-                    autoResetEvent.Reset();
+                    while (true)
+                    {
+                        // Start an ASync Accept.
+                        IAsyncResult result = sd.listener.BeginAcceptTcpClient(HandleServerListenAccept, sd.listener);
+                        autoResetEvent.WaitOne();
+                        autoResetEvent.Reset();
+                    }
                 }
                 catch
                 {
@@ -115,6 +118,15 @@ namespace BridgeOpsClient
                         if (!PullColumnRecord())
                             MessageBox.Show("The column record is out of date, but a new one could not be pulled. " +
                                             "Logging out.");
+                        else
+                        {
+                            MessageBox.Show("Column record has been updated. It would be advisable to restart the " +
+                                            "application.");
+                        }
+                    }
+                    if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
+                    {
+                        PullResourceInformation();
                     }
                 }
                 catch
@@ -355,15 +367,15 @@ namespace BridgeOpsClient
             return true;
         }
 
-        static bool pullInProgress = false;
+        static bool columnRecordPulInProgress = false;
         public static bool PullColumnRecord()
         {
-            if (pullInProgress)
-                return true; // One may already be underway, in which case, no need to bother.
+            if (columnRecordPulInProgress)
+                Thread.Sleep(20);
 
             lock (ColumnRecord.lockColumnRecord)
             {
-                pullInProgress = true;
+                columnRecordPulInProgress = true;
 
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 try
@@ -393,19 +405,30 @@ namespace BridgeOpsClient
                 finally
                 {
                     if (stream != null) stream.Close();
-                    pullInProgress = false;
+
+                    foreach (PageDatabaseView pdv in PageDatabase.views)
+                        pdv.PopulateColumnComboBox();
+
+                    columnRecordPulInProgress = false;
                 }
             }
         }
 
+        static bool resourcePullInProgress = false;
         public static bool PullResourceInformation()
         {
+            if (resourcePullInProgress)
+                Thread.Sleep(20);
+            resourcePullInProgress = true;
+
             List<string?> columnNames;
             List<List<object?>> rows;
             if (SelectAll("Resource", out columnNames, out rows))
             {
                 try
                 {
+                    PageConferenceView.resources.Clear();
+
                     int ids = columnNames.IndexOf(Glo.Tab.RESOURCE_ID);
                     int names = columnNames.IndexOf(Glo.Tab.RESOURCE_NAME);
                     int startTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_FROM);
@@ -436,16 +459,25 @@ namespace BridgeOpsClient
 #pragma warning restore CS8605
                         }
                     }
-                    PageConferenceView.SetResources();
+                    foreach (PageConferenceView confView in BridgeOpsClient.MainWindow.pageConferenceViews)
+                        confView.SetResources();
+
                     return true;
                 }
                 catch
                 {
                     return false;
                 }
+                finally
+                {
+                    resourcePullInProgress = false;
+                }
             }
             else
+            {
+                resourcePullInProgress = false;
                 return false;
+            }
         }
 
         public static bool SendInsert(byte fncByte, object toSerialise)

@@ -315,13 +315,13 @@ internal class BridgeOpsAgent
             return false;
         }
     }
-    private static void SendColumnRecordChangeNotification(string? initiatorClientID)
+    private static void SendChangeNotification(string? initiatorClientID, byte fncByte)
     {
         foreach (var kvp in clientSessions)
         {
-            // Skip the requestor, as they'll be making their own request.
-            //if (initiatorClientID != null && kvp.Key == initiatorClientID)
-            //    continue;
+            // Skip the requestor if provided, as they'll be making their own request.
+            if (initiatorClientID != null && kvp.Key == initiatorClientID)
+                continue;
 
             try
             {
@@ -335,7 +335,7 @@ internal class BridgeOpsAgent
                     throw new Exception($"Could not create network stream for {kvp.Value.ip}.");
 
                 // This will trigger the client to return with a column record pull request the usual way. 
-                stream.WriteByte(Glo.SERVER_COLUMN_RECORD_UPDATED);
+                stream.WriteByte(fncByte);
             }
             catch (Exception e)
             {
@@ -998,7 +998,11 @@ internal class BridgeOpsAgent
                 if (com.ExecuteNonQuery() == 0)
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
                 else
+                {
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                    if (target == Glo.CLIENT_NEW_RESOURCE)
+                        SendChangeNotification(null, Glo.SERVER_RESOURCES_UPDATED);
+                }
             }
         }
         catch (Exception e)
@@ -1238,6 +1242,8 @@ internal class BridgeOpsAgent
             finally
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                if (target == Glo.CLIENT_UPDATE_RESOURCE)
+                    SendChangeNotification(null, Glo.SERVER_RESOURCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -1290,7 +1296,11 @@ internal class BridgeOpsAgent
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             else
+            {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                if (req.table == "Resource")
+                    SendChangeNotification(null, Glo.SERVER_RESOURCES_UPDATED);
+            }
         }
         catch (Exception e)
         {
@@ -1601,7 +1611,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
 
                 // All clients will now request an updated column record.
-                SendColumnRecordChangeNotification(req.sessionID);
+                SendChangeNotification(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
             }
         }
         catch (Exception e)
@@ -1681,7 +1691,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
 
                 // All clients will now request an updated column record.
-                SendColumnRecordChangeNotification(req.sessionID);
+                SendChangeNotification(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
             }
         }
         catch (Exception e)

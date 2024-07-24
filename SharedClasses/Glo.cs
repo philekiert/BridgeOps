@@ -54,7 +54,7 @@ public static class Glo
     public const int CLIENT_COLUMN_ORDER_UPDATE = 51;
 
     public const int SERVER_CLIENT_CHECK = 0;           // Not yet implemented
-    public const int SERVER_COLUMN_RECORD_UPDATED = 1;  // Not yet implemented
+    public const int SERVER_COLUMN_RECORD_UPDATED = 1;
     public const int SERVER_RESOURCES_UPDATED = 2;      // Not yet implemented
     public const int SERVER_FORCE_LOGOUT = 3;           // Not yet implemented
 

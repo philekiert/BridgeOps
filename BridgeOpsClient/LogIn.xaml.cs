@@ -89,13 +89,13 @@ namespace BridgeOpsClient
                 else
                 {
                     MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +
-                                    "contact the software adminitrator.");
+                                    "contact the software administrator.");
                     App.LogOut();
                 }
                 if (!App.PullResourceInformation())
                 {
                     MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +
-                                    "contact the software adminitrator.");
+                                    "contact the software administrator.");
                     App.LogOut();
                 }
             }

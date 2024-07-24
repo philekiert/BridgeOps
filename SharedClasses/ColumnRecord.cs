@@ -209,6 +209,9 @@ public static class ColumnRecord
 
     public static bool Initialise(string columns)
     {
+        // Locking these shouldn't be necessary, as the ColumnRecord should never be edited outside the
+        // App.PullColumnRecord function, and that's written to be limited to one thread at once.
+
         organisation = new();
         organisationFriendlyNameReversal = new();
         organisationChange = new();

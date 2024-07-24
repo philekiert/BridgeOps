@@ -60,18 +60,29 @@ namespace BridgeOpsClient
         public static List<string> resourceRowNames = new();
         // This is a list of indices, linking displayed rows to resources to allow the user customise the display.
         public static List<int> resourcesOrder = new();
-        public static void SetResources()
+        public bool updateScrollBar = false;
+        public void SetResources()
         {
-            resourceRowNames.Clear();
-            resourcesOrder.Clear();
-            totalCapacity = 0;
-            foreach (ResourceInfo ri in resources)
+            lock (resourceRowNames)
             {
-                resourcesOrder.Add(resourcesOrder.Count);
-                for (int i = 1; i <= ri.capacity; ++i)
-                    resourceRowNames.Add(ri.name + " " + i);
-                totalCapacity += ri.capacity;
+                lock (resourcesOrder)
+                {
+                    resourceRowNames.Clear();
+                    resourcesOrder.Clear();
+                    totalCapacity = 0;
+                    foreach (ResourceInfo ri in resources)
+                    {
+                        resourcesOrder.Add(resourcesOrder.Count);
+                        for (int i = 1; i <= ri.capacity; ++i)
+                            resourceRowNames.Add(ri.name + " " + i);
+                        totalCapacity += ri.capacity;
+                    }
+                }
             }
+
+            // This causes UpdateScrollBar() to trigger in TimerUpdate(). Can't figure out right now why just calling
+            // it from here doesn't work.
+            updateScrollBar = true;
         }
         public static ResourceInfo? GetResourceFromSelectedRow(int row)
         {
@@ -99,6 +110,8 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
+            SetResources();
+
             tmrRender.Tick += TimerUpdate;
             tmrRender.Interval = new TimeSpan(10000);
             tmrRender.Start();
@@ -106,6 +119,8 @@ namespace BridgeOpsClient
             schResources.view = schView;
             schRuler.view = schView;
             schRuler.res = schResources;
+
+            MainWindow.pageConferenceViews.Add(this);
         }
 
         void RedrawRuler()
@@ -151,6 +166,12 @@ namespace BridgeOpsClient
         long lastFrame = 0;
         void TimerUpdate(object? sender, EventArgs e)
         {
+            if (updateScrollBar)
+            {
+                UpdateScrollBar();
+                updateScrollBar = false;
+            }
+
             // Smooth zoom (prefer 60Hz).
             float deltaTime = (float)((Environment.TickCount64 - lastFrame) / 16.6666f);
 
