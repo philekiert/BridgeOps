@@ -37,7 +37,7 @@ namespace BridgeOpsClient
             // Unused in the list of resources, but use to pass the selected row to the New Conference.
             private int selectedRow = 0;
             private int selectedRowTotal = 0;
-            public int SelectedRow { get { return selectedRow; } }
+            public int SelectedRow { get { return selectedRow; } }  
             public int SelectedRowTotal { get { return selectedRowTotal; } }
 
             public ResourceInfo(int id, string name, DateTime start, DateTime end, int capacity)

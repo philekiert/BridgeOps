@@ -70,6 +70,7 @@ namespace BridgeOpsClient
         }
 
         public static Thread? listenerThread;
+        private static NetworkStream? listenerStream;
         private static void ListenForServer()
         {
             sd.InitialiseListener();
@@ -100,6 +101,7 @@ namespace BridgeOpsClient
             }
         }
         private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+        private static bool streamInProgress = false;
         private static void HandleServerListenAccept(IAsyncResult result)
         {
             if (result.AsyncState != null)
@@ -124,9 +126,13 @@ namespace BridgeOpsClient
                                             "application.");
                         }
                     }
-                    if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
+                    else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
                     {
                         PullResourceInformation();
+                    }
+                    else if (fncByte == Glo.SERVER_CLIENT_CHECK)
+                    {
+                        stream.WriteByte(Glo.SERVER_CLIENT_CHECK);
                     }
                 }
                 catch

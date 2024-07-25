@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Reflection.Metadata;
 
 public static class Glo
@@ -207,6 +208,13 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_BUFFER ||
                      column == Glo.Tab.ORGANISATION_ID ||
                      column == Glo.Tab.RECURRENCE_ID)));
+        }
+
+        public static IPAddress? GetIPAddressFromString(string ip)
+        {
+            IPAddress? clientIP;
+            IPAddress.TryParse(ip, out clientIP);
+            return clientIP;
         }
     }
 }

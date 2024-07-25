@@ -26,21 +26,27 @@ internal class BridgeOpsAgent
 
     static bool columnRecordIntact = false;
 
-    struct ClientSession
+    const int notificationSendRetries = 10;
+
+    class ClientSession
     {
         public string username;
-        public string ip;
+        public string ipString;
         public int loginID;
         public bool admin;
         public List<bool[]> permissions;
         public bool[] createPermissions;
         public bool[] editPermissions;
         public bool[] deletePermissions;
+
+        public NetworkStream? stream;
+        public IPAddress? ipAddess;
+
         public ClientSession(string username, string ip, int loginID, bool admin,
                              int createPermissions, int editPermissions, int deletePermissions)
         {
             this.username = username;
-            this.ip = ip;
+            ipString = ip;
             this.loginID = loginID;
             this.admin = admin;
             this.createPermissions = Glo.Fun.GetPermissionsArray(createPermissions);
@@ -48,12 +54,97 @@ internal class BridgeOpsAgent
             this.deletePermissions = Glo.Fun.GetPermissionsArray(deletePermissions);
 
             permissions = new() { this.createPermissions, this.editPermissions, this.deletePermissions };
+
+            ipAddess = Glo.Fun.GetIPAddressFromString(ip);
+
+            stream = null;
+        }
+
+        // Clients should only ever be contacted using the network stream in this struct. This is to prevent multiple
+        // threads attempting to open a network stream on the same port simultaneously, and the NetworkStream needs to
+        // be locked in every instance.
+        public bool SetStream(NetworkStream? stream)
+        {
+            if (this.stream != null)
+                return false;
+            else
+            {
+                this.stream = stream;
+                return true;
+            }
+        }
+        private object streamLock = new();
+
+        public void CloseStream()
+        {
+            if (stream != null)
+            {
+                stream.Close();
+                stream = null;
+            }
+        }
+
+        // This bool is only switched off after the client requests the column record. It's purpose is to prevent the
+        // agent from demanding the client make numerous column record pulls where only one would suffice.
+        public bool columnRecordChangeNotificationUnsent = false;
+        public void SendColumnRecordChangeNotification()
+        {
+            if (!columnRecordChangeNotificationUnsent)
+            {
+                columnRecordChangeNotificationUnsent = true;
+                if (!SendNotification(Glo.SERVER_COLUMN_RECORD_UPDATED))
+                    LogError($"Column record change notification could not be sent to {ipString} " +
+                             $"after {notificationSendRetries} retries.");
+            }
+        }
+        public void SendResourceChangeNotification()
+        {
+            if (!SendNotification(Glo.SERVER_RESOURCES_UPDATED))
+                LogError($"Resource change notification could not be sent to {ipString} " +
+                         $"after {notificationSendRetries} retries.");
+        }
+
+        public bool SendNotification(byte notificationByte)
+        {
+            bool sent = false;
+
+            if (ipAddess == null)
+                return sent;
+
+            lock (streamLock)
+            {
+                for (int i = 0; i < notificationSendRetries; ++i)
+                {
+                    try
+                    {
+                        stream = sr.NewClientNetworkStream(new IPEndPoint(ipAddess, portOutbound));
+
+                        if (stream != null)
+                        {
+                            stream.WriteByte(notificationByte);
+                            stream.Close();
+                            stream = null;
+
+                            sent = true;
+                            break;
+                        }
+                    }
+                    catch
+                    { CloseStream(); }
+                    Thread.Sleep(1_000); // Sleep for a second if we didn't get anywhere.
+                }
+            }
+
+            return sent;
         }
     }
     static Dictionary<string, ClientSession> clientSessions = new Dictionary<string, ClientSession>();
     static bool CheckSessionValidity(string id)
     {
-        return clientSessions.ContainsKey(id);
+        lock (clientSessions)
+        {
+            return clientSessions.ContainsKey(id);
+        }
     }
     static bool CheckSessionPermission(ClientSession session, int category, int intent)
     {
@@ -68,8 +159,11 @@ internal class BridgeOpsAgent
     // If you need to check the quickly condition, but need the bool outside of scope.
     static bool CheckSessionValidity(string id, out bool result)
     {
-        result = clientSessions.ContainsKey(id);
-        return result;
+        lock (clientSessions)
+        {
+            result = clientSessions.ContainsKey(id);
+            return result;
+        }
     }
     static bool CheckSessionPermission(ClientSession session, int category, int intent, out bool result)
     {
@@ -78,21 +172,21 @@ internal class BridgeOpsAgent
     }
 
     // Multiple threads may try to access this at once, so hold them up if stopnecessary.
-    private static bool currentlyWriting = false;
-    private static void LogError(string context, Exception e)
+    static object logErrorLock = new();
+    private static void LogError(string context, Exception? e)
     {
-        while (currentlyWriting) Thread.Sleep(10);
-        currentlyWriting = true;
-        string error = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss") + "   ";
-        if (context.Length > 0) error += context + "   ";
-        error += e.Message + "\n";
-        File.AppendAllText(Glo.LOG_ERROR_AGENT, error);
-        currentlyWriting = false;
+        lock (logErrorLock)
+        {
+            string error = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+            if (context.Length > 0)
+                error += "   " + context;
+            if (e != null)
+                error += "   " + e.Message;
+            File.AppendAllText(Glo.LOG_ERROR_AGENT, error + "\n");
+        }
     }
-    private static void LogError(Exception e)
-    {
-        LogError("", e);
-    }
+    private static void LogError(Exception e) { LogError("", e); }
+    private static void LogError(string s) { LogError(s, null); }
 
     // Network Configuration
     private static int portInbound = Glo.PORT_INBOUND_DEFAULT;
@@ -315,31 +409,19 @@ internal class BridgeOpsAgent
             return false;
         }
     }
-    private static void SendChangeNotification(string? initiatorClientID, byte fncByte)
+
+    private static void SendChangeNotifications(string? initiatorClientID, byte fncByte)
     {
-        foreach (var kvp in clientSessions)
+        lock (clientSessions)
         {
-            // Skip the requestor if provided, as they'll be making their own request.
-            if (initiatorClientID != null && kvp.Key == initiatorClientID)
-                continue;
-
-            try
+            foreach (var kvp in clientSessions)
             {
-                IPAddress? clientIP;
-                IPAddress.TryParse(kvp.Value.ip, out clientIP);
-                if (clientIP == null)
-                    continue; // This will never be the case, this is just to keep Visual Studio happy.
+                // Skip the requestor if provided, as they'll be making their own request.
+                if (initiatorClientID != null && kvp.Key == initiatorClientID)
+                    continue;
 
-                NetworkStream? stream = sr.NewClientNetworkStream(new IPEndPoint(clientIP, portOutbound));
-                if (stream == null)
-                    throw new Exception($"Could not create network stream for {kvp.Value.ip}.");
-
-                // This will trigger the client to return with a column record pull request the usual way. 
-                stream.WriteByte(fncByte);
-            }
-            catch (Exception e)
-            {
-                LogError(e);
+                Thread notificationThread = new Thread(kvp.Value.SendColumnRecordChangeNotification);
+                notificationThread.Start();
             }
         }
     }
@@ -399,6 +481,10 @@ internal class BridgeOpsAgent
         Thread sqlNudgeThr = new Thread(SqlServerNudge);
         sqlNudgeThr.Start();
 
+        // Start the thread responsible for nudging clients to see if they're still there.
+        Thread clientNudgeThr = new Thread(ClientNudge);
+        clientNudgeThr.Start();
+
         // Start the thread responsible for handling requests from the server console.
         Thread bridgeOpsConsoleRequestsThr = new Thread(BridgeOpsConsoleRequests);
         bridgeOpsConsoleRequestsThr.Start();
@@ -434,6 +520,43 @@ internal class BridgeOpsAgent
             finally
             {
                 sqlConnect.Close();
+            }
+        }
+    }
+    private static void ClientNudge()
+    {
+        while (true)
+        {
+            Thread.Sleep(10_000); // Sleep for 10 seconds.
+            List<string> sessionsToClose = new();
+
+            lock (clientSessions)
+            {
+                foreach (var kvp in clientSessions)
+                {
+                    try
+                    {
+                        IPAddress? clientIP = Glo.Fun.GetIPAddressFromString(kvp.Value.ipString);
+                        if (clientIP == null)
+                            continue; // This will never be the case, this is just to keep Visual Studio happy.
+
+                        NetworkStream? stream = sr.NewClientNetworkStream(new IPEndPoint(clientIP, portOutbound));
+                        if (stream == null)
+                            throw new Exception($"Could not create network stream for {kvp.Value.ipString}.");
+
+                        // Are you still there?
+                        stream.WriteByte(Glo.SERVER_CLIENT_CHECK);
+                        stream.ReadByte(); // Will throw an exception if it fails.
+                    }
+                    catch (Exception e)
+                    {
+                        sessionsToClose.Add(kvp.Key);
+                        LogError(e);
+                    }
+                }
+
+                foreach (string id in sessionsToClose)
+                    clientSessions.Remove(id);
             }
         }
     }
@@ -582,11 +705,14 @@ internal class BridgeOpsAgent
 
     private static void ConsoleClientList(NamedPipeServerStream server)
     {
-        ConnectedClients connectedClients = new ConnectedClients();
-        foreach (KeyValuePair<string, ClientSession> client in clientSessions)
-            connectedClients.Add(client.Value.ip, client.Value.username);
+        lock (clientSessions)
+        {
+            ConnectedClients connectedClients = new ConnectedClients();
+            foreach (KeyValuePair<string, ClientSession> client in clientSessions)
+                connectedClients.Add(client.Value.ipString, client.Value.username);
 
-        sr.WriteAndFlush(server, sr.Serialise(connectedClients));
+            sr.WriteAndFlush(server, sr.Serialise(connectedClients));
+        }
     }
 
     private static void ConsoleLogoutUser(NamedPipeServerStream server)
@@ -644,18 +770,26 @@ internal class BridgeOpsAgent
 
         try
         {
-            if (!CheckSessionValidity(sr.ReadString(stream)))
-                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
-            else
+            lock (clientSessions)
             {
-                if (columnRecordIntact)
+                string id = sr.ReadString(stream);
+                if (!CheckSessionValidity(id))
                 {
-                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                    sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    --pullingColumnRecord;
+                    return;
                 }
                 else
-                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                    clientSessions[id].columnRecordChangeNotificationUnsent = false;
             }
+
+            if (columnRecordIntact)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+            }
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         catch (Exception e)
         {
@@ -665,7 +799,7 @@ internal class BridgeOpsAgent
         --pullingColumnRecord;
     }
 
-    private static async void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
+    private static void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
     {
         string credentials = sr.ReadString(stream);
         LoginRequest loginReq = sr.Deserialise<LoginRequest>(credentials);
@@ -680,76 +814,79 @@ internal class BridgeOpsAgent
 
         try
         {
-            Task taskSqlConnect = sqlConnect.OpenAsync();
-
-            // Prepare variables for if/else block below.
-            string userAlreadyLoggedIn = "";
-            string ipAlreadyConnected = "";
 
             // Identify any duplicate IPs and users for removal from open sessions if login is successful.
             lock (clientSessions)
             {
+                // Prepare variables for if/else block below.
+                string userAlreadyLoggedIn = "";
+                string ipAlreadyConnected = "";
                 foreach (KeyValuePair<string, ClientSession> cs in clientSessions)
                 {
                     if (userAlreadyLoggedIn == "" && cs.Value.username == loginReq.username)
                         userAlreadyLoggedIn = cs.Key;
-                    if (ipAlreadyConnected == "" && cs.Value.ip == ipStr)
+                    if (ipAlreadyConnected == "" && cs.Value.ipString == ipStr)
                         ipAlreadyConnected = cs.Key;
 
                     if (userAlreadyLoggedIn != "" && ipAlreadyConnected != "")
                         break;
                 }
-            }
 
-            await taskSqlConnect;
-            SqlCommand sqlCommand = PullUpUserFromPassword(loginReq.username, loginReq.password, sqlConnect);
+                sqlConnect.Open();
+                SqlCommand sqlCommand = PullUpUserFromPassword(loginReq.username, loginReq.password, sqlConnect);
 
-            SqlDataReader reader = sqlCommand.ExecuteReader();
-            if (reader.Read())
-            {
-                int loginID = Convert.ToInt32(reader.GetValue(0)); // Has to be an int if anything was returned at all.
-                // Assuming login was successful, kick out any sessions with clashing IPs or usernames.
-                if (userAlreadyLoggedIn != "")
-                    clientSessions.Remove(userAlreadyLoggedIn);
-                if (ipAlreadyConnected != "" && ipAlreadyConnected != userAlreadyLoggedIn)
-                    clientSessions.Remove(ipAlreadyConnected);
-
-                object enabled = reader.GetValue(7);
-                if (!(bool)(reader.GetValue(7)))
+                SqlDataReader reader = sqlCommand.ExecuteReader();
+                if (reader.Read())
                 {
-                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_DISABLED);
-                    return;
+                    int loginID = Convert.ToInt32(reader.GetValue(0)); // Has to be an int if anything was returned.
+
+                    // Assuming login was successful, kick out any sessions with clashing IPs or usernames.
+                    if (userAlreadyLoggedIn != "")
+                        clientSessions.Remove(userAlreadyLoggedIn);
+                    if (ipAlreadyConnected != "" && ipAlreadyConnected != userAlreadyLoggedIn)
+                        clientSessions.Remove(ipAlreadyConnected);
+
+                    object enabled = reader.GetValue(7);
+                    if (!(bool)(reader.GetValue(7)))
+                    {
+                        sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_DISABLED);
+                        return;
+                    }
+
+                    // Generate a random unique session ID.
+                    string key;
+                    do
+                    {
+                        key = "";
+                        for (int n = 0; n < 16; ++n)
+                            key += (char)(rnd.Next() % 256);
+                    }
+                    while (clientSessions.ContainsKey(key));
+
+                    bool admin = (bool)reader.GetValue(3);
+                    byte createPermissions = (byte)reader.GetValue(4);
+                    byte editPermissions = (byte)reader.GetValue(5);
+                    byte deletePermissions = (byte)reader.GetValue(6);
+
+                    clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID, admin,
+                                                              createPermissions,
+                                                              editPermissions,
+                                                              deletePermissions));
+
+                    if (clientSessions[key].ipAddess == null)
+                        throw new Exception();
+
+                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
+                    stream.WriteByte((byte)(admin ? 1 : 0));
+                    stream.WriteByte(createPermissions);
+                    stream.WriteByte(editPermissions);
+                    stream.WriteByte(deletePermissions);
+                    sr.WriteAndFlush(stream, loginID.ToString());
+
                 }
-
-                // Generate a random unique session ID.
-                string key;
-                do
-                {
-                    key = "";
-                    for (int n = 0; n < 16; ++n)
-                        key += (char)(rnd.Next() % 256);
-                }
-                while (clientSessions.ContainsKey(key));
-
-                bool admin = (bool)reader.GetValue(3);
-                byte createPermissions = (byte)reader.GetValue(4);
-                byte editPermissions = (byte)reader.GetValue(5);
-                byte deletePermissions = (byte)reader.GetValue(6);
-
-                clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID, admin,
-                                                          createPermissions,
-                                                          editPermissions,
-                                                          deletePermissions));
-
-                sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
-                stream.WriteByte((byte)(admin ? 1 : 0));
-                stream.WriteByte(createPermissions);
-                stream.WriteByte(editPermissions);
-                stream.WriteByte(deletePermissions);
-                sr.WriteAndFlush(stream, loginID.ToString());
+                else // Username or password incorrect.
+                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_INVALID);
             }
-            else // Username or password incorrect.
-                sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_INVALID);
         }
         catch (Exception e)
         {
@@ -762,47 +899,51 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static async void ClientPasswordReset(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientPasswordReset(NetworkStream stream, SqlConnection sqlConnect)
     {
         SqlCommand com;
 
         try
         {
-            Task taskSqlConnect = sqlConnect.OpenAsync();
+            ClientSession session;
+            PasswordResetRequest req;
 
-            PasswordResetRequest req = sr.Deserialise<PasswordResetRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            lock (clientSessions)
             {
-                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
-                return;
-            }
-
-            // Must be here if the above code works.
-            ClientSession session = clientSessions[req.sessionID];
-
-            // Confirm that the request is from a session with the correct permissions, or is owned by the account
-            // whos password is being changed.
-            if (req.loginID != session.loginID &&
-                !CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
-            {
-                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
-                return;
-            }
-
-            await taskSqlConnect;
-
-            // If the session isn't admin, check to see if the original password was correct.
-            if (!CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT) ||
-                !req.userManagementMenu)
-            {
-                com = PullUpUserFromPassword(session.username, req.password, sqlConnect);
-                SqlDataReader reader = com.ExecuteReader();
-                if (!reader.Read())
+                req = sr.Deserialise<PasswordResetRequest>(sr.ReadString(stream));
+                if (!CheckSessionValidity(req.sessionID))
                 {
-                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     return;
                 }
-                reader.Close();
+
+                // Must be here if the above code works.
+                session = clientSessions[req.sessionID];
+
+                // Confirm that the request is from a session with the correct permissions, or is owned by the account
+                // whos password is being changed.
+                if (req.loginID != session.loginID &&
+                    !CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+
+                sqlConnect.Open();
+
+                // If the session isn't admin, check to see if the original password was correct.
+                if (!CheckSessionPermission(session, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT) ||
+                    !req.userManagementMenu)
+                {
+                    com = PullUpUserFromPassword(session.username, req.password, sqlConnect);
+                    SqlDataReader reader = com.ExecuteReader();
+                    if (!reader.Read())
+                    {
+                        stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                        return;
+                    }
+                    reader.Close();
+                }
             }
             // If we're still good to go, set the new password.
             com = new SqlCommand(req.SqlUpdate(), sqlConnect);
@@ -826,8 +967,11 @@ internal class BridgeOpsAgent
             if (CheckSessionValidity(sr.ReadString(stream)))
             {
                 List<object[]> users = new();
-                foreach (KeyValuePair<string, ClientSession> session in clientSessions)
-                    users.Add(new object[] { session.Value.loginID, session.Value.username });
+                lock (clientSessions)
+                {
+                    foreach (KeyValuePair<string, ClientSession> session in clientSessions)
+                        users.Add(new object[] { session.Value.loginID, session.Value.username });
+                }
                 sr.WriteAndFlush(stream, sr.Serialise(users));
             }
         }
@@ -845,48 +989,51 @@ internal class BridgeOpsAgent
             string sessionDetails = sr.ReadString(stream);
             LogoutRequest logoutReq = sr.Deserialise<LogoutRequest>(sessionDetails);
 
-            if (clientSessions.ContainsKey(logoutReq.sessionID))
+            lock (clientSessions)
             {
-                ClientSession thisSession = clientSessions[logoutReq.sessionID];
-                if (clientSessions[logoutReq.sessionID].loginID == logoutReq.loginID)
+                if (clientSessions.ContainsKey(logoutReq.sessionID))
                 {
-                    // Users may log themselves out without restriction.
-                    clientSessions.Remove(logoutReq.sessionID);
-                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
-                    return;
-                }
-
-                // If a user is logging out another user, they must have the required permissions.
-                if (CheckSessionPermission(thisSession, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
-                {
-                    string sessionToLogOut = "";
-                    foreach (KeyValuePair<string, ClientSession> session in clientSessions)
+                    ClientSession thisSession = clientSessions[logoutReq.sessionID];
+                    if (clientSessions[logoutReq.sessionID].loginID == logoutReq.loginID)
                     {
-                        if (session.Value.loginID == logoutReq.loginID)
-                        {
-                            sessionToLogOut = session.Key;
-                            break;
-                        }
-                    }
-
-                    if (sessionToLogOut == "")
-                    {
-                        sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND);
+                        // Users may log themselves out without restriction.
+                        clientSessions.Remove(logoutReq.sessionID);
+                        sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
                         return;
                     }
 
-                    clientSessions.Remove(sessionToLogOut);
-                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
-                    return;
+                    // If a user is logging out another user, they must have the required permissions.
+                    if (CheckSessionPermission(thisSession, Glo.PERMISSION_USER_ACC_MGMT, Glo.PERMISSION_EDIT))
+                    {
+                        string sessionToLogOut = "";
+                        foreach (KeyValuePair<string, ClientSession> session in clientSessions)
+                        {
+                            if (session.Value.loginID == logoutReq.loginID)
+                            {
+                                sessionToLogOut = session.Key;
+                                break;
+                            }
+                        }
+
+                        if (sessionToLogOut == "")
+                        {
+                            sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND);
+                            return;
+                        }
+
+                        clientSessions.Remove(sessionToLogOut);
+                        sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
+                        return;
+                    }
+                    else
+                    {
+                        sr.WriteAndFlush(stream, Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString());
+                        return;
+                    }
                 }
                 else
-                {
-                    sr.WriteAndFlush(stream, Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString());
-                    return;
-                }
+                    sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_INVALID);
             }
-            else
-                sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_SESSION_INVALID);
         }
         catch (Exception e)
         {
@@ -906,61 +1053,64 @@ internal class BridgeOpsAgent
             bool permission = false;
             int create = Glo.PERMISSION_CREATE;
 
-            if (target == Glo.CLIENT_NEW_ORGANISATION)
+            lock (clientSessions)
             {
-                Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
-            }
-            else if (target == Glo.CLIENT_NEW_ASSET)
-            {
-                Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
-            }
-            else if (target == Glo.CLIENT_NEW_CONTACT)
-            {
-                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert();
-            }
-            else if (target == Glo.CLIENT_NEW_CONFERENCE_TYPE)
-            {
-                ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert();
-            }
-            else if (target == Glo.CLIENT_NEW_CONFERENCE)
-            {
-                Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert();
-            }
-            else if (target == Glo.CLIENT_NEW_RESOURCE)
-            {
-                Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RESOURCES, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert();
-            }
-            else if (target == Glo.CLIENT_NEW_LOGIN)
-            {
-                Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT, create,
-                    out permission))
-                    com.CommandText = newRow.SqlInsert();
+                if (target == Glo.CLIENT_NEW_ORGANISATION)
+                {
+                    Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
+                }
+                else if (target == Glo.CLIENT_NEW_ASSET)
+                {
+                    Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
+                }
+                else if (target == Glo.CLIENT_NEW_CONTACT)
+                {
+                    Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_CONFERENCE_TYPE)
+                {
+                    ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_CONFERENCE)
+                {
+                    Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_RESOURCE)
+                {
+                    Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RESOURCES,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_LOGIN)
+                {
+                    Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
             }
 
             if (!sessionValid)
@@ -1001,7 +1151,7 @@ internal class BridgeOpsAgent
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                     if (target == Glo.CLIENT_NEW_RESOURCE)
-                        SendChangeNotification(null, Glo.SERVER_RESOURCES_UPDATED);
+                        SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                 }
             }
         }
@@ -1023,7 +1173,8 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             PrimaryColumnSelect pcs = sr.Deserialise<PrimaryColumnSelect>(sr.ReadString(stream));
-            if (!clientSessions.ContainsKey(pcs.sessionID))
+
+            if (!CheckSessionValidity(pcs.sessionID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1168,59 +1319,62 @@ internal class BridgeOpsAgent
             bool permission = false;
             int edit = Glo.PERMISSION_EDIT;
 
-            if (target == Glo.CLIENT_UPDATE_ORGANISATION)
+            lock (clientSessions)
             {
-                Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
-                    out permission))
-                    com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
-            }
-            else if (target == Glo.CLIENT_UPDATE_ASSET)
-            {
-                Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
-                    out permission))
-                    com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
-            }
-            else if (target == Glo.CLIENT_UPDATE_CONTACT)
-            {
-                Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
-                    out permission))
-                    com.CommandText = newRow.SqlUpdate();
-            }
-            else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
-            {
-                ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
-                    out permission))
-                    com.CommandText = newRow.SqlUpdate();
-            }
-            else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
-            {
-                // Make sure, when you get around to implementing this, that you check for permissions (as above).
-                Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
-                //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                //    com.CommandText = newRow.SqlUpdate();
-            }
-            else if (target == Glo.CLIENT_UPDATE_RESOURCE)
-            {
-                // Make sure, when you get around to implementing this, that you check for permissions (as above).
-                Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
-                //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                //    com.CommandText = newRow.SqlUpdate();
-            }
-            else if (target == Glo.CLIENT_UPDATE_LOGIN)
-            {
-                Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                    CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
-                    out permission))
-                    com.CommandText = newRow.SqlUpdate();
+                if (target == Glo.CLIENT_UPDATE_ORGANISATION)
+                {
+                    Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
+                }
+                else if (target == Glo.CLIENT_UPDATE_ASSET)
+                {
+                    Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
+                }
+                else if (target == Glo.CLIENT_UPDATE_CONTACT)
+                {
+                    Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = newRow.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
+                {
+                    ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
+                        out permission))
+                        com.CommandText = newRow.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
+                {
+                    // Make sure, when you get around to implementing this, that you check for permissions (as above).
+                    Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    //    com.CommandText = newRow.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_RESOURCE)
+                {
+                    // Make sure, when you get around to implementing this, that you check for permissions (as above).
+                    Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
+                    //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
+                    //    com.CommandText = newRow.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_LOGIN)
+                {
+                    Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
+                        out permission))
+                        com.CommandText = newRow.SqlUpdate();
+                }
             }
 
             if (!sessionValid)
@@ -1243,7 +1397,7 @@ internal class BridgeOpsAgent
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (target == Glo.CLIENT_UPDATE_RESOURCE)
-                    SendChangeNotification(null, Glo.SERVER_RESOURCES_UPDATED);
+                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -1299,7 +1453,7 @@ internal class BridgeOpsAgent
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (req.table == "Resource")
-                    SendChangeNotification(null, Glo.SERVER_RESOURCES_UPDATED);
+                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -1513,16 +1667,20 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             TableModification req = sr.Deserialise<TableModification>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
-            {
-                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
-                return;
-            }
 
-            if (!clientSessions[req.sessionID].admin)
+            lock (clientSessions)
             {
-                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
-                return;
+                if (!CheckSessionValidity(req.sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+                if (!clientSessions[req.sessionID].admin)
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
             }
 
             string orderUpdateCommand = "";
@@ -1611,7 +1769,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
 
                 // All clients will now request an updated column record.
-                SendChangeNotification(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
+                SendChangeNotifications(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
             }
         }
         catch (Exception e)
@@ -1643,16 +1801,20 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             ColumnOrdering req = sr.Deserialise<ColumnOrdering>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
-            {
-                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
-                return;
-            }
 
-            if (!clientSessions[req.sessionID].admin)
+            lock (clientSessions)
             {
-                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
-                return;
+                if (!CheckSessionValidity(req.sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+                if (!clientSessions[req.sessionID].admin)
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
             }
 
             // Reject if the column record isn't intact, or if the order column counts aren't right.
@@ -1691,7 +1853,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
 
                 // All clients will now request an updated column record.
-                SendChangeNotification(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
+                SendChangeNotifications(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
             }
         }
         catch (Exception e)
