@@ -147,9 +147,9 @@ namespace BridgeOpsClient
             }
         }
 
-
         public static SendReceive sr = new SendReceive();
         public static SessionDetails sd = new SessionDetails();
+        public static object streamLock = new();
 
         private void ApplicationExit(object sender, EventArgs e)
         {
@@ -158,41 +158,44 @@ namespace BridgeOpsClient
 
         public static string LogIn(string username, string password)
         {
-            LoginRequest loginReq = new LoginRequest(username, password);
-            string send = sr.Serialise(loginReq);
-
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream == null)
-                    throw new Exception(NO_NETWORK_STREAM);
-                stream.WriteByte(Glo.CLIENT_LOGIN);
-                sr.WriteAndFlush(stream, send);
+                LoginRequest loginReq = new LoginRequest(username, password);
+                string send = sr.Serialise(loginReq);
 
-                string result = sr.ReadString(stream);
-
-                if (result.StartsWith(Glo.CLIENT_LOGIN_ACCEPT))
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    sd.admin = stream.ReadByte() == 0 ? false : true;
-                    sd.createPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
-                    sd.editPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
-                    sd.deletePermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+                    if (stream == null)
+                        throw new Exception(NO_NETWORK_STREAM);
+                    stream.WriteByte(Glo.CLIENT_LOGIN);
+                    sr.WriteAndFlush(stream, send);
 
-                    if (!int.TryParse(sr.ReadString(stream), out sd.loginID))
-                        return "";
+                    string result = sr.ReadString(stream);
 
-                    sd.sessionID = result.Replace(Glo.CLIENT_LOGIN_ACCEPT, "");
+                    if (result.StartsWith(Glo.CLIENT_LOGIN_ACCEPT))
+                    {
+                        sd.admin = stream.ReadByte() == 0 ? false : true;
+                        sd.createPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+                        sd.editPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+                        sd.deletePermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
 
-                    return Glo.CLIENT_LOGIN_ACCEPT;
+                        if (!int.TryParse(sr.ReadString(stream), out sd.loginID))
+                            return "";
+
+                        sd.sessionID = result.Replace(Glo.CLIENT_LOGIN_ACCEPT, "");
+
+                        return Glo.CLIENT_LOGIN_ACCEPT;
+                    }
+                    else
+                    {
+                        return result;
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    return result;
+                    return e.Message;
                 }
-            }
-            catch (Exception e)
-            {
-                return e.Message;
             }
         }
 
@@ -206,35 +209,38 @@ namespace BridgeOpsClient
             {
                 if (IsLoggedIn)
                 {
-                    NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-
-                    if (stream != null)
+                    lock (streamLock)
                     {
-                        stream.WriteByte(Glo.CLIENT_LOGOUT);
-                        sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
-                                                              loginID)));
-                        if (loginID == sd.loginID)
-                        {
-                            sr.ReadString(stream); // Empty the pipe.
+                        NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
 
-                            // No real need for an error if connection is lost and the logout 'fails'. An error will
-                            // present when the user tries to log in again.
-                            sd.sessionID = "";
-
-                            if (Current.MainWindow != null)
-                                ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
-                        }
-                        else
+                        if (stream != null)
                         {
-                            string response = sr.ReadString(stream);
-                            if (response == Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND)
-                                MessageBox.Show("Could not find this user's session.");
-                            else if (response == Glo.CLIENT_LOGOUT_ACCEPT)
-                                MessageBox.Show("User logged out successfully");
-                            else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString())
-                                MessageBox.Show("You do not have the required permissions for this action");
+                            stream.WriteByte(Glo.CLIENT_LOGOUT);
+                            sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
+                                                                  loginID)));
+                            if (loginID == sd.loginID)
+                            {
+                                sr.ReadString(stream); // Empty the pipe.
+
+                                // No real need for an error if connection is lost and the logout 'fails'. An error
+                                // will present when the user tries to log in again.
+                                sd.sessionID = "";
+
+                                if (Current.MainWindow != null)
+                                    ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
+                            }
                             else
-                                throw new Exception();
+                            {
+                                string response = sr.ReadString(stream);
+                                if (response == Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND)
+                                    MessageBox.Show("Could not find this user's session.");
+                                else if (response == Glo.CLIENT_LOGOUT_ACCEPT)
+                                    MessageBox.Show("User logged out successfully");
+                                else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString())
+                                    MessageBox.Show("You do not have the required permissions for this action");
+                                else
+                                    throw new Exception();
+                            }
                         }
                     }
                 }
@@ -383,39 +389,42 @@ namespace BridgeOpsClient
             {
                 columnRecordPulInProgress = true;
 
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-                try
+                lock (streamLock)
                 {
-                    if (stream != null)
+                    NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                    try
                     {
-                        stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
-                        sr.WriteAndFlush(stream, sd.sessionID);
-                        if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                        if (stream != null)
                         {
-                            ColumnRecord.Initialise(sr.ReadString(stream));
-                            return true;
+                            stream.WriteByte(Glo.CLIENT_PULL_COLUMN_RECORD);
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                ColumnRecord.Initialise(sr.ReadString(stream));
+                                return true;
+                            }
+                            else
+                            {
+                                MessageBox.Show("Could not pull column record.");
+                                return false;
+                            }
                         }
                         else
-                        {
-                            MessageBox.Show("Could not pull column record.");
                             return false;
-                        }
                     }
-                    else
+                    catch
+                    {
                         return false;
-                }
-                catch
-                {
-                    return false;
-                }
-                finally
-                {
-                    if (stream != null) stream.Close();
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
 
-                    foreach (PageDatabaseView pdv in PageDatabase.views)
-                        pdv.PopulateColumnComboBox();
+                        foreach (PageDatabaseView pdv in PageDatabase.views)
+                            pdv.PopulateColumnComboBox();
 
-                    columnRecordPulInProgress = false;
+                        columnRecordPulInProgress = false;
+                    }
                 }
             }
         }
@@ -492,145 +501,157 @@ namespace BridgeOpsClient
         }
         public static bool SendInsert(byte fncByte, object toSerialise, out string returnID)
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    stream.WriteByte(fncByte);
-                    sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    if (stream != null)
                     {
-                        returnID = "";
-                        return true;
+                        stream.WriteByte(fncByte);
+                        sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            returnID = "";
+                            return true;
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
+                        {
+                            returnID = sr.ReadString(stream);
+                            return true;
+                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            SessionInvalidated();
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            MessageBox.Show(PERMISSION_DENIED);
+                        }
                     }
-                    else if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
-                    {
-                        returnID = sr.ReadString(stream);
-                        return true;
-                    }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        SessionInvalidated();
-                    }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        MessageBox.Show(PERMISSION_DENIED);
-                    }
+                    returnID = "";
+                    return false;
                 }
-                returnID = "";
-                return false;
-            }
-            catch
-            {
-                returnID = "";
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    returnID = "";
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 
         public static bool SendUpdate(byte fncByte, object toSerialise)
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    stream.WriteByte(fncByte);
-                    sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                        return true;
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
+                    if (stream != null)
                     {
-                        SessionInvalidated();
+                        stream.WriteByte(fncByte);
+                        sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            SessionInvalidated();
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            MessageBox.Show(PERMISSION_DENIED);
+                        }
                     }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        MessageBox.Show(PERMISSION_DENIED);
-                    }
+                    return false;
                 }
-                return false;
-            }
-            catch
-            {
-                MessageBox.Show("Could not run table update.");
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not run table update.");
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 
         public static bool SendDelete(string table, string column, string id, bool isString)
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    DeleteRequest req = new DeleteRequest(sd.sessionID, table, column, id, isString);
+                    if (stream != null)
+                    {
+                        DeleteRequest req = new DeleteRequest(sd.sessionID, table, column, id, isString);
 
-                    stream.WriteByte(Glo.CLIENT_DELETE);
-                    sr.WriteAndFlush(stream, sr.Serialise(req));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                        return true;
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        SessionInvalidated();
+                        stream.WriteByte(Glo.CLIENT_DELETE);
+                        sr.WriteAndFlush(stream, sr.Serialise(req));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            SessionInvalidated();
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            MessageBox.Show(PERMISSION_DENIED);
+                        }
                     }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        MessageBox.Show(PERMISSION_DENIED);
-                    }
+                    return false;
                 }
-                return false;
-            }
-            catch
-            {
-                MessageBox.Show("Could not delete record.");
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not delete record.");
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
         public static string[]? SelectColumnPrimary(string table, string column)
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, table, column);
-                    stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
-                    sr.WriteAndFlush(stream, sr.Serialise(pcs));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                        return sr.ReadString(stream).Split(';');
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                        SessionInvalidated();
+                    if (stream != null)
+                    {
+                        PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, table, column);
+                        stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
+                        sr.WriteAndFlush(stream, sr.Serialise(pcs));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return sr.ReadString(stream).Split(';');
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        return null;
+                    }
                     return null;
                 }
-                return null;
-            }
-            catch
-            {
-                MessageBox.Show("Could not run or return query.");
-                return null;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not run or return query.");
+                    return null;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 
@@ -664,40 +685,43 @@ namespace BridgeOpsClient
                     select.Add(col.Key);
             }
 
-            using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            lock (streamLock)
             {
-                try
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 {
-                    if (stream != null)
+                    try
                     {
-                        SelectRequest req = new SelectRequest(sd.sessionID, table, select, likeColumns, likeValues);
-                        stream.WriteByte(Glo.CLIENT_SELECT);
-                        sr.WriteAndFlush(stream, sr.Serialise(req));
-                        int response = stream.ReadByte();
-                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        if (stream != null)
                         {
-                            SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                            columnNames = result.columnNames;
-                            rows = result.rows;
-                            ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
-                            return true;
+                            SelectRequest req = new SelectRequest(sd.sessionID, table, select, likeColumns, likeValues);
+                            stream.WriteByte(Glo.CLIENT_SELECT);
+                            sr.WriteAndFlush(stream, sr.Serialise(req));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                columnNames = result.columnNames;
+                                rows = result.rows;
+                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
+                                return true;
+                            }
+                            else if (response == Glo.CLIENT_SESSION_INVALID)
+                                SessionInvalidated();
+                            throw new Exception();
                         }
-                        else if (response == Glo.CLIENT_SESSION_INVALID)
-                            SessionInvalidated();
                         throw new Exception();
                     }
-                    throw new Exception();
-                }
-                catch
-                {
-                    MessageBox.Show("Could not run or return query.");
-                    columnNames = new();
-                    rows = new();
-                    return false;
-                }
-                finally
-                {
-                    if (stream != null) stream.Close();
+                    catch
+                    {
+                        MessageBox.Show("Could not run or return query.");
+                        columnNames = new();
+                        rows = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
                 }
             }
         }
@@ -713,15 +737,99 @@ namespace BridgeOpsClient
                 foreach (var col in dictionary)
                     select.Add(col.Key);
 
-            using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+            lock (streamLock)
             {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            SelectWideRequest req = new(sd.sessionID, dictionary == null ? new() { "*" } : select,
+                                                        table, value);
+                            stream.WriteByte(Glo.CLIENT_SELECT_WIDE);
+                            sr.WriteAndFlush(stream, sr.Serialise(req));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                columnNames = result.columnNames;
+                                rows = result.rows;
+                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
+                                return true;
+                            }
+                            else if (response == Glo.CLIENT_SESSION_INVALID)
+                                SessionInvalidated();
+                            throw new Exception();
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Could not run or return query.");
+                        columnNames = new();
+                        rows = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
+        public static bool LinkContact(string organisationID, int contactID, bool unlink)
+        {
+            lock (streamLock)
+            {
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 try
                 {
                     if (stream != null)
                     {
-                        SelectWideRequest req = new(sd.sessionID, dictionary == null ? new() { "*" } : select,
-                                                    table, value);
-                        stream.WriteByte(Glo.CLIENT_SELECT_WIDE);
+                        LinkContactRequest req = new LinkContactRequest(sd.sessionID, organisationID, contactID, unlink);
+
+                        stream.WriteByte(Glo.CLIENT_LINK_CONTACT);
+                        sr.WriteAndFlush(stream, sr.Serialise(req));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            SessionInvalidated();
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            MessageBox.Show(PERMISSION_DENIED);
+                        }
+                    }
+                    return false;
+                }
+                catch
+                {
+                    MessageBox.Show("Could not link or unlink contact to organisation.");
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
+            }
+        }
+
+        public static bool LinkedContactSelect(string organisationID,
+                                               out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            lock (streamLock)
+            {
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
+                {
+                    if (stream != null)
+                    {
+                        LinkedContactSelectRequest req = new(sd.sessionID, organisationID);
+                        stream.WriteByte(Glo.CLIENT_LINKED_CONTACT_SELECT);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
@@ -752,162 +860,93 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool LinkContact(string organisationID, int contactID, bool unlink)
-        {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
-            {
-                if (stream != null)
-                {
-                    LinkContactRequest req = new LinkContactRequest(sd.sessionID, organisationID, contactID, unlink);
-
-                    stream.WriteByte(Glo.CLIENT_LINK_CONTACT);
-                    sr.WriteAndFlush(stream, sr.Serialise(req));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                        return true;
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        SessionInvalidated();
-                    }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        MessageBox.Show(PERMISSION_DENIED);
-                    }
-                }
-                return false;
-            }
-            catch
-            {
-                MessageBox.Show("Could not link or unlink contact to organisation.");
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
-        }
-
-        public static bool LinkedContactSelect(string organisationID,
-                                               out List<string?> columnNames, out List<List<object?>> rows)
-        {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
-            {
-                if (stream != null)
-                {
-                    LinkedContactSelectRequest req = new(sd.sessionID, organisationID);
-                    stream.WriteByte(Glo.CLIENT_LINKED_CONTACT_SELECT);
-                    sr.WriteAndFlush(stream, sr.Serialise(req));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                    {
-                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                        columnNames = result.columnNames;
-                        rows = result.rows;
-                        ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
-                        return true;
-                    }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                        SessionInvalidated();
-                    throw new Exception();
-                }
-                throw new Exception();
-            }
-            catch
-            {
-                MessageBox.Show("Could not run or return query.");
-                columnNames = new();
-                rows = new();
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
-        }
-
         public static bool SelectHistory(string table, string id,
                                          out List<string?> columnNames, out List<List<object?>> rows)
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    SelectHistoryRequest req = new(sd.sessionID, table, id);
-                    stream.WriteByte(Glo.CLIENT_SELECT_HISTORY);
-                    sr.WriteAndFlush(stream, sr.Serialise(req));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    if (stream != null)
                     {
-                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                        columnNames = result.columnNames;
-                        rows = result.rows;
-                        ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
-                        return true;
+                        SelectHistoryRequest req = new(sd.sessionID, table, id);
+                        stream.WriteByte(Glo.CLIENT_SELECT_HISTORY);
+                        sr.WriteAndFlush(stream, sr.Serialise(req));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                            columnNames = result.columnNames;
+                            rows = result.rows;
+                            ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
+                            return true;
+                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        throw new Exception();
                     }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                        SessionInvalidated();
                     throw new Exception();
                 }
-                throw new Exception();
-            }
-            catch
-            {
-                MessageBox.Show("Could not run or return history list.");
-                columnNames = new();
-                rows = new();
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not run or return history list.");
+                    columnNames = new();
+                    rows = new();
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 
         public static bool BuildHistorical(string table, string changeID, string recordID, out List<object?> data)
         {
-            NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
-            try
+            lock (streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
                 {
-                    SelectHistoricalRecordRequest req = new(sd.sessionID, table, changeID, recordID);
-                    stream.WriteByte(Glo.CLIENT_SELECT_HISTORICAL_RECORD);
-                    sr.WriteAndFlush(stream, sr.Serialise(req));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    if (stream != null)
                     {
-                        SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                        if (result.rows.Count > 0 &&
-                            (table == "Organisation" && result.rows[0].Count == ColumnRecord.organisation.Count) ||
-                            (table == "Asset" && result.rows[0].Count == ColumnRecord.asset.Count))
+                        SelectHistoricalRecordRequest req = new(sd.sessionID, table, changeID, recordID);
+                        stream.WriteByte(Glo.CLIENT_SELECT_HISTORICAL_RECORD);
+                        sr.WriteAndFlush(stream, sr.Serialise(req));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
-                            data = result.rows[0];
-                            ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
-                            return true;
+                            SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                            if (result.rows.Count > 0 &&
+                                (table == "Organisation" && result.rows[0].Count == ColumnRecord.organisation.Count) ||
+                                (table == "Asset" && result.rows[0].Count == ColumnRecord.asset.Count))
+                            {
+                                data = result.rows[0];
+                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
+                                return true;
+                            }
+                            else
+                            {
+                                throw new Exception();
+                            }
                         }
-                        else
-                        {
-                            throw new Exception();
-                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        throw new Exception();
                     }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                        SessionInvalidated();
                     throw new Exception();
                 }
-                throw new Exception();
-            }
-            catch
-            {
-                MessageBox.Show("Could not run or return historical record.");
-                data = new();
-                return false;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not run or return historical record.");
+                    data = new();
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 

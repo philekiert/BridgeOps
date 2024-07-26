@@ -296,53 +296,56 @@ namespace BridgeOpsClient
             // Legal values are checked rigorously by the agent, so we don't need to worry so much about that here.
             // The button will also not be enabled if there have been no changes.
 
-            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
-            try
+            lock (App.streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                try
                 {
-                    stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
+                    if (stream != null)
+                    {
+                        stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
 
-                    SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
-                                                                        organisationOrder,
-                                                                        assetOrder,
-                                                                        contactOrder,
-                                                                        conferenceOrder);
+                        SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
+                                                                            organisationOrder,
+                                                                            assetOrder,
+                                                                            contactOrder,
+                                                                            conferenceOrder);
 
-                    App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                    {
-                        changeMade = true;
-                        Close();
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        App.SessionInvalidated();
-                        Close();
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        // Shouldn't ever arrive here.
-                        MessageBox.Show("Only admins can reorder columns.");
-                        return;
+                        App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            changeMade = true;
+                            Close();
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            App.SessionInvalidated();
+                            Close();
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            // Shouldn't ever arrive here.
+                            MessageBox.Show("Only admins can reorder columns.");
+                            return;
+                        }
+                        else
+                            throw new Exception();
                     }
                     else
-                        throw new Exception();
+                        MessageBox.Show("Could not create network stream.");
                 }
-                else
-                    MessageBox.Show("Could not create network stream.");
-            }
-            catch
-            {
-                MessageBox.Show("Could not apply new column order.");
-                return;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not apply new column order.");
+                    return;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
     }

@@ -243,82 +243,86 @@ namespace BridgeOpsClient
         public bool changeMade = false;
         private void SendToServer(SendReceiveClasses.TableModification mod)
         {
-            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
-            try
+            lock (App.streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                try
                 {
-                    stream.WriteByte(Glo.CLIENT_TABLE_MODIFICATION);
-                    App.sr.WriteAndFlush(stream, App.sr.Serialise(mod));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    if (stream != null)
                     {
-                        changeMade = true;
-                        Close();
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_CONFIRM)
-                    {
-                        if (MessageBox.Show("This column contains data, either current or historical. " +
-                                            "Changing the type of a column can lead to data loss if the new type is " +
-                                            "unable to represent the currently held data. It is highly recommended " +
-                                            "that you back up the database before making this change, as if the " +
-                                            "change is successful, any data loss will be irreversible." +
-                                            "\n\nAre you sure you wish to proceed?",
-                                            "Change Type", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                        stream.WriteByte(Glo.CLIENT_TABLE_MODIFICATION);
+                        App.sr.WriteAndFlush(stream, App.sr.Serialise(mod));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
-                            stream.WriteByte(Glo.CLIENT_CONFIRM);
-                            response = stream.ReadByte();
-                            if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            changeMade = true;
+                            Close();
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_CONFIRM)
+                        {
+                            if (MessageBox.Show("This column contains data, either current or historical. " +
+                                                "Changing the type of a column can lead to data loss if the new " +
+                                                "type is unable to represent the currently held data. It is highly " +
+                                                "recommended that you back up the database before making this " +
+                                                "change, as if the change is successful, any data loss will be " +
+                                                "irreversible." +
+                                                "\n\nAre you sure you wish to proceed?",
+                                                "Change Type", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                             {
-                                MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
-                                                App.sr.ReadString(stream));
-                                return;
-                            }
-                            else if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                            {
-                                changeMade = true;
-                                Close();
-                                return;
+                                stream.WriteByte(Glo.CLIENT_CONFIRM);
+                                response = stream.ReadByte();
+                                if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                                {
+                                    MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
+                                                    App.sr.ReadString(stream));
+                                    return;
+                                }
+                                else if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                                {
+                                    changeMade = true;
+                                    Close();
+                                    return;
+                                }
+                                else
+                                    throw new Exception();
                             }
                             else
-                                throw new Exception();
+                                stream.WriteByte(Glo.CLIENT_CANCEL);
+                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            App.SessionInvalidated();
+                            Close();
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            // Shouldn't ever arrive here.
+                            MessageBox.Show("Only admins can make table alterations.");
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            MessageBox.Show("The table alteration could not be made. See SQL error:\n\n" +
+                                            App.sr.ReadString(stream));
+                            return;
                         }
                         else
-                            stream.WriteByte(Glo.CLIENT_CANCEL);
-                    }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        App.SessionInvalidated();
-                        Close();
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        // Shouldn't ever arrive here.
-                        MessageBox.Show("Only admins can make table alterations.");
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
-                    {
-                        MessageBox.Show("The table alteration could not be made. See SQL error:\n\n" +
-                                        App.sr.ReadString(stream));
-                        return;
+                            throw new Exception();
                     }
                     else
-                        throw new Exception();
+                        MessageBox.Show("Could not create network stream.");
                 }
-                else
-                    MessageBox.Show("Could not create network stream.");
-            }
-            catch
-            {
-                MessageBox.Show("Could not run table alteration.");
-                return;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
+                catch
+                {
+                    MessageBox.Show("Could not run table alteration.");
+                    return;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
         }
 

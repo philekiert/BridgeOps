@@ -79,26 +79,29 @@ namespace BridgeOpsClient
 
         private void DisplayLoggedInUsers()
         {
-            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
-            try
+            lock (App.streamLock)
             {
-                if (stream == null)
-                    throw new Exception(App.NO_NETWORK_STREAM);
-                stream.WriteByte(Glo.CLIENT_LOGGEDIN_LIST);
-                App.sr.WriteAndFlush(stream, App.sd.sessionID);
-                List<object[]>? loggedIn = App.sr.Deserialise<List<object[]>>(App.sr.ReadString(stream));
+                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                try
+                {
+                    if (stream == null)
+                        throw new Exception(App.NO_NETWORK_STREAM);
+                    stream.WriteByte(Glo.CLIENT_LOGGEDIN_LIST);
+                    App.sr.WriteAndFlush(stream, App.sd.sessionID);
+                    List<object[]>? loggedIn = App.sr.Deserialise<List<object[]>>(App.sr.ReadString(stream));
 
-                if (loggedIn != null)
-                    foreach (object[]? o in loggedIn)
-                        if (o != null)
-                        {
-                            int index;
-                            if (int.TryParse(o[0].ToString(), out index))
+                    if (loggedIn != null)
+                        foreach (object[]? o in loggedIn)
+                            if (o != null)
+                            {
+                                int index;
+                                if (int.TryParse(o[0].ToString(), out index))
 
-                                rows[dctID[index]][4] = "Logged In";
-                        }
+                                    rows[dctID[index]][4] = "Logged In";
+                            }
+                }
+                catch { }
             }
-            catch { }
         }
 
         private void dtgUsers_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -259,69 +262,71 @@ namespace BridgeOpsClient
 
             SendReceiveClasses.TableModification mod = new(App.sd.sessionID, table, column);
 
-            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
-            try
+            lock (App.streamLock)
             {
-                if (stream != null)
+                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                try
                 {
-                    stream.WriteByte(Glo.CLIENT_TABLE_MODIFICATION);
-                    App.sr.WriteAndFlush(stream, App.sr.Serialise(mod));
-                    int response = stream.ReadByte();
-                    if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                    if (stream != null)
                     {
-                        InitiateTableChange();
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_CONFIRM)
-                    {
-                        if (MessageBox.Show("This column contains data, either current or historical. " +
-                                            "There will be no way to retrieve this data, so it is advisable to back " +
-                                            "up the database before making changes that could result in data loss." +
-                                            "\n\nAre you sure you wish to proceed?",
-                                            "Remove Column", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                        stream.WriteByte(Glo.CLIENT_TABLE_MODIFICATION);
+                        App.sr.WriteAndFlush(stream, App.sr.Serialise(mod));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
-                            stream.WriteByte(Glo.CLIENT_CONFIRM);
-                            if (stream.ReadByte() != Glo.CLIENT_REQUEST_SUCCESS)
-                                throw new Exception();
+                            InitiateTableChange();
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_CONFIRM)
+                        {
+                            if (MessageBox.Show("This column contains data, either current or historical. " +
+                                                "There will be no way to retrieve this data, so it is advisable to back " +
+                                                "up the database before making changes that could result in data loss." +
+                                                "\n\nAre you sure you wish to proceed?",
+                                                "Remove Column", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                            {
+                                stream.WriteByte(Glo.CLIENT_CONFIRM);
+                                if (stream.ReadByte() != Glo.CLIENT_REQUEST_SUCCESS)
+                                    throw new Exception();
+                                else
+                                    InitiateTableChange();
+                            }
                             else
-                                InitiateTableChange();
+                                stream.WriteByte(Glo.CLIENT_CANCEL);
+                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            App.SessionInvalidated();
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            // Shouldn't ever arrive here.
+                            MessageBox.Show("Only admins can make table modifications.");
+                            return;
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
+                                            App.sr.ReadString(stream));
+                            return;
                         }
                         else
-                            stream.WriteByte(Glo.CLIENT_CANCEL);
-                    }
-                    else if (response == Glo.CLIENT_SESSION_INVALID)
-                    {
-                        App.SessionInvalidated();
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                    {
-                        // Shouldn't ever arrive here.
-                        MessageBox.Show("Only admins can make table modifications.");
-                        return;
-                    }
-                    else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
-                    {
-                        MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
-                                        App.sr.ReadString(stream));
-                        return;
+                            throw new Exception();
                     }
                     else
-                        throw new Exception();
+                        MessageBox.Show("Could not create network stream.");
                 }
-                else
-                    MessageBox.Show("Could not create network stream.");
+                catch
+                {
+                    MessageBox.Show("Could not run table update.");
+                    return;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
             }
-            catch
-            {
-                MessageBox.Show("Could not run table update.");
-                return;
-            }
-            finally
-            {
-                if (stream != null) stream.Close();
-            }
-
         }
 
         private void InitiateTableChange()

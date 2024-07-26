@@ -55,36 +55,39 @@ namespace BridgeOpsClient
 
             PasswordResetRequest req = new(App.sd.sessionID, id, pwdCurrent.Password, pwdNew.Password, adminReset);
 
-            NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
-            try
+            lock (App.streamLock)
             {
-                if (stream == null)
-                    throw new Exception(App.NO_NETWORK_STREAM);
-                stream.WriteByte(Glo.CLIENT_PASSWORD_RESET);
-                App.sr.WriteAndFlush(stream, App.sr.Serialise(req));
-
-                int result = App.sr.ReadByte(stream);
-                switch (result)
+                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                try
                 {
-                    case Glo.CLIENT_SESSION_INVALID:
-                        App.SessionInvalidated();
-                        return;
-                    case Glo.CLIENT_INSUFFICIENT_PERMISSIONS:
-                        MessageBox.Show(App.PERMISSION_DENIED);
-                        return;
-                    case Glo.CLIENT_REQUEST_FAILED:
-                        MessageBox.Show("Incorrect password.");
-                        return;
-                    case Glo.CLIENT_REQUEST_SUCCESS:
-                        MessageBox.Show("Password changed successfully.");
-                        Close();
-                        break;
-                    default:
-                        MessageBox.Show("Something went wrong.");
-                        break;
+                    if (stream == null)
+                        throw new Exception(App.NO_NETWORK_STREAM);
+                    stream.WriteByte(Glo.CLIENT_PASSWORD_RESET);
+                    App.sr.WriteAndFlush(stream, App.sr.Serialise(req));
+
+                    int result = App.sr.ReadByte(stream);
+                    switch (result)
+                    {
+                        case Glo.CLIENT_SESSION_INVALID:
+                            App.SessionInvalidated();
+                            return;
+                        case Glo.CLIENT_INSUFFICIENT_PERMISSIONS:
+                            MessageBox.Show(App.PERMISSION_DENIED);
+                            return;
+                        case Glo.CLIENT_REQUEST_FAILED:
+                            MessageBox.Show("Incorrect password.");
+                            return;
+                        case Glo.CLIENT_REQUEST_SUCCESS:
+                            MessageBox.Show("Password changed successfully.");
+                            Close();
+                            break;
+                        default:
+                            MessageBox.Show("Something went wrong.");
+                            break;
+                    }
                 }
+                catch { }
             }
-            catch { }
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
