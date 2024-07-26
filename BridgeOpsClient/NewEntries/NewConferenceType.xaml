@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        Title="New Conference Type" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+        Title="New Conference Type" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        Closed="Window_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />

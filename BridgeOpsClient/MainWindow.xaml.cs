@@ -272,5 +272,10 @@ namespace BridgeOpsClient
                     pcv.scrollBar.Margin = new Thickness(0);
             }
         }
+        
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

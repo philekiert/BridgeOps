@@ -96,7 +96,6 @@ namespace BridgeOpsClient
                             {
                                 int index;
                                 if (int.TryParse(o[0].ToString(), out index))
-
                                     rows[dctID[index]][4] = "Logged In";
                             }
                 }

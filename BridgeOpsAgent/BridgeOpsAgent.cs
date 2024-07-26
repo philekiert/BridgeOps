@@ -194,7 +194,7 @@ internal class BridgeOpsAgent
     }
     static bool CheckSessionPermission(ClientSession session, int category, int intent)
     {
-        return session.permissions[intent][category];
+        return session.admin || session.permissions[intent][category];
     }
     static SqlCommand PullUpUserFromPassword(string username, string password, SqlConnection sqlConnect)
     {
@@ -217,7 +217,7 @@ internal class BridgeOpsAgent
         return result;
     }
 
-    // Multiple threads may try to access this at once, so hold them up if stopnecessary.
+    // Multiple threads may try to access this at once, so hold them up if necessary.
     static object logErrorLock = new();
     private static void LogError(string context, Exception? e)
     {
@@ -685,7 +685,8 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_UPDATE_CONFERENCE_TYPE ||
                          fncByte == Glo.CLIENT_UPDATE_CONFERENCE ||
                          fncByte == Glo.CLIENT_UPDATE_RESOURCE ||
-                         fncByte == Glo.CLIENT_UPDATE_LOGIN)
+                         fncByte == Glo.CLIENT_UPDATE_LOGIN ||
+                         fncByte == Glo.CLIENT_UPDATE_CHANGE_REASON)
                     ClientUpdate(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
@@ -1356,49 +1357,57 @@ internal class BridgeOpsAgent
                 }
                 else if (target == Glo.CLIENT_UPDATE_ASSET)
                 {
-                    Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    Asset newUpdate = sr.Deserialise<Asset>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
-                        com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
+                        com.CommandText = newUpdate.SqlUpdate(clientSessions[newUpdate.sessionID].loginID);
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONTACT)
                 {
-                    Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    Contact newUpdate = sr.Deserialise<Contact>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
-                        com.CommandText = newRow.SqlUpdate();
+                        com.CommandText = newUpdate.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
                 {
-                    ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
+                    ConferenceType newUpdate = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
                         out permission))
-                        com.CommandText = newRow.SqlUpdate();
+                        com.CommandText = newUpdate.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
                 {
                     // Make sure, when you get around to implementing this, that you check for permissions (as above).
-                    Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    Conference newUpdate = sr.Deserialise<Conference>(sr.ReadString(stream));
                     //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     //    com.CommandText = newRow.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_RESOURCE)
                 {
                     // Make sure, when you get around to implementing this, that you check for permissions (as above).
-                    Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
+                    Resource newUpdate = sr.Deserialise<Resource>(sr.ReadString(stream));
                     //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
                     //    com.CommandText = newRow.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_LOGIN)
                 {
-                    Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
+                    Login newUpdate = sr.Deserialise<Login>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
                         out permission))
-                        com.CommandText = newRow.SqlUpdate();
+                        com.CommandText = newUpdate.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_CHANGE_REASON)
+                {
+                    ChangeReasonUpdate newUpdate = sr.Deserialise<ChangeReasonUpdate>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
+                        out permission))
+                        com.CommandText = newUpdate.SqlUpdate();
                 }
             }
 

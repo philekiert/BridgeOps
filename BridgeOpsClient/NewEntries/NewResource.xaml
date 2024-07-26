@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="New Resource" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+        Title="New Resource" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        Closed="Window_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />

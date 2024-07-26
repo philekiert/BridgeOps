@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize">
+        Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        Closed="Window_Closed">
     <TabControl>
         <TabItem Header="Organisation">
             <Grid>
@@ -130,11 +131,14 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Row="0" Grid.Column="2" x:Name="btnRefresh" Content="Refresh"
+                <Button Grid.Row="0" Grid.Column="0" x:Name="btnRefresh" Content="Refresh"
                         Margin="10 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnRefresh_Click"/>
-                <custom:SqlDataGrid Grid.Row="1" Grid.ColumnSpan="3" x:Name="dtgChangeLog" Width="470" Height="400"
+                <Button Grid.Row="0" Grid.Column="1" x:Name="btnCorrectReason" Content="Correct Reason"
+                        Margin="10 10 10 0" Width="100" HorizontalAlignment="Right" Click="btnCorrectReason_Click"
+                        IsEnabled="False"/>
+                <custom:SqlDataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                    x:Name="dtgChangeLog" Width="470" Height="400"
                                     MouseDoubleClick="dtgChangeLog_MouseDoubleClick"/>
             </Grid>
         </TabItem>

@@ -983,6 +983,14 @@ namespace BridgeOpsClient
             }
         }
 
+        // Called whenever a window that could be the remaining one open is closed. This used to end the application on
+        // its own, but now the listener thread is running, this is no longer the case.
+        public static void WindowClosed()
+        {
+            if (Application.Current.Windows.Count == 0)
+                Environment.Exit(0);
+        }
+
     }
 
     public class SessionDetails

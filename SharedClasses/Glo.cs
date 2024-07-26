@@ -43,6 +43,7 @@ public static class Glo
     public const int CLIENT_UPDATE_CONFERENCE_TYPE = 18;
     public const int CLIENT_UPDATE_CONFERENCE = 19;
     public const int CLIENT_UPDATE_RESOURCE = 20;
+    public const int CLIENT_UPDATE_CHANGE_REASON = 21;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT = 31;
     public const int CLIENT_SELECT_WIDE = 32;

@@ -42,9 +42,9 @@ namespace BridgeOpsClient
                 btnAssetRemove.IsEnabled = false;
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
-            {
                 btnDelete.IsEnabled = false;
-            }
+            if (App.sd.admin)
+                btnCorrectReason.IsEnabled = true;
         }
 
         public NewOrganisation() // New organisation.
@@ -484,6 +484,27 @@ namespace BridgeOpsClient
                                 originalNotes != txtNotes.Text ||
                                 ditOrganisation.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
+        }
+
+        private void btnCorrectReason_Click(object sender, RoutedEventArgs e)
+        {
+            string changeIdString = dtgChangeLog.GetCurrentlySelectedID();
+            string changeReason = dtgChangeLog.GetCurrentlySelectedCell(3);
+            int changeID;
+            if (int.TryParse(changeIdString, out changeID))
+            {
+                DialogChangeReason changeDialog = new DialogChangeReason("Organisation", changeID, changeReason);
+                changeDialog.ShowDialog();
+                if (changeDialog.DialogResult == true)
+                    GetHistory();
+            }
+            else
+                MessageBox.Show("Please select a change record.");
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
         }
     }
 }

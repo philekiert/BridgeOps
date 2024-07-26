@@ -331,5 +331,10 @@ namespace BridgeOpsClient
             if (edit)
                 DetectAlterations();
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

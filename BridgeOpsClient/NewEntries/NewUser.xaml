@@ -7,7 +7,7 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New User" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        UseLayoutRounding="True">
+        Closed="Window_Closed" UseLayoutRounding="True">
     <Grid>
         <Grid.Resources>
             <Style TargetType="TextBox">

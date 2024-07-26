@@ -317,5 +317,10 @@ namespace BridgeOpsClient
             PasswordChange pc = new(id, true);
             pc.ShowDialog();
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

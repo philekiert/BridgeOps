@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
-        Title="Bridge Management Software" Height="800" Width="800">
+        Title="Bridge Management Software" Height="800" Width="800"
+        Closed="Window_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>

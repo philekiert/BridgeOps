@@ -207,5 +207,10 @@ namespace BridgeOpsClient
                                 ditContact.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

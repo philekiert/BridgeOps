@@ -48,5 +48,10 @@ namespace BridgeOpsClient
                 cmbResource.SelectedIndex = resource.SelectedRowTotal;
 
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

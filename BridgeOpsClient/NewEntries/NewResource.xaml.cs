@@ -66,5 +66,10 @@ namespace BridgeOpsClient
             else
                 MessageBox.Show("Could not create resource.");
 }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

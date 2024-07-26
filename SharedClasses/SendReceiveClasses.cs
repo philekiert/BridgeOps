@@ -1349,6 +1349,35 @@ namespace SendReceiveClasses
         }
     }
 
+    struct ChangeReasonUpdate
+    {
+        public string sessionID;
+        public string tableName;
+        public int changeID;
+        public string reason;
+
+        public ChangeReasonUpdate(string sessionID, string tableName, int changeID, string reason)
+        {
+            this.sessionID = sessionID;
+            this.tableName = tableName;
+            this.changeID = changeID;
+            this.reason = reason;
+        }
+
+        private void Prepare()
+        {
+            tableName = SqlAssist.SecureColumn(tableName) + "Change";
+            reason = SqlAssist.AddQuotes(SqlAssist.SecureValue(reason));
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            return SqlAssist.Update(tableName, $"{Glo.Tab.CHANGE_REASON} = {reason}", Glo.Tab.CHANGE_ID, changeID);
+        }
+    }
+
 
     //   H E L P E R   F U N C T I O N S
 

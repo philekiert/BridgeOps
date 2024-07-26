@@ -121,5 +121,10 @@ namespace BridgeOpsClient
             if (mainWindow.IsLoaded)
                 mainWindow.GreyOutPermissions();
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            App.WindowClosed();
+        }
     }
 }

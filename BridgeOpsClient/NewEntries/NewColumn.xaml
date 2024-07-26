@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        Title="New Column" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+        Title="New Column" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Closed="Window_Closed">
     <Grid>
         <Grid.Resources>
             <Style TargetType="TextBox">
