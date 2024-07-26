@@ -26,28 +26,37 @@ internal class BridgeOpsAgent
 
     static bool columnRecordIntact = false;
 
-    const int notificationSendRetries = 10;
+    const int clientNudgeInterval = 20_000;
+    const int notificationSendRetries = 3;
+    const int maxMissedNudges = 10;
 
     class ClientSession
     {
         public string username;
         public string ipString;
         public int loginID;
+        public string sessionID; // This is stored in its key, but it's good to have it here as well.
         public bool admin;
         public List<bool[]> permissions;
         public bool[] createPermissions;
         public bool[] editPermissions;
         public bool[] deletePermissions;
 
+        // This will count up each time SqlServerNudge() gets no response. If it exceeds maxMissedNudges, the session
+        // is terminated.
+        public int missedNudges = 0;
+        public int MissedNudges { get { return missedNudges; } }
+
         public NetworkStream? stream;
         public IPAddress? ipAddess;
 
-        public ClientSession(string username, string ip, int loginID, bool admin,
+        public ClientSession(string username, string ip, int loginID, string sessionID, bool admin,
                              int createPermissions, int editPermissions, int deletePermissions)
         {
             this.username = username;
             ipString = ip;
             this.loginID = loginID;
+            this.sessionID = sessionID;
             this.admin = admin;
             this.createPermissions = Glo.Fun.GetPermissionsArray(createPermissions);
             this.editPermissions = Glo.Fun.GetPermissionsArray(editPermissions);
@@ -99,9 +108,47 @@ internal class BridgeOpsAgent
         }
         public void SendResourceChangeNotification()
         {
-            if (!SendNotification(Glo.SERVER_RESOURCES_UPDATED))
-                LogError($"Resource change notification could not be sent to {ipString} " +
+            if (!SendNotification(Glo.CLIENT_NEW_RESOURCE))
+                LogError($"Column record change notification could not be sent to {ipString} " +
                          $"after {notificationSendRetries} retries.");
+        }
+
+        public void SendNudge()
+        {
+            if (ipAddess == null)
+                return; // Will never be the case.
+
+            lock (streamLock)
+            {
+                try
+                {
+                    stream = sr.NewClientNetworkStream(new IPEndPoint(ipAddess, portOutbound));
+
+                    if (stream != null)
+                    {
+                        stream.WriteByte(Glo.SERVER_CLIENT_NUDGE);
+                        stream.ReadTimeout = 1000; // Set to 5000ms originally by NewClientNetworkStream(), but that's
+                                                   // overkill for this.
+                        stream.ReadByte();
+                        CloseStream();
+                        missedNudges = 0;
+                    }
+                    else
+                        ++missedNudges;
+                }
+                catch
+                {
+                    CloseStream();
+                    ++missedNudges;
+                }
+            }
+
+            if (missedNudges == maxMissedNudges)
+                lock (clientSessions)
+                {
+                    if (clientSessions.ContainsKey(sessionID))
+                        clientSessions.Remove(sessionID);
+                }
         }
 
         public bool SendNotification(byte notificationByte)
@@ -118,20 +165,19 @@ internal class BridgeOpsAgent
                     try
                     {
                         stream = sr.NewClientNetworkStream(new IPEndPoint(ipAddess, portOutbound));
-
                         if (stream != null)
                         {
                             stream.WriteByte(notificationByte);
-                            stream.Close();
-                            stream = null;
-
+                            CloseStream();
                             sent = true;
                             break;
                         }
                     }
                     catch
                     { CloseStream(); }
-                    Thread.Sleep(1_000); // Sleep for a second if we didn't get anywhere.
+
+                    if (i != notificationSendRetries - 1)
+                        Thread.Sleep(1_000); // Sleep for a second if we didn't get anywhere.
                 }
             }
 
@@ -527,36 +573,15 @@ internal class BridgeOpsAgent
     {
         while (true)
         {
-            Thread.Sleep(10_000); // Sleep for 10 seconds.
-            List<string> sessionsToClose = new();
+            Thread.Sleep(clientNudgeInterval);
 
             lock (clientSessions)
             {
                 foreach (var kvp in clientSessions)
                 {
-                    try
-                    {
-                        IPAddress? clientIP = Glo.Fun.GetIPAddressFromString(kvp.Value.ipString);
-                        if (clientIP == null)
-                            continue; // This will never be the case, this is just to keep Visual Studio happy.
-
-                        NetworkStream? stream = sr.NewClientNetworkStream(new IPEndPoint(clientIP, portOutbound));
-                        if (stream == null)
-                            throw new Exception($"Could not create network stream for {kvp.Value.ipString}.");
-
-                        // Are you still there?
-                        stream.WriteByte(Glo.SERVER_CLIENT_CHECK);
-                        stream.ReadByte(); // Will throw an exception if it fails.
-                    }
-                    catch (Exception e)
-                    {
-                        sessionsToClose.Add(kvp.Key);
-                        LogError(e);
-                    }
+                    Thread clientNudgeThread = new Thread(kvp.Value.SendNudge);
+                    clientNudgeThread.Start();
                 }
-
-                foreach (string id in sessionsToClose)
-                    clientSessions.Remove(id);
             }
         }
     }
@@ -868,7 +893,7 @@ internal class BridgeOpsAgent
                     byte editPermissions = (byte)reader.GetValue(5);
                     byte deletePermissions = (byte)reader.GetValue(6);
 
-                    clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID, admin,
+                    clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID, key, admin,
                                                               createPermissions,
                                                               editPermissions,
                                                               deletePermissions));

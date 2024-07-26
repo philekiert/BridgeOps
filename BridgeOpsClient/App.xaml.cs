@@ -130,9 +130,9 @@ namespace BridgeOpsClient
                     {
                         PullResourceInformation();
                     }
-                    else if (fncByte == Glo.SERVER_CLIENT_CHECK)
+                    else if (fncByte == Glo.SERVER_CLIENT_NUDGE)
                     {
-                        stream.WriteByte(Glo.SERVER_CLIENT_CHECK);
+                        stream.WriteByte(Glo.SERVER_CLIENT_NUDGE);
                     }
                 }
                 catch
