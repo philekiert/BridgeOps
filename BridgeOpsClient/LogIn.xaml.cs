@@ -94,7 +94,7 @@ namespace BridgeOpsClient
                 }
                 if (!App.PullResourceInformation())
                 {
-                    MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +
+                    MessageBox.Show("Log in was successful, but could not pull resource information. Logging out. Please " +
                                     "contact the software administrator.");
                     App.LogOut();
                 }

@@ -200,7 +200,7 @@ namespace BridgeOpsClient.CustomControls
         #region Custom Selection Changed Event
 
         // Define a custom routed event
-        public static readonly RoutedEvent SelectionChangedEvent = EventManager.RegisterRoutedEvent(
+        public static RoutedEvent SelectionChangedEvent = EventManager.RegisterRoutedEvent(
             "SelectionChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(SqlDataGrid));
 
         // Provide CLR event wrapper
@@ -214,8 +214,6 @@ namespace BridgeOpsClient.CustomControls
         {
             // When the DataGrid's selection changes, raise the custom event.
             RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
-
-            dtg.SelectedIndex = dtg.SelectedIndex;
         }
 
         #endregion

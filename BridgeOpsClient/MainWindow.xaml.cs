@@ -47,7 +47,10 @@ namespace BridgeOpsClient
             LogIn logIn = new LogIn(this);
             logIn.ShowDialog();
             if (!App.IsLoggedIn)
+            {
                 Close();
+                App.WindowClosed(); // InitializeComponent() hasn't been called yet, so Window_Closed() won't fire.
+            }
 
             InitializeComponent();
 

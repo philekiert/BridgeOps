@@ -1,6 +1,8 @@
 ﻿using System;
 using System.CodeDom.Compiler;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
 using System.Data;
 using System.DirectoryServices.ActiveDirectory;
@@ -244,11 +246,12 @@ namespace BridgeOpsClient
                         }
                     }
                 }
-                if (Current.MainWindow != null && loginID == sd.loginID)
+                if (Current.MainWindow != null && loginID == sd.loginID && !Current.Windows.OfType<Login>().Any())
                 {
                     // Thought about making this while (!IsLoggedIn) in case the user closes the login window, but
                     // decided it might be useful for the user to get back to the app if they accidentally clicked
                     // the button, need to copy some unsaved work, then become disconnected for some reason.
+
                     LogIn logIn = new LogIn((MainWindow)Current.MainWindow);
                     logIn.ShowDialog();
                 }
@@ -924,6 +927,31 @@ namespace BridgeOpsClient
                             {
                                 data = result.rows[0];
                                 ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
+                                // Historical records are delivered in the database column order, so the data has to be
+                                // be arranged in a way the calling Window expects it.
+
+                                List<int> order = table == "Organisation" ? ColumnRecord.organisationOrder :
+                                                                            ColumnRecord.assetOrder;
+
+                                object?[] orderedArray = new object?[result.rows[0].Count];
+
+                                int i = 0;
+                                foreach (object? o in result.rows[0])
+                                {
+                                    for (int n = 0; n < orderedArray.Length; ++n)
+                                        if (order[n] == i)
+                                        {
+                                            orderedArray[n] = o;
+                                            break;
+                                        }
+                                    ++i;
+                                }
+
+                                data = new();
+
+                                foreach (object? o in orderedArray)
+                                    data.Add(o);
+
                                 return true;
                             }
                             else
@@ -990,7 +1018,6 @@ namespace BridgeOpsClient
             if (Application.Current.Windows.Count == 0)
                 Environment.Exit(0);
         }
-
     }
 
     public class SessionDetails

@@ -37,7 +37,7 @@ namespace BridgeOpsClient
             // Unused in the list of resources, but use to pass the selected row to the New Conference.
             private int selectedRow = 0;
             private int selectedRowTotal = 0;
-            public int SelectedRow { get { return selectedRow; } }  
+            public int SelectedRow { get { return selectedRow; } }
             public int SelectedRowTotal { get { return selectedRowTotal; } }
 
             public ResourceInfo(int id, string name, DateTime start, DateTime end, int capacity)
@@ -380,7 +380,7 @@ namespace BridgeOpsClient
         private bool CtrlDown() { return Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl); }
         private bool AltDown() { return Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt); }
         private bool ShiftDown() { return Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift); }
-        
+
         private void btnDayToday_Click(object sender, RoutedEventArgs e)
         {
             schView.scheduleTime = new DateTime(DateTime.Now.Year,
@@ -415,10 +415,10 @@ namespace BridgeOpsClient
                 // Get number of intervals for half the width of the view.
                 double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
                 double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
-                int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
+                int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 60);
                 int viewHalfDays = (int)(viewHalfHours / 24);
 
-                TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+                TimeSpan half = new TimeSpan(0, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
 
                 DateTime start = view.scheduleTime - half;
                 // Overshoot so text doesn't cut disappear early when scrolling.
@@ -470,10 +470,10 @@ namespace BridgeOpsClient
                 double minuteWidth = formattedTextLight[0].Width;
                 double minuteYmod = (formattedText[0].Height - hourHeight) - 1;
 
-
                 double firstDateX = double.MaxValue;
                 string firstDateStringOverride = "";
 
+                DateTime partialFirstDay = new DateTime(); // Used for printing the partial day at the start.
                 int hourDisplay = 1;
                 if (zoomTimeDisplay < 12)
                     hourDisplay = 4;
@@ -517,6 +517,9 @@ namespace BridgeOpsClient
                             }
                             else
                                 firstDateStringOverride = $"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}";
+
+                            if (partialFirstDay.Ticks == 0 && t.Ticks >= TimeSpan.TicksPerDay)
+                                partialFirstDay = t - new TimeSpan(TimeSpan.TicksPerDay);
                         }
                     }
 
@@ -525,7 +528,10 @@ namespace BridgeOpsClient
                 }
 
                 FormattedText dateEdge = new(firstDateStringOverride == "" ?
-                                                $"{start.DayOfWeek} {start.Day}/{start.Month}/{start.Year}" :
+                                                $"{partialFirstDay.DayOfWeek} " +
+                                                $"{partialFirstDay.Day}/" +
+                                                $"{partialFirstDay.Month}/" +
+                                                $"{partialFirstDay.Year}" :
                                                 firstDateStringOverride,
                                              CultureInfo.CurrentCulture,
                                              FlowDirection.LeftToRight,
@@ -602,7 +608,7 @@ namespace BridgeOpsClient
                                                           Brushes.Black,
                                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
                         if (yPix > -formattedText.Height)
-                        dc.DrawText(formattedText, new Point(5, yPix + 2));
+                            dc.DrawText(formattedText, new Point(5, yPix + 2));
 
                         // If text went over the line at the top of the screen, redraw the grey border on top.
                         if (yPix + 2 < 0)
