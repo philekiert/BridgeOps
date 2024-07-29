@@ -72,7 +72,6 @@ namespace BridgeOpsClient
         }
 
         public static Thread? listenerThread;
-        private static NetworkStream? listenerStream;
         private static void ListenForServer()
         {
             sd.InitialiseListener();
@@ -103,7 +102,6 @@ namespace BridgeOpsClient
             }
         }
         private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
-        private static bool streamInProgress = false;
         private static void HandleServerListenAccept(IAsyncResult result)
         {
             if (result.AsyncState != null)
@@ -982,6 +980,7 @@ namespace BridgeOpsClient
         {
             for (int n = 0; n < rows.Count; ++n)
             {
+#pragma warning disable CS8600
 #pragma warning disable CS8602
                 for (int i = 0; i < columnTypes.Count; ++i)
                 {
@@ -1005,8 +1004,13 @@ namespace BridgeOpsClient
                             bool.TryParse(rows[n][i].ToString(), out result);
                             rows[n][i] = result;
                         }
+                        else if (columnTypes[i] == "String")
+                        {
+                            rows[n][i] = ((JsonValue)rows[n][i]).ToString();
+                        }
                     }
                 }
+#pragma warning restore CS8600
 #pragma warning restore CS8602
             }
         }

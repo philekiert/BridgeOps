@@ -41,7 +41,7 @@ namespace BridgeOpsClient
             // This will trigger cmbTableSelectionchanged(), which will PopulateColumnComboBox().
             cmbTable.SelectedIndex = 0;
 
-            dtgResults.MouseDoubleClick += dtg_DoubleClick;
+            dtgResults.CustomDoubleClick += dtg_DoubleClick;
 
             txtSearch.Focus();
         }

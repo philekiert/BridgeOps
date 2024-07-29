@@ -40,7 +40,7 @@ namespace BridgeOpsClient
             {
                 dtg.Update(columns, columnNames, rows);
             }
-            dtg.MouseDoubleClick += dtg_DoubleClick;
+            dtg.CustomDoubleClick += dtg_DoubleClick;
         }
 
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)

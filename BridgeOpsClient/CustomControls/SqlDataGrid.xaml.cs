@@ -214,6 +214,44 @@ namespace BridgeOpsClient.CustomControls
         {
             // When the DataGrid's selection changes, raise the custom event.
             RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
+
+            //dtg.SelectedIndex = dtg.SelectedIndex; // Not idea why. Commenting out to see if anything breaks.
+        }
+
+        #endregion
+
+        #region Custom Double Click Event
+
+        public static RoutedEvent CustomDoubleClickEvent = EventManager.RegisterRoutedEvent(
+            "CustomDoubleClick", RoutingStrategy.Bubble, typeof(MouseButtonEventHandler), typeof(SqlDataGrid));
+
+        public event MouseButtonEventHandler CustomDoubleClick
+        {
+            add { AddHandler(CustomDoubleClickEvent, value); }
+            remove { RemoveHandler(CustomDoubleClickEvent, value); }
+        }
+
+        private void dtg_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            MouseButtonEventArgs newE = new MouseButtonEventArgs(e.MouseDevice, e.Timestamp, e.ChangedButton)
+            {
+                RoutedEvent = CustomDoubleClickEvent
+            };
+
+            bool IsClickOnScrollbar(DependencyObject originalSource)
+            {
+                while (originalSource != null)
+                {
+                    if (originalSource is System.Windows.Controls.Primitives.ScrollBar ||
+                        originalSource is System.Windows.Controls.Primitives.DataGridColumnHeader)
+                        return true;
+                    originalSource = VisualTreeHelper.GetParent(originalSource);
+                }
+                return false;
+            }
+
+            if (!IsClickOnScrollbar((DependencyObject)e.OriginalSource))
+                RaiseEvent(newE);
         }
 
         #endregion
@@ -238,5 +276,10 @@ namespace BridgeOpsClient.CustomControls
         }
 
         #endregion
+
+        private void dtg_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

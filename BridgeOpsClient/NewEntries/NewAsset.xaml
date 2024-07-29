@@ -80,7 +80,7 @@
                         IsEnabled="False"/>
                 <custom:SqlDataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                     x:Name="dtgChangeLog" Width="470" Height="400"
-                                    MouseDoubleClick="dtgChangeLog_MouseDoubleClick"/>
+                                    CustomDoubleClick="dtgChangeLog_MouseDoubleClick"/>
             </Grid>
         </TabItem>
     </TabControl>
