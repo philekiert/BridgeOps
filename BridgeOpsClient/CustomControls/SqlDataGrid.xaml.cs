@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Intrinsics.X86;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,10 +20,22 @@ namespace BridgeOpsClient.CustomControls
 {
     public partial class SqlDataGrid : UserControl
     {
+        ContextMenu menuShowHideColumns;
         ScrollViewer? scrollViewer;
+
+        public bool canHideColumns = false;
+
+        DataTemplate tickIcon;
+
+        // Set by the caller when calling Update(). This is used to make sure the correct column settings are updated
+        // if the user reorders, resizes or hides columns.
+        public string identity = "";
+
         public SqlDataGrid()
         {
             InitializeComponent();
+            menuShowHideColumns = (ContextMenu)FindResource("contextColumns");
+            tickIcon = (DataTemplate)FindResource("tickIcon");
         }
 
         private void dtg_Loaded(object sender, RoutedEventArgs e)
@@ -108,6 +121,7 @@ namespace BridgeOpsClient.CustomControls
                 }
                 else
                     header.MaxWidth = 256;
+
                 if (s == null)
                     header.Header = "";
                 else
@@ -155,6 +169,69 @@ namespace BridgeOpsClient.CustomControls
             foreach (List<object?> row in rows)
                 rowsBinder.Add(new Row(row));
 
+            if (canHideColumns)
+            {
+                menuShowHideColumns.Items.Clear();
+                foreach (DataGridColumn col in dtg.Columns)
+                {
+                    MenuItem item = new MenuItem();
+                    item.Header = col.Header;
+                    item.Icon = tickIcon.LoadContent();
+
+                    item.Click += contextShowHideColumnsToggle;
+
+                    menuShowHideColumns.Items.Add(item);
+                }
+
+
+                // Apply user's view configuration.
+
+                List<string> order = new();
+                List<int> widths = new();
+                List<bool> hidden = new();
+
+
+                if (identity == "Organisation")
+                {
+                    order = App.sd.OrganisationDataOrder;
+                    widths = App.sd.OrganisationDataWidth;
+                    hidden = App.sd.OrganisationDataHidden;
+                }
+                else if (identity == "Asset")
+                {
+                    order = App.sd.AssetDataOrder;
+                    widths = App.sd.AssetDataWidth;
+                    hidden = App.sd.AssetDataHidden;
+                }
+                else if (identity == "Contact")
+                {
+                    order = App.sd.ContactDataOrder;
+                    widths = App.sd.ContactDataWidth;
+                    hidden = App.sd.ContactDataHidden;
+                }
+
+                if (order.Count != 0 || (order.Count != widths.Count || widths.Count != hidden.Count))
+                {
+                    int setIndex = 0;
+                    for (int i = 0; i < order.Count; ++i)
+                    {
+                        foreach (DataGridColumn col in dtg.Columns)
+                        {
+                            if ((string)col.Header == order[i])
+                            {
+                                col.Width = widths[i];
+                                if (hidden[i]) col.Visibility = Visibility.Hidden;
+                                col.DisplayIndex = setIndex;
+                                ++setIndex;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+                menuShowHideColumns.Visibility = Visibility.Hidden;
+
             dtg.ItemsSource = rowsBinder;
         }
 
@@ -180,14 +257,91 @@ namespace BridgeOpsClient.CustomControls
             return id;
         }
 
+        public void StoreViewSettings()
+        {
+            if (identity != "")
+            {
+                List<string> order;
+                List<int> widths;
+                List<bool> hidden;
+
+                if (identity == "Organisation")
+                {
+                    order = App.sd.OrganisationDataOrder;
+                    widths = App.sd.OrganisationDataWidth;
+                    hidden = App.sd.OrganisationDataHidden;
+                }
+                else if (identity == "Asset")
+                {
+                    order = App.sd.AssetDataOrder;
+                    widths = App.sd.AssetDataWidth;
+                    hidden = App.sd.AssetDataHidden;
+                }
+                else if (identity == "Contact")
+                {
+                    order = App.sd.ContactDataOrder;
+                    widths = App.sd.ContactDataWidth;
+                    hidden = App.sd.ContactDataHidden;
+                }
+                else return;
+
+                order.Clear(); widths.Clear(); hidden.Clear();
+
+                int colCount = dtg.Columns.Count;
+                order.AddRange(new string[colCount]);
+                widths.AddRange(new int[colCount]);
+                hidden.AddRange(new bool[colCount]);
+                foreach (DataGridColumn col in dtg.Columns)
+                {
+                    order[col.DisplayIndex] = (string)col.Header;
+                    widths[col.DisplayIndex] = (int)col.Width.DisplayValue;
+                    hidden[col.DisplayIndex] = col.Visibility == Visibility.Hidden;
+                }
+            }
+        }
+
+        private void contextShowHideColumnsToggle(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item)
+                foreach (DataGridColumn col in dtg.Columns)
+                    if (item.Header == col.Header)
+                    {
+                        if (col.Visibility == Visibility.Visible)
+                        {
+                            col.Visibility = Visibility.Hidden;
+                            item.Icon = null;
+                        }
+                        else
+                        {
+                            col.Visibility = Visibility.Visible;
+                            item.Icon = tickIcon.LoadContent();
+                        }
+                        StoreViewSettings();
+                        break;
+                    }
+        }
+
         // When clicking on an empty space on the DataGrid, select item 0 if present.
-        private void dtg_MouseDown(object sender, MouseButtonEventArgs e)
+        private void dtg_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // A mousedown on the DataGrid won't be triggered if it's on a data row or header.
             if (dtg.Items.Count != 0 && dtg.SelectedIndex == -1)
             {
                 dtg.SelectedIndex = 0;
                 dtg.Focus(); // Otherwise the item highlight is greyed out.
+            }
+
+
+            // Select a row even if the columns don't extend that far.
+            var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
+            if (hit != null)
+            {
+                DependencyObject obj = hit.VisualHit;
+                while (obj != null && !(obj is DataGridRow))
+                    obj = VisualTreeHelper.GetParent(obj);
+
+                if (obj is DataGridRow row)
+                    dtg.SelectedItem = row.Item;
             }
         }
 
@@ -277,9 +431,9 @@ namespace BridgeOpsClient.CustomControls
 
         #endregion
 
-        private void dtg_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void dtg_ColumnReordered(object sender, DataGridColumnEventArgs e)
         {
-
+            StoreViewSettings();
         }
     }
 }

@@ -41,6 +41,7 @@ namespace BridgeOpsClient
             // This will trigger cmbTableSelectionchanged(), which will PopulateColumnComboBox().
             cmbTable.SelectedIndex = 0;
 
+            dtgResults.canHideColumns = true;
             dtgResults.CustomDoubleClick += dtg_DoubleClick;
 
             txtSearch.Focus();
@@ -57,7 +58,6 @@ namespace BridgeOpsClient
                 table = ColumnRecord.orderedContact;
 
             cmbColumn.Items.Clear();
-            dtgResults.Wipe();
             fieldValues.Clear();
 
             btnClear.IsEnabled = false;
@@ -139,7 +139,11 @@ namespace BridgeOpsClient
                            new List<string> { "*" },
                            selectColumns, selectValues,
                            out columnNames, out rows))
+            {
+                dtgResults.StoreViewSettings();
+                dtgResults.identity = cmbTable.Text;
                 dtgResults.Update(tableColDefs, columnNames, rows);
+            }
         }
 
         // Wide search on either enter or click.
@@ -168,7 +172,11 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
             if (App.SelectWide(cmbTable.Text, txtSearch.Text,
                            out columnNames, out rows))
+            {
+                dtgResults.StoreViewSettings();
+                dtgResults.identity = cmbTable.Text;
                 dtgResults.Update(tableColDefs, columnNames, rows);
+            }
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
         {

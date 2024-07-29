@@ -39,6 +39,14 @@
             <Setter Property="Height" Value="20" />
             <Setter Property="Margin" Value="0 2 0 0" />
         </Style>
+        
+        <!-- Icons -->
+        <DataTemplate x:Key="tickIcon">
+            <TextBlock FontFamily="Segoe MDL2 Assets"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Text="&#xE73E;"/>
+        </DataTemplate>
 
         <!-- Old, may not want to use this eventually -->
         <Style TargetType="ToolBarTray">

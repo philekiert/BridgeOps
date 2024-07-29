@@ -118,6 +118,11 @@ namespace BridgeOpsClient
                 lblDialNo.Content = ColumnRecord.organisation["Dial_No"].friendlyName;
             if (ColumnRecord.organisation["Notes"].friendlyName != "")
                 lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
+
+            dtgAssets.canHideColumns = true;
+            dtgAssets.identity = "Asset";
+            dtgContacts.canHideColumns = true;
+            dtgContacts.identity = "Contact";
         }
 
         public void PopulateAssets()

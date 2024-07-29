@@ -5,20 +5,31 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ContextMenu x:Key="contextColumns" x:Name="contextShowHideColumns"/>
+    </UserControl.Resources>
+
     <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="True"
               VerticalGridLinesBrush="#f0f0f0" HorizontalGridLinesBrush="#eee"
               AutoGenerateColumns="False" HeadersVisibility="Column"
               SelectionMode="Single" Margin="10 10 10 10"
               SelectionUnit="FullRow"
               EnableRowVirtualization="True" EnableColumnVirtualization="False"
-              MouseDown="dtg_MouseDown" SelectionChanged="dtg_SelectionChanged" Loaded="dtg_Loaded"
+              SelectionChanged="dtg_SelectionChanged" Loaded="dtg_Loaded"
               RequestBringIntoView="dtg_RequestBringIntoView" MouseDoubleClick="dtg_MouseDoubleClick"
-              MouseLeftButtonDown="dtg_MouseLeftButtonDown">
+              MouseLeftButtonDown="dtg_MouseLeftButtonDown"
+              ColumnReordered="dtg_ColumnReordered"
         <DataGrid.RowStyle>
-            <Style TargetType="{x:Type DataGridRow}">
+            <Style TargetType="DataGridRow">
                 <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             </Style>
         </DataGrid.RowStyle>
+        <DataGrid.ColumnHeaderStyle>
+            <Style TargetType="DataGridColumnHeader">
+                <Setter Property="ContextMenu" Value="{StaticResource contextColumns}"/>
+            </Style>
+        </DataGrid.ColumnHeaderStyle>
         <DataGrid.Resources>
             <Style TargetType="DataGridCell">
                 <Setter Property="BorderThickness" Value="0"/>

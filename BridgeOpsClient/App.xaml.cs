@@ -1044,6 +1044,17 @@ namespace BridgeOpsClient
         public bool[] editPermissions = new bool[6];
         public bool[] deletePermissions = new bool[6];
 
+        // These collections store the user's desired order and display settings for
+        public List<string> OrganisationDataOrder = new();
+        public List<string> AssetDataOrder = new();
+        public List<string> ContactDataOrder = new();
+        public List<bool> OrganisationDataHidden = new();
+        public List<bool> AssetDataHidden = new();
+        public List<bool> ContactDataHidden= new();
+        public List<int> OrganisationDataWidth = new();
+        public List<int> AssetDataWidth = new();
+        public List<int> ContactDataWidth = new();
+
         public IPAddress ThisIP { get { return new IPAddress(thisIpAddress); } }
         public IPEndPoint ThisEP { get { return new IPEndPoint(ThisIP, portInbound); } }
         public IPAddress ServerIP { get { return new IPAddress(serverIpAddress); } }
