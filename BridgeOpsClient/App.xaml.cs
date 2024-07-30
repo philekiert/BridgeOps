@@ -69,6 +69,10 @@ namespace BridgeOpsClient
                 sd.portInbound = 52343;
                 sd.portOutbound = 52344;
             }
+
+            foreach (Window win in Application.Current.Windows)
+                if (win is BridgeOpsClient.MainWindow mainWin)
+                    mainWindow = mainWin;
         }
 
         public static Thread? listenerThread;
@@ -151,6 +155,8 @@ namespace BridgeOpsClient
         public static SessionDetails sd = new SessionDetails();
         public static object streamLock = new();
 
+        public static BridgeOpsClient.MainWindow? mainWindow = null;
+
         private void ApplicationExit(object sender, EventArgs e)
         {
             LogOut();
@@ -209,6 +215,24 @@ namespace BridgeOpsClient
             {
                 if (IsLoggedIn)
                 {
+                    // Only store the user settings if it's actually their session logging out.
+                    string? settings = null;
+                    if (loginID == sd.loginID)
+                    {
+                        settings = "";
+                        for (int i = 0; i < sd.dataOrder.Length; ++i)
+                            settings += string.Join(";", sd.dataOrder[i]) + "\n";
+                        for (int i = 0; i < sd.dataHidden.Length; ++i)
+                            settings += string.Join(";", sd.dataHidden[i]) + "\n";
+                        for (int i = 0; i < sd.dataWidths.Length; ++i)
+                            settings += string.Join(";", sd.dataWidths[i]) + "\n";
+                        settings += (int)BridgeOpsClient.MainWindow.oldConfWidth + ";" +
+                                    (int)BridgeOpsClient.MainWindow.oldDataWidth + ";" +
+                                    BridgeOpsClient.MainWindow.viewState;
+
+
+                    }
+
                     lock (streamLock)
                     {
                         NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
@@ -216,8 +240,7 @@ namespace BridgeOpsClient
                         if (stream != null)
                         {
                             stream.WriteByte(Glo.CLIENT_LOGOUT);
-                            sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID,
-                                                                  loginID)));
+                            sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID, loginID, settings)));
                             if (loginID == sd.loginID)
                             {
                                 sr.ReadString(stream); // Empty the pipe.
@@ -226,8 +249,11 @@ namespace BridgeOpsClient
                                 // will present when the user tries to log in again.
                                 sd.sessionID = "";
 
-                                if (Current.MainWindow != null)
-                                    ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
+                                if (mainWindow != null)
+                                {
+                                    mainWindow.ToggleLogInOut(false);
+                                    mainWindow.ClearSqlDataGrids();
+                                }
                             }
                             else
                             {
@@ -494,6 +520,76 @@ namespace BridgeOpsClient
                 resourcePullInProgress = false;
                 return false;
             }
+        }
+
+        public static bool PullUserSettings()
+        {
+            lock (streamLock)
+            {
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                if (stream != null)
+                {
+                    try
+                    {
+                        stream.WriteByte(Glo.CLIENT_PULL_USER_SETTINGS);
+                        {
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            string result = sr.ReadString(stream);
+                            stream.Close();
+
+                            string[] settings = result.Split("\n");
+
+                            if (settings.Length != (sd.dataOrder.Length * 3) + 1)
+                                return false;
+
+                            double dVal;
+                            for (int i = 0; i < sd.dataOrder.Length; ++i)
+                            {
+                                // Order strings.
+                                sd.dataOrder[i] = settings[i].Split(";").ToList();
+                                sd.dataWidths[i].Clear();
+                                sd.dataHidden[i].Clear();
+
+                                // Hidden bools.
+                                int index = i + sd.dataOrder.Length;
+                                foreach (string s in settings[index].Split(";"))
+                                    sd.dataHidden[i].Add(s == "True");
+
+                                // Width ints.
+                                index += sd.dataOrder.Length;
+                                foreach (string s in settings[index].Split(";"))
+                                    if (double.TryParse(s, out dVal) && dVal >= 0)
+                                        sd.dataWidths[i].Add(dVal);
+                            }
+
+                            // Conference view width, database view width, then view state.
+                            string[] viewSplit = settings[9].Split(";");
+                            if (viewSplit.Length != 3)
+                                return false;
+
+                            int iVal;
+                            if (int.TryParse(viewSplit[0], out iVal))
+                                BridgeOpsClient.MainWindow.oldConfWidth = iVal;
+                            if (int.TryParse(viewSplit[1], out iVal))
+                                BridgeOpsClient.MainWindow.oldDataWidth = iVal;
+                            if (int.TryParse(viewSplit[2], out iVal) && iVal >= 0 && iVal <= 2)
+                                BridgeOpsClient.MainWindow.viewState = iVal;
+
+                            for (int i = 0; i < sd.dataOrder.Length; ++i)
+                                if (sd.dataOrder[i].Count != sd.dataHidden[i].Count ||
+                                    sd.dataOrder[i].Count != sd.dataWidths[i].Count)
+                                    return false;
+                        }
+                    }
+                    catch
+                    {
+                        stream.Close();
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         public static bool SendInsert(byte fncByte, object toSerialise)
@@ -1019,8 +1115,12 @@ namespace BridgeOpsClient
         // its own, but now the listener thread is running, this is no longer the case.
         public static void WindowClosed()
         {
-            if (Application.Current.Windows.Count == 0)
+            if (Application.Current.Windows.Count == 0 ||
+                !Current.Windows.OfType<BridgeOpsClient.MainWindow>().Any())
+            {
+                LogOut();
                 Environment.Exit(0);
+            }
         }
     }
 
@@ -1044,16 +1144,25 @@ namespace BridgeOpsClient
         public bool[] editPermissions = new bool[6];
         public bool[] deletePermissions = new bool[6];
 
-        // These collections store the user's desired order and display settings for
-        public List<string> OrganisationDataOrder = new();
-        public List<string> AssetDataOrder = new();
-        public List<string> ContactDataOrder = new();
-        public List<bool> OrganisationDataHidden = new();
-        public List<bool> AssetDataHidden = new();
-        public List<bool> ContactDataHidden= new();
-        public List<int> OrganisationDataWidth = new();
-        public List<int> AssetDataWidth = new();
-        public List<int> ContactDataWidth = new();
+        // These collections store the user's desired order and display settings for the database view.
+        // Array indices:  0  Organisation
+        //                 1  Asset
+        //                 2  Contact
+        //                 3  Asset (Organisation links table)
+        //                 4  Contact (Organisation links table)
+        public List<string>[] dataOrder = new List<string>[5];
+        public List<bool>[] dataHidden = new List<bool>[5];
+        public List<double>[] dataWidths = new List<double>[5];
+
+        public SessionDetails()
+        {
+            for (int i = 0; i < dataOrder.Length; ++i)
+            {
+                dataOrder[i] = new();
+                dataHidden[i] = new();
+                dataWidths[i] = new();
+            }
+        }
 
         public IPAddress ThisIP { get { return new IPAddress(thisIpAddress); } }
         public IPEndPoint ThisEP { get { return new IPEndPoint(ThisIP, portInbound); } }

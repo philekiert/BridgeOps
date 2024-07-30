@@ -94,10 +94,13 @@ namespace BridgeOpsClient
                 }
                 if (!App.PullResourceInformation())
                 {
-                    MessageBox.Show("Log in was successful, but could not pull resource information. Logging out. Please " +
-                                    "contact the software administrator.");
+                    MessageBox.Show("Log in was successful, but could not pull resource information. Logging out. " +
+                                    "Please contact the software administrator.");
                     App.LogOut();
                 }
+
+                // No need to warn if this fails, it will simply fail and be reset/rebuilt on the user's next logout.
+                App.PullUserSettings();
             }
             else
             {
@@ -119,7 +122,11 @@ namespace BridgeOpsClient
             }
 
             if (mainWindow.IsLoaded)
+            {
                 mainWindow.GreyOutPermissions();
+                mainWindow.mixedPaneRedrawOverride = true;
+                mainWindow.ApplyViewState();
+            }
         }
 
         private void Window_Closed(object sender, EventArgs e)

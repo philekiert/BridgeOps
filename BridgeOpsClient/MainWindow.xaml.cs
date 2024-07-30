@@ -55,16 +55,33 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             frameConf.Content = new PageConferenceView();
-            frameData.Content = new PageDatabase(this);
+            pageDatabase = new PageDatabase(this);
+            frameData.Content = pageDatabase;
 
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
 
-            // Set default view here:
-            //btnConfPane_Click(new bool(), new RoutedEventArgs()); // Conference View
-            btnDataPane_Click(new bool(), new RoutedEventArgs()); // Data View
-            //btnMixedPane_Click(new bool(), new RoutedEventArgs()); // Mixed View
-
+            mixedPaneRedrawOverride = true;
+            ApplyViewState();
             GreyOutPermissions();
+
+            App.mainWindow = this;
+        }
+
+        public void ApplyViewState()
+        {
+            // Set default view here:
+            if (viewState == 0)
+                btnConfPane_Click(new bool(), new RoutedEventArgs()); // Conference View
+            else if (viewState == 1)
+                btnMixedPane_Click(new bool(), new RoutedEventArgs()); // Mixed View
+            else
+                btnDataPane_Click(new bool(), new RoutedEventArgs()); // Data View
+        }
+
+        public void ClearSqlDataGrids()
+        {
+            if (pageDatabase != null)
+                pageDatabase.ClearSqlDataGrids();
         }
 
         public void GreyOutPermissions()
@@ -189,20 +206,16 @@ namespace BridgeOpsClient
 
         /* This is surely needlessly verbose, will optimise later if time allows. Removing and re-adding the columns
          * was the only way I could get it all to work. */
-        double oldConfWidth = 1;
-        double oldDataWidth = 1;
+        public static double oldConfWidth = 1;
+        public static double oldDataWidth = 1;
+        public static int viewState = 2; // 0: Conference, 1: Mixed, 2: Data
 
         private void btnConfPane_Click(object sender, RoutedEventArgs e)
         {
+            viewState = 0;
+
             if (frameData.Visibility == Visibility.Visible)
             {
-                // If we're coming from a pane split, remember their widths.
-                if (frameConf.Visibility == Visibility.Visible)
-                {
-                    oldConfWidth = grdConfData.ColumnDefinitions[0].Width.Value;
-                    oldDataWidth = grdConfData.ColumnDefinitions[1].Width.Value;
-                }
-
                 SetMinWidth(0);
 
                 frameConf.Visibility = Visibility.Visible;
@@ -221,10 +234,16 @@ namespace BridgeOpsClient
             }
         }
 
+        public bool mixedPaneRedrawOverride = false; // Needed for first run.
         private void btnMixedPane_Click(object sender, RoutedEventArgs e)
         {
-            if (frameConf.Visibility == Visibility.Collapsed || frameData.Visibility == Visibility.Collapsed)
+            viewState = 1;
+
+            if (frameConf.Visibility == Visibility.Collapsed || frameData.Visibility == Visibility.Collapsed ||
+                mixedPaneRedrawOverride)
             {
+                mixedPaneRedrawOverride = false;
+
                 SetMinWidth(1);
                 frameConf.Visibility = Visibility.Visible;
                 spltConfData.Visibility = Visibility.Visible;
@@ -249,15 +268,10 @@ namespace BridgeOpsClient
 
         private void btnDataPane_Click(object sender, RoutedEventArgs e)
         {
+            viewState = 2;
+
             if (frameConf.Visibility == Visibility.Visible)
             {
-                // If we're coming from a pane split, remember their widths.
-                if (frameData.Visibility == Visibility.Visible)
-                {
-                    oldConfWidth = grdConfData.ColumnDefinitions[0].Width.Value;
-                    oldDataWidth = grdConfData.ColumnDefinitions[1].Width.Value;
-                }
-
                 SetMinWidth(2);
 
                 frameConf.Visibility = Visibility.Collapsed;
@@ -266,7 +280,7 @@ namespace BridgeOpsClient
 
                 grdConfData.ColumnDefinitions.Clear();
                 ColumnDefinition col = new ColumnDefinition();
-                col.MinWidth = CONF_PANE_MIN_WIDTH;
+                col.MinWidth = DATA_PANE_MIN_WIDTH;
                 grdConfData.ColumnDefinitions.Add(col);
 
                 frameConf.SetValue(Grid.RowProperty, 0);
@@ -275,10 +289,20 @@ namespace BridgeOpsClient
                     pcv.scrollBar.Margin = new Thickness(0);
             }
         }
-        
+
         private void Window_Closed(object sender, EventArgs e)
         {
             App.WindowClosed();
+        }
+
+        // Remember widths. This is stored in the user view settings.
+        private void frameConf_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (frameConf.Visibility == Visibility.Visible && frameData.Visibility == Visibility.Visible)
+            {
+                oldConfWidth = grdConfData.ColumnDefinitions[0].Width.Value;
+                oldDataWidth = grdConfData.ColumnDefinitions[1].Width.Value;
+            }
         }
     }
 }

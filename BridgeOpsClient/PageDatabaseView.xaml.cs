@@ -140,8 +140,7 @@ namespace BridgeOpsClient
                            selectColumns, selectValues,
                            out columnNames, out rows))
             {
-                dtgResults.StoreViewSettings();
-                dtgResults.identity = cmbTable.Text;
+                dtgResults.identity = cmbTable.SelectedIndex;
                 dtgResults.Update(tableColDefs, columnNames, rows);
             }
         }
@@ -173,8 +172,7 @@ namespace BridgeOpsClient
             if (App.SelectWide(cmbTable.Text, txtSearch.Text,
                            out columnNames, out rows))
             {
-                dtgResults.StoreViewSettings();
-                dtgResults.identity = cmbTable.Text;
+                dtgResults.identity = cmbColumn.SelectedIndex;
                 dtgResults.Update(tableColDefs, columnNames, rows);
             }
         }

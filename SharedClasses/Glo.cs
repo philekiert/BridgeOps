@@ -29,6 +29,7 @@ public static class Glo
     public const int CLIENT_LOGOUT = 2;
     public const int CLIENT_PASSWORD_RESET = 3;
     public const int CLIENT_LOGGEDIN_LIST = 4;
+    public const int CLIENT_PULL_USER_SETTINGS = 5;
     public const int CLIENT_NEW_LOGIN = 7;
     public const int CLIENT_NEW_ORGANISATION = 8;
     public const int CLIENT_NEW_CONTACT = 9;
@@ -154,6 +155,7 @@ public static class Glo
         public const string LOGIN_EDIT_PERMISSIONS = "Edit_Permissions";
         public const string LOGIN_DELETE_PERMISSIONS = "Delete_Permissions";
         public const string LOGIN_ENABLED = "Enabled";
+        public const string LOGIN_VIEW_SETTINGS = "Organisation_Order";
 
         public const string FRIENDLY_TABLE = "TableName";
         public const string FRIENDLY_COLUMN = "ColumnName";

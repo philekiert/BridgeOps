@@ -120,9 +120,9 @@ namespace BridgeOpsClient
                 lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
 
             dtgAssets.canHideColumns = true;
-            dtgAssets.identity = "Asset";
+            dtgAssets.identity = 3;
             dtgContacts.canHideColumns = true;
-            dtgContacts.identity = "Contact";
+            dtgContacts.identity = 4;
         }
 
         public void PopulateAssets()

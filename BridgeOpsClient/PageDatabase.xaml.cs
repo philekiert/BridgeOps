@@ -157,5 +157,11 @@ namespace BridgeOpsClient
             // This needs automating at some point, because these measurements could be OS-dependent.
             containingWindow.MinHeight = 180 * paneCount + 87;
         }
+
+        public void ClearSqlDataGrids()
+        {
+            foreach (PageDatabaseView view in views)
+                view.dtgResults.Wipe();
+        }
     }
 }

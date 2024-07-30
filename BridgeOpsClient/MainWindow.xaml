@@ -74,10 +74,10 @@
         </Grid>
         <Grid x:Name="grdConfData" Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" MinWidth="200" />
+                <ColumnDefinition Width="1*" MinWidth="200"/>
                 <ColumnDefinition Width="1*" MinWidth="818"/>
             </Grid.ColumnDefinitions>
-            <Frame Grid.Column="0" x:Name="frameConf"></Frame>
+            <Frame Grid.Column="0" x:Name="frameConf" SizeChanged="frameConf_SizeChanged"></Frame>
             <GridSplitter Grid.Column="0" x:Name="spltConfData" Width="5"
                           HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
             <Frame Grid.Column="1" x:Name="frameData"></Frame>

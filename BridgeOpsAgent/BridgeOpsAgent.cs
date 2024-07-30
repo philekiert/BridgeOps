@@ -663,10 +663,12 @@ internal class BridgeOpsAgent
                 int fncByte = stream.ReadByte();
                 if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
                     ClientPullColumnRecord(stream);
+                else if (fncByte == Glo.CLIENT_PULL_USER_SETTINGS)
+                    ClientPullUserSettings(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LOGIN)
                     ClientLogin(stream, sqlConnect, (IPEndPoint?)client.Client.RemoteEndPoint);
                 else if (fncByte == Glo.CLIENT_LOGOUT)
-                    ClientLogout(stream);
+                    ClientLogout(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_PASSWORD_RESET)
                     ClientPasswordReset(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LOGGEDIN_LIST)
@@ -825,6 +827,45 @@ internal class BridgeOpsAgent
         --pullingColumnRecord;
     }
 
+    private static void ClientPullUserSettings(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            int loginID;
+            lock (clientSessions)
+            {
+                string sessionID = sr.ReadString(stream);
+                if (!CheckSessionValidity(sessionID))
+                {
+                    sr.WriteAndFlush(stream, "Failed"); // This will simply fail to be read by the client.
+                    return;
+                }
+                else
+                    loginID = clientSessions[sessionID].loginID;
+            }
+
+            sqlConnect.Open();
+
+            string settings = "";
+            SqlCommand command = new SqlCommand($"SELECT {Glo.Tab.LOGIN_VIEW_SETTINGS} FROM Login " +
+                                                $"WHERE {Glo.Tab.LOGIN_ID} = {loginID}", sqlConnect);
+            SqlDataReader reader = command.ExecuteReader();
+            reader.Read();
+            if (!reader.IsDBNull(0))
+                settings = reader.GetString(0);
+            sr.WriteAndFlush(stream, settings);
+        }
+        catch (Exception e)
+        {
+            LogError("Could not pull user settings. See error", e);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
     private static void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
     {
         string credentials = sr.ReadString(stream);
@@ -840,7 +881,6 @@ internal class BridgeOpsAgent
 
         try
         {
-
             // Identify any duplicate IPs and users for removal from open sessions if login is successful.
             lock (clientSessions)
             {
@@ -1008,7 +1048,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientLogout(NetworkStream stream)
+    private static void ClientLogout(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1022,6 +1062,17 @@ internal class BridgeOpsAgent
                     ClientSession thisSession = clientSessions[logoutReq.sessionID];
                     if (clientSessions[logoutReq.sessionID].loginID == logoutReq.loginID)
                     {
+                        if (logoutReq.settings != null)
+                        {
+                            logoutReq.settings = SqlAssist.SecureValue(logoutReq.settings);
+                            sqlConnect.Open();
+                            SqlCommand command = new("UPDATE Login " +
+                                                    $"SET {Glo.Tab.LOGIN_VIEW_SETTINGS} = '{logoutReq.settings}' " +
+                                                    $"WHERE {Glo.Tab.LOGIN_ID} = {logoutReq.loginID};", sqlConnect);
+                            if (command.ExecuteNonQuery() == 0)
+                                LogError($"Could not update user settings for login {logoutReq.loginID}.");
+                        }
+
                         // Users may log themselves out without restriction.
                         clientSessions.Remove(logoutReq.sessionID);
                         sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
@@ -1064,6 +1115,12 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError(e);
+        }
+        finally
+        {
+            stream.Close();
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
         }
     }
 
@@ -1190,6 +1247,7 @@ internal class BridgeOpsAgent
         {
             if (sqlConnect.State == System.Data.ConnectionState.Open)
                 sqlConnect.Close();
+            stream.Close();
         }
     }
 
@@ -1892,14 +1950,14 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            if (sqlConnect.State == System.Data.ConnectionState.Open)
+            if (sqlConnect.State == ConnectionState.Open)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
 
             LogError(e);
         }
         finally
         {
-            if (sqlConnect.State == System.Data.ConnectionState.Open)
+            if (sqlConnect.State == ConnectionState.Open)
                 sqlConnect.Close();
             updatingColumnRecord = false;
         }

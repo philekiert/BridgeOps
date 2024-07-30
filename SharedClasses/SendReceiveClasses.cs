@@ -192,11 +192,57 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int loginID;
+        public string? settings;
 
-        public LogoutRequest(string sessionID, int loginID)
+        public LogoutRequest(string sessionID, int loginID, string? settings)
         {
             this.sessionID = sessionID;
             this.loginID = loginID;
+            this.settings = settings;
+        }
+    }
+
+    struct UserSettings
+    {
+        public string sessionID;
+        public List<string> organisationDataOrder;
+        public List<string> assetDataOrder;
+        public List<string> contactDataOrder;
+        public List<bool> organisationDataHidden;
+        public List<bool> assetDataHidden;
+        public List<bool> contactDataHidden;
+        public List<int> organisationDataWidths;
+        public List<int> assetDataWidths;
+        public List<int> contactDataWidths;
+        public int conferenceViewWidth;
+        public int databaseViewWidth;
+        public int viewState;
+
+        public UserSettings(string sessionID,
+                            List<string> organisationDataOrder,
+                            List<string> assetDataOrder,
+                            List<string> contactDataOrder,
+                            List<bool> organisationDataHidden,
+                            List<bool> assetDataHidden,
+                            List<bool> contactDataHidden,
+                            List<int> organisationDataWidths,
+                            List<int> assetDataWidths,
+                            List<int> contactDataWidths,
+                            int conferenceViewWidth, int databaseViewWidth, int viewState)
+        {
+            this.sessionID = sessionID;
+            this.organisationDataOrder = organisationDataOrder;
+            this.assetDataOrder = assetDataOrder;
+            this.contactDataOrder = contactDataOrder;
+            this.organisationDataHidden = organisationDataHidden;
+            this.assetDataHidden = assetDataHidden;
+            this.contactDataHidden = contactDataHidden;
+            this.organisationDataWidths = organisationDataWidths;
+            this.assetDataWidths = assetDataWidths;
+            this.contactDataWidths = contactDataWidths;
+            this.conferenceViewWidth = conferenceViewWidth;
+            this.databaseViewWidth = databaseViewWidth;
+            this.viewState = viewState;
         }
     }
 
