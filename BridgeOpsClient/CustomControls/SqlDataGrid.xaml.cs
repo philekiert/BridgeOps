@@ -75,6 +75,7 @@ namespace BridgeOpsClient.CustomControls
 
         public void Wipe()
         {
+            identity = -1;
             dtg.ItemsSource = null;
             dtg.Columns.Clear();
         }
@@ -100,10 +101,8 @@ namespace BridgeOpsClient.CustomControls
             // Add any columns to omit to a dictionary for fast lookup.
             Dictionary<string, bool> columnstoOmit = new();
             if (omitColumns.Length > 0)
-            {
                 foreach (string s in omitColumns)
                     columnstoOmit.Add(s, true);
-            }
 
             dtg.Columns.Clear();
             dtg.ItemsSource = null;

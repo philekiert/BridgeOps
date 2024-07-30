@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -90,12 +91,48 @@ namespace BridgeOpsClient
             }
         }
 
+        // Last search variables for updating the SqlDataGrid when a change is made by the user.
+        bool lastWideSearch = false;
+        List<string> lastSearchColumns = new();
+        List<string> lastSearchValues = new();
+        string lastWideValue = "";
+        Dictionary<string, ColumnRecord.Column> lastColumnDefinitions = new();
+        public void RepeatSearch(int identity)
+        {
+            if (identity != dtgResults.identity)
+                return;
+
+            string table = "Organisation";
+            if (dtgResults.identity == 1)
+                table = "Asset";
+            else if (dtgResults.identity == 2)
+                table = "Contact";
+
+            if (dtgResults.identity != -1)
+            {
+                List<string?> columnNames;
+                List<List<object?>> rows;
+                if (lastWideSearch && App.SelectWide(table, txtSearch.Text,
+                                                     out columnNames, out rows))
+                    dtgResults.Update(lastColumnDefinitions, columnNames, rows);
+                else if (App.Select(cmbTable.Text,
+                                    new List<string> { "*" },
+                                    lastSearchColumns, lastSearchValues,
+                                    out columnNames, out rows))
+                    dtgResults.Update(lastColumnDefinitions, columnNames, rows);
+            }
+        }
+
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PopulateColumnComboBox();
         }
 
         private void btnSearch_Click(object sender, RoutedEventArgs e)
+        {
+            btnSearch_Click(sender, e, cmbTable.SelectedIndex);
+        }
+        private void btnSearch_Click(object sender, RoutedEventArgs e, int identity)
         {
             Dictionary<string, ColumnRecord.Column> tableColDefs;
             Dictionary<string, string> nameReversals;
@@ -106,11 +143,13 @@ namespace BridgeOpsClient
             }
             else if (cmbTable.Text == "Asset")
             {
+                identity = 1;
                 tableColDefs = ColumnRecord.asset;
                 nameReversals = ColumnRecord.assetFriendlyNameReversal;
             }
             else // if == "Contact"
             {
+                identity = 2;
                 tableColDefs = ColumnRecord.contact;
                 nameReversals = ColumnRecord.contactFriendlyNameReversal;
             }
@@ -135,32 +174,37 @@ namespace BridgeOpsClient
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (App.Select(cmbTable.Text,
+            if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                            new List<string> { "*" },
                            selectColumns, selectValues,
                            out columnNames, out rows))
             {
-                dtgResults.identity = cmbTable.SelectedIndex;
+                lastWideSearch = false;
+                lastSearchColumns = selectColumns;
+                lastSearchValues = selectValues;
+                lastColumnDefinitions = tableColDefs;
+
+                dtgResults.identity = identity;
                 dtgResults.Update(tableColDefs, columnNames, rows);
             }
         }
 
         // Wide search on either enter or click.
-        private void WideSearch()
+        private void WideSearch(int identity)
         {
             Dictionary<string, ColumnRecord.Column> tableColDefs;
             Dictionary<string, string> nameReversals;
-            if (cmbTable.Text == "Organisation")
+            if (identity == 0) // Organisation
             {
                 tableColDefs = ColumnRecord.organisation;
                 nameReversals = ColumnRecord.organisationFriendlyNameReversal;
             }
-            else if (cmbTable.Text == "Asset")
+            else if (identity == 1) // Asset
             {
                 tableColDefs = ColumnRecord.asset;
                 nameReversals = ColumnRecord.assetFriendlyNameReversal;
             }
-            else // if == "Contact"
+            else // if == 2 / Contact
             {
                 tableColDefs = ColumnRecord.contact;
                 nameReversals = ColumnRecord.contactFriendlyNameReversal;
@@ -169,21 +213,25 @@ namespace BridgeOpsClient
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (App.SelectWide(cmbTable.Text, txtSearch.Text,
-                           out columnNames, out rows))
+            if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Needs changing in RepeatSearch() as well if adjusted.
+                               out columnNames, out rows))
             {
-                dtgResults.identity = cmbColumn.SelectedIndex;
+                lastWideSearch = true;
+                lastWideValue = txtSearch.Text;
+                lastColumnDefinitions = tableColDefs;
+
+                dtgResults.identity = identity;
                 dtgResults.Update(tableColDefs, columnNames, rows);
             }
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
         {
-            WideSearch();
+            WideSearch(cmbTable.SelectedIndex);
         }
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
-                WideSearch();
+                WideSearch(cmbTable.SelectedIndex);
         }
 
         // Highlight fields with values, and reload those values when selecting fields.
@@ -230,11 +278,11 @@ namespace BridgeOpsClient
             string currentID = dtgResults.GetCurrentlySelectedID();
             if (currentID != "")
             {
-                if (cmbTable.Text == "Organisation")
+                if (dtgResults.identity == 0)
                     App.EditOrganisation(currentID);
-                if (cmbTable.Text == "Asset")
+                if (dtgResults.identity == 1)
                     App.EditAsset(currentID);
-                if (cmbTable.Text == "Contact")
+                if (dtgResults.identity == 2)
                     App.EditContact(currentID);
             }
         }

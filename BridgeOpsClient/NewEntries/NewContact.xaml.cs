@@ -25,6 +25,10 @@ namespace BridgeOpsClient
         public bool isDialog = false;
         string? originalNotes = "";
 
+        NewOrganisation? associatedOrg;
+
+        public bool changeMade = false;
+
         private void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -42,9 +46,11 @@ namespace BridgeOpsClient
 
             ApplyPermissions();
         }
-        public NewContact(string id)
+        public NewContact(string id, NewOrganisation? org)
         {
             this.id = id;
+
+            associatedOrg = org;
 
             InitializeComponent();
             InitialiseFields();
@@ -112,8 +118,9 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id))
                 {
-                    if (isDialog)
-                        DialogResult = true;
+                    changeMade = true;
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches(2);
                     Close();
                 }
                 else
@@ -178,7 +185,14 @@ namespace BridgeOpsClient
                 }
 
                 if (App.SendUpdate(Glo.CLIENT_UPDATE_CONTACT, contact))
+                {
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches(2);
+                    changeMade = true;
+                    if (associatedOrg != null)
+                        associatedOrg.PopulateContacts();
                     Close();
+                }
                 else
                     MessageBox.Show("Could not edit contact.");
             }
@@ -194,7 +208,14 @@ namespace BridgeOpsClient
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, id, false))
+            {
+                changeMade = true;
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(2);
+                if (associatedOrg != null)
+                    associatedOrg.PopulateContacts();
                 Close();
+            }
             else
                 MessageBox.Show("Could not delete contact.");
         }

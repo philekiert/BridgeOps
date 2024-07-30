@@ -25,6 +25,10 @@ namespace BridgeOpsClient
         string? originalOrgID = "";
         string? originalNotes = "";
 
+        public bool changeMade = false;
+
+        NewOrganisation? associatedOrg;
+
         private void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -46,10 +50,12 @@ namespace BridgeOpsClient
 
             ApplyPermissions();
         }
-        public NewAsset(string id)
+        public NewAsset(string id, NewOrganisation? org)
         {
             InitializeComponent();
             InitialiseFields();
+
+            associatedOrg = org;
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -165,7 +171,12 @@ namespace BridgeOpsClient
                     newAsset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset))
+                {
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches(1);
+                    changeMade = true;
                     Close();
+                }
                 else
                     MessageBox.Show("Could not create asset.");
             }
@@ -229,7 +240,14 @@ namespace BridgeOpsClient
                 {
                     asset.changeReason = reasonDialog.txtReason.Text;
                     if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+                    {
+                        changeMade = true;
+                        if (MainWindow.pageDatabase != null)
+                            MainWindow.pageDatabase.RepeatSearches(1);
+                        if (associatedOrg != null)
+                            associatedOrg.PopulateAssets();
                         Close();
+                    }
                     else
                         MessageBox.Show("Could not edit asset.");
                 }
@@ -246,7 +264,14 @@ namespace BridgeOpsClient
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id, true))
+            {
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(1);
+                if (associatedOrg != null)
+                    associatedOrg.PopulateAssets();
+                changeMade = true;
                 Close();
+            }
             else
                 MessageBox.Show("Could not delete asset.");
         }

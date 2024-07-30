@@ -204,7 +204,11 @@ namespace BridgeOpsClient
                     newOrg.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, newOrg))
+                {
                     Close();
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches(0);
+                }
                 else
                     MessageBox.Show("Could not create organisation.");
             }
@@ -273,7 +277,11 @@ namespace BridgeOpsClient
                 {
                     org.changeReason = reasonDialog.txtReason.Text;
                     if (App.SendUpdate(Glo.CLIENT_UPDATE_ORGANISATION, org))
+                    {
+                        if (MainWindow.pageDatabase != null)
+                            MainWindow.pageDatabase.RepeatSearches(0);
                         Close();
+                    }
                     else
                         MessageBox.Show("Could not edit organisation.");
                 }
@@ -302,7 +310,11 @@ namespace BridgeOpsClient
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id, true))
+            {
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(0);
                 Close();
+            }
             else
                 MessageBox.Show("Could not delete organisation.");
         }
@@ -312,7 +324,9 @@ namespace BridgeOpsClient
         {
             string currentID = dtgAssets.GetCurrentlySelectedID();
             if (currentID != "")
-                App.EditAsset(dtgAssets.GetCurrentlySelectedID());
+            {
+                App.EditAsset(dtgAssets.GetCurrentlySelectedID(), this);
+            }
         }
 
         // Bring up selected contact on double-click.
@@ -320,7 +334,7 @@ namespace BridgeOpsClient
         {
             string currentID = dtgContacts.GetCurrentlySelectedID();
             if (currentID != "")
-                App.EditContact(dtgContacts.GetCurrentlySelectedID());
+                App.EditContact(dtgContacts.GetCurrentlySelectedID(), this);
         }
 
         private void btnAssetNew_Click(object sender, RoutedEventArgs e)
@@ -333,7 +347,8 @@ namespace BridgeOpsClient
             newAsset.cmbOrgID.IsEnabled = false;
 
             newAsset.ShowDialog();
-            PopulateAssets();
+            if (newAsset.changeMade)
+                PopulateAssets();
         }
 
         private void btnAssetAdd_Click(object sender, RoutedEventArgs e)

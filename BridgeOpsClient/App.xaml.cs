@@ -336,7 +336,8 @@ namespace BridgeOpsClient
             return true;
         }
 
-        public static bool EditAsset(string id)
+        public static bool EditAsset(string id) { return EditAsset(id, null); }
+        public static bool EditAsset(string id, NewOrganisation? org)
         {
             string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
             if (organisationArray == null)
@@ -360,7 +361,7 @@ namespace BridgeOpsClient
                     // We expect data for every field. If the count is different, the operation must have failed.
                     if (rows[0].Count == ColumnRecord.asset.Count)
                     {
-                        NewAsset asset = new NewAsset(id);
+                        NewAsset asset = new NewAsset(id, org);
                         asset.cmbOrgID.ItemsSource = organisationList;
                         asset.Populate(rows[0]);
                         asset.Show();
@@ -376,7 +377,8 @@ namespace BridgeOpsClient
             return true;
         }
 
-        public static bool EditContact(string id)
+        public static bool EditContact(string id) { return EditContact(id, null); }
+        public static bool EditContact(string id, NewOrganisation? org)
         {
             List<string?> columnNames;
             List<List<object?>> rows;
@@ -391,7 +393,7 @@ namespace BridgeOpsClient
                     // We expect data for every field. If the count is different, the operation must have failed.
                     if (rows[0].Count == ColumnRecord.contact.Count)
                     {
-                        NewContact contact = new NewContact(id);
+                        NewContact contact = new NewContact(id, org);
                         contact.Populate(rows[0]);
                         contact.Show();
                     }

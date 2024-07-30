@@ -163,5 +163,11 @@ namespace BridgeOpsClient
             foreach (PageDatabaseView view in views)
                 view.dtgResults.Wipe();
         }
+
+        public void RepeatSearches(int identity)
+        {
+            foreach (PageDatabaseView view in views)
+                view.RepeatSearch(identity);
+        }
     }
 }
