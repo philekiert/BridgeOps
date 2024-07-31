@@ -95,6 +95,7 @@ namespace BridgeOpsClient
         bool lastWideSearch = false;
         List<string> lastSearchColumns = new();
         List<string> lastSearchValues = new();
+        List<Conditional> lastSearchConditionals = new();
         string lastWideValue = "";
         Dictionary<string, ColumnRecord.Column> lastColumnDefinitions = new();
         public void RepeatSearch(int identity)
@@ -117,7 +118,7 @@ namespace BridgeOpsClient
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
                 else if (App.Select(cmbTable.Text,
                                     new List<string> { "*" },
-                                    lastSearchColumns, lastSearchValues,
+                                    lastSearchColumns, lastSearchValues, lastSearchConditionals,
                                     out columnNames, out rows))
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
             }
@@ -171,17 +172,22 @@ namespace BridgeOpsClient
                 }
             }
 
+            List<Conditional> conditionals = new();
+            for (int i = 0; i < selectColumns.Count; ++i)
+                conditionals.Add(Conditional.Like);
+
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                            new List<string> { "*" },
-                           selectColumns, selectValues,
+                           selectColumns, selectValues, conditionals,
                            out columnNames, out rows))
             {
                 lastWideSearch = false;
                 lastSearchColumns = selectColumns;
                 lastSearchValues = selectValues;
+                lastSearchConditionals = conditionals;
                 lastColumnDefinitions = tableColDefs;
 
                 dtgResults.identity = identity;

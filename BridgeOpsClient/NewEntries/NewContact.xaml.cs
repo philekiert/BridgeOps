@@ -212,7 +212,7 @@ namespace BridgeOpsClient
                 MessageBox.Show("Could not delete contact.");
         }
 
-        // Check for changes whenever the screen something is with.
+        // Check for changes whenever the user interacts with any control.
         private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
         public bool AnyInteraction()
         {

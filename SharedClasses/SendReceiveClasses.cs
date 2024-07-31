@@ -1147,6 +1147,11 @@ namespace SendReceiveClasses
         public string SqlSelect { get { return "SELECT " + column + " FROM " + table + ";"; } }
     }
 
+    public enum Conditional
+    {
+        Equals,
+        Like
+    }
     struct SelectRequest
     {
         public string sessionID;
@@ -1154,9 +1159,11 @@ namespace SendReceiveClasses
         public List<string> select;
         public List<string> likeColumns;
         public List<string> likeValues;
+        public List<Conditional> conditionals;
 
         public SelectRequest(string sessionID, string table,
-                              List<string> select, List<string> likeColumns, List<string> likeValues)
+                             List<string> select,
+                             List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals)
         {
             /* There is no check here to make sure that columns and values are the equal lengths. Be careful
                to respect this restriction. Agent will throw an exception if they are unequal. */
@@ -1165,6 +1172,21 @@ namespace SendReceiveClasses
             this.select = select;
             this.likeColumns = likeColumns;
             this.likeValues = likeValues;
+            this.conditionals = conditionals;
+        }
+
+        public void Prepare()
+        {
+            table = SqlAssist.SecureColumn(table);
+            SqlAssist.SecureColumn(select);
+            SqlAssist.SecureColumn(likeColumns);
+            for (int i = 0; i < likeValues.Count; ++i)
+                likeValues[i] = SqlAssist.SecureValue(likeValues[i]);
+        }
+
+        public bool Validate()
+        {
+            return (likeColumns.Count != likeValues.Count || likeColumns.Count != conditionals.Count);
         }
     }
 
@@ -1181,6 +1203,13 @@ namespace SendReceiveClasses
             this.table = table;
             this.select = select;
             this.value = value;
+        }
+
+        public void Prepare()
+        {
+            table = SqlAssist.SecureColumn(table);
+            SqlAssist.SecureColumn(select);
+            value = SqlAssist.SecureValue(value);
         }
     }
 

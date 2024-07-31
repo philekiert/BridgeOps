@@ -315,6 +315,7 @@ namespace BridgeOpsClient
                            new List<string> { "*" },
                            new List<string> { Glo.Tab.ORGANISATION_ID },
                            new List<string> { id },
+                           new List<Conditional> { Conditional.Equals },
                            out columnNames, out rows))
             {
                 if (rows.Count > 0)
@@ -355,6 +356,7 @@ namespace BridgeOpsClient
                            new List<string> { "*" },
                            new List<string> { Glo.Tab.ASSET_ID },
                            new List<string> { id },
+                           new List<Conditional> { Conditional.Equals },
                            out columnNames, out rows))
             {
                 if (rows.Count > 0)
@@ -386,6 +388,7 @@ namespace BridgeOpsClient
                            new List<string> { "*" },
                            new List<string> { Glo.Tab.CONTACT_ID },
                            new List<string> { id.ToString() },
+                           new List<Conditional> { Conditional.Equals },
                            out columnNames, out rows))
             {
                 if (rows.Count > 0)
@@ -756,22 +759,23 @@ namespace BridgeOpsClient
 
         public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows)
         {
-            return Select(table, new List<string> { "*" }, new(), new(), out columnNames, out rows);
+            return Select(table, new List<string> { "*" }, new(), new(), new(), out columnNames, out rows);
         }
-        public static bool SelectAll(string table, string likeColumn, string likeValue,
+        public static bool SelectAll(string table, string likeColumn, string likeValue, Conditional conditional,
                                      out List<string?> columnNames, out List<List<object?>> rows)
         {
             return Select(table, new List<string> { "*" },
                           new List<string> { likeColumn }, new List<string> { likeValue },
+                          new List<Conditional> { conditional },
                           out columnNames, out rows);
         }
         public static bool Select(string table, List<string> select,
                                   out List<string?> columnNames, out List<List<object?>> rows)
         {
-            return Select(table, select, new(), new(), out columnNames, out rows);
+            return Select(table, select, new(), new(), new(), out columnNames, out rows);
         }
         public static bool Select(string table, List<string> select,
-                                  List<string> likeColumns, List<string> likeValues,
+                                  List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
                                   out List<string?> columnNames, out List<List<object?>> rows)
         {
             // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
@@ -792,7 +796,8 @@ namespace BridgeOpsClient
                     {
                         if (stream != null)
                         {
-                            SelectRequest req = new SelectRequest(sd.sessionID, table, select, likeColumns, likeValues);
+                            SelectRequest req = new SelectRequest(sd.sessionID, table, select,
+                                                                  likeColumns, likeValues, conditionals);
                             stream.WriteByte(Glo.CLIENT_SELECT);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();

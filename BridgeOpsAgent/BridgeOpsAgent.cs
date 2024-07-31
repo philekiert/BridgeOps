@@ -1304,6 +1304,10 @@ internal class BridgeOpsAgent
                 return;
             }
 
+            if (req.Validate())
+                throw new Exception("Value lists not of equal length.");
+            req.Prepare();
+
             string command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
             List<string> conditions = new();
             if (req.likeColumns.Count > 0)
@@ -1312,7 +1316,12 @@ internal class BridgeOpsAgent
                 {
                     // If the search is blank, we want to return everything, including null values.
                     if (req.likeValues[i] != "")
-                        conditions.Add(req.likeColumns[i] + " LIKE \'%" + req.likeValues[i] + "%'");
+                    {
+                        if (req.conditionals[i] == Conditional.Like)
+                            conditions.Add(req.likeColumns[i] + " LIKE '%" + req.likeValues[i] + "%'");
+                        else // if Conditional.Equals
+                            conditions.Add(req.likeColumns[i] + " = '" + req.likeValues[i] + "'");
+                    }
                 }
 
                 if (conditions.Count > 0)
@@ -1348,6 +1357,8 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
             }
+
+            req.Prepare();
 
             // Get the list of columns to search, reject if the table was invalid.
             Dictionary<string, ColumnRecord.Column> columns;
