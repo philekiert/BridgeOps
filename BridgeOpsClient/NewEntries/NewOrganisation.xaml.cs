@@ -228,7 +228,6 @@ namespace BridgeOpsClient
                 Organisation org = new Organisation();
                 org.sessionID = App.sd.sessionID;
                 org.organisationID = id;
-                org.changeTracked = true;
                 List<string> cols;
                 List<string?> vals;
                 ditOrganisation.ExtractValues(out cols, out vals);
@@ -302,9 +301,14 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
 
             if (App.SelectHistory("OrganisationChange", id, out columnNames, out rows))
+            {
+                foreach (List<object?> row in rows)
+                    if (row[2] == null)
+                        row[2] = "[Deleted]";
                 dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
                                     { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
                                     Glo.Tab.CHANGE_ID);
+            }
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -361,6 +365,7 @@ namespace BridgeOpsClient
 
             Asset asset = new Asset(App.sd.sessionID, assetID, id, null, new(), new(), new());
             asset.organisationIdChanged = true;
+            asset.changeReason = "Added to organisation " + id + ".";
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
             {
                 if (MainWindow.pageDatabase != null)
@@ -380,6 +385,7 @@ namespace BridgeOpsClient
             }
             Asset asset = new Asset(App.sd.sessionID, assetID, null, null, new(), new(), new());
             asset.organisationIdChanged = true;
+            asset.changeReason = "Removed from organisation " + id + ".";
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
             {
                 if (MainWindow.pageDatabase != null)

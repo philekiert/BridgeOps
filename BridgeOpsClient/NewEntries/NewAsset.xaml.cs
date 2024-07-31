@@ -135,9 +135,14 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
 
             if (App.SelectHistory("AssetChange", id, out columnNames, out rows))
+            {
+                foreach (List<object?> row in rows)
+                    if (row[2] == null)
+                        row[2] = "[Deleted]";
                 dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
                                    { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows,
                                    Glo.Tab.CHANGE_ID);
+            }
         }
 
         public string[]? organisationList;
@@ -192,7 +197,6 @@ namespace BridgeOpsClient
                 Asset asset = new Asset();
                 asset.sessionID = App.sd.sessionID;
                 asset.assetID = id;
-                asset.changeTracked = true;
                 List<string> cols;
                 List<string?> vals;
                 ditAsset.ExtractValues(out cols, out vals);

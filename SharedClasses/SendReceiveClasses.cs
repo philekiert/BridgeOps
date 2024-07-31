@@ -566,7 +566,6 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
-        public bool changeTracked;
         public string changeReason = "";
 
         public Organisation(string sessionID, string organisationID, string? parentOrgID,
@@ -585,7 +584,6 @@ namespace SendReceiveClasses
             parentOrgIdChanged = false;
             dialNoChanged = false;
             notesChanged = false;
-            changeTracked = false;
             changeReason = "";
         }
         private void Prepare()
@@ -601,7 +599,6 @@ namespace SendReceiveClasses
             SqlAssist.SecureColumn(additionalCols);
             SqlAssist.SecureValue(additionalVals);
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
-            if (changeTracked && changeReason != null)
                 changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
         }
 
@@ -666,50 +663,47 @@ namespace SendReceiveClasses
             string command = SqlAssist.Update("Organisation", string.Join(", ", setters),
                                               Glo.Tab.ORGANISATION_ID, organisationID);
 
-            if (changeTracked)
+            // Add _Register bools for each column affected.
+            int initialCount = additionalCols.Count;
+            for (int i = 0; i < initialCount; ++i)
             {
-                // Add _Register bools for each column affected.
-                int initialCount = additionalCols.Count;
-                for (int i = 0; i < initialCount; ++i)
-                {
-                    additionalCols.Add(additionalCols[i] + "_Register");
-                    additionalVals.Add("1");
-                }
-                // Put the other values into additionals for the sake of simplicity this time around.
-                if (parentOrgIdChanged)
-                {
-                    additionalCols.Add(Glo.Tab.PARENT_ID);
-                    additionalCols.Add(Glo.Tab.PARENT_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionalVals.Add(parentOrgID);
-                    additionalVals.Add("1");
-                }
-                if (dialNoChanged)
-                {
-                    additionalCols.Add(Glo.Tab.DIAL_NO);
-                    additionalCols.Add(Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionalVals.Add(dialNo);
-                    additionalVals.Add("1");
-                }
-                if (notesChanged)
-                {
-                    additionalCols.Add(Glo.Tab.NOTES);
-                    additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionalVals.Add(notes);
-                    additionalVals.Add("1");
-                }
-
-                command += SqlAssist.InsertInto("OrganisationChange",
-                                           SqlAssist.ColConcat(additionalCols,
-                                                               Glo.Tab.ORGANISATION_ID,
-                                                               Glo.Tab.CHANGE_TIME,
-                                                               Glo.Tab.LOGIN_ID,
-                                                               Glo.Tab.CHANGE_REASON),
-                                           SqlAssist.ValConcat(additionalVals,
-                                                               organisationID,
-                                                               '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
-                                                               loginID.ToString(),
-                                                               changeReason == null ? "''" : changeReason));
+                additionalCols.Add(additionalCols[i] + "_Register");
+                additionalVals.Add("1");
             }
+            // Put the other values into additionals for the sake of simplicity this time around.
+            if (parentOrgIdChanged)
+            {
+                additionalCols.Add(Glo.Tab.PARENT_ID);
+                additionalCols.Add(Glo.Tab.PARENT_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add(parentOrgID);
+                additionalVals.Add("1");
+            }
+            if (dialNoChanged)
+            {
+                additionalCols.Add(Glo.Tab.DIAL_NO);
+                additionalCols.Add(Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add(dialNo);
+                additionalVals.Add("1");
+            }
+            if (notesChanged)
+            {
+                additionalCols.Add(Glo.Tab.NOTES);
+                additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add(notes);
+                additionalVals.Add("1");
+            }
+
+            command += SqlAssist.InsertInto("OrganisationChange",
+                                       SqlAssist.ColConcat(additionalCols,
+                                                           Glo.Tab.ORGANISATION_ID,
+                                                           Glo.Tab.CHANGE_TIME,
+                                                           Glo.Tab.LOGIN_ID,
+                                                           Glo.Tab.CHANGE_REASON),
+                                       SqlAssist.ValConcat(additionalVals,
+                                                           organisationID,
+                                                           '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                           loginID.ToString(),
+                                                           changeReason == null ? "''" : changeReason));
 
             return SqlAssist.Transaction(command);
         }
@@ -726,7 +720,6 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
-        public bool changeTracked = false;
         public string changeReason = "";
 
         public Asset(string sessionID, string assetID, string? organisationID, string? notes,
@@ -754,8 +747,7 @@ namespace SendReceiveClasses
             SqlAssist.SecureColumn(additionalCols);
             SqlAssist.SecureValue(additionalVals);
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
-            if (changeTracked && changeReason != null)
-                changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
+            changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
         }
 
         public string SqlInsert(int loginID)
@@ -812,43 +804,40 @@ namespace SendReceiveClasses
             string com = SqlAssist.Update("Asset", string.Join(", ", setters),
                                           Glo.Tab.ASSET_ID, assetID);
 
-            if (changeTracked)
+            // Add _Register bools for each column affected.
+            int initialCount = additionalCols.Count;
+            for (int i = 0; i < initialCount; ++i)
             {
-                // Add _Register bools for each column affected.
-                int initialCount = additionalCols.Count;
-                for (int i = 0; i < initialCount; ++i)
-                {
-                    additionalCols.Add(additionalCols[i] + "_Register");
-                    additionalVals.Add("1");
-                }
-                // Put the other values into additionals for the sake of simplicity this time around.
-                if (organisationIdChanged)
-                {
-                    additionalCols.Add(Glo.Tab.ORGANISATION_ID);
-                    additionalCols.Add(Glo.Tab.ORGANISATION_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionalVals.Add(organisationID);
-                    additionalVals.Add("1");
-                }
-                if (notesChanged)
-                {
-                    additionalCols.Add(Glo.Tab.NOTES);
-                    additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionalVals.Add(notes);
-                    additionalVals.Add("1");
-                }
-
-                com += SqlAssist.InsertInto("AssetChange",
-                                            SqlAssist.ColConcat(additionalCols,
-                                                                Glo.Tab.ASSET_ID,
-                                                                Glo.Tab.CHANGE_TIME,
-                                                                Glo.Tab.LOGIN_ID,
-                                                                Glo.Tab.CHANGE_REASON),
-                                            SqlAssist.ValConcat(additionalVals,
-                                                                assetID,
-                                                                '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
-                                                                loginID.ToString(),
-                                                                changeReason == null ? "" : changeReason));
+                additionalCols.Add(additionalCols[i] + "_Register");
+                additionalVals.Add("1");
             }
+            // Put the other values into additionals for the sake of simplicity this time around.
+            if (organisationIdChanged)
+            {
+                additionalCols.Add(Glo.Tab.ORGANISATION_ID);
+                additionalCols.Add(Glo.Tab.ORGANISATION_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add(organisationID);
+                additionalVals.Add("1");
+            }
+            if (notesChanged)
+            {
+                additionalCols.Add(Glo.Tab.NOTES);
+                additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalVals.Add(notes);
+                additionalVals.Add("1");
+            }
+
+            com += SqlAssist.InsertInto("AssetChange",
+                                        SqlAssist.ColConcat(additionalCols,
+                                                            Glo.Tab.ASSET_ID,
+                                                            Glo.Tab.CHANGE_TIME,
+                                                            Glo.Tab.LOGIN_ID,
+                                                            Glo.Tab.CHANGE_REASON),
+                                        SqlAssist.ValConcat(additionalVals,
+                                                            assetID,
+                                                            '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                            loginID.ToString(),
+                                                            changeReason == null ? "" : changeReason));
 
             return SqlAssist.Transaction(com);
         }
