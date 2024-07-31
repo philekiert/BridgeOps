@@ -166,8 +166,23 @@ namespace BridgeOpsClient
 
         public void RepeatSearches(int identity)
         {
+            // Force any open organisation windows to refresh their asset and contact lists just in case they're
+            // effected by a change.
+            if (identity == 1)
+            {
+                foreach (Window window in Application.Current.Windows)
+                    if (window is NewOrganisation org)
+                        org.PopulateAssets();
+            }
+            else if (identity == 2)
+            {
+                foreach (Window window in Application.Current.Windows)
+                    if (window is NewOrganisation org)
+                        org.PopulateContacts();
+            }
+
             foreach (PageDatabaseView view in views)
-                view.RepeatSearch(identity);
+                            view.RepeatSearch(identity);
         }
     }
 }

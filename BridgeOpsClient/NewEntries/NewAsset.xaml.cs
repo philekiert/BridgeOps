@@ -27,8 +27,6 @@ namespace BridgeOpsClient
 
         public bool changeMade = false;
 
-        NewOrganisation? associatedOrg;
-
         private void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -50,12 +48,10 @@ namespace BridgeOpsClient
 
             ApplyPermissions();
         }
-        public NewAsset(string id, NewOrganisation? org)
+        public NewAsset(string id)
         {
             InitializeComponent();
             InitialiseFields();
-
-            associatedOrg = org;
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -244,8 +240,6 @@ namespace BridgeOpsClient
                         changeMade = true;
                         if (MainWindow.pageDatabase != null)
                             MainWindow.pageDatabase.RepeatSearches(1);
-                        if (associatedOrg != null)
-                            associatedOrg.PopulateAssets();
                         Close();
                     }
                     else
@@ -267,8 +261,6 @@ namespace BridgeOpsClient
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
-                if (associatedOrg != null)
-                    associatedOrg.PopulateAssets();
                 changeMade = true;
                 Close();
             }

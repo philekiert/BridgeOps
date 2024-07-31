@@ -12,19 +12,19 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
             <RowDefinition Height="24"/>
-            <RowDefinition />
+            <RowDefinition/>
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0">
             <MenuItem Header="File">
                 <MenuItem Header="Log In" IsEnabled="False"
-                          x:Name="menuUserLogIn" Click="menuUserLogIn_Click" />
+                          x:Name="menuUserLogIn" Click="menuUserLogIn_Click"/>
                 <MenuItem Header="Log Out" IsEnabled="True"
-                          x:Name="menuUserLogOut" Click="menuUserLogOut_Click" />
+                          x:Name="menuUserLogOut" Click="menuUserLogOut_Click"/>
                 <MenuItem Header="Change Password" IsEnabled="True"
-                          x:Name="menuChangePassword" Click="menuChangePassword_Click" />
+                          x:Name="menuChangePassword" Click="menuChangePassword_Click"/>
                 <MenuItem Header="Reset View Settings" IsEnabled="True"
-                          x:Name="menuResetViewSettings" Click="menuResetViewSettings_Click" />
+                          x:Name="menuResetViewSettings" Click="menuResetViewSettings_Click"/>
                 <Separator/>
                 <MenuItem Header="Settings" IsEnabled="True"
                           x:Name="menuSettings" Click="menuSettings_Click"/>

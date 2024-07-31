@@ -25,8 +25,6 @@ namespace BridgeOpsClient
         public bool isDialog = false;
         string? originalNotes = "";
 
-        NewOrganisation? associatedOrg;
-
         public bool changeMade = false;
 
         private void ApplyPermissions()
@@ -46,11 +44,9 @@ namespace BridgeOpsClient
 
             ApplyPermissions();
         }
-        public NewContact(string id, NewOrganisation? org)
+        public NewContact(string id)
         {
             this.id = id;
-
-            associatedOrg = org;
 
             InitializeComponent();
             InitialiseFields();
@@ -189,8 +185,6 @@ namespace BridgeOpsClient
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(2);
                     changeMade = true;
-                    if (associatedOrg != null)
-                        associatedOrg.PopulateContacts();
                     Close();
                 }
                 else
@@ -212,8 +206,6 @@ namespace BridgeOpsClient
                 changeMade = true;
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(2);
-                if (associatedOrg != null)
-                    associatedOrg.PopulateContacts();
                 Close();
             }
             else

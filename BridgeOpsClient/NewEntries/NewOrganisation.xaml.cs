@@ -325,7 +325,7 @@ namespace BridgeOpsClient
             string currentID = dtgAssets.GetCurrentlySelectedID();
             if (currentID != "")
             {
-                App.EditAsset(dtgAssets.GetCurrentlySelectedID(), this);
+                App.EditAsset(dtgAssets.GetCurrentlySelectedID());
             }
         }
 
@@ -334,7 +334,7 @@ namespace BridgeOpsClient
         {
             string currentID = dtgContacts.GetCurrentlySelectedID();
             if (currentID != "")
-                App.EditContact(dtgContacts.GetCurrentlySelectedID(), this);
+                App.EditContact(dtgContacts.GetCurrentlySelectedID());
         }
 
         private void btnAssetNew_Click(object sender, RoutedEventArgs e)
@@ -362,7 +362,10 @@ namespace BridgeOpsClient
             Asset asset = new Asset(App.sd.sessionID, assetID, id, null, new(), new(), new());
             asset.organisationIdChanged = true;
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
-                PopulateAssets();
+            {
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(1);
+            }
             else
                 MessageBox.Show("Could not update specified asset.");
         }
@@ -378,7 +381,10 @@ namespace BridgeOpsClient
             Asset asset = new Asset(App.sd.sessionID, assetID, null, null, new(), new(), new());
             asset.organisationIdChanged = true;
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
-                PopulateAssets();
+            {
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(1);
+            }
             else
                 MessageBox.Show("Could not update specified asset.");
         }
