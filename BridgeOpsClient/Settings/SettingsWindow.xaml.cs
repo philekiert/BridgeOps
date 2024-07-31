@@ -20,6 +20,10 @@ namespace BridgeOpsClient
         public SettingsWindow()
         {
             InitializeComponent();
+
+            dtgUsers.identity = 5;
+            dtgColumns.identity = 6;
+
             PopulateUserList();
 
             bool editPermission = App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT];

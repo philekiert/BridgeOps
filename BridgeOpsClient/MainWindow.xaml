@@ -23,6 +23,8 @@
                           x:Name="menuUserLogOut" Click="menuUserLogOut_Click" />
                 <MenuItem Header="Change Password" IsEnabled="True"
                           x:Name="menuChangePassword" Click="menuChangePassword_Click" />
+                <MenuItem Header="Reset View Settings" IsEnabled="True"
+                          x:Name="menuResetViewSettings" Click="menuResetViewSettings_Click" />
                 <Separator/>
                 <MenuItem Header="Settings" IsEnabled="True"
                           x:Name="menuSettings" Click="menuSettings_Click"/>

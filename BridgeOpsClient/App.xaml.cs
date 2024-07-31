@@ -153,6 +153,7 @@ namespace BridgeOpsClient
 
         public static SendReceive sr = new SendReceive();
         public static SessionDetails sd = new SessionDetails();
+        public static UserSettings us = new UserSettings();
         public static object streamLock = new();
 
         public static BridgeOpsClient.MainWindow? mainWindow = null;
@@ -168,6 +169,8 @@ namespace BridgeOpsClient
             {
                 LoginRequest loginReq = new LoginRequest(username, password);
                 string send = sr.Serialise(loginReq);
+
+                us = new UserSettings();
 
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 try
@@ -220,17 +223,16 @@ namespace BridgeOpsClient
                     if (loginID == sd.loginID)
                     {
                         settings = "";
-                        for (int i = 0; i < sd.dataOrder.Length; ++i)
-                            settings += string.Join(";", sd.dataOrder[i]) + "\n";
-                        for (int i = 0; i < sd.dataHidden.Length; ++i)
-                            settings += string.Join(";", sd.dataHidden[i]) + "\n";
-                        for (int i = 0; i < sd.dataWidths.Length; ++i)
-                            settings += string.Join(";", sd.dataWidths[i]) + "\n";
+                        for (int i = 0; i < us.dataOrder.Length; ++i)
+                            settings += string.Join(";", us.dataOrder[i]) + "\n";
+                        for (int i = 0; i < us.dataHidden.Length; ++i)
+                            settings += string.Join(";", us.dataHidden[i]) + "\n";
+                        for (int i = 0; i < us.dataWidths.Length; ++i)
+                            settings += string.Join(";", us.dataWidths[i]) + "\n";
                         settings += (int)BridgeOpsClient.MainWindow.oldConfWidth + ";" +
                                     (int)BridgeOpsClient.MainWindow.oldDataWidth + ";" +
                                     BridgeOpsClient.MainWindow.viewState;
-
-
+                        us = new();
                     }
 
                     lock (streamLock)
@@ -541,27 +543,27 @@ namespace BridgeOpsClient
 
                             string[] settings = result.Split("\n");
 
-                            if (settings.Length != (sd.dataOrder.Length * 3) + 1)
+                            if (settings.Length != (us.dataOrder.Length * 3) + 1)
                                 return false;
 
                             double dVal;
-                            for (int i = 0; i < sd.dataOrder.Length; ++i)
+                            for (int i = 0; i < us.dataOrder.Length; ++i)
                             {
                                 // Order strings.
-                                sd.dataOrder[i] = settings[i].Split(";").ToList();
-                                sd.dataWidths[i].Clear();
-                                sd.dataHidden[i].Clear();
+                                us.dataOrder[i] = settings[i].Split(";").ToList();
+                                us.dataWidths[i].Clear();
+                                us.dataHidden[i].Clear();
 
                                 // Hidden bools.
-                                int index = i + sd.dataOrder.Length;
+                                int index = i + us.dataOrder.Length;
                                 foreach (string s in settings[index].Split(";"))
-                                    sd.dataHidden[i].Add(s == "True");
+                                    us.dataHidden[i].Add(s == "True");
 
                                 // Width ints.
-                                index += sd.dataOrder.Length;
+                                index += us.dataOrder.Length;
                                 foreach (string s in settings[index].Split(";"))
                                     if (double.TryParse(s, out dVal) && dVal >= 0)
-                                        sd.dataWidths[i].Add(dVal);
+                                        us.dataWidths[i].Add(dVal);
                             }
 
                             // Conference view width, database view width, then view state.
@@ -577,9 +579,9 @@ namespace BridgeOpsClient
                             if (int.TryParse(viewSplit[2], out iVal) && iVal >= 0 && iVal <= 2)
                                 BridgeOpsClient.MainWindow.viewState = iVal;
 
-                            for (int i = 0; i < sd.dataOrder.Length; ++i)
-                                if (sd.dataOrder[i].Count != sd.dataHidden[i].Count ||
-                                    sd.dataOrder[i].Count != sd.dataWidths[i].Count)
+                            for (int i = 0; i < us.dataOrder.Length; ++i)
+                                if (us.dataOrder[i].Count != us.dataHidden[i].Count ||
+                                    us.dataOrder[i].Count != us.dataWidths[i].Count)
                                     return false;
                         }
                     }
@@ -1146,26 +1148,6 @@ namespace BridgeOpsClient
         public bool[] editPermissions = new bool[6];
         public bool[] deletePermissions = new bool[6];
 
-        // These collections store the user's desired order and display settings for the database view.
-        // Array indices:  0  Organisation
-        //                 1  Asset
-        //                 2  Contact
-        //                 3  Asset (Organisation links table)
-        //                 4  Contact (Organisation links table)
-        public List<string>[] dataOrder = new List<string>[5];
-        public List<bool>[] dataHidden = new List<bool>[5];
-        public List<double>[] dataWidths = new List<double>[5];
-
-        public SessionDetails()
-        {
-            for (int i = 0; i < dataOrder.Length; ++i)
-            {
-                dataOrder[i] = new();
-                dataHidden[i] = new();
-                dataWidths[i] = new();
-            }
-        }
-
         public IPAddress ThisIP { get { return new IPAddress(thisIpAddress); } }
         public IPEndPoint ThisEP { get { return new IPEndPoint(ThisIP, portInbound); } }
         public IPAddress ServerIP { get { return new IPAddress(serverIpAddress); } }
@@ -1192,6 +1174,29 @@ namespace BridgeOpsClient
             catch
             {
                 return false;
+            }
+        }
+    }
+
+    public class UserSettings
+    {
+        // These collections store the user's desired order and display settings for the database view.
+        // Array indices:  0  Organisation
+        //                 1  Asset
+        //                 2  Contact
+        //                 3  Asset (Organisation links table)
+        //                 4  Contact (Organisation links table)
+        public List<string>[] dataOrder = new List<string>[7];
+        public List<bool>[] dataHidden = new List<bool>[7];
+        public List<double>[] dataWidths = new List<double>[7];
+
+        public UserSettings()
+        {
+            for (int i = 0; i < dataOrder.Length; ++i)
+            {
+                dataOrder[i] = new();
+                dataHidden[i] = new();
+                dataWidths[i] = new();
             }
         }
     }

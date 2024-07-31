@@ -170,13 +170,15 @@ namespace BridgeOpsClient.CustomControls
             foreach (List<object?> row in rows)
                 rowsBinder.Add(new Row(row));
 
-            if (canHideColumns && identity != -1)
+            if (!canHideColumns)
+                menuShowHideColumns.Visibility = Visibility.Hidden;
+            if (identity != -1)
             {
                 // Apply user's view configuration.
 
-                List<string> order = App.sd.dataOrder[identity];
-                List<bool> hidden = App.sd.dataHidden[identity];
-                List<double> widths = App.sd.dataWidths[identity];
+                List<string> order = App.us.dataOrder[identity];
+                List<bool> hidden = App.us.dataHidden[identity];
+                List<double> widths = App.us.dataWidths[identity];
 
                 if (order.Count != 0 && (order.Count == widths.Count && widths.Count == hidden.Count))
                 {
@@ -188,7 +190,8 @@ namespace BridgeOpsClient.CustomControls
                             if ((string)col.Header == order[i])
                             {
                                 col.Width = widths[i];
-                                if (hidden[i]) col.Visibility = Visibility.Hidden;
+                                if (canHideColumns)
+                                    if (hidden[i]) col.Visibility = Visibility.Hidden;
                                 col.DisplayIndex = setIndex;
                                 ++setIndex;
                                 break;
@@ -197,8 +200,6 @@ namespace BridgeOpsClient.CustomControls
                     }
                 }
             }
-            else
-                menuShowHideColumns.Visibility = Visibility.Hidden;
 
             dtg.ItemsSource = rowsBinder;
 
@@ -239,9 +240,9 @@ namespace BridgeOpsClient.CustomControls
                 return;
 
 
-            List<string> order = App.sd.dataOrder[identity];
-            List<bool> hidden = App.sd.dataHidden[identity];
-            List<double> widths = App.sd.dataWidths[identity];
+            List<string> order = App.us.dataOrder[identity];
+            List<bool> hidden = App.us.dataHidden[identity];
+            List<double> widths = App.us.dataWidths[identity];
 
             order.Clear(); hidden.Clear(); widths.Clear();
 
@@ -400,12 +401,12 @@ namespace BridgeOpsClient.CustomControls
 
         private void contextShowHideColumns_Loaded(object sender, RoutedEventArgs e)
         {
-            if (identity == -1)
+            if (identity == -1 || !canHideColumns)
                 return;
 
-            List<string> order = App.sd.dataOrder[identity];
-            List<bool> hidden = App.sd.dataHidden[identity];
-            List<double> widths = App.sd.dataWidths[identity];
+            List<string> order = App.us.dataOrder[identity];
+            List<bool> hidden = App.us.dataHidden[identity];
+            List<double> widths = App.us.dataWidths[identity];
 
             menuShowHideColumns.Items.Clear();
             var cols = dtg.Columns.OrderBy(i => i.DisplayIndex);

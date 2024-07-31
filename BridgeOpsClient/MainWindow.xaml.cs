@@ -181,6 +181,22 @@ namespace BridgeOpsClient
             pc.ShowDialog();
         }
 
+        private void menuResetViewSettings_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxButton messageBoxButton = MessageBoxButton.YesNo;
+            MessageBoxResult result = MessageBox.Show("Are you sure? This will:\n\n• Reset all data table view " +
+                                                      "settings, such as hidden columns, column orders and columns " +
+                                                      "widths.\n• Reset pane layout.\n\nYou will need to log back in.",
+                                                      "Reset View Settings",
+                                                      messageBoxButton);
+            if (result == MessageBoxResult.Yes)
+            {
+                // Reset settings before LogOut(), and they will be stored on the database as part of that method.
+                App.us = new UserSettings();
+                App.LogOut();
+            }
+        }
+
         private void menuSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow settingsWindow = new();
