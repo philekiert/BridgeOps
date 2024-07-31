@@ -18,7 +18,8 @@
               SelectionChanged="dtg_SelectionChanged" Loaded="dtg_Loaded"
               RequestBringIntoView="dtg_RequestBringIntoView" MouseDoubleClick="dtg_MouseDoubleClick"
               MouseLeftButtonDown="dtg_MouseLeftButtonDown"
-              ColumnReordered="dtg_ColumnReordered">
+              ColumnReordered="dtg_ColumnReordered"
+              KeyDown="dtg_KeyDown">
         <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
                 <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>
@@ -51,5 +52,15 @@
                 <Setter Property="Height" Value="20"/>
             </Style>
         </DataGrid.Resources>
+        <DataGrid.ContextMenu>
+            <ContextMenu>
+                <MenuItem x:Name="mnuSelectAll" Header="Select All"
+                          Click="mnuSelectAll_Click" IsEnabled="False"/>
+                <MenuItem x:Name="mnuCopy" Header="Copy"
+                          Click="mnuCopy_Click"/>
+                <MenuItem x:Name="mnuCopyWithHeaders" Header="Copy Including Headers"
+                          Click="mnuCopyWithHeaders_Click"/>
+            </ContextMenu>
+        </DataGrid.ContextMenu>
     </DataGrid>
 </UserControl>

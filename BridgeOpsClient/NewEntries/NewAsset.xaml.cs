@@ -88,6 +88,8 @@ namespace BridgeOpsClient
 
         private void InitialiseFields()
         {
+            ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
+
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
             txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
             txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
@@ -99,8 +101,6 @@ namespace BridgeOpsClient
                 lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
             if (ColumnRecord.asset["Notes"].friendlyName != "")
                 lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
-
-            ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
         }
 
         public void Populate(List<object?> data)
@@ -138,7 +138,7 @@ namespace BridgeOpsClient
             {
                 foreach (List<object?> row in rows)
                     if (row[2] == null)
-                        row[2] = "[Deleted]";
+                        row[2] = "[deleted]";
                 dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
                                    { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows,
                                    Glo.Tab.CHANGE_ID);

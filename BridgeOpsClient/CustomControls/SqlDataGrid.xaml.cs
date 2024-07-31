@@ -234,7 +234,7 @@ namespace BridgeOpsClient.CustomControls
             return id;
         }
 
-        public void StoreViewSettings()
+        private void StoreViewSettings()
         {
             if (identity == -1)
                 return;
@@ -256,6 +256,12 @@ namespace BridgeOpsClient.CustomControls
                 widths[col.DisplayIndex] = col.Width.DisplayValue;
                 hidden[col.DisplayIndex] = col.Visibility == Visibility.Hidden;
             }
+        }
+
+        public void EnableMultiSelect()
+        {
+            dtg.SelectionMode = DataGridSelectionMode.Extended;
+            mnuSelectAll.IsEnabled = true;
         }
 
         private void contextShowHideColumnsToggle(object sender, RoutedEventArgs e)
@@ -425,6 +431,39 @@ namespace BridgeOpsClient.CustomControls
                 item.StaysOpenOnClick = true;
                 menuShowHideColumns.Items.Add(item);
             }
+        }
+
+        private void mnuCopy_Click(object sender, RoutedEventArgs e)
+        {
+            dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
+            ApplicationCommands.Copy.Execute(null, dtg);
+        }
+        private void mnuCopyWithHeaders_Click(object sender, RoutedEventArgs e)
+        {
+            dtg.ClipboardCopyMode = DataGridClipboardCopyMode.IncludeHeader;
+            ApplicationCommands.Copy.Execute(null, dtg);
+        }
+
+        private void dtg_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.C ||
+                e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl ||
+                e.Key == Key.LeftShift || e.Key == Key.RightShift)
+            {
+                if (Keyboard.IsKeyDown(Key.C) &&
+                    (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) &&
+                    (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)))
+                {
+                    dtg.ClipboardCopyMode = DataGridClipboardCopyMode.IncludeHeader;
+                    ApplicationCommands.Copy.Execute(null, dtg);
+                    dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
+                }
+            }
+        }
+
+        private void mnuSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            ApplicationCommands.SelectAll.Execute(null, dtg);
         }
     }
 }

@@ -63,14 +63,14 @@ namespace BridgeOpsClient
 
         private void InitialiseFields()
         {
+            ditContact.Initialise(ColumnRecord.orderedContact, "Contact");
+
             // Implement max length. Max lengths in the DataInputTable are set automatically.
             txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
 
             // Implemement friendly name.
             if (ColumnRecord.contact["Notes"].friendlyName != "")
                 lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
-
-            ditContact.Initialise(ColumnRecord.orderedContact, "Contact");
         }
 
 #pragma warning disable CS8602

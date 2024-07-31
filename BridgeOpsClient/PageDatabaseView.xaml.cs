@@ -44,6 +44,7 @@ namespace BridgeOpsClient
 
             dtgResults.canHideColumns = true;
             dtgResults.CustomDoubleClick += dtg_DoubleClick;
+            dtgResults.EnableMultiSelect();
 
             txtSearch.Focus();
         }
