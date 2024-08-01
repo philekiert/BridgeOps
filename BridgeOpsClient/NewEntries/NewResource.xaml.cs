@@ -62,7 +62,10 @@ namespace BridgeOpsClient
             nr.capacity = capacity;
 
             if (App.SendInsert(Glo.CLIENT_NEW_RESOURCE, nr))
+            {
                 Close();
+                App.PullResourceInformation();
+            }
             else
                 MessageBox.Show("Could not create resource.");
 }
