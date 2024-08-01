@@ -569,7 +569,7 @@ namespace BridgeOpsClient
                             }
 
                             // Conference view width, database view width, then view state.
-                            string[] viewSplit = settings[9].Split(";");
+                            string[] viewSplit = settings[us.dataOrder.Length * 3].Split(";");
                             if (viewSplit.Length != 3)
                                 return false;
 

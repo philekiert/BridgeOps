@@ -277,8 +277,8 @@ namespace BridgeOpsClient
 
                 frameData.SetValue(Grid.RowProperty, 1);
 
-                if (frameConf.Content is PageConferenceView pcv)
-                    pcv.scrollBar.Margin = new Thickness(0, 0, 7, 0);
+                foreach (PageConferenceView confView in pageConferenceViews)
+                    confView.scrollBar.Margin = new Thickness(0, 0, 7, 0);
             }
         }
 
