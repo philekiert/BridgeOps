@@ -117,7 +117,7 @@ namespace SendReceiveClasses
             }
             return unicodeEncoding.GetString(bString);
         }
-
+        
         public NamedPipeServerStream NewServerNamedPipe(string pipeName) // Inbound to server.
         {
             // timeout not supported on this type of stream.

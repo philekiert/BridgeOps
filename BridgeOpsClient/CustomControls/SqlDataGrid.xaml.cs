@@ -433,6 +433,21 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
+        public void AddContextMenuItem(MenuItem item, bool top)
+        {
+            if (top)
+                mnuData.Items.Insert(0, item);
+            else
+                mnuData.Items.Add(item);
+        }
+        public void AddSeparator(bool top)
+        {
+            if (top)
+                mnuData.Items.Insert(0, new Separator());
+            else
+                mnuData.Items.Add(new Separator());
+        }
+
         private void mnuCopy_Click(object sender, RoutedEventArgs e)
         {
             dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
@@ -459,11 +474,6 @@ namespace BridgeOpsClient.CustomControls
                     dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
                 }
             }
-        }
-
-        private void mnuSelectAll_Click(object sender, RoutedEventArgs e)
-        {
-            ApplicationCommands.SelectAll.Execute(null, dtg);
         }
     }
 }

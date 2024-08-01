@@ -220,7 +220,7 @@ namespace BridgeOpsClient
                 {
                     // Only store the user settings if it's actually their session logging out.
                     string? settings = null;
-                    if (loginID == sd.loginID)
+                    if (loginID == sd.loginID && us.settingsPulled)
                     {
                         settings = "";
                         for (int i = 0; i < us.dataOrder.Length; ++i)
@@ -272,7 +272,7 @@ namespace BridgeOpsClient
                         }
                     }
                 }
-                if (Current.MainWindow != null && loginID == sd.loginID && !Current.Windows.OfType<Login>().Any())
+                if (Current.MainWindow != null && loginID == sd.loginID && !Current.Windows.OfType<LogIn>().Any())
                 {
                     // Thought about making this while (!IsLoggedIn) in case the user closes the login window, but
                     // decided it might be useful for the user to get back to the app if they accidentally clicked
@@ -534,6 +534,7 @@ namespace BridgeOpsClient
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
                 if (stream != null)
                 {
+                    us.settingsPulled = true;
                     try
                     {
                         stream.WriteByte(Glo.CLIENT_PULL_USER_SETTINGS);
@@ -1192,6 +1193,8 @@ namespace BridgeOpsClient
         public List<string>[] dataOrder = new List<string>[7];
         public List<bool>[] dataHidden = new List<bool>[7];
         public List<double>[] dataWidths = new List<double>[7];
+
+        public bool settingsPulled = false;
 
         public UserSettings()
         {

@@ -36,6 +36,14 @@ namespace BridgeOpsClient
                 tabDatabaseLayout.IsEnabled = false;
             else
                 PopulateColumnList();
+
+            dtgColumns.AddSeparator(true);
+            MenuItem item = new MenuItem()
+            {
+                Header = "Remove",
+            };
+            item.Click += btnColumnRemove_Click;
+            dtgColumns.AddContextMenuItem(item, true);
         }
 
         List<string?> columnNames = new();
@@ -343,6 +351,7 @@ namespace BridgeOpsClient
         {
             btnColumnRemove.IsEnabled = Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
                                                                      dtgColumns.GetCurrentlySelectedCell(1));
+            ((MenuItem)dtgColumns.mnuData.Items[0]).IsEnabled = btnColumnRemove.IsEnabled;
         }
 
         private void btnReorder_Click(object sender, RoutedEventArgs e)

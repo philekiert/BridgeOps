@@ -27,7 +27,7 @@ namespace BridgeOpsClient
 
             this.mainWindow = mainWindow;
 
-            txtUsername.Focus(); 
+            txtUsername.Focus();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -84,18 +84,19 @@ namespace BridgeOpsClient
                     if (mainWindow.menuUserLogIn != null)
                         mainWindow.ToggleLogInOut(true);
 
-                    Close();
+                    if (!App.PullResourceInformation())
+                    {
+                        MessageBox.Show("Log in was successful, but could not pull resource information. Logging out. " +
+                                        "Please contact the software administrator.");
+                        App.LogOut();
+                    }
+                    else
+                        Close();
                 }
                 else
                 {
                     MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +
                                     "contact the software administrator.");
-                    App.LogOut();
-                }
-                if (!App.PullResourceInformation())
-                {
-                    MessageBox.Show("Log in was successful, but could not pull resource information. Logging out. " +
-                                    "Please contact the software administrator.");
                     App.LogOut();
                 }
 

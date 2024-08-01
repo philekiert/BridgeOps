@@ -53,13 +53,14 @@
             </Style>
         </DataGrid.Resources>
         <DataGrid.ContextMenu>
-            <ContextMenu>
-                <MenuItem x:Name="mnuSelectAll" Header="Select All"
-                          Click="mnuSelectAll_Click" IsEnabled="False"/>
+            <ContextMenu x:Name="mnuData">
+                <MenuItem x:Name="mnuSelectAll" Header="Select All" IsEnabled="False"
+                          Command="ApplicationCommands.SelectAll"/>
+                <Separator/>
                 <MenuItem x:Name="mnuCopy" Header="Copy"
-                          Click="mnuCopy_Click"/>
+                          Click="mnuCopy_Click" InputGestureText="Ctrl+C"/>
                 <MenuItem x:Name="mnuCopyWithHeaders" Header="Copy Including Headers"
-                          Click="mnuCopyWithHeaders_Click"/>
+                          Click="mnuCopyWithHeaders_Click" InputGestureText="Ctrl+Shift+C"/>
             </ContextMenu>
         </DataGrid.ContextMenu>
     </DataGrid>

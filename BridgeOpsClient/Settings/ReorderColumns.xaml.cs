@@ -132,8 +132,10 @@ namespace BridgeOpsClient
                 return;
 
             List<object> items = new();
-            foreach (object s in lstColumns.SelectedItems)
-                items.Add(s);
+            // We need to add them in order, as SelectedItems' order is not guaranteed.
+            foreach (object item in lstColumns.Items)
+                if (lstColumns.SelectedItems.Contains(item))
+                    items.Add(item);
 
             lstColumns.SelectedItems.Clear();
 

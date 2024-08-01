@@ -398,6 +398,7 @@ public class ConsoleController
                     string[] names = lines[l].Split(";;");
                     if (names.Length == 3)
                     {
+                        names[1] = names[1].Replace(" ", "_");
                         if (names[0].Length > 0 || names[1].Length > 0 || names[2].Length > 0)
                         {
                             if (names[0] == "Organisation" || names[0] == "Contact" ||

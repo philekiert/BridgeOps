@@ -26,7 +26,7 @@ internal class BridgeOpsAgent
 
     static bool columnRecordIntact = false;
 
-    const int clientNudgeInterval = 100_000;
+    const int clientNudgeInterval = /*100_000*/ 10000_000;
     const int notificationSendRetries = 3;
     const int maxMissedNudges = 2;
 
@@ -504,6 +504,7 @@ internal class BridgeOpsAgent
                 successfulSqlConnection = true;
 
                 // Catches its own exception and logs its own error.
+                
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 // Get the column record.
                 columnRecordIntact = GetColumnRecordFromFile();
@@ -1803,6 +1804,7 @@ internal class BridgeOpsAgent
                     }
 
                     // Fix the column order as required if removing a column.
+                    
                     var order = ColumnRecord.GetOrder(req.table);
                     if (order == null)
                         throw new("Error discerning the correct table dictionary being affected by removal.");
@@ -1812,7 +1814,10 @@ internal class BridgeOpsAgent
                     // Remove the current column's index, and decrement anything higher.
                     for (int i = 0; i < order.Count; ++i)
                         if (order[i] == oldColIndex)
+                        {
                             order.RemoveAt(i);
+                            --order[i];
+                        }
                         else if (order[i] > oldColIndex)
                             --order[i];
                     // Paste over the crack left at the end by the removal. Without this, when get bugs later when
