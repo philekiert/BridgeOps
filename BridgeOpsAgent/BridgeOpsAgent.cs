@@ -1561,7 +1561,7 @@ internal class BridgeOpsAgent
             SqlCommand com = new SqlCommand(req.SqlDelete(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             else
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -1607,14 +1607,15 @@ internal class BridgeOpsAgent
                 com = new SqlCommand(req.SqlInsert(), sqlConnect);
 
             if (com.ExecuteNonQuery() == 0)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             else
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)
         {
+            // This will almost certainly because someone deleted the contact in the meantime, so respond with this.
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             LogError("Couldn't create or modify organisation/contact link, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
         }
         finally
         {

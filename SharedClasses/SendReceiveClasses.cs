@@ -117,7 +117,7 @@ namespace SendReceiveClasses
             }
             return unicodeEncoding.GetString(bString);
         }
-        
+
         public NamedPipeServerStream NewServerNamedPipe(string pipeName) // Inbound to server.
         {
             // timeout not supported on this type of stream.
@@ -566,7 +566,7 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
-        public string changeReason = "";
+        public string changeReason;
 
         public Organisation(string sessionID, string organisationID, string? parentOrgID,
                             string? dialNo, string? notes, List<string> additionalCols,
@@ -599,7 +599,7 @@ namespace SendReceiveClasses
             SqlAssist.SecureColumn(additionalCols);
             SqlAssist.SecureValue(additionalVals);
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
-                changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
+            changeReason = SqlAssist.AddQuotes(SqlAssist.SecureValue(changeReason));
         }
 
         public string SqlInsert(int loginID)
@@ -720,7 +720,7 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
-        public string changeReason = "";
+        public string changeReason;
 
         public Asset(string sessionID, string assetID, string? organisationID, string? notes,
                      List<string> additionalCols,
@@ -734,6 +734,7 @@ namespace SendReceiveClasses
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
             this.additionalNeedsQuotes = additionalNeedsQuotes;
+            changeReason = "";
         }
 
         private void Prepare()
