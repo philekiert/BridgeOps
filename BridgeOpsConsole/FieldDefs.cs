@@ -40,20 +40,20 @@ public class FieldDefs
         // The length of the key name makes up the category.Important for outputting database-layout.txt
         public int categoryLength;
         public string columnName;
-        public string type;
-        public string typeDefault;
+        public string sqlType;
+        public string sqlTypeDefault;
         public bool canOverride;
         public bool primaryKey;
         public bool autoIncrement;
         public List<string>? primaryKeyLinks; // If the primary key is reference by foreign keys, track this.
 
-        public Definition(int categoryLength, string columnName, string type,
+        public Definition(int categoryLength, string columnName, string typeName,
                           bool canOverride, bool primaryKey, bool autoIncrement)
         {
             this.categoryLength = categoryLength;
             this.columnName = columnName;
-            this.type = type;
-            typeDefault = type;
+            this.sqlType = typeName;
+            sqlTypeDefault = typeName;
             this.canOverride = canOverride;
             this.primaryKey = primaryKey;
             this.autoIncrement = autoIncrement;
@@ -63,8 +63,8 @@ public class FieldDefs
         {
             this.categoryLength = categoryLength;
             this.columnName = columnName;
-            this.type = type;
-            typeDefault = type;
+            this.sqlType = type;
+            sqlTypeDefault = type;
             this.canOverride = canOverride;
             this.primaryKey = primaryKey;
             this.autoIncrement = autoIncrement;
@@ -185,7 +185,7 @@ public class FieldDefs
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
                     additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
                     additionsKeys.Add(d.Key);
-                    additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.type, false, false, false));
+                    additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.sqlType, false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
@@ -208,7 +208,7 @@ public class FieldDefs
                     additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
                     additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
                     additionsKeys.Add(d.Key);
-                    additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.type, false, false, false));
+                    additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.sqlType, false, false, false));
                 }
             }
         for (int d = 0; d < additionsKeys.Count; ++d)
@@ -303,10 +303,10 @@ public class FieldDefs
 
                 str += d.Key + ":" + WhiteSpace(longestKeys[categoryIndex] - d.Key.Length) + "  ";
 
-                string formattedVal = d.Value.typeDefault;
+                string formattedVal = d.Value.sqlTypeDefault;
 
                 // If it's a LIST, extract the type first.
-                if (d.Value.typeDefault.StartsWith("LIST"))
+                if (d.Value.sqlTypeDefault.StartsWith("LIST"))
                     formattedVal = ExtractLISTType(formattedVal);
 
                 if (formattedVal.StartsWith("VARC"))
@@ -359,7 +359,7 @@ public class FieldDefs
             }
             Console.WriteLine(d.Value.columnName +
                               WhiteSpace(longestKeys[categoryIndex] - d.Value.columnName.Length) + "  " +
-                              d.Value.type.Replace("UNSIGNED", ""));
+                              d.Value.sqlType.Replace("UNSIGNED", ""));
         }
     }
 

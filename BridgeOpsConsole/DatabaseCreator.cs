@@ -88,7 +88,7 @@ public class DatabaseCreator
                 foreach (KeyValuePair<string, Definition> kvp in fieldDefs.defs)
                 {
                     if (kvp.Key.EndsWith(currentKey))
-                        kvp.Value.type = newType;
+                        kvp.Value.sqlType = newType;
                 }
             }
 
@@ -112,7 +112,7 @@ public class DatabaseCreator
                         if (valIndex > -1)
                         {
                             string val = line.Remove(0, valIndex);
-                            string type = def.type;
+                            string type = def.sqlType;
                             bool isList = false;
                             bool readSuccess = false;
                             // First, check to see if the type is a list, extract and remember for later.
@@ -127,12 +127,12 @@ public class DatabaseCreator
                                 if (int.TryParse(val, out iVal) && iVal > 0 && iVal <= 65535)
                                 {
                                     string newVal = "CHAR(" + val + ")";
-                                    if (newVal != def.type && !(isList && "LIST(" + newVal + ")" == def.type))
+                                    if (newVal != def.sqlType && !(isList && "LIST(" + newVal + ")" == def.sqlType))
                                     {
                                         ++valuesChanged;
-                                        def.type = "CHAR(" + val + ")";
+                                        def.sqlType = "CHAR(" + val + ")";
                                         if (stillReadingPrimaryKeys)
-                                            UpdateForeignKeys(key, def.type);
+                                            UpdateForeignKeys(key, def.sqlType);
                                     }
                                     readSuccess = true;
                                 }
@@ -143,36 +143,36 @@ public class DatabaseCreator
                                 if (int.TryParse(val, out iVal) && iVal > 0 && iVal <= 65535)
                                 {
                                     string newVal = "VARCHAR(" + val + ")";
-                                    if (newVal != def.type && !(isList && "LIST(" + newVal + ")" == def.type))
+                                    if (newVal != def.sqlType && !(isList && "LIST(" + newVal + ")" == def.sqlType))
                                     {
                                         ++valuesChanged;
-                                        def.type = "VARCHAR(" + val + ")";
+                                        def.sqlType = "VARCHAR(" + val + ")";
                                         if (stillReadingPrimaryKeys)
-                                            UpdateForeignKeys(key, def.type);
+                                            UpdateForeignKeys(key, def.sqlType);
                                     }
                                     readSuccess = true;
                                 }
                             }
                             else if (fieldDefs.TestIntegralType(val))
                             {
-                                if (val != def.type && !(isList && "LIST(" + val + ")" == def.type))
+                                if (val != def.sqlType && !(isList && "LIST(" + val + ")" == def.sqlType))
                                 {
                                     ++valuesChanged;
-                                    def.type = val;
+                                    def.sqlType = val;
                                     if (stillReadingPrimaryKeys)
-                                        UpdateForeignKeys(key, def.type);
+                                        UpdateForeignKeys(key, def.sqlType);
                                 }
                                 readSuccess = true;
                             }
 
                             if (isList)
-                                def.type = "LIST(" + def.type + ")";
+                                def.sqlType = "LIST(" + def.sqlType + ")";
 
                             if (readSuccess)
                             {
                                 ++valuesRead;
                                 if (showFileReadSuccesses)
-                                    Writer.Affirmative(key + " read as " + def.type);
+                                    Writer.Affirmative(key + " read as " + def.sqlType);
                             }
                             else
                                 Writer.Negative(key + " couldn't be read.");
@@ -206,7 +206,7 @@ public class DatabaseCreator
     public void ResetTypeOverrides()
     {
         foreach (KeyValuePair<string, Definition> def in fieldDefs.defs)
-            def.Value.type = def.Value.typeDefault;
+            def.Value.sqlType = def.Value.sqlTypeDefault;
     }
 
     public void DeleteDatabase()
@@ -405,8 +405,8 @@ public class DatabaseCreator
                 else
                     column += "CREATE TABLE " + fieldDefs.TableName(def.Key) + " (";
                 // UNSIGNED is not supported in SQL Server.
-                column += def.Value.columnName + " " +
-                          (def.Value.type == "BOOLEAN" ? "BIT" : def.Value.type).Replace(" UNSIGNED", "");
+                column += def.Value.columnName + " " + 
+                          (def.Value.sqlType == "BOOLEAN" ? "BIT" : def.Value.sqlType).Replace(" UNSIGNED", "");
 
                 // Auto Increment keys.
                 if (def.Value.autoIncrement)

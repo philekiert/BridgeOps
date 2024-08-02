@@ -1816,7 +1816,7 @@ internal class BridgeOpsAgent
                         if (order[i] == oldColIndex)
                         {
                             order.RemoveAt(i);
-                            --order[i];
+                            --i;
                         }
                         else if (order[i] > oldColIndex)
                             --order[i];

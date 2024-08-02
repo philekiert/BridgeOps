@@ -175,6 +175,9 @@ public class ConsoleController
         AddCommand("import organisation parents", ValType.String, menu, ImportOrganisationParents,
                    "Import organisation parents from a specified .csv file. " +
                    "Full file path is required, make sure to read docs before proceeding.");
+        AddCommand("generate test data", ValType.Int, menu, GenerateTestData,
+                   "Outputs C:/Organisations.csv with the specified number of randomly generated organisations, " +
+                   "along with C:/Assets.csv filled by assets with randomly assigned parents.");
 
         // Agent
         menu = MENU_AGENT;
@@ -470,12 +473,67 @@ public class ConsoleController
         return 0;
     }
 
+    private int GenerateTestData()
+    {
+        Writer.Message("If the Organisations.csv and Assets.csv already exist," +
+                       "this will overwrite them. Continue?");
+        if (!Writer.YesNo())
+            return 0;
+
+        string[] parents = new string[] { "Earth Spacedock",
+                                          "Mars Colony",
+                                          "Titan Shipyards",
+                                          "Europa Deep Exploration Centre" };
+        StringBuilder o = new("TEXT,TEXT,TEXT,TEXT\nOrganisation_ID,Parent_ID,Dial_No,Notes\n");
+        StringBuilder a = new("TEXT,TEXT,TEXT\nAsset_ID,Organisation_ID,Notes\n");
+
+        o.AppendLine("Sol Space Agency");
+        o.AppendLine($"{parents[0]},Sol Space Agency");
+        o.AppendLine($"{parents[1]},Sol Space Agency");
+        o.AppendLine($"{parents[2]},Sol Space Agency");
+        o.AppendLine($"{parents[3]},Sol Space Agency");
+
+        string[] orgNotes = new string[] { "Installed with no issues.",
+                                           "Installed on second attempt with no issues.",
+                                           "\"Installed, engineer noted minor packet loss on tests, quality unaffected.\"",
+                                           "\"Installed with packet loss. Quality effected, user happy enough.\"" };
+
+        int assetIndex = 0;
+
+        Random r = new();
+        for (int i = 0; i < commandValInt; ++i)
+        {
+            o.AppendLine($"SSA{i},{parents[r.Next(0, 4)]},{i},{orgNotes[r.Next(0, 4)]}");
+
+            int assets = r.Next(0, 10);
+            for (int j = 0; j < assets; ++j)
+                a.AppendLine($"42-{assetIndex++},SSA{i},Tested and functional at installed location.");
+        }
+
+        try
+        {
+            File.WriteAllText("C:\\Organisations.csv", o.ToString());
+            File.WriteAllText("C:\\Assets.csv", a.ToString());
+        }
+        catch
+        {
+            Writer.Negative("Failed to write files. Run the console as administrator and try again.");
+            return 1;
+        }
+
+        Console.WriteLine();
+        Writer.Affirmative("Files written successfully.");
+
+        return 0;
+    }
+
     // These methods are barely optimised due to time restrictions and how often this feature is likely to be used.
     // Keep "Organisation" and "Asset" capitalised.
     private int ImportOrganisations() { return ImportRecords("Organisation", Glo.Tab.ORGANISATION_ID); }
     private int ImportAssets() { return ImportRecords("Asset", Glo.Tab.ASSET_ID); }
     private int ImportRecords(string table, string primaryKey)
     {
+        commandValString = commandValString.Replace("\"", "");
         if (!File.Exists(commandValString))
         {
             Writer.Negative("File not found.");
@@ -573,73 +631,83 @@ public class ConsoleController
         while (!parser.EndOfData)
         {
             ++rowNum;
-            string[]? row = parser.ReadFields();
-            if (row == null || row.Length != headers.Length)
+            try
             {
-                Writer.Negative("Line " + rowNum + " could not be read.");
-                continue;
-            }
-
-            string[] rowUnchanged = (string[])row.Clone();
-
-            string insertInto = "INSERT INTO " + table + " (";
-            string insertRegisterInto = "INSERT INTO " + table + "Change (";
-            string values = ") VALUES (";
-
-            // Add quotes to text fields.
-            for (int i = 0; i < row.Length; ++i)
-            {
-                if (row[i] == "")   // NULL
-                    row[i] = "NULL";
-                else if (types[i] == "TEXT") // TEXT
-                    row[i] = "'" + row[i].Replace("'", "''") + "'";
-                else if (types[i] == "NUMBER") // NUMBER
-                    row[i] = row[i].Replace("'", "''");
-                else // DATETIME
+                string[]? readFields = parser.ReadFields();
+                string[] row = new string[headers.Length];
+                if (readFields == null)
                 {
-                    long unixTimestamp;
-                    DateTime dateTime;
-                    if (long.TryParse(row[i], out unixTimestamp))
+                    Writer.Negative("Line " + rowNum + " could not be read.");
+                    continue;
+                }
+
+                Array.Copy(readFields, row, readFields.Length);
+
+                string[] rowUnchanged = (string[])row.Clone();
+
+                string insertInto = "INSERT INTO " + table + " (";
+                string insertRegisterInto = "INSERT INTO " + table + "Change (";
+                string values = ") VALUES (";
+
+                // Add quotes to text fields.
+                for (int i = 0; i < row.Length; ++i)
+                {
+                    if (row[i] == "" || row[i] == null)   // NULL
+                        row[i] = "NULL";
+                    else if (types[i] == "TEXT") // TEXT
+                        row[i] = "'" + row[i].Replace("'", "''") + "'";
+                    else if (types[i] == "NUMBER") // NUMBER
+                        row[i] = row[i].Replace("'", "''");
+                    else // DATETIME
                     {
-                        DateTime test = new DateTime(1686830167);
-                        if (unixTimestamp == 0)
-                            row[i] = "NULL";
-                        else
+                        long unixTimestamp;
+                        DateTime dateTime;
+                        if (long.TryParse(row[i], out unixTimestamp))
                         {
-                            DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
-                            row[i] = $"'{SqlAssist.DateTimeToSQLType(dto.DateTime)}'";
+                            DateTime test = new DateTime(1686830167);
+                            if (unixTimestamp == 0)
+                                row[i] = "NULL";
+                            else
+                            {
+                                DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
+                                row[i] = $"'{SqlAssist.DateTimeToSQLType(dto.DateTime)}'";
+                            }
                         }
+                        else if (DateTime.TryParse(row[i], out dateTime))
+                            row[i] = $"'{SqlAssist.DateTimeToSQLType(dateTime)}'";
                     }
-                    else if (DateTime.TryParse(row[i], out dateTime))
-                        row[i] = $"'{SqlAssist.DateTimeToSQLType(dateTime)}'";
+                }
+
+                if (parentPresent)
+                    row[parentIndex] = "NULL";
+
+                string rowString = string.Join(',', row);
+
+                // Create a transaction for the inserts into the main and change tables.
+                StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
+                bldr.Append(insertInto + string.Join(',', headers) + values + rowString + "); ");
+                bldr.Append(insertRegisterInto + string.Join(',', headersRegister) +
+                            values + rowString + registersOn +
+                            "'" + SqlAssist.DateTimeToSQLType(DateTime.Now) + "'); ");
+                bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
+
+                // Attempt insert, and if it fails, store the row for review by the user.
+                if (!dbCreate.SendCommandSQL(bldr.ToString(), true))
+                {
+                    List<string> failedRow = new(rowUnchanged);
+                    failedRow.Add(dbCreate.lastSqlError);
+                    failed.Add(failedRow);
+                    PrintCSVReadDot(false);
+                }
+                else
+                {
+                    ++successes;
+                    PrintCSVReadDot(true);
                 }
             }
-
-            if (parentPresent)
-                row[parentIndex] = "NULL";
-
-            string rowString = string.Join(',', row);
-
-            // Create a transaction for the inserts into the main and change tables.
-            StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
-            bldr.Append(insertInto + string.Join(',', headers) + values + rowString + "); ");
-            bldr.Append(insertRegisterInto + string.Join(',', headersRegister) +
-                        values + rowString + registersOn +
-                        "'" + SqlAssist.DateTimeToSQLType(DateTime.Now) + "'); ");
-            bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
-
-            // Attempt insert, and if it fails, store the row for review by the user.
-            if (!dbCreate.SendCommandSQL(bldr.ToString(), true))
+            catch
             {
-                List<string> failedRow = new(rowUnchanged);
-                failedRow.Add(dbCreate.lastSqlError);
-                failed.Add(failedRow);
-                PrintCSVReadDot(false);
-            }
-            else
-            {
-                ++successes;
-                PrintCSVReadDot(true);
+                Writer.Negative("Line " + rowNum + " could not be read.");
             }
         }
         Console.ForegroundColor = ConsoleColor.White;
@@ -685,6 +753,8 @@ public class ConsoleController
     private int ImportAssetParents() { return ImportRecordParents("Asset", Glo.Tab.ASSET_ID); }
     private int ImportRecordParents(string table, string primaryKey)
     {
+        commandValString = commandValString.Replace("\"", "");
+
         if (!File.Exists(commandValString))
         {
             Writer.Negative("File not found.");
@@ -755,57 +825,69 @@ public class ConsoleController
         while (!parser.EndOfData)
         {
             ++rowNum;
-            string[]? row = parser.ReadFields();
-            if (row == null || row.Length != headers.Length)
+
+            try
+            {
+                string[]? readFields = parser.ReadFields();
+                string[] row = new string[headers.Length];
+                if (readFields == null)
+                {
+                    Writer.Negative("Line " + rowNum + " could not be read.");
+                    continue;
+                }
+
+                Array.Copy(readFields, row, readFields.Length);
+
+                string[] rowUnchanged = (string[])row.Clone();
+
+                for (int i = 0; i < row.Length; ++i)
+                {
+                    if (row[i] == "" || row[i] == null)   // NULL
+                        row[i] = "NULL";
+                    else if (types[i] == "TEXT") // TEXT
+                        row[i] = "'" + row[i].Replace("'", "''") + "'";
+                    else // NUMBER
+                        row[i] = row[i].Replace("'", "''");
+                }
+
+                // Create a transaction for the inserts into the main and change tables.
+                StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
+                bldr.Append("UPDATE " + table +
+                           " SET " + parentColName + " = " + row[parentIndex] +
+                           " WHERE " + primaryKey + " = " + row[idIndex] + "; ");
+                bldr.Append($"INSERT INTO {table}Change " +
+                                   $"({primaryKey}, " +
+                                   $"{parentColName}, " +
+                                   $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
+                                   $"{Glo.Tab.LOGIN_ID}, " +
+                                   $"{Glo.Tab.CHANGE_REASON}, " +
+                                   $"{Glo.Tab.CHANGE_TIME})" +
+                            $"VALUES({row[idIndex]}, " +
+                                   $"{row[parentIndex]}, " +
+                                   $"1, " + // Switch on the register.
+                                   $"1, " + // Admin account should always be 1 after database creation.
+                                   $"'Set parent to imported value.', " +
+                                   $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}'); ");
+                bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
+
+                // Attempt update, and if it fails, store the row for review by the user.
+                if (!dbCreate.SendCommandSQL(bldr.ToString(), true))
+                {
+                    List<string> failedRow = new(rowUnchanged);
+                    failedRow.Add(dbCreate.lastSqlError);
+                    failed.Add(failedRow);
+                    PrintCSVReadDot(false);
+                }
+                else
+                {
+                    ++successes;
+                    PrintCSVReadDot(true);
+                }
+            }
+            catch
             {
                 Writer.Negative("Line " + rowNum + " could not be read.");
                 continue;
-            }
-
-            string[] rowUnchanged = (string[])row.Clone();
-
-            for (int i = 0; i < row.Length; ++i)
-            {
-                if (row[i] == "")   // NULL
-                    row[i] = "NULL";
-                else if (types[i] == "TEXT") // TEXT
-                    row[i] = "'" + row[i].Replace("'", "''") + "'";
-                else // NUMBER
-                    row[i] = row[i].Replace("'", "''");
-            }
-
-            // Create a transaction for the inserts into the main and change tables.
-            StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
-            bldr.Append("UPDATE " + table +
-                       " SET " + parentColName + " = " + row[parentIndex] +
-                       " WHERE " + primaryKey + " = " + row[idIndex] + "; ");
-            bldr.Append($"INSERT INTO {table}Change " +
-                               $"({primaryKey}, " +
-                               $"{parentColName}, " +
-                               $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
-                               $"{Glo.Tab.LOGIN_ID}, " +
-                               $"{Glo.Tab.CHANGE_REASON}, " +
-                               $"{Glo.Tab.CHANGE_TIME})" +
-                        $"VALUES({row[idIndex]}, " +
-                               $"{row[parentIndex]}, " +
-                               $"1, " + // Switch on the register.
-                               $"1, " + // Admin account should always be 1 after database creation.
-                               $"'Set parent to imported value.', " +
-                               $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}'); ");
-            bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
-
-            // Attempt update, and if it fails, store the row for review by the user.
-            if (!dbCreate.SendCommandSQL(bldr.ToString(), true))
-            {
-                List<string> failedRow = new(rowUnchanged);
-                failedRow.Add(dbCreate.lastSqlError);
-                failed.Add(failedRow);
-                PrintCSVReadDot(false);
-            }
-            else
-            {
-                ++successes;
-                PrintCSVReadDot(true);
             }
         }
         Console.ForegroundColor = ConsoleColor.White;
