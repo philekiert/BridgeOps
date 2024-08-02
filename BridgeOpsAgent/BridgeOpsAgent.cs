@@ -1256,6 +1256,7 @@ internal class BridgeOpsAgent
                 else
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             }
+            catch { }
 
         }
         finally
