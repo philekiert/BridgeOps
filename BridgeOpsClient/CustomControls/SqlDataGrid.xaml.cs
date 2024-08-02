@@ -79,6 +79,7 @@ namespace BridgeOpsClient.CustomControls
             dtg.ItemsSource = null;
             dtg.Columns.Clear();
         }
+        public void btnWipe_Click(object sender, EventArgs e) { Wipe(); }
 
         List<Row> rowsBinder = new();
 
