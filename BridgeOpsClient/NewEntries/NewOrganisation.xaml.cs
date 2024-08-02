@@ -56,6 +56,8 @@ namespace BridgeOpsClient
             tabChangeLog.IsEnabled = false;
 
             ApplyPermissions();
+
+            txtOrgID.Focus();
         }
         public NewOrganisation(string id)
         {
@@ -187,7 +189,8 @@ namespace BridgeOpsClient
                     return;
                 }
 
-                Organisation newOrg = new Organisation();
+                Organisation newOrg = new();
+                newOrg.changeReason = ""; // set automatically.
 
                 newOrg.sessionID = App.sd.sessionID;
 
@@ -209,8 +212,6 @@ namespace BridgeOpsClient
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(0);
                 }
-                else
-                    MessageBox.Show("Could not create organisation.");
             }
             else
             {
@@ -281,8 +282,6 @@ namespace BridgeOpsClient
                             MainWindow.pageDatabase.RepeatSearches(0);
                         Close();
                     }
-                    else
-                        MessageBox.Show("Could not edit organisation.");
                 }
             }
             else
@@ -319,8 +318,6 @@ namespace BridgeOpsClient
                     MainWindow.pageDatabase.RepeatSearches(0);
                 Close();
             }
-            else
-                MessageBox.Show("Could not delete organisation.");
         }
 
         // Bring up selected asset on double-click.
@@ -371,8 +368,6 @@ namespace BridgeOpsClient
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
             }
-            else
-                MessageBox.Show("Could not update specified asset.");
         }
 
         private void btnAssetRemove_Click(object sender, RoutedEventArgs e)

@@ -23,6 +23,8 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             ChangeTable();
+
+            cmbTable.Focus();
         }
 
         // Use our own order lists here to allow for recall when switching between tables.

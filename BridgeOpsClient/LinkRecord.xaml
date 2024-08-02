@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="LinkRecord" Height="450" Width="450" MaxHeight="450" MaxWidth="450">
+        Title="LinkRecord" Height="450" Width="450" MaxHeight="450" MaxWidth="450"
+        WindowStartupLocation="CenterOwner">
     <Grid>
         <custom:SqlDataGrid x:Name="dtg"/>
     </Grid>

@@ -21,6 +21,8 @@ namespace BridgeOpsClient
         public NewConferenceType()
         {
             InitializeComponent();
+
+            txtTypeName.Focus();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

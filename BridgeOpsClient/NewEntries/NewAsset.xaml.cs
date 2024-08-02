@@ -47,6 +47,8 @@ namespace BridgeOpsClient
             tabChangeLog.IsEnabled = false;
 
             ApplyPermissions();
+
+            txtAssetID.Focus();
         }
         public NewAsset(string id)
         {
@@ -157,6 +159,7 @@ namespace BridgeOpsClient
                 }
 
                 Asset newAsset = new();
+                newAsset.changeReason = ""; // Set automatically.
 
                 newAsset.sessionID = App.sd.sessionID;
 
@@ -178,8 +181,6 @@ namespace BridgeOpsClient
                     changeMade = true;
                     Close();
                 }
-                else
-                    MessageBox.Show("Could not create asset.");
             }
             else
             {
@@ -246,8 +247,6 @@ namespace BridgeOpsClient
                             MainWindow.pageDatabase.RepeatSearches(1);
                         Close();
                     }
-                    else
-                        MessageBox.Show("Could not edit asset.");
                 }
             }
             else
@@ -268,8 +267,6 @@ namespace BridgeOpsClient
                 changeMade = true;
                 Close();
             }
-            else
-                MessageBox.Show("Could not delete asset.");
         }
 
         private void SqlDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)

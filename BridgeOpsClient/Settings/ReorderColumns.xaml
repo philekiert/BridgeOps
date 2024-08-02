@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        Title="Reorder Columns" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
+        Title="Reorder Columns" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
