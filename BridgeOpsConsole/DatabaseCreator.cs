@@ -415,7 +415,7 @@ public class DatabaseCreator
 
             // Entity Table Strings
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
-                            ", CONSTRAINT fk_ParentOrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) );";
+                            ", CONSTRAINT fk_ParentOrgID FOREIGN KEY (Parent_ID) REFERENCES Organisation (Organisation_ID) );";
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
             login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
                      ", CONSTRAINT nq_Username UNIQUE (Username) );";

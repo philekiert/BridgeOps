@@ -62,7 +62,6 @@ public static class Glo
     public const int SERVER_FORCE_LOGOUT = 3;           // Not yet implemented
 
 
-
     // Console/Agent Function Specifiers
     public const int CONSOLE_CLIENT_LIST = 0;
     public const int CONSOLE_LOGOUT_USER = 1;
