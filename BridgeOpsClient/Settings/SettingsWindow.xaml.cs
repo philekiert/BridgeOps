@@ -44,6 +44,14 @@ namespace BridgeOpsClient
             };
             item.Click += btnColumnRemove_Click;
             dtgColumns.AddContextMenuItem(item, true);
+
+            dtgUsers.AddSeparator(true);
+            item = new MenuItem()
+            {
+                Header = "Logout"
+            };
+            item.Click += btnUserLogOut_Click;
+            dtgUsers.AddContextMenuItem(item, true);
         }
 
         List<string?> columnNames = new();
@@ -352,6 +360,12 @@ namespace BridgeOpsClient
             btnColumnRemove.IsEnabled = Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
                                                                      dtgColumns.GetCurrentlySelectedCell(1));
             ((MenuItem)dtgColumns.mnuData.Items[0]).IsEnabled = btnColumnRemove.IsEnabled;
+        }
+
+        private void dtgUsers_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            btnUserLogOut.IsEnabled = !(dtgUsers.GetCurrentlySelectedID() == App.sd.loginID.ToString());
+            ((MenuItem)dtgUsers.mnuData.Items[0]).IsEnabled = btnUserLogOut.IsEnabled;
         }
 
         private void btnReorder_Click(object sender, RoutedEventArgs e)

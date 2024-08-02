@@ -19,7 +19,8 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <custom:SqlDataGrid x:Name="dtgUsers" Grid.Row="0"
-                                        CustomDoubleClick="dtgUsers_MouseDoubleClick"/>
+                                        CustomDoubleClick="dtgUsers_MouseDoubleClick"
+                                        SelectionChanged="dtgUsers_SelectionChanged"/>
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>

@@ -670,6 +670,11 @@ namespace BridgeOpsClient
                         {
                             MessageBox.Show(PERMISSION_DENIED);
                         }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
+                        {
+                            MessageBox.Show("The record could no longer be found.");
+                            string reason = sr.ReadString(stream);
+                        }
                     }
                     return false;
                 }

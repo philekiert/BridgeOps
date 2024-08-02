@@ -1,10 +1,10 @@
 ﻿<UserControl x:Class="BridgeOpsClient.CustomControls.SqlDataGrid"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
-             mc:Ignorable="d" d:DesignWidth="800">
+             mc:Ignorable="d" d:DesignWidth="800" IsTabStop="False">
     <UserControl.Resources>
         <ContextMenu x:Key="contextColumns" x:Name="contextShowHideColumns" Loaded="contextShowHideColumns_Loaded"/>
     </UserControl.Resources>
@@ -19,7 +19,7 @@
               RequestBringIntoView="dtg_RequestBringIntoView" MouseDoubleClick="dtg_MouseDoubleClick"
               MouseLeftButtonDown="dtg_MouseLeftButtonDown"
               ColumnReordered="dtg_ColumnReordered"
-              KeyDown="dtg_KeyDown">
+              KeyDown="dtg_KeyDown" IsTabStop="False">
         <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
                 <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>
