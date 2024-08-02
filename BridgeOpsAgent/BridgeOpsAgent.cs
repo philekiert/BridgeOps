@@ -1248,8 +1248,15 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            LogError("Couldn't create new contact. See error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            try
+            {
+                LogError("Couldn't create new contact. See error:", e);
+                if (e.Message.Contains("FOREIGN KEY"))
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY);
+                else
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            }
+
         }
         finally
         {
