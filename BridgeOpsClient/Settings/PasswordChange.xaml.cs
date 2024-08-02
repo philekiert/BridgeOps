@@ -35,6 +35,8 @@ namespace BridgeOpsClient
                 lblCurrent.Visibility = Visibility.Collapsed;
                 pwdCurrent.Visibility = Visibility.Collapsed;
             }
+
+            pwdCurrent.Focus();
         }
 
         private void InitialiseFields()

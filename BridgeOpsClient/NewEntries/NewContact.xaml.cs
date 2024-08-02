@@ -119,11 +119,6 @@ namespace BridgeOpsClient
                         MainWindow.pageDatabase.RepeatSearches(2);
                     Close();
                 }
-                else
-                {
-                    // There shouldn't be any errors with insert on this one, as everything is either text or null.
-                    MessageBox.Show("Could not create contact.");
-                }
             }
             else
             {
@@ -187,8 +182,6 @@ namespace BridgeOpsClient
                     changeMade = true;
                     Close();
                 }
-                else
-                    MessageBox.Show("Could not edit contact.");
             }
             else
             {
@@ -208,8 +201,6 @@ namespace BridgeOpsClient
                     MainWindow.pageDatabase.RepeatSearches(2);
                 Close();
             }
-            else
-                MessageBox.Show("Could not delete contact.");
         }
 
         // Check for changes whenever the user interacts with any control.

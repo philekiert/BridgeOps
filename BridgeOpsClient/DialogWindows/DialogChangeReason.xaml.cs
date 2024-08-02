@@ -29,6 +29,8 @@ namespace BridgeOpsClient.DialogWindows
                 DialogResult = false;
                 Close();
             }
+
+            txtReason.Focus();
         }
 
         // Reason correction.

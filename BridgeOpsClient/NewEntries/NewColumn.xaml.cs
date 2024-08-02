@@ -26,6 +26,8 @@ namespace BridgeOpsClient
         public NewColumn()
         {
             InitializeComponent();
+
+            txtColumnName.Focus();
         }
         // Edit
         public NewColumn(string table, string column, ColumnRecord.Column columnDetails)

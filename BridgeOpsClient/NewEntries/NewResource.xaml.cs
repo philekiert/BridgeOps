@@ -25,6 +25,8 @@ namespace BridgeOpsClient
 
             timeAvailableFrom.SetDateTime(new DateTime(2024, 7, 1));
             timeAvailableTo.SetDateTime(new DateTime(2024, 7, 31));
+
+            txtResourceName.Focus();
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)

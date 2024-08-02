@@ -27,6 +27,8 @@ namespace BridgeOpsClient
             GetCheckBoxArray();
 
             btnResetPassword.Visibility = Visibility.Collapsed;
+
+            txtUsername.Focus();
         }
         public NewUser(int id)
         {

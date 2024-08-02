@@ -632,6 +632,10 @@ namespace BridgeOpsClient
                         {
                             MessageBox.Show(PERMISSION_DENIED);
                         }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY)
+                        {
+                            MessageBox.Show("The foreign key could no longer be found.");
+                        }
                     }
                     returnID = "";
                     return false;
@@ -713,6 +717,10 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             MessageBox.Show(PERMISSION_DENIED);
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
+                        {
+                            MessageBox.Show("The record could no longer be found.");
                         }
                     }
                     return false;
@@ -912,6 +920,10 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             MessageBox.Show(PERMISSION_DENIED);
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
+                        {
+                            MessageBox.Show("The record could no longer be found.");
                         }
                     }
                     return false;

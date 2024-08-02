@@ -23,6 +23,8 @@ namespace BridgeOpsClient
             txtIPAddress.Text = Properties.Settings.Default.serverAddress;
             txtPortOutbound.Text = Properties.Settings.Default.portOutbound.ToString();
             txtPortInbound.Text = Properties.Settings.Default.portInbound.ToString();
+
+            txtIPAddress.Focus();
         }
 
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
