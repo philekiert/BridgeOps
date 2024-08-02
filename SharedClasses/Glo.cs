@@ -72,11 +72,12 @@ public static class Glo
     public const int CLIENT_INSUFFICIENT_PERMISSIONS = 1;
     public const int CLIENT_REQUEST_FAILED = 2;
     public const int CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW = 3;
-    public const int CLIENT_REQUEST_SUCCESS = 4;
-    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 5;
-    public const int CLIENT_CONFIRM = 6;
-    public const int CLIENT_CONFIRM_MORE_TO_FOLLOW = 7;
-    public const int CLIENT_CANCEL = 8;
+    public const int CLIENT_REQUEST_FAILED_RECORD_DELETED = 4;
+    public const int CLIENT_REQUEST_SUCCESS = 5;
+    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 6;
+    public const int CLIENT_CONFIRM = 7;
+    public const int CLIENT_CONFIRM_MORE_TO_FOLLOW = 8;
+    public const int CLIENT_CANCEL = 9;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DISABLED = "I used to be an adventurer like you";

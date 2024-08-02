@@ -108,7 +108,7 @@ internal class BridgeOpsAgent
         }
         public void SendResourceChangeNotification()
         {
-            if (!SendNotification(Glo.CLIENT_NEW_RESOURCE))
+            if (!SendNotification(Glo.SERVER_RESOURCES_UPDATED))
                 LogError($"Column record change notification could not be sent to {ipString} " +
                          $"after {notificationSendRetries} retries.");
         }
@@ -466,7 +466,14 @@ internal class BridgeOpsAgent
                 if (initiatorClientID != null && kvp.Key == initiatorClientID)
                     continue;
 
-                Thread notificationThread = new Thread(kvp.Value.SendColumnRecordChangeNotification);
+                Thread notificationThread;
+                if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
+                    notificationThread = new Thread(kvp.Value.SendColumnRecordChangeNotification);
+                else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
+                    notificationThread = new Thread(kvp.Value.SendResourceChangeNotification);
+                else
+                    continue;
+
                 notificationThread.Start();
             }
         }
@@ -504,7 +511,7 @@ internal class BridgeOpsAgent
                 successfulSqlConnection = true;
 
                 // Catches its own exception and logs its own error.
-                
+
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 // Get the column record.
                 columnRecordIntact = GetColumnRecordFromFile();
@@ -1496,12 +1503,13 @@ internal class BridgeOpsAgent
             try
             {
                 com.ExecuteNonQuery();
-            }
-            finally
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (target == Glo.CLIENT_UPDATE_RESOURCE)
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            }
+            catch (Exception e)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             }
         }
         catch (Exception e)
@@ -1511,6 +1519,7 @@ internal class BridgeOpsAgent
         }
         finally
         {
+            stream.Close();
             if (sqlConnect.State == System.Data.ConnectionState.Open)
                 sqlConnect.Close();
         }
@@ -1804,7 +1813,7 @@ internal class BridgeOpsAgent
                     }
 
                     // Fix the column order as required if removing a column.
-                    
+
                     var order = ColumnRecord.GetOrder(req.table);
                     if (order == null)
                         throw new("Error discerning the correct table dictionary being affected by removal.");
