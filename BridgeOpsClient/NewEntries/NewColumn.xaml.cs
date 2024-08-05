@@ -126,7 +126,7 @@ namespace BridgeOpsClient
 
             if (!edit) // If adding.
             {
-                SendReceiveClasses.TableModification mod = new(App.sd.sessionID,
+                SendReceiveClasses.TableModification mod = new(App.sd.sessionID, ColumnRecord.columnRecordID,
                                                                cmbTable.Text, txtColumnName.Text,
                                                                cmbType.Text, allowed);
                 VARCHAR(ref mod);
@@ -141,6 +141,7 @@ namespace BridgeOpsClient
 
                 SendReceiveClasses.TableModification mod =
                     new(App.sd.sessionID,
+                        ColumnRecord.columnRecordID,
                         cmbTable.Text,
                         originalColumn,
                         txtColumnName.Text != originalColumn ? txtColumnName.Text : null,

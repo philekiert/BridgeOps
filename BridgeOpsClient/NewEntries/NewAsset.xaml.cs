@@ -162,6 +162,7 @@ namespace BridgeOpsClient
                 newAsset.changeReason = ""; // Set automatically.
 
                 newAsset.sessionID = App.sd.sessionID;
+                newAsset.columnRecordID = ColumnRecord.columnRecordID;
 
                 newAsset.assetID = txtAssetID.Text;
                 newAsset.organisationID = cmbOrgID.Text.Length == 0 ? null : cmbOrgID.Text;
@@ -197,6 +198,7 @@ namespace BridgeOpsClient
             {
                 Asset asset = new Asset();
                 asset.sessionID = App.sd.sessionID;
+                asset.columnRecordID = ColumnRecord.columnRecordID;
                 asset.assetID = id;
                 List<string> cols;
                 List<string?> vals;

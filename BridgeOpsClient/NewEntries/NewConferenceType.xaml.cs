@@ -30,6 +30,8 @@ namespace BridgeOpsClient
             ConferenceType nct = new();
 
             nct.sessionID = App.sd.sessionID;
+            nct.columnRecordID = ColumnRecord.columnRecordID;
+
             if (txtTypeName.Text.Length == 0)
                 nct.name = null;
             else

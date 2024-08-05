@@ -100,6 +100,7 @@ namespace BridgeOpsClient
                 nc.requireIdBack = requireIdBack;
 
                 nc.sessionID = App.sd.sessionID;
+                nc.columnRecordID = ColumnRecord.columnRecordID;
                 if (txtNotes.Text.Length == 0)
                     nc.notes = null;
                 else
@@ -142,6 +143,7 @@ namespace BridgeOpsClient
             {
                 Contact contact = new Contact();
                 contact.sessionID = App.sd.sessionID;
+                contact.columnRecordID = ColumnRecord.columnRecordID;
                 contact.contactID = idInt;
                 List<string> cols;
                 List<string?> vals;

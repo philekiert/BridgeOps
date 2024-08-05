@@ -55,7 +55,8 @@ namespace BridgeOpsClient.DialogWindows
             }
             else
             {
-                ChangeReasonUpdate update = new ChangeReasonUpdate(App.sd.sessionID, table, changeID, txtReason.Text);
+                ChangeReasonUpdate update = new ChangeReasonUpdate(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                                                   table, changeID, txtReason.Text);
                 if (App.SendUpdate(Glo.CLIENT_UPDATE_CHANGE_REASON, update))
                 {
                     DialogResult = true;

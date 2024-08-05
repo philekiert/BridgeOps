@@ -26,6 +26,8 @@ public static class ColumnRecord
         }
     }
 
+    public static int columnRecordID;
+
     public static string GetPrintName(KeyValuePair<string, Column> col)
     {
         if (col.Value.friendlyName != "")
@@ -246,8 +248,12 @@ public static class ColumnRecord
         try
         {
             string[] lines = columns.Split('\n');
-            // Start at 1, since the first line is an edit warning.
-            int n = 1;
+
+            if (!int.TryParse(lines[0], out columnRecordID))
+                return false;
+
+            // Start at 2, since the first line is the column record ID.
+            int n = 2;
             for (; n < lines.Length; ++n)
             {
                 if (lines[n] == "-")

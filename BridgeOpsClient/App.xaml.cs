@@ -703,7 +703,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        DeleteRequest req = new DeleteRequest(sd.sessionID, table, column, id, isString);
+                        DeleteRequest req = new DeleteRequest(sd.sessionID, ColumnRecord.columnRecordID,
+                                                              table, column, id, isString);
 
                         stream.WriteByte(Glo.CLIENT_DELETE);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
@@ -747,7 +748,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, table, column);
+                        PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, ColumnRecord.columnRecordID,
+                                                                          table, column);
                         stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
                         sr.WriteAndFlush(stream, sr.Serialise(pcs));
                         int response = stream.ReadByte();
@@ -810,8 +812,8 @@ namespace BridgeOpsClient
                     {
                         if (stream != null)
                         {
-                            SelectRequest req = new SelectRequest(sd.sessionID, table, select,
-                                                                  likeColumns, likeValues, conditionals);
+                            SelectRequest req = new SelectRequest(sd.sessionID, ColumnRecord.columnRecordID,
+                                                                  table, select, likeColumns, likeValues, conditionals);
                             stream.WriteByte(Glo.CLIENT_SELECT);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();
@@ -863,8 +865,8 @@ namespace BridgeOpsClient
                     {
                         if (stream != null)
                         {
-                            SelectWideRequest req = new(sd.sessionID, dictionary == null ? new() { "*" } : select,
-                                                        table, value);
+                            SelectWideRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
+                                                        dictionary == null ? new() { "*" } : select, table, value);
                             stream.WriteByte(Glo.CLIENT_SELECT_WIDE);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();
@@ -906,7 +908,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        LinkContactRequest req = new LinkContactRequest(sd.sessionID, organisationID, contactID, unlink);
+                        LinkContactRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
+                                                     organisationID, contactID, unlink);
 
                         stream.WriteByte(Glo.CLIENT_LINK_CONTACT);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
@@ -950,7 +953,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        LinkedContactSelectRequest req = new(sd.sessionID, organisationID);
+                        LinkedContactSelectRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
+                                                             organisationID);
                         stream.WriteByte(Glo.CLIENT_LINKED_CONTACT_SELECT);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         int response = stream.ReadByte();
@@ -992,7 +996,7 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        SelectHistoryRequest req = new(sd.sessionID, table, id);
+                        SelectHistoryRequest req = new(sd.sessionID, ColumnRecord.columnRecordID, table, id);
                         stream.WriteByte(Glo.CLIENT_SELECT_HISTORY);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         int response = stream.ReadByte();
@@ -1033,7 +1037,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        SelectHistoricalRecordRequest req = new(sd.sessionID, table, changeID, recordID);
+                        SelectHistoricalRecordRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
+                                                                table, changeID, recordID);
                         stream.WriteByte(Glo.CLIENT_SELECT_HISTORICAL_RECORD);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         int response = stream.ReadByte();

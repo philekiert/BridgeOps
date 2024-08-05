@@ -138,6 +138,7 @@ namespace BridgeOpsClient
             Login login = new Login();
 
             login.sessionID = App.sd.sessionID;
+            login.columnRecordID = ColumnRecord.columnRecordID;
 
             login.loginID = id;
             login.username = txtUsername.Text;

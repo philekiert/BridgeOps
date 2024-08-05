@@ -281,6 +281,7 @@ namespace SendReceiveClasses
         public enum Intent { Addition, Removal, Modification }
 
         public string sessionID;
+        public int columnRecordID;
         public Intent intent;
         public string table;
         public string column;
@@ -290,9 +291,10 @@ namespace SendReceiveClasses
         public List<string> allowed;
 
         // Removal
-        public TableModification(string sessionID, string table, string column)
+        public TableModification(string sessionID, int columnRecordID, string table, string column)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             intent = Intent.Removal;
             this.table = table;
             this.column = column;
@@ -303,10 +305,11 @@ namespace SendReceiveClasses
         }
 
         // Addition
-        public TableModification(string sessionID, string table, string column,
+        public TableModification(string sessionID, int columnRecordID, string table, string column,
                                  string columnType, List<string> allowed)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             intent = Intent.Addition;
             this.table = table;
             this.column = column;
@@ -317,11 +320,12 @@ namespace SendReceiveClasses
         }
 
         // Modification
-        public TableModification(string sessionID, string table, string column,
+        public TableModification(string sessionID, int columnRecordID, string table, string column,
                                  string? columnRename, string? friendly,
                                  string? columnType, List<string> allowed)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             intent = Intent.Modification;
             this.table = table;
             this.column = column;
@@ -512,17 +516,19 @@ namespace SendReceiveClasses
     struct ColumnOrdering
     {
         public string sessionID;
+        public int columnRecordID;
         public List<int> organisationOrder = new();
         public List<int> assetOrder = new();
         public List<int> contactOrder = new();
         public List<int> conferenceOrder = new();
 
-        public ColumnOrdering(string sessionID, List<int> organisationOrder,
-                                                List<int> assetOrder,
-                                                List<int> contactOrder,
-                                                List<int> conferenceOrder)
+        public ColumnOrdering(string sessionID, int columnRecordID, List<int> organisationOrder,
+                                                                    List<int> assetOrder,
+                                                                    List<int> contactOrder,
+                                                                    List<int> conferenceOrder)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.organisationOrder = organisationOrder;
             this.assetOrder = assetOrder;
             this.contactOrder = contactOrder;
@@ -556,6 +562,7 @@ namespace SendReceiveClasses
     struct Organisation
     {
         public string sessionID;
+        public int columnRecordID;
         public string organisationID;
         public string? parentOrgID;
         public string? dialNo;
@@ -568,12 +575,14 @@ namespace SendReceiveClasses
         public List<bool> additionalNeedsQuotes;
         public string changeReason;
 
-        public Organisation(string sessionID, string organisationID, string? parentOrgID,
+        public Organisation(string sessionID, int columnRecordID,
+                            string organisationID, string? parentOrgID,
                             string? dialNo, string? notes, List<string> additionalCols,
                                                            List<string?> additionalVals,
                                                            List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.organisationID = organisationID;
             this.parentOrgID = parentOrgID;
             this.dialNo = dialNo;
@@ -712,6 +721,7 @@ namespace SendReceiveClasses
     struct Asset
     {
         public string sessionID;
+        public int columnRecordID;
         public string assetID;
         public string? organisationID;
         public string? notes;
@@ -722,12 +732,14 @@ namespace SendReceiveClasses
         public List<bool> additionalNeedsQuotes;
         public string changeReason;
 
-        public Asset(string sessionID, string assetID, string? organisationID, string? notes,
+        public Asset(string sessionID, int columnRecordID,
+                     string assetID, string? organisationID, string? notes,
                      List<string> additionalCols,
                      List<string?> additionalVals,
                      List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.assetID = assetID;
             this.organisationID = organisationID;
             this.notes = notes;
@@ -847,6 +859,7 @@ namespace SendReceiveClasses
     struct Contact
     {
         public string sessionID;
+        public int columnRecordID;
         public int contactID = -1;
         public string? notes;
         public bool notesChanged;
@@ -855,11 +868,13 @@ namespace SendReceiveClasses
         public List<bool> additionalNeedsQuotes;
         public bool requireIdBack;
 
-        public Contact(string sessionID, int contactID, string? notes, List<string> additionalCols,
-                                                                       List<string?> additionalVals,
-                                                                       List<bool> additionalNeedsQuotes)
+        public Contact(string sessionID, int columnRecordID,
+                       int contactID, string? notes, List<string> additionalCols,
+                                                     List<string?> additionalVals,
+                                                     List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.contactID = contactID;
             this.notes = notes;
             this.additionalCols = additionalCols;
@@ -909,13 +924,15 @@ namespace SendReceiveClasses
     struct ConferenceType
     {
         public string sessionID;
+        public int columnRecordID;
         public int typeID;
         public string? name;
         public bool nameChanged;
 
-        public ConferenceType(string sessionID, int typeID, string? name)
+        public ConferenceType(string sessionID, int columnRecordID, int typeID, string? name)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.typeID = typeID;
             this.name = name;
             nameChanged = false;
@@ -951,6 +968,7 @@ namespace SendReceiveClasses
     struct Conference
     {
         public string sessionID;
+        public int columnRecordID;
         public int conferenceID;
         public int typeID;
         public string? title;
@@ -963,12 +981,14 @@ namespace SendReceiveClasses
         public List<string> additionalCols;
         public List<string?> additionalVals;
 
-        public Conference(string sessionID, int conferenceID, int typeID, string? title,
+        public Conference(string sessionID, int columnRecordID,
+                          int conferenceID, int typeID, string? title,
                           DateTime start, DateTime end, TimeSpan buffer,
                           string? organisationID, int? recurrenceID, string? notes, List<string> additionalCols,
                                                                                     List<string?> additionalVals)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.conferenceID = conferenceID;
             this.typeID = typeID;
             this.title = title;
@@ -1009,16 +1029,18 @@ namespace SendReceiveClasses
     struct Resource
     {
         public string sessionID;
+        public int columnRecordID;
         public int resourceID;
         public string? name;
         public DateTime availableFrom;
         public DateTime availableTo;
         public int capacity;
 
-        public Resource(string sessionID, int resourceID, string? name,
+        public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
                         DateTime availableFrom, DateTime availableTo, int capacity)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.resourceID = resourceID;
             this.name = name;
             this.availableFrom = availableFrom;
@@ -1051,6 +1073,7 @@ namespace SendReceiveClasses
     struct Login
     {
         public string sessionID;
+        public int columnRecordID;
         public int loginID;
         public string username;
         public string password;
@@ -1060,10 +1083,12 @@ namespace SendReceiveClasses
         public int deletePermissions;
         public bool enabled;
 
-        public Login(string sessionID, int loginID, string username, string password, bool admin,
+        public Login(string sessionID, int columnRecordID,
+                     int loginID, string username, string password, bool admin,
                      int createPermissions, int editPermissions, int deletePermissions, bool enabled)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.loginID = loginID;
             this.username = username;
             this.password = password;
@@ -1124,12 +1149,14 @@ namespace SendReceiveClasses
     struct PrimaryColumnSelect
     {
         public string sessionID;
+        public int columnRecordID;
         public string table;
         public string column;
 
-        public PrimaryColumnSelect(string sessionID, string table, string column)
+        public PrimaryColumnSelect(string sessionID, int columnRecordID, string table, string column)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.table = table;
             this.column = column;
         }
@@ -1145,19 +1172,21 @@ namespace SendReceiveClasses
     struct SelectRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public string table;
         public List<string> select;
         public List<string> likeColumns;
         public List<string> likeValues;
         public List<Conditional> conditionals;
 
-        public SelectRequest(string sessionID, string table,
+        public SelectRequest(string sessionID, int columnRecordID, string table,
                              List<string> select,
                              List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals)
         {
             /* There is no check here to make sure that columns and values are the equal lengths. Be careful
                to respect this restriction. Agent will throw an exception if they are unequal. */
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.table = table;
             this.select = select;
             this.likeColumns = likeColumns;
@@ -1183,13 +1212,16 @@ namespace SendReceiveClasses
     struct SelectWideRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public List<string> select;
         public string table;
         public string value;
 
-        public SelectWideRequest(string sessionID, List<string> select, string table, string value)
+        public SelectWideRequest(string sessionID, int columnRecordID,
+                                 List<string> select, string table, string value)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.table = table;
             this.select = select;
             this.value = value;
@@ -1248,14 +1280,17 @@ namespace SendReceiveClasses
     struct DeleteRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public string table;
         public string column;
         public string id;
         public bool needsQuotes;
 
-        public DeleteRequest(string sessionID, string table, string column, string id, bool isString)
+        public DeleteRequest(string sessionID, int columnRecordID,
+                             string table, string column, string id, bool isString)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.table = table;
             this.column = column;
             this.id = id;
@@ -1273,13 +1308,16 @@ namespace SendReceiveClasses
     struct LinkContactRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public string organisationID;
         public int contactID;
         public bool unlink;
 
-        public LinkContactRequest(string sessionID, string organisationID, int contactID, bool unlink)
+        public LinkContactRequest(string sessionID, int columnRecordID,
+                                  string organisationID, int contactID, bool unlink)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.organisationID = organisationID;
             this.contactID = contactID;
             this.unlink = unlink;
@@ -1310,11 +1348,13 @@ namespace SendReceiveClasses
     struct LinkedContactSelectRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public string organisationID;
 
-        public LinkedContactSelectRequest(string sessionID, string organisationID)
+        public LinkedContactSelectRequest(string sessionID, int columnRecordID, string organisationID)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.organisationID = organisationID;
         }
 
@@ -1339,12 +1379,14 @@ namespace SendReceiveClasses
     struct SelectHistoryRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public string tableName;
         public string recordID;
 
-        public SelectHistoryRequest(string sessionID, string tableName, string recordID)
+        public SelectHistoryRequest(string sessionID, int columnRecordID, string tableName, string recordID)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.tableName = tableName;
             this.recordID = recordID;
         }
@@ -1375,13 +1417,16 @@ namespace SendReceiveClasses
     struct SelectHistoricalRecordRequest
     {
         public string sessionID;
+        public int columnRecordID;
         public string tableName;
         public string changeID;
         public string recordID;
 
-        public SelectHistoricalRecordRequest(string sessionID, string tableName, string changeID, string recordID)
+        public SelectHistoricalRecordRequest(string sessionID, int columnRecordID,
+                                             string tableName, string changeID, string recordID)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.tableName = tableName;
             this.changeID = changeID;
             this.recordID = recordID;
@@ -1417,13 +1462,16 @@ namespace SendReceiveClasses
     struct ChangeReasonUpdate
     {
         public string sessionID;
+        public int columnRecordID;
         public string tableName;
         public int changeID;
         public string reason;
 
-        public ChangeReasonUpdate(string sessionID, string tableName, int changeID, string reason)
+        public ChangeReasonUpdate(string sessionID, int columnRecordID,
+                                  string tableName, int changeID, string reason)
         {
             this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
             this.tableName = tableName;
             this.changeID = changeID;
             this.reason = reason;

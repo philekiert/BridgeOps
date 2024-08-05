@@ -310,6 +310,7 @@ namespace BridgeOpsClient
                         stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
 
                         SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
+                                                                            ColumnRecord.columnRecordID,
                                                                             organisationOrder,
                                                                             assetOrder,
                                                                             contactOrder,

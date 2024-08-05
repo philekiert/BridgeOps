@@ -280,7 +280,8 @@ namespace BridgeOpsClient
                 return;
             }
 
-            SendReceiveClasses.TableModification mod = new(App.sd.sessionID, table, column);
+            SendReceiveClasses.TableModification mod = new(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                                           table, column);
 
             lock (App.streamLock)
             {

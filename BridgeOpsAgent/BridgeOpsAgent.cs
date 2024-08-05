@@ -24,9 +24,13 @@ internal class BridgeOpsAgent
     static UnicodeEncoding unicodeEncoding = new UnicodeEncoding();
     static SendReceive sr = new SendReceive();
 
+    // int is fine for column version - you'd have to make one update every second for over 130 years with no power
+    // outages or other agent restarts to exhaust all possible values.
+    static int columnRecordID = 0;
+    static string columnRecord = "";
     static bool columnRecordIntact = false;
 
-    const int clientNudgeInterval = /*100_000*/ 10000_000;
+    const int clientNudgeInterval = /*100_000*/ 10_000_000; // Increased for testing only. Revert for deployment.
     const int notificationSendRetries = 3;
     const int maxMissedNudges = 2;
 
@@ -185,11 +189,11 @@ internal class BridgeOpsAgent
         }
     }
     static Dictionary<string, ClientSession> clientSessions = new Dictionary<string, ClientSession>();
-    static bool CheckSessionValidity(string id)
+    static bool CheckSessionValidity(string id, int crID)
     {
         lock (clientSessions)
         {
-            return clientSessions.ContainsKey(id);
+            return clientSessions.ContainsKey(id) && crID == columnRecordID;
         }
     }
     static bool CheckSessionPermission(ClientSession session, int category, int intent)
@@ -203,13 +207,10 @@ internal class BridgeOpsAgent
                                             username, password), sqlConnect);
     }
     // If you need to check the quickly condition, but need the bool outside of scope.
-    static bool CheckSessionValidity(string id, out bool result)
+    static bool CheckSessionValidity(string id, int crID, out bool result)
     {
-        lock (clientSessions)
-        {
-            result = clientSessions.ContainsKey(id);
-            return result;
-        }
+        result = CheckSessionValidity(id, crID);
+        return result;
     }
     static bool CheckSessionPermission(ClientSession session, int category, int intent, out bool result)
     {
@@ -304,6 +305,7 @@ internal class BridgeOpsAgent
 
             SqlDataReader reader = sqlCommand.ExecuteReader(CommandBehavior.Default);
             Dictionary<string, string[]> checkConstraints = new Dictionary<string, string[]>();
+
             while (reader.Read())
             {
                 try
@@ -352,7 +354,7 @@ internal class BridgeOpsAgent
             }
             reader.Close();
 
-            string fileText = "!!! NEVER, EVER, EVER EDIT THIS FILE !!!\n";
+            string fileText = (++columnRecordID).ToString() + "\n^\n";
 
             int[] orderCounts = new int[4]; // Record the column counts for the four tables that require ordering.
 
@@ -425,8 +427,11 @@ internal class BridgeOpsAgent
             AddColumnOrder("Contact", orderCounts[2]);
             AddColumnOrder("Conference", orderCounts[3]);
 
-            // Automatically generates the file if one isn't present.
-            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, fileText.Remove(fileText.Length - 1));
+            columnRecord = fileText.Remove(fileText.Length - 1);
+
+            // Automatically generates a file for debugging if one isn't present.
+            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, columnRecord);
+
             return true;
         }
         catch (Exception e)
@@ -440,18 +445,19 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-    private static bool GetColumnRecordFromFile()
+    private static bool ParseColumnRecord(bool fromFile)
     {
         try
         {
-            if (!ColumnRecord.Initialise(File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD)))
-                throw new Exception("Column record file may be corrupted. Restore from console.");
+            string init = fromFile ? File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD) : columnRecord;
+            if (!ColumnRecord.Initialise(init))
+                throw new Exception();
             else
                 return true;
         }
-        catch (Exception e)
+        catch
         {
-            LogError("Column record could not be initialised, see error:", e);
+            LogError("Column record could not be initialised due to some form of corruption.");
             return false;
         }
     }
@@ -511,10 +517,8 @@ internal class BridgeOpsAgent
                 successfulSqlConnection = true;
 
                 // Catches its own exception and logs its own error.
-
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
-                // Get the column record.
-                columnRecordIntact = GetColumnRecordFromFile();
+                columnRecordIntact = ParseColumnRecord(false);
             }
             catch (Exception e)
             {
@@ -809,7 +813,7 @@ internal class BridgeOpsAgent
             lock (clientSessions)
             {
                 string id = sr.ReadString(stream);
-                if (!CheckSessionValidity(id))
+                if (!CheckSessionValidity(id, columnRecordID))
                 {
                     stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     --pullingColumnRecord;
@@ -822,7 +826,7 @@ internal class BridgeOpsAgent
             if (columnRecordIntact)
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                sr.WriteAndFlush(stream, File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD));
+                sr.WriteAndFlush(stream, columnRecord);
             }
             else
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -843,7 +847,7 @@ internal class BridgeOpsAgent
             lock (clientSessions)
             {
                 string sessionID = sr.ReadString(stream);
-                if (!CheckSessionValidity(sessionID))
+                if (!CheckSessionValidity(sessionID, columnRecordID))
                 {
                     sr.WriteAndFlush(stream, "Failed"); // This will simply fail to be read by the client.
                     return;
@@ -985,7 +989,7 @@ internal class BridgeOpsAgent
             lock (clientSessions)
             {
                 req = sr.Deserialise<PasswordResetRequest>(sr.ReadString(stream));
-                if (!CheckSessionValidity(req.sessionID))
+                if (!CheckSessionValidity(req.sessionID, columnRecordID))
                 {
                     stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     return;
@@ -1038,7 +1042,7 @@ internal class BridgeOpsAgent
     {
         try
         {
-            if (CheckSessionValidity(sr.ReadString(stream)))
+            if (CheckSessionValidity(sr.ReadString(stream), columnRecordID))
             {
                 List<object[]> users = new();
                 lock (clientSessions)
@@ -1149,7 +1153,7 @@ internal class BridgeOpsAgent
                 if (target == Glo.CLIENT_NEW_ORGANISATION)
                 {
                     Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
@@ -1157,7 +1161,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_ASSET)
                 {
                     Asset newRow = sr.Deserialise<Asset>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert(clientSessions[newRow.sessionID].loginID);
@@ -1165,7 +1169,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_CONTACT)
                 {
                     Contact newRow = sr.Deserialise<Contact>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
@@ -1173,7 +1177,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_CONFERENCE_TYPE)
                 {
                     ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
@@ -1181,7 +1185,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_CONFERENCE)
                 {
                     Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
@@ -1189,7 +1193,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_RESOURCE)
                 {
                     Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RESOURCES,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
@@ -1197,7 +1201,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_LOGIN)
                 {
                     Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_USER_ACC_MGMT,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
@@ -1274,7 +1278,7 @@ internal class BridgeOpsAgent
             sqlConnect.Open();
             PrimaryColumnSelect pcs = sr.Deserialise<PrimaryColumnSelect>(sr.ReadString(stream));
 
-            if (!CheckSessionValidity(pcs.sessionID))
+            if (!CheckSessionValidity(pcs.sessionID, pcs.columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1314,7 +1318,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             SelectRequest req = sr.Deserialise<SelectRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1368,7 +1372,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             SelectWideRequest req = sr.Deserialise<SelectWideRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1434,65 +1438,65 @@ internal class BridgeOpsAgent
             {
                 if (target == Glo.CLIENT_UPDATE_ORGANISATION)
                 {
-                    Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    Organisation update = sr.Deserialise<Organisation>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
-                        com.CommandText = newRow.SqlUpdate(clientSessions[newRow.sessionID].loginID);
+                        com.CommandText = update.SqlUpdate(clientSessions[update.sessionID].loginID);
                 }
                 else if (target == Glo.CLIENT_UPDATE_ASSET)
                 {
-                    Asset newUpdate = sr.Deserialise<Asset>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    Asset update = sr.Deserialise<Asset>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
-                        com.CommandText = newUpdate.SqlUpdate(clientSessions[newUpdate.sessionID].loginID);
+                        com.CommandText = update.SqlUpdate(clientSessions[update.sessionID].loginID);
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONTACT)
                 {
-                    Contact newUpdate = sr.Deserialise<Contact>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_RECORDS, edit,
+                    Contact update = sr.Deserialise<Contact>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
-                        com.CommandText = newUpdate.SqlUpdate();
+                        com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
                 {
-                    ConferenceType newUpdate = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
+                    ConferenceType update = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
                         out permission))
-                        com.CommandText = newUpdate.SqlUpdate();
+                        com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
                 {
                     // Make sure, when you get around to implementing this, that you check for permissions (as above).
-                    Conference newUpdate = sr.Deserialise<Conference>(sr.ReadString(stream));
-                    //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                    //    com.CommandText = newRow.SqlUpdate();
+                    Conference update = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    //if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid))
+                    //    com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_RESOURCE)
                 {
                     // Make sure, when you get around to implementing this, that you check for permissions (as above).
-                    Resource newUpdate = sr.Deserialise<Resource>(sr.ReadString(stream));
-                    //if (CheckSessionValidity(newRow.sessionID, out sessionValid))
-                    //    com.CommandText = newRow.SqlUpdate();
+                    Resource update = sr.Deserialise<Resource>(sr.ReadString(stream));
+                    //if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid))
+                    //    com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_LOGIN)
                 {
-                    Login newUpdate = sr.Deserialise<Login>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
+                    Login update = sr.Deserialise<Login>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
                         out permission))
-                        com.CommandText = newUpdate.SqlUpdate();
+                        com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_CHANGE_REASON)
                 {
-                    ChangeReasonUpdate newUpdate = sr.Deserialise<ChangeReasonUpdate>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newUpdate.sessionID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newUpdate.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
+                    ChangeReasonUpdate update = sr.Deserialise<ChangeReasonUpdate>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_USER_ACC_MGMT, edit,
                         out permission))
-                        com.CommandText = newUpdate.SqlUpdate();
+                        com.CommandText = update.SqlUpdate();
                 }
             }
 
@@ -1515,7 +1519,7 @@ internal class BridgeOpsAgent
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             }
-            catch (Exception e)
+            catch
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             }
@@ -1540,7 +1544,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             DeleteRequest req = sr.Deserialise<DeleteRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1596,7 +1600,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             LinkContactRequest req = sr.Deserialise<LinkContactRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1638,7 +1642,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             LinkedContactSelectRequest req = sr.Deserialise<LinkedContactSelectRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1668,7 +1672,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             SelectHistoryRequest req = sr.Deserialise<SelectHistoryRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1703,7 +1707,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             SelectHistoricalRecordRequest req = sr.Deserialise<SelectHistoricalRecordRequest>(sr.ReadString(stream));
-            if (!CheckSessionValidity(req.sessionID))
+            if (!CheckSessionValidity(req.sessionID, columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                 return;
@@ -1792,7 +1796,7 @@ internal class BridgeOpsAgent
 
             lock (clientSessions)
             {
-                if (!CheckSessionValidity(req.sessionID))
+                if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
                 {
                     stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     return;
@@ -1842,10 +1846,12 @@ internal class BridgeOpsAgent
                     // making additions.
                     order.Add(order.Count);
 
-                    ColumnOrdering colOrder = new ColumnOrdering("", ColumnRecord.organisationOrder,
-                                                                     ColumnRecord.assetOrder,
-                                                                     ColumnRecord.contactOrder,
-                                                                     ColumnRecord.conferenceOrder);
+                    // We'll need to make a transaction with both the removal and order change, so create the second
+                    // command here.
+                    ColumnOrdering colOrder = new ColumnOrdering("", 0, ColumnRecord.organisationOrder,
+                                                                        ColumnRecord.assetOrder,
+                                                                        ColumnRecord.contactOrder,
+                                                                        ColumnRecord.conferenceOrder);
                     orderUpdateCommand = colOrder.SqlCommand();
                 }
 
@@ -1888,7 +1894,9 @@ internal class BridgeOpsAgent
             {
                 // Update the column record. Error message printed in both functions if this fails.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
-                columnRecordIntact = GetColumnRecordFromFile();
+                columnRecordIntact = ParseColumnRecord(false);
+
+                ++columnRecordID;
 
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst
@@ -1930,7 +1938,7 @@ internal class BridgeOpsAgent
 
             lock (clientSessions)
             {
-                if (!CheckSessionValidity(req.sessionID))
+                if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
                 {
                     stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     return;
@@ -1972,7 +1980,7 @@ internal class BridgeOpsAgent
             {
                 // Update the column record. Error message printed in both functions if this fails.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
-                columnRecordIntact = GetColumnRecordFromFile();
+                columnRecordIntact = ParseColumnRecord(false);
 
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst

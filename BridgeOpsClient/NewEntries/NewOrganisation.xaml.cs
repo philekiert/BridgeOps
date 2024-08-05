@@ -193,6 +193,7 @@ namespace BridgeOpsClient
                 newOrg.changeReason = ""; // set automatically.
 
                 newOrg.sessionID = App.sd.sessionID;
+                newOrg.columnRecordID = ColumnRecord.columnRecordID;
 
                 newOrg.organisationID = txtOrgID.Text;
                 newOrg.parentOrgID = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
@@ -228,6 +229,7 @@ namespace BridgeOpsClient
             {
                 Organisation org = new Organisation();
                 org.sessionID = App.sd.sessionID;
+                org.columnRecordID = ColumnRecord.columnRecordID;
                 org.organisationID = id;
                 List<string> cols;
                 List<string?> vals;
@@ -360,7 +362,8 @@ namespace BridgeOpsClient
             if (assetID == null)
                 return;
 
-            Asset asset = new Asset(App.sd.sessionID, assetID, id, null, new(), new(), new());
+            Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                    assetID, id, null, new(), new(), new());
             asset.organisationIdChanged = true;
             asset.changeReason = "Added to organisation " + id + ".";
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
@@ -378,7 +381,8 @@ namespace BridgeOpsClient
                 MessageBox.Show("Could not discern asset ID from record.");
                 return;
             }
-            Asset asset = new Asset(App.sd.sessionID, assetID, null, null, new(), new(), new());
+            Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                    assetID, null, null, new(), new(), new());
             asset.organisationIdChanged = true;
             asset.changeReason = "Removed from organisation " + id + ".";
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))

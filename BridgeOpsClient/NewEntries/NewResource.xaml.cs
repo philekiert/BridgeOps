@@ -34,6 +34,7 @@ namespace BridgeOpsClient
             Resource nr = new Resource();
 
             nr.sessionID = App.sd.sessionID;
+            nr.columnRecordID = ColumnRecord.columnRecordID;
 
             DateTime from = timeAvailableFrom.GetDateTime();
             DateTime to = timeAvailableTo.GetDateTime();
