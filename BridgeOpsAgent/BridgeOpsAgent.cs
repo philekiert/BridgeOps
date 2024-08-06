@@ -1328,7 +1328,18 @@ internal class BridgeOpsAgent
                 throw new Exception("Value lists not of equal length.");
             req.Prepare();
 
-            string command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
+            // For a historical search, we'll want to build  our commands a little differently. First we need to get a
+            // list of unique IDs.
+            bool historical = req.includeHistory && (req.table == "Organisation" || req.table == "Asset");
+            string command = "";
+            if (historical)
+                command = "SELECT DISTINCT " + (req.table == "Organisation" ?
+                                                Glo.Tab.ORGANISATION_ID :
+                                                Glo.Tab.ASSET_ID)
+                                                + " FROM " + req.table + "Change";
+            else
+                command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
+
             List<string> conditions = new();
             if (req.likeColumns.Count > 0)
             {
@@ -1347,6 +1358,11 @@ internal class BridgeOpsAgent
                 if (conditions.Count > 0)
                     command += " WHERE " + string.Join(" AND ", conditions);
             }
+
+            if (historical)
+                command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
+                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
+                          " IN (" + command + ");";
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
 
@@ -1394,7 +1410,16 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            string command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
+            bool historical = req.includeHistory && (req.table == "Organisation" || req.table == "Asset");
+            string command = "";
+            if (historical)
+                command = "SELECT DISTINCT " + (req.table == "Organisation" ?
+                                                Glo.Tab.ORGANISATION_ID :
+                                                Glo.Tab.ASSET_ID)
+                                                + " FROM " + req.table + "Change";
+            else
+                command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
+
             List<string> conditions = new();
             foreach (KeyValuePair<string, ColumnRecord.Column> kvp in columns)
             {
@@ -1403,6 +1428,11 @@ internal class BridgeOpsAgent
             }
 
             command += " WHERE " + string.Join(" OR ", conditions);
+
+            if (historical)
+                command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
+                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
+                          " IN (" + command + ");";
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
 

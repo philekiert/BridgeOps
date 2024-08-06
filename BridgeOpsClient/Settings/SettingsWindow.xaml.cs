@@ -68,8 +68,8 @@ namespace BridgeOpsClient
             if (App.Select("Login", new List<string>() { Glo.Tab.LOGIN_ID,
                                                          Glo.Tab.LOGIN_USERNAME,
                                                          Glo.Tab.LOGIN_ADMIN,
-                                                         Glo.Tab.LOGIN_ENABLED},
-                out columnNames, out rows))
+                                                         Glo.Tab.LOGIN_ENABLED },
+                out columnNames, out rows, false))
             {
                 columnNames.Add("Status");
                 columnNames[2] = "Type";
@@ -141,7 +141,7 @@ namespace BridgeOpsClient
                                    new() { Glo.Tab.LOGIN_ID },
                                    new() { id.ToString() },
                                    new() { SendReceiveClasses.Conditional.Equals },
-                                   out columnNames, out rows))
+                                   out columnNames, out rows, false))
                     {
                         if (rows.Count > 0)
                         {

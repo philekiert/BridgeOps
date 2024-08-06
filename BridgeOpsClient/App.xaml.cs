@@ -316,7 +316,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.ORGANISATION_ID },
                            new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows))
+                           out columnNames, out rows, false))
             {
                 if (rows.Count > 0)
                 {
@@ -357,7 +357,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.ASSET_ID },
                            new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows))
+                           out columnNames, out rows, false))
             {
                 if (rows.Count > 0)
                 {
@@ -389,7 +389,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.CONTACT_ID },
                            new List<string> { id.ToString() },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows))
+                           out columnNames, out rows, false))
             {
                 if (rows.Count > 0)
                 {
@@ -470,7 +470,7 @@ namespace BridgeOpsClient
 
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (SelectAll("Resource", out columnNames, out rows))
+            if (SelectAll("Resource", out columnNames, out rows, false))
             {
                 try
                 {
@@ -773,26 +773,27 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows)
+        public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows,
+                                     bool historical)
         {
-            return Select(table, new List<string> { "*" }, new(), new(), new(), out columnNames, out rows);
+            return Select(table, new List<string> { "*" }, new(), new(), new(), out columnNames, out rows, historical);
         }
         public static bool SelectAll(string table, string likeColumn, string likeValue, Conditional conditional,
-                                     out List<string?> columnNames, out List<List<object?>> rows)
+                                     out List<string?> columnNames, out List<List<object?>> rows, bool historical)
         {
             return Select(table, new List<string> { "*" },
                           new List<string> { likeColumn }, new List<string> { likeValue },
                           new List<Conditional> { conditional },
-                          out columnNames, out rows);
+                          out columnNames, out rows, historical);
         }
         public static bool Select(string table, List<string> select,
-                                  out List<string?> columnNames, out List<List<object?>> rows)
+                                  out List<string?> columnNames, out List<List<object?>> rows, bool historical)
         {
-            return Select(table, select, new(), new(), new(), out columnNames, out rows);
+            return Select(table, select, new(), new(), new(), out columnNames, out rows, historical);
         }
         public static bool Select(string table, List<string> select,
                                   List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
-                                  out List<string?> columnNames, out List<List<object?>> rows)
+                                  out List<string?> columnNames, out List<List<object?>> rows, bool historical)
         {
             // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
             // the columns must be stated in the correct order when populating the DataInputTable.
@@ -813,7 +814,8 @@ namespace BridgeOpsClient
                         if (stream != null)
                         {
                             SelectRequest req = new SelectRequest(sd.sessionID, ColumnRecord.columnRecordID,
-                                                                  table, select, likeColumns, likeValues, conditionals);
+                                                                  table, select, likeColumns, likeValues, conditionals,
+                                                                  historical);
                             stream.WriteByte(Glo.CLIENT_SELECT);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();
@@ -847,7 +849,8 @@ namespace BridgeOpsClient
         }
 
         public static bool SelectWide(string table, string value,
-                                      out List<string?> columnNames, out List<List<object?>> rows)
+                                      out List<string?> columnNames, out List<List<object?>> rows,
+                                      bool historical)
         {
             // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
             // the columns must be stated in the correct order when populating the DataInputTable.
@@ -866,7 +869,8 @@ namespace BridgeOpsClient
                         if (stream != null)
                         {
                             SelectWideRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
-                                                        dictionary == null ? new() { "*" } : select, table, value);
+                                                        dictionary == null ? new() { "*" } : select, table, value,
+                                                        historical);
                             stream.WriteByte(Glo.CLIENT_SELECT_WIDE);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();

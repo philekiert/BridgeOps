@@ -102,7 +102,8 @@ namespace BridgeOpsClient
         }
 
         // Last search variables for updating the SqlDataGrid when a change is made by the user.
-        bool lastWideSearch = false;
+        bool lastSearchWide = false;
+        bool lastSearchHistorical = false;
         List<string> lastSearchColumns = new();
         List<string> lastSearchValues = new();
         List<Conditional> lastSearchConditionals = new();
@@ -123,13 +124,13 @@ namespace BridgeOpsClient
             {
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (lastWideSearch && App.SelectWide(table, txtSearch.Text,
-                                                     out columnNames, out rows))
+                if (lastSearchWide && App.SelectWide(table, txtSearch.Text,
+                                                     out columnNames, out rows, lastSearchHistorical))
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
                 else if (App.Select(cmbTable.Text,
                                     new List<string> { "*" },
                                     lastSearchColumns, lastSearchValues, lastSearchConditionals,
-                                    out columnNames, out rows))
+                                    out columnNames, out rows, lastSearchHistorical))
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
             }
         }
@@ -145,6 +146,8 @@ namespace BridgeOpsClient
         }
         private void btnSearch_Click(object sender, RoutedEventArgs e, int identity)
         {
+            bool historical = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
             Dictionary<string, ColumnRecord.Column> tableColDefs;
             Dictionary<string, string> nameReversals;
             if (cmbTable.Text == "Organisation")
@@ -192,9 +195,9 @@ namespace BridgeOpsClient
             if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                            new List<string> { "*" },
                            selectColumns, selectValues, conditionals,
-                           out columnNames, out rows))
+                           out columnNames, out rows, historical))
             {
-                lastWideSearch = false;
+                lastSearchWide = false;
                 lastSearchColumns = selectColumns;
                 lastSearchValues = selectValues;
                 lastSearchConditionals = conditionals;
@@ -208,6 +211,8 @@ namespace BridgeOpsClient
         // Wide search on either enter or click.
         private void WideSearch(int identity)
         {
+            bool historical = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
             Dictionary<string, ColumnRecord.Column> tableColDefs;
             Dictionary<string, string> nameReversals;
             if (identity == 0) // Organisation
@@ -230,9 +235,9 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Needs changing in RepeatSearch() as well if adjusted.
-                               out columnNames, out rows))
+                               out columnNames, out rows, historical))
             {
-                lastWideSearch = true;
+                lastSearchWide = true;
                 lastWideValue = txtSearch.Text;
                 lastColumnDefinitions = tableColDefs;
 
@@ -286,6 +291,8 @@ namespace BridgeOpsClient
             }
 
             txtSearch.Text = "";
+
+            btnClear.IsEnabled = false;
         }
 
         // Bring up selected organisation on double-click.

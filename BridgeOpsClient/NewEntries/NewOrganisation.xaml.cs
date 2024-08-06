@@ -133,7 +133,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_ID, id, Conditional.Equals, out columnNames, out rows))
+            if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_ID, id, Conditional.Equals, out columnNames, out rows, false))
                 dtgAssets.Update(ColumnRecord.asset, columnNames, rows, Glo.Tab.ORGANISATION_ID);
         }
         public void PopulateContacts()

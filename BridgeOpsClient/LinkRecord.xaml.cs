@@ -36,7 +36,7 @@ namespace BridgeOpsClient
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (App.SelectAll(table, out columnNames, out rows))
+            if (App.SelectAll(table, out columnNames, out rows, false))
             {
                 dtg.Update(columns, columnNames, rows);
             }

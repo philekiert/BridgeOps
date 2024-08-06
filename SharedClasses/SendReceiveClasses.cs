@@ -1178,10 +1178,12 @@ namespace SendReceiveClasses
         public List<string> likeColumns;
         public List<string> likeValues;
         public List<Conditional> conditionals;
+        public bool includeHistory;
 
         public SelectRequest(string sessionID, int columnRecordID, string table,
                              List<string> select,
-                             List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals)
+                             List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
+                             bool includeHistory)
         {
             /* There is no check here to make sure that columns and values are the equal lengths. Be careful
                to respect this restriction. Agent will throw an exception if they are unequal. */
@@ -1192,6 +1194,7 @@ namespace SendReceiveClasses
             this.likeColumns = likeColumns;
             this.likeValues = likeValues;
             this.conditionals = conditionals;
+            this.includeHistory = includeHistory;
         }
 
         public void Prepare()
@@ -1216,15 +1219,18 @@ namespace SendReceiveClasses
         public List<string> select;
         public string table;
         public string value;
+        public bool includeHistory;
 
         public SelectWideRequest(string sessionID, int columnRecordID,
-                                 List<string> select, string table, string value)
+                                 List<string> select, string table, string value,
+                                 bool includeHistory)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
             this.table = table;
             this.select = select;
             this.value = value;
+            this.includeHistory = includeHistory;
         }
 
         public void Prepare()
