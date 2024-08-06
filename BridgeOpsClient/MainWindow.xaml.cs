@@ -139,7 +139,7 @@ namespace BridgeOpsClient
             if (ColumnRecord.resource["Available_To"].friendlyName != "")
                 newResource.lblAvailableTo.Content = ColumnRecord.resource["Available_To"].friendlyName;
 
-            newResource.txtResourceName.MaxLength = ColumnRecord.resource["Resource_ID"].restriction;
+            newResource.txtResourceName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.resource["Resource_ID"].restriction);
 
             newResource.Show();
         }
@@ -151,7 +151,7 @@ namespace BridgeOpsClient
             if (ColumnRecord.conferenceType["Type_Name"].friendlyName != "")
                 newResource.lblTypeName.Content = ColumnRecord.conferenceType["Type_Name"].friendlyName;
 
-            newResource.txtTypeName.MaxLength = ColumnRecord.conferenceType["Type_Name"].restriction;
+            newResource.txtTypeName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.conferenceType["Type_Name"].restriction);
 
             newResource.Show();
         }
@@ -212,12 +212,10 @@ namespace BridgeOpsClient
         public void ToggleLogInOut(bool loggedIn)
         {
             // This can fail if only the login window is visible, no big deal and no need to report.
-            try
-            {
+            if (menuUserLogIn != null)
                 menuUserLogIn.IsEnabled = !loggedIn;
+            if (menuUserLogOut != null)
                 menuUserLogOut.IsEnabled = loggedIn;
-            }
-            catch { }
         }
 
         /* This is surely needlessly verbose, will optimise later if time allows. Removing and re-adding the columns

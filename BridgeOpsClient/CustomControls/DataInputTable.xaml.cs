@@ -27,10 +27,10 @@ namespace BridgeOpsClient.CustomControls
         {
             public string name;
             public string type;
-            public int restriction;
+            public long restriction;
             public string? value = "";
 
-            public ColValue(string name, string type, int restriction)
+            public ColValue(string name, string type, long restriction)
             {
                 this.name = name;
                 this.type = type;
@@ -116,7 +116,7 @@ namespace BridgeOpsClient.CustomControls
                             txtInput.SetValue(Grid.ColumnProperty, 1);
                             txtInput.SetValue(Grid.RowProperty, i);
                             if (ColumnRecord.IsTypeString(col.Value))
-                                txtInput.MaxLength = col.Value.restriction;
+                                txtInput.MaxLength = Glo.Fun.LongToInt(col.Value.restriction);
 #pragma warning disable CS8622
                             txtInput.TextChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
@@ -242,10 +242,10 @@ namespace BridgeOpsClient.CustomControls
                             cv.value = input;
                         else // Some sort of INT and needs checking against restriction.
                         {
-                            int value;
-                            if (!int.TryParse(input, out value) || value < 0 || value > cv.restriction)
+                            long value;
+                            if (!long.TryParse(input, out value) || value < 0 || value > cv.restriction)
                                 disallowed.Add(cv.name.Replace('_', ' ') + " must be a whole number lower than " +
-                                               cv.restriction.ToString() + ";");
+                                               cv.restriction.ToString() + ".");
                             else
                                 cv.value = input;
                         }

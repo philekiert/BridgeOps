@@ -294,8 +294,12 @@ namespace BridgeOpsClient
         public static void SessionInvalidated()
         {
             sd.sessionID = ""; // Tells the app that it's no longer logged in.
-            ((MainWindow)Current.MainWindow).ToggleLogInOut(false);
-            MessageBox.Show("Session is no longer valid. Please copy any unsaved work, then log out and back in.");
+            if (mainWindow != null)
+            {
+                mainWindow.ToggleLogInOut(false);
+                if (mainWindow.IsLoaded)
+                    MessageBox.Show("Session is no longer valid. Please copy any unsaved work, then log out and back in.");
+            }
         }
 
         public static bool EditOrganisation(string id)

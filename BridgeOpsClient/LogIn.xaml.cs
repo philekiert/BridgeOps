@@ -115,7 +115,7 @@ namespace BridgeOpsClient
                                     "minute. If the problem does not resolve itself, contact the software " +
                                     "administrator.");
                 else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DISABLED)
-                    MessageBox.Show("Account disabled, please speak to your administrator.");
+                    MessageBox.Show("Account disabled, please speak to your administrator.");   
                 else
                     MessageBox.Show("Could not connect to Agent.");
 

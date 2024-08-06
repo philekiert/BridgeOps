@@ -107,9 +107,9 @@ namespace BridgeOpsClient
             ditOrganisation.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtOrgID.MaxLength = ColumnRecord.organisation["Organisation_ID"].restriction;
-            txtDialNo.MaxLength = ColumnRecord.organisation["Dial_No"].restriction;
-            txtNotes.MaxLength = ColumnRecord.organisation["Notes"].restriction;
+            txtOrgID.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation["Organisation_ID"].restriction);
+            txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation["Dial_No"].restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation["Notes"].restriction);
 
             // Implement friendly names.
             if (ColumnRecord.organisation["Organisation_ID"].friendlyName != "")

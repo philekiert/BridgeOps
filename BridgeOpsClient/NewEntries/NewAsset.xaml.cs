@@ -93,8 +93,8 @@ namespace BridgeOpsClient
             ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtAssetID.MaxLength = ColumnRecord.asset["Asset_ID"].restriction;
-            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+            txtAssetID.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset["Asset_ID"].restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset["Notes"].restriction);
 
             // Implement friendly names.
             if (ColumnRecord.asset["Asset_ID"].friendlyName != "")

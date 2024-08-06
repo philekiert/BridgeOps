@@ -68,9 +68,9 @@ namespace BridgeOpsClient
         private void InitialiseFields()
         {
             // Implement max length. Max lengths in the DataInputTable are set automatically.
-            txtUsername.MaxLength = ColumnRecord.login["Username"].restriction;
-            txtPassword.MaxLength = ColumnRecord.login["Password"].restriction;
-            txtPasswordConfirm.MaxLength = ColumnRecord.login["Password"].restriction;
+            txtUsername.MaxLength = Glo.Fun.LongToInt(ColumnRecord.login["Username"].restriction);
+            txtPassword.MaxLength = Glo.Fun.LongToInt(ColumnRecord.login["Password"].restriction);
+            txtPasswordConfirm.MaxLength = Glo.Fun.LongToInt(ColumnRecord.login["Password"].restriction);
 
             // I don't think there's any reason to implement friendly names for user accounts. If they're added, they
             // just won't do anything, and I think that's fine.

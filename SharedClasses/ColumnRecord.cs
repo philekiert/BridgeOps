@@ -13,11 +13,11 @@ public static class ColumnRecord
     {
         // column name is stored as the key in Dictionary
         public string type;
-        public int restriction; // Only for character strings
+        public long restriction; // Only for character strings
         public string[] allowed; // Allowed values, only ever present in user-added columns
         public string friendlyName;
 
-        public Column(string type, int restriction, string[] allowed, string friendlyName)
+        public Column(string type, long restriction, string[] allowed, string friendlyName)
         {
             this.type = type;
             this.restriction = restriction;
@@ -279,7 +279,7 @@ public static class ColumnRecord
 
                 // Type and restriction will be corrected in a sec.
                 string type = restriction;
-                int max = 0;
+                long max = 0;
 
                 // If type is text, change type name and set max length.
                 int r;
@@ -292,6 +292,8 @@ public static class ColumnRecord
                     max = 255;
                 else if (type == "SMALLINT")
                     max = 32_767;
+                else if (type == "BIGINT")
+                    max = 9_223_372_036_854_775_807;
                 else if (type == "INT" || type == "TEXT")
                     max = 2_147_483_647;
                 // else max remains 0 for dates.

@@ -61,6 +61,8 @@
                           Click="mnuCopy_Click" InputGestureText="Ctrl+C"/>
                 <MenuItem x:Name="mnuCopyWithHeaders" Header="Copy Including Headers"
                           Click="mnuCopyWithHeaders_Click" InputGestureText="Ctrl+Shift+C"/>
+                <MenuItem x:Name="mnuExportSpreadsheet" Header="Export Spreadsheet"
+                          Click="mnuExportSpreadsheet_Click"/>
             </ContextMenu>
         </DataGrid.ContextMenu>
     </DataGrid>

@@ -220,5 +220,10 @@ public static class Glo
             IPAddress.TryParse(ip, out clientIP);
             return clientIP;
         }
+
+        public static int LongToInt(long val)
+        {
+            return val > int.MaxValue ? int.MaxValue : (int)val;
+        }
     }
 }

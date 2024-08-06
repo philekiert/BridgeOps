@@ -66,7 +66,7 @@ namespace BridgeOpsClient
             ditContact.Initialise(ColumnRecord.orderedContact, "Contact");
 
             // Implement max length. Max lengths in the DataInputTable are set automatically.
-            txtNotes.MaxLength = ColumnRecord.asset["Notes"].restriction;
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset["Notes"].restriction);
 
             // Implemement friendly name.
             if (ColumnRecord.contact["Notes"].friendlyName != "")

@@ -15,8 +15,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ClosedXML.Excel;
 using static BridgeOpsClient.CustomControls.SqlDataGrid;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+
 
 namespace BridgeOpsClient.CustomControls
 {
@@ -110,7 +112,6 @@ namespace BridgeOpsClient.CustomControls
 
             int count = 0;
 
-            DataGridTextColumn? notes = null; // We want to add this one last.
             foreach (string? s in columnNames)
             {
                 DataGridTextColumn header = new();
@@ -153,18 +154,12 @@ namespace BridgeOpsClient.CustomControls
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                 }
-                if (s == Glo.Tab.NOTES) // We want notes at the end at the moment.
-                    notes = header;
-                else if (s != null && columnstoOmit.ContainsKey(s))
+                if (s != null && columnstoOmit.ContainsKey(s))
                     header.Visibility = Visibility.Hidden;
                 else
                     dtg.Columns.Add(header);
                 ++count;
             }
-
-            // Move the notes column to the end.
-            if (notes != null)
-                dtg.Columns.Add(notes);
 
             // Data
             rowsBinder = new();
@@ -474,6 +469,64 @@ namespace BridgeOpsClient.CustomControls
                     ApplicationCommands.Copy.Execute(null, dtg);
                     dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
                 }
+            }
+        }
+
+        private void mnuExportSpreadsheet_Click(object sender, RoutedEventArgs e)
+        {
+            // Save as...
+            Microsoft.Win32.SaveFileDialog saveDialog = new();
+            DateTime now = DateTime.Now;
+            saveDialog.FileName = $"Data Export {now.ToString("yyyy-MM-dd HHmmss")}.xlsx";
+            saveDialog.DefaultExt = ".xlsx";
+            saveDialog.Filter = "Excel Workbook|*.xlsx|Excel Macro-Enabled Workbook|*.xlsm";
+            bool? result = saveDialog.ShowDialog();
+            if (result != true)
+                return;
+            if (!saveDialog.FileName.EndsWith(".xlsx") && !saveDialog.FileName.EndsWith(".xlsm"))
+            {
+                MessageBox.Show("Invalid file path");
+                return;
+            }
+
+            // Create a new workbook.
+            XLWorkbook xl = new();
+            IXLWorksheet sheet = xl.AddWorksheet("Data Export");
+            sheet.Name = "Exported Data";
+
+            // Add headers.
+            IXLCell cell = sheet.Cell(1, 1);
+            int[] order = new int[dtg.Columns.Count];
+            int n = 0;
+            foreach (DataGridColumn col in dtg.Columns.OrderBy(c => c.DisplayIndex))
+            {
+                order[n] = dtg.Columns.IndexOf(col);
+                cell.Value = col.Header.ToString();
+                cell = cell.CellRight();
+                ++n;
+            }
+
+            // Add rows.
+            cell = sheet.Cell(2, 1);
+            List<Row> selectedOrdered = dtg.SelectedItems.Cast<Row>().ToList();
+            object?[] rowObjects = new object?[dtg.Columns.Count];
+            foreach (Row row in selectedOrdered.OrderBy(r => dtg.Items.IndexOf(r)))
+            {
+                for (n = 0; n < row.items.Count; ++n)
+                    rowObjects[n] = row.items[order[n]];
+
+                cell.InsertData(rowObjects, true);
+                cell = cell.CellBelow();
+            }
+
+            // Write file to disk.
+            try
+            {
+                xl.SaveAs(saveDialog.FileName);
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show("Could not save file, see error: " + err.Message);
             }
         }
     }
