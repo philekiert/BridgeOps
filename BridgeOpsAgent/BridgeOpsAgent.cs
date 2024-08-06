@@ -1929,8 +1929,6 @@ internal class BridgeOpsAgent
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 columnRecordIntact = ParseColumnRecord(false);
 
-                ++columnRecordID;
-
                 // Don't report success until the column record has been updated, otherwise the client
                 // will attempt to pull the record first.stopst
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
