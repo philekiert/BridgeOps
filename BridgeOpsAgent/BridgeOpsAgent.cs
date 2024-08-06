@@ -1421,13 +1421,16 @@ internal class BridgeOpsAgent
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
 
             List<string> conditions = new();
-            foreach (KeyValuePair<string, ColumnRecord.Column> kvp in columns)
+            if (req.value != "") // In that case, just select everything.
             {
-                if (ColumnRecord.IsTypeString(kvp.Value))
-                    conditions.Add(kvp.Key + " LIKE \'%" + req.value + "%'");
-            }
+                foreach (KeyValuePair<string, ColumnRecord.Column> kvp in columns)
+                {
+                    if (ColumnRecord.IsTypeString(kvp.Value))
+                        conditions.Add(kvp.Key + " LIKE \'%" + req.value + "%'");
+                }
 
-            command += " WHERE " + string.Join(" OR ", conditions);
+                command += " WHERE " + string.Join(" OR ", conditions);
+            }
 
             if (historical)
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
