@@ -116,8 +116,10 @@ namespace BridgeOpsClient
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id))
                 {
                     changeMade = true;
-                    if (MainWindow.pageDatabase != null)
-                        MainWindow.pageDatabase.RepeatSearches(2);
+                    // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
+                    // table in the application but the Organisation that added it, if there was one.
+                    if (isDialog)
+                        DialogResult = true;
                     Close();
                 }
             }
