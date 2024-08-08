@@ -318,5 +318,11 @@ namespace BridgeOpsClient
                 oldDataWidth = grdConfData.ColumnDefinitions[1].Width.Value;
             }
         }
+
+        private void menuSelect_Click(object sender, RoutedEventArgs e)
+        {
+            SelectBuilder selectBuilder = new();
+            selectBuilder.Show();
+        }
     }
 }
