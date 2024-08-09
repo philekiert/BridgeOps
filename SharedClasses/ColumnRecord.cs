@@ -183,6 +183,16 @@ public static class ColumnRecord
             return ordered ? orderedContact : contact;
         else if (table == "Conference")
             return ordered ? orderedConference : conference;
+        else if (table == "OrganisationChange")
+            return organisationChange; // No ordered version.
+        else if (table == "AssetChange")
+            return assetChange; // No ordered version.
+        else if (table == "OrganisationContacts") // Not present in the column record.
+            return new Dictionary<string, Column>()
+            {
+                { Glo.Tab.ORGANISATION_ID, organisation[Glo.Tab.ORGANISATION_ID] },
+                { Glo.Tab.CONTACT_ID, contact[Glo.Tab.CONTACT_ID] }
+            };
         else
             return null;
     }

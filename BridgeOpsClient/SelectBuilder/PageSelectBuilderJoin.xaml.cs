@@ -54,5 +54,19 @@ namespace BridgeOpsClient
             btnUp.IsEnabled = Grid.GetRow(frame) > 0;
             btnDown.IsEnabled = Grid.GetRow(frame) < selectBuilder.joins.Count - 1;
         }
+
+        private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            List<string> columns = new();
+            string? selectedTable = ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).Content.ToString();
+            if (selectedTable != null)
+            {
+                var dictionary = ColumnRecord.GetDictionary(selectedTable, true);
+                if (dictionary != null)
+                    foreach (var kvp in dictionary)
+                        columns.Add(ColumnRecord.GetPrintName(kvp));
+            }
+            cmbColumn1.ItemsSource = columns;
+        }
     }
 }

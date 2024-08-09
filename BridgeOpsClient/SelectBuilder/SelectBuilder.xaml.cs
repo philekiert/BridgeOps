@@ -136,6 +136,8 @@ namespace BridgeOpsClient
                     ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
             }
             else return;
+
+            ResetTabIndices();
         }
 
         public void RemoveRow(object row)
@@ -194,6 +196,41 @@ namespace BridgeOpsClient
                     ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
             }
             else return;
+
+            ResetTabIndices();
+        }
+
+        void ResetTabIndices()
+        {
+            int i = 0;
+            int tabStop = 2; // Start on 3 due to controls above.
+            for (i = 0; i < joins.Count; ++i)
+                joins[i].TabIndex = i + tabStop;
+            tabStop += i;
+            btnAddColumn.TabIndex = tabStop++;
+            for (i = 0; i < columns.Count; ++i)
+                columns[i].TabIndex = i + tabStop;
+            tabStop += i;
+            btnAddWhere.TabIndex = tabStop++;
+            for (i = 0; i < wheres.Count; ++i)
+                wheres[i].TabIndex = i + tabStop;
+        }
+
+        List<string> columnNameList = new();
+
+        public void UpdateColumns()
+        {
+        }
+
+        private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateColumns();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            Width += 1;
+            UpdateLayout();
         }
     }
 }

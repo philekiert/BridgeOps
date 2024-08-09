@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:BridgeOpsClient"
       mc:Ignorable="d">
 
-    <Grid>
+    <Grid Width="Auto">
         <Grid.Resources>
             <Style TargetType="ComboBox">
                 <Setter Property="Margin" Value="10 5 10 5"/>
@@ -21,11 +21,13 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
@@ -34,15 +36,32 @@
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
                 Padding="0 -2 0 0" Margin="10 5 10 5" Width="24" Height="24" Content="-" />
-        <Label Content="Table" Grid.Row="0" Grid.Column="1" Margin="0 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="2" MinWidth="80"/>
-        <Label Content="Columns" Grid.Row="0" Grid.Column="3" Margin="0 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="4" MinWidth="80" Margin="10 5 0 5"/>
-        <Label Content="=" Grid.Row="0" Grid.Column="5" Margin="0 0 0 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="6" MinWidth="80" Margin="0 5 10 5"/>
-        <Button Grid.Row="0" Grid.Column="7" x:Name="btnUp" Click="btnUp_Click"
-                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
-        <Button Grid.Row="0" Grid.Column="8" x:Name="btnDown" Click="btnDown_Click"
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
+                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲" HorizontalAlignment="Right"/>
+        <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
                 Padding="0 -2 0 0" Margin="-1 5 0 5" Width="24" Content="▼"/>
+        <Label Content="Table" Grid.Row="0" Grid.Column="3" Margin="10 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="4" MinWidth="80" x:Name="cmbTable"
+                  SelectionChanged="cmbTable_SelectionChanged">
+            <ComboBoxItem Content="Organisation"/>
+            <ComboBoxItem Content="OrganisationChange"/>
+            <ComboBoxItem Content="OrganisationContacts"/>
+            <ComboBoxItem Content="Asset"/>
+            <ComboBoxItem Content="AssetChange"/>
+            <ComboBoxItem Content="Contact"/>
+        </ComboBox>
+        <Label Content="Columns" Grid.Row="0" Grid.Column="5" Margin="0 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="6" MinWidth="80" Margin="10 5 0 5"
+                  x:Name="cmbColumn1"/>
+        <Label Content="=" Grid.Row="0" Grid.Column="7" Margin="0 0 0 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="8" MinWidth="80" Margin="0 5 10 5"
+                  x:Name="cmbColumn2"/>
+        <Label Content="Type" Grid.Row="0" Grid.Column="9" Margin="0 0 -7 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="1" Width="66" x:Name="cmbType">
+            <ComboBoxItem Content="INNER"/>
+            <ComboBoxItem Content="OUTER"/>
+            <ComboBoxItem Content="LEFT"/>
+            <ComboBoxItem Content="RIGHT"/>
+        </ComboBox>
     </Grid>
 </Page>

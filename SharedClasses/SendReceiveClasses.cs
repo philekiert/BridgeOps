@@ -1504,7 +1504,7 @@ namespace SendReceiveClasses
     {
         public static string SecureColumn(string val)
         {
-            if (val.Contains(';') || val.Contains('\''))
+            if (val.Contains(';') || val.Contains('\'') || val.Contains(' '))
                 return "";
             else
                 return val;
@@ -1513,7 +1513,7 @@ namespace SendReceiveClasses
         {
             // Blank columns will cause an exception when the command is run, causing the SQL query/non-query to abort.
             for (int i = 0; i < vals.Count; ++i)
-                if (vals[i].Contains(';') || vals[i].Contains('\''))
+                if (vals[i].Contains(';') || vals[i].Contains('\'') || vals[i].Contains(' '))
                     vals[i] = "";
         }
         public static string SecureValue(string val)
