@@ -164,6 +164,8 @@ namespace BridgeOpsClient
 
                 for (int i = 0; i < joins.Count; ++i)
                     ((PageSelectBuilderJoin)joins[i].Content).ToggleUpDownButtons();
+
+                UpdateColumns();
             }
             else if (row is PageSelectBuilderColumn)
             {
