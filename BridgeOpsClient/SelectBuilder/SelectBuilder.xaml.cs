@@ -25,6 +25,10 @@ namespace BridgeOpsClient
         public List<Frame> columns = new();
         public List<Frame> wheres = new();
 
+        public PageSelectBuilderJoin Join(int index) { return (PageSelectBuilderJoin)joins[index].Content; }
+        public PageSelectBuilderColumn Column(int index) { return (PageSelectBuilderColumn)columns[index].Content; }
+        public PageSelectBuilderWhere Where(int index) { return (PageSelectBuilderWhere)wheres[index].Content; }
+
         private void btnAddJoin_Click(object sender, RoutedEventArgs e)
         {
             grdJoins.RowDefinitions.Add(new RowDefinition());
@@ -36,7 +40,7 @@ namespace BridgeOpsClient
             Grid.SetRow(frame, joins.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < joins.Count - 1; ++i)
-                ((PageSelectBuilderJoin)joins[i].Content).ToggleUpDownButtons();
+                Join(i).ToggleUpDownButtons();
             join.ToggleUpDownButtons();
         }
 
@@ -51,7 +55,7 @@ namespace BridgeOpsClient
             Grid.SetRow(frame, columns.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < columns.Count - 1; ++i)
-                ((PageSelectBuilderColumn)columns[i].Content).ToggleUpDownButtons();
+                Column(i).ToggleUpDownButtons();
             column.ToggleUpDownButtons();
         }
 
@@ -66,7 +70,7 @@ namespace BridgeOpsClient
             Grid.SetRow(frame, wheres.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < wheres.Count - 1; ++i)
-                ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
+                Where(i).ToggleUpDownButtons();
             where.ToggleUpDownButtons();
         }
 
@@ -220,6 +224,39 @@ namespace BridgeOpsClient
 
         public void UpdateColumns()
         {
+            List<string> tableNames = new();
+
+            // The selected index updated before the text, so check that rather than the text.
+            if (cmbTable.SelectedIndex >= 0)
+            {
+                tableNames.Add((string)((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).Content);
+            }
+
+            // Get the table names from each join, and add if not previously used.
+            for (int i = 0; i < joins.Count; ++i)
+                if (Join(i).cmbTable.SelectedIndex >= 0)
+                {
+                    string s = (string)((ComboBoxItem)Join(i).cmbTable.Items[Join(i).cmbTable.SelectedIndex]).Content;
+                    if (!tableNames.Contains(s))
+                        tableNames.Add(s);
+                }
+
+
+            List<string> columnList = new();
+            foreach (string s in tableNames)
+            {
+                var dictionary = ColumnRecord.GetDictionary(s, true);
+                if (dictionary != null)
+                    foreach (var kvp in dictionary)
+                        columnList.Add(s + "." + ColumnRecord.GetPrintName(kvp));
+            }
+
+            for (int i = 0; i < joins.Count; ++i)
+                Join(i).cmbColumn2.ItemsSource = columnList;
+            for (int i = 0; i < columns.Count; ++i)
+                Column(i).cmbColumn.ItemsSource = columnList;
+            for (int i = 0; i < wheres.Count; ++i)
+                Where(i).cmbColumn.ItemsSource = columnList;
         }
 
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)

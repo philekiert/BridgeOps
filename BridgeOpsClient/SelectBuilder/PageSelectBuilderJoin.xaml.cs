@@ -67,6 +67,8 @@ namespace BridgeOpsClient
                         columns.Add(ColumnRecord.GetPrintName(kvp));
             }
             cmbColumn1.ItemsSource = columns;
+
+            selectBuilder.UpdateColumns();
         }
     }
 }
