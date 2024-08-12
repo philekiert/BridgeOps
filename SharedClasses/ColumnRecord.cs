@@ -42,6 +42,16 @@ public static class ColumnRecord
         else
             return key.Replace('_', ' ');
     }
+    public static string ReversePrintName(string key, Dictionary<string, Column> dictionary)
+    {
+        key = key.Replace(' ', '_');
+        if (dictionary.ContainsKey(key))
+            return key;
+        foreach (var kvp in dictionary)
+            if (kvp.Value.friendlyName.Replace(' ', '_') == key)
+                return kvp.Key;
+        return "";
+    }
 
     public static Dictionary<string, Column> organisation = new();
     public static Dictionary<string, string> organisationFriendlyNameReversal = new();
@@ -215,7 +225,7 @@ public static class ColumnRecord
     public static bool IsTypeString(Column col)
     { return col.type == "TEXT" || col.type == "VARCHAR"; }
     public static bool IsTypeInt(string type)
-    { return type == "INT"; }
+    { return type.Contains("INT"); }
     public static bool IsTypeInt(Column col)
     { return col.type.Contains("INT"); }
 

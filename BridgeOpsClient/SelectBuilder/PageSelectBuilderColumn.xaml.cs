@@ -26,8 +26,8 @@ namespace BridgeOpsClient
 
             if (selectBuilder.columns.Count == 0)
             {
-                btnUp.Visibility = Visibility.Hidden;
-                btnDown.Visibility = Visibility.Hidden;
+                btnUp.IsEnabled = false;
+                btnDown.IsEnabled = false;
             }
 
             this.selectBuilder = selectBuilder;
@@ -51,10 +51,13 @@ namespace BridgeOpsClient
 
         public void ToggleUpDownButtons()
         {
-            btnUp.Visibility = Grid.GetRow(frame) > 0 ? Visibility.Visible :
-                                                        Visibility.Hidden;
-            btnDown.Visibility = Grid.GetRow(frame) < selectBuilder.columns.Count - 1 ? Visibility.Visible :
-                                                                                        Visibility.Hidden;
+            btnUp.IsEnabled = Grid.GetRow(frame) > 0;
+            btnDown.IsEnabled = Grid.GetRow(frame) < selectBuilder.columns.Count - 1;
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            selectBuilder.UpdateColumns();
         }
     }
 }

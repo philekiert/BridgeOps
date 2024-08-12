@@ -70,5 +70,10 @@ namespace BridgeOpsClient
 
             selectBuilder.UpdateColumns();
         }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            selectBuilder.UpdateColumns();
+        }
     }
 }

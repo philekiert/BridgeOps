@@ -254,9 +254,29 @@ namespace BridgeOpsClient
             }
 
             for (int i = 0; i < joins.Count; ++i)
-                Join(i).cmbColumn2.ItemsSource = columnList;
+            {
+                string thisJoinTable = "";
+                if (Join(i).cmbTable.SelectedIndex >= 0)
+                    thisJoinTable = (string)((ComboBoxItem)Join(i).cmbTable.Items[Join(i).cmbTable.SelectedIndex]).Content;
+                if (thisJoinTable == "")
+                    Join(i).cmbColumn2.ItemsSource = columnList;
+                else
+                {
+                    List<string> ammendedList = new();
+                    foreach (string s in columnList)
+                        if (!s.StartsWith(thisJoinTable + "."))
+                            ammendedList.Add(s);
+                    Join(i).cmbColumn2.ItemsSource = ammendedList;
+                }
+            }
             for (int i = 0; i < columns.Count; ++i)
-                Column(i).cmbColumn.ItemsSource = columnList;
+            {
+                List<string> ammendedList = new();
+                for (int t = 0; t < tableNames.Count; ++t)
+                    ammendedList.Add(tableNames[t] + ".*");
+                ammendedList.AddRange(columnList);
+                Column(i).cmbColumn.ItemsSource = ammendedList;
+            }
             for (int i = 0; i < wheres.Count; ++i)
                 Where(i).cmbColumn.ItemsSource = columnList;
         }

@@ -3,8 +3,8 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:BridgeOpsClient"
-      mc:Ignorable="d">
+      xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
+      mc:Ignorable="d" Loaded="Page_Loaded">
 
     <Grid>
         <Grid.Resources>
@@ -22,9 +22,9 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
@@ -33,19 +33,29 @@
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
                 Padding="0 -2 0 0" Margin="10 5 10 5" Width="24" Height="24" Content="-" />
-        <ComboBox Grid.Row="0" Grid.Column="1" Width="55" SelectedIndex="0" Margin="0 5 10 5">
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
+                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
+        <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
+                Padding="0 -2 0 0" Margin="-1 5 20 5" Width="24" Content="▼"/>
+        <ComboBox Grid.Row="0" Grid.Column="3" Width="55" SelectedIndex="0" Margin="0 5 10 5"
+                  x:Name="cmbAndOr">
             <ComboBoxItem Content="AND"/>
             <ComboBoxItem Content="OR"/>
         </ComboBox>
-        <Label Content="Where" Grid.Row="0" Grid.Column="2" Margin="0 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="3" MinWidth="100" x:Name="cmbColumn"/>
-        <ComboBox Grid.Row="0" Grid.Column="4" Width="88" Margin="0 5 0 5" SelectedIndex="0">
-            <ComboBoxItem Content="LESS THAN"/>
-        </ComboBox>
-        <TextBox Grid.Row="0" Grid.Column="5" Width="150"/>
-        <Button Grid.Row="0" Grid.Column="6" x:Name="btnUp" Click="btnUp_Click"
-                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
-        <Button Grid.Row="0" Grid.Column="7" x:Name="btnDown" Click="btnDown_Click"
-                Padding="0 -2 0 0" Margin="-1 5 0 5" Width="24" Content="▼"/>
+        <Label Content="Where" Grid.Row="0" Grid.Column="4" Margin="0 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="5" MinWidth="100" x:Name="cmbColumn"
+                  SelectionChanged="cmbColumn_SelectionChanged"/>
+        <ComboBox Grid.Row="0" Grid.Column="6" Width="88" Margin="0 5 10 5" SelectedIndex="0" x:Name="cmbOperator"/>
+        <TextBox Grid.Row="0" Grid.Column="7" Width="200" x:Name="txtValue" Margin="0 5 10 5"
+                 Visibility="Collapsed"/>
+        <customcontrols:DateTimePicker Grid.Row="0" Grid.Column="7" Margin="0 0 0 0" Width="190" x:Name="dtmValue"
+                                       Visibility="Collapsed"/>
+        <DatePicker Grid.Row="0" Grid.Column="7" Width="200" Height="20" Padding="0 0 0 0" Margin="0 0 10 0"
+                    x:Name="datValue" 
+                    Visibility="Collapsed" />
+        <customcontrols:TimePicker Grid.Row="0" Grid.Column="7" Width="70" Margin="-6 0 6 0" x:Name="timValue"
+                                   Visibility="Collapsed"/>
+        <CheckBox Grid.Row="0" Grid.Column="7" VerticalAlignment="Center" Margin="0 0 10 0" x:Name="chkValue" 
+                  Visibility="Collapsed" />
     </Grid>
 </Page>
