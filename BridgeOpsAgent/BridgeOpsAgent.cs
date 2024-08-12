@@ -704,7 +704,7 @@ internal class BridgeOpsAgent
                     ClientUpdate(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
-                else if (fncByte == Glo.CLIENT_SELECT)
+                else if (fncByte == Glo.CLIENT_SELECT_QUICK)
                     ClientSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_WIDE)
                     ClientSelectWide(stream, sqlConnect);
@@ -1317,7 +1317,7 @@ internal class BridgeOpsAgent
         try
         {
             sqlConnect.Open();
-            SelectRequest req = sr.Deserialise<SelectRequest>(sr.ReadString(stream));
+            QuickSelectRequest req = sr.Deserialise<QuickSelectRequest>(sr.ReadString(stream));
             if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);

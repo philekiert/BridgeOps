@@ -46,9 +46,10 @@ public static class Glo
     public const int CLIENT_UPDATE_RESOURCE = 20;
     public const int CLIENT_UPDATE_CHANGE_REASON = 21;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
-    public const int CLIENT_SELECT = 31;
-    public const int CLIENT_SELECT_WIDE = 32;
-    public const int CLIENT_DELETE = 33;
+    public const int CLIENT_SELECT_QUICK = 31;
+    public const int CLIENT_SELECT = 32;
+    public const int CLIENT_SELECT_WIDE = 33;
+    public const int CLIENT_DELETE = 34;
     public const int CLIENT_LINK_CONTACT = 40;
     public const int CLIENT_LINKED_CONTACT_SELECT = 41;
     public const int CLIENT_SELECT_HISTORY = 42;

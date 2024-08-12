@@ -817,10 +817,10 @@ namespace BridgeOpsClient
                     {
                         if (stream != null)
                         {
-                            SelectRequest req = new SelectRequest(sd.sessionID, ColumnRecord.columnRecordID,
+                            QuickSelectRequest req = new QuickSelectRequest(sd.sessionID, ColumnRecord.columnRecordID,
                                                                   table, select, likeColumns, likeValues, conditionals,
                                                                   historical);
-                            stream.WriteByte(Glo.CLIENT_SELECT);
+                            stream.WriteByte(Glo.CLIENT_SELECT_QUICK);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();
                             if (response == Glo.CLIENT_REQUEST_SUCCESS)

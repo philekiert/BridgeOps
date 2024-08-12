@@ -1169,7 +1169,7 @@ namespace SendReceiveClasses
         Equals,
         Like
     }
-    struct SelectRequest
+    struct QuickSelectRequest
     {
         public string sessionID;
         public int columnRecordID;
@@ -1180,7 +1180,7 @@ namespace SendReceiveClasses
         public List<Conditional> conditionals;
         public bool includeHistory;
 
-        public SelectRequest(string sessionID, int columnRecordID, string table,
+        public QuickSelectRequest(string sessionID, int columnRecordID, string table,
                              List<string> select,
                              List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
                              bool includeHistory)
@@ -1209,6 +1209,74 @@ namespace SendReceiveClasses
         public bool Validate()
         {
             return (likeColumns.Count != likeValues.Count || likeColumns.Count != conditionals.Count);
+        }
+    }
+
+    struct SelectRequest
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public string table;
+        public bool distinct;
+        public List<string> joinTables;
+        public List<string> joinColumns1;
+        public List<string> joinColumns2;
+        public List<string> joinTypes;
+        public List<string> columns;
+        public List<string> columnAliases;
+        public List<string> whereColumns;
+        public List<string> whereOperators;
+        public List<string?> whereValues;
+
+        public SelectRequest(string sessionID, int columnRecordID,
+                             string table, bool distinct,
+                             List<string> joinTables,
+                             List<string> joinColumns1, List<string> joinColumns2,
+                             List<string> joinTypes,
+                             List<string> columns, List<string> columnAliases,
+                             List<string> whereColumns, List<string> whereOperators, List<string> whereValues)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.table = table;
+            this.distinct = distinct;
+            this.joinTables = joinTables;
+            this.joinColumns1 = joinColumns1;
+            this.joinColumns2 = joinColumns2;
+            this.joinTypes = joinTypes;
+            this.columns = columns;
+            this.columnAliases = columnAliases;
+            this.whereColumns = whereColumns;
+            this.whereOperators = whereOperators;
+            this.whereValues = whereValues;
+        }
+
+        public void Prepare()
+        {
+            table = SqlAssist.SecureColumn(table);
+            SqlAssist.SecureColumn(joinTables);
+            SqlAssist.SecureColumn(joinColumns1);
+            SqlAssist.SecureColumn(joinColumns2);
+            if (!SqlAssist.CheckJoinTypes(joinTypes))
+                joinTypes.Clear();
+            SqlAssist.SecureColumn(columns);
+            SqlAssist.SecureColumn(columnAliases);
+            SqlAssist.SecureColumn(whereColumns);
+            if (!SqlAssist.CheckOperators(whereOperators))
+                whereOperators.Clear();
+            SqlAssist.SecureValue(whereValues);
+
+
+        }
+
+        public bool Validate()
+        {
+            return joinTables.Count == joinColumns1.Count &&
+                   joinTables.Count == joinColumns2.Count &&
+                   joinTables.Count == joinTypes.Count &&
+                   columns.Count == columnAliases.Count &&
+                   whereColumns.Count == whereOperators.Count &&
+                   whereOperators.Count == whereValues.Count;
         }
     }
 
@@ -1528,6 +1596,23 @@ namespace SendReceiveClasses
                 if (s != null)
                     val[i] = SecureValue(s);
             }
+        }
+
+        private static HashSet<string> joinTypes = new() { "INNER", "OUTER", "LEFT", "RIGHT" };
+        private static HashSet<string> operators = new() { "=", "<", ">", "<=", ">=", "LIKE" };
+        public static bool CheckJoinTypes(List<string> toCheck)
+        {
+            foreach (string s in toCheck)
+                if (!joinTypes.Contains(s))
+                    return false;
+            return true;
+        }
+        public static bool CheckOperators(List<string> toCheck)
+        {
+            foreach (string s in operators)
+                if (!operators.Contains(s)
+                    return false;
+            return true;
         }
 
         public static void LevelAdditionals(ref List<string> columns, ref List<string?> values)
