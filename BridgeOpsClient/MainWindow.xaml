@@ -46,9 +46,8 @@
                     <MenuItem Header="Conference Type" x:Name="menuDatabaseNewConferenceType"
                               Click="menuDatabaseNewConferenceType_Click"/>
                 </MenuItem>
-                <MenuItem Header="Functions">
-                    <MenuItem Header="SELECT" Click="menuSelect_Click"/>
-                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Select Query Builder" Click="menuSelect_Click"/>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">

@@ -41,7 +41,7 @@
                 Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲" HorizontalAlignment="Right"/>
         <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
                 Padding="0 -2 0 0" Margin="-1 5 0 5" Width="24" Content="▼"/>
-        <Label Content="Table" Grid.Row="0" Grid.Column="3" Margin="10 0 -6 0"/>
+        <Label Content="Table" Grid.Row="0" Grid.Column="3" Margin="15 0 -6 0"/>
         <ComboBox Grid.Row="0" Grid.Column="4" MinWidth="80" x:Name="cmbTable"
                   SelectionChanged="cmbTable_SelectionChanged">
             <ComboBoxItem Content="Organisation"/>
@@ -58,7 +58,7 @@
         <ComboBox Grid.Row="0" Grid.Column="8" MinWidth="80" Margin="0 5 10 5"
                   x:Name="cmbColumn2"/>
         <Label Content="Type" Grid.Row="0" Grid.Column="9" Margin="0 0 -7 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="1" Width="66" x:Name="cmbType">
+        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="0" Width="66" x:Name="cmbType">
             <ComboBoxItem Content="INNER"/>
             <ComboBoxItem Content="OUTER"/>
             <ComboBoxItem Content="LEFT"/>

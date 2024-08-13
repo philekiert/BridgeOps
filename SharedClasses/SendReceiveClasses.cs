@@ -647,7 +647,7 @@ namespace SendReceiveClasses
                                                             Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX),
                                         SqlAssist.ValConcat(additionalVals,
                                                             organisationID,
-                                                            '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                            '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                             loginID.ToString(),
                                                             "'Created new organisation.'",
                                                             parentOrgID, "1",
@@ -710,7 +710,7 @@ namespace SendReceiveClasses
                                                            Glo.Tab.CHANGE_REASON),
                                        SqlAssist.ValConcat(additionalVals,
                                                            organisationID,
-                                                           '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                           '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                            loginID.ToString(),
                                                            changeReason == null ? "''" : changeReason));
 
@@ -795,7 +795,7 @@ namespace SendReceiveClasses
                                                             Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX),
                                         SqlAssist.ValConcat(additionalVals,
                                                             assetID,
-                                                            '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                            '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                             loginID.ToString(),
                                                             "'Created new asset.'",
                                                             organisationID, "1",
@@ -848,7 +848,7 @@ namespace SendReceiveClasses
                                                             Glo.Tab.CHANGE_REASON),
                                         SqlAssist.ValConcat(additionalVals,
                                                             assetID,
-                                                            '\'' + SqlAssist.DateTimeToSQLType(DateTime.Now) + '\'',
+                                                            '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                             loginID.ToString(),
                                                             changeReason == null ? "" : changeReason));
 
@@ -1017,9 +1017,9 @@ namespace SendReceiveClasses
                                                                             "Notes"),
                                         SqlAssist.ValConcat(additionalVals, typeID.ToString(),
                                                                             title,
-                                                                            SqlAssist.DateTimeToSQLType(start),
-                                                                            SqlAssist.DateTimeToSQLType(end),
-                                                                            SqlAssist.TimeSpanToSQLType(buffer),
+                                                                            SqlAssist.DateTimeToSQL(start, false),
+                                                                            SqlAssist.DateTimeToSQL(end, false),
+                                                                            SqlAssist.TimeSpanToSQL(buffer),
                                                                             organisationID,
                                                                             recurrenceID.ToString(),
                                                                             notes));
@@ -1059,14 +1059,14 @@ namespace SendReceiveClasses
         {
             Prepare();
             return SqlAssist.InsertInto("Resource",
-                                        SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
-                                                            Glo.Tab.RESOURCE_FROM,
-                                                            Glo.Tab.RESOURCE_TO,
-                                                            Glo.Tab.RESOURCE_CAPACITY),
-                                        SqlAssist.ValConcat(name,
-                                                            SqlAssist.AddQuotes(SqlAssist.DateTimeToSQLType(availableFrom)),
-                                                            SqlAssist.AddQuotes(SqlAssist.DateTimeToSQLType(availableTo)),
-                                                            capacity.ToString()));
+                             SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
+                                                 Glo.Tab.RESOURCE_FROM,
+                                                 Glo.Tab.RESOURCE_TO,
+                                                 Glo.Tab.RESOURCE_CAPACITY),
+                             SqlAssist.ValConcat(name,
+                                                 SqlAssist.AddQuotes(SqlAssist.DateTimeToSQL(availableFrom, false)),
+                                                 SqlAssist.AddQuotes(SqlAssist.DateTimeToSQL(availableTo, false)),
+                                                 capacity.ToString()));
         }
     }
 
@@ -1292,8 +1292,7 @@ namespace SendReceiveClasses
                    whereOperators.Count == whereValues.Count &&
                    whereValues.Count == whereValueTypesNeedQuotes.Count &&
                    whereBracketsOpen.Count == whereBracketsClose.Count &&
-                   (whereColumns.Count == 0 || whereAndOrs.Count == whereColumns.Count - 1) &&
-                   orderBy.Count <= columns.Count;
+                   (whereColumns.Count == 0 || whereAndOrs.Count != whereColumns.Count - 1);
         }
 
         public string SqlSelect()
@@ -1304,16 +1303,20 @@ namespace SendReceiveClasses
             // SELECT columns
             StringBuilder str = new("SELECT ");
             for (int i = 0; i < columns.Count; ++i)
-                str.Append(columnAliases[i] == "" ? $"{columns[i]}, " : $"{columns[i]} AS {columnAliases[i]}, ");
+            {
+                if (i > 0)
+                    str.Append("       ");
+                str.Append(columnAliases[i] == "" ? $"{columns[i]},\n" : $"{columns[i]} AS {columnAliases[i]},\n");
+            }
 
-            // Get rid of the trailing ",", leaving the space
+            // Get rid of the trailing ",", leaving the new line.
             str.Remove(str.Length - 2, 1);
 
-            str.Append($" FROM {table} ");
+            str.Append($"FROM {table}\n");
 
             // JOINs
             for (int i = 0; i < joinTables.Count; ++i)
-                str.Append($"{joinTypes[i]} JOIN {joinTables[i]} ON {joinColumns1[i]} = {joinColumns2[i]} ");
+                str.Append($"{joinTypes[i]} JOIN {joinTables[i]} ON {joinColumns1[i]} = {joinColumns2[i]}\n");
 
             // WHEREs
             if (whereColumns.Count > 0)
@@ -1322,8 +1325,9 @@ namespace SendReceiveClasses
                 for (int i = 0; i < whereColumns.Count; ++i)
                 {
                     if (i > 0)
-                        str.Append($"{whereAndOrs[i]} ");
-                    str.Append($"{whereColumns[i]} {whereOperators[i]} {whereValues[i]} ");
+                        str.Append($"{(whereAndOrs[i] == "OR" ? "   " : "  ")}{whereAndOrs[i]} ");
+                    str.Append($"{whereColumns[i]} {whereOperators[i]}" +
+                               $"{(whereValues[i] == null ? "\n" : " " + whereValues[i] + "\n")}");
                 }
             }
 
@@ -1332,9 +1336,16 @@ namespace SendReceiveClasses
             {
                 str.Append("ORDER BY ");
                 for (int i = 0; i < orderBy.Count; ++i)
-                    str.Append(string.Join(", ", orderBy));
+                {
+                    if (i > 0)
+                        str.Append("         ");
+                    str.Append(orderBy[i] + ",\n");
+                }
+                // Get rid of the trailing ",", leaving the new line.
+                str = str.Remove(str.Length - 2, 1);
             }
 
+            str = str.Remove(str.Length - 1, 1);
             str.Append(';');
 
             return str.ToString();
@@ -1660,7 +1671,7 @@ namespace SendReceiveClasses
         }
 
         private static HashSet<string> joinTypes = new() { "INNER", "OUTER", "LEFT", "RIGHT" };
-        private static HashSet<string> operators = new() { "=", "<", ">", "<=", ">=", "LIKE" };
+        private static HashSet<string> operators = new() { "=", "<", ">", "<=", ">=", "LIKE", "IS NULL", "IS NOT NULL" };
         public static bool CheckJoinTypes(List<string> toCheck)
         {
             foreach (string s in toCheck)
@@ -1841,11 +1852,14 @@ namespace SendReceiveClasses
                 return "";
         }
 
-        public static string DateTimeToSQLType(DateTime dateTime)
+        public static string DateTimeToSQL(DateTime dateTime, bool dateOnly)
         {
-            return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            if (dateOnly)
+                return dateTime.ToString("yyyy-MM-dd");
+            else
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
         }
-        public static string TimeSpanToSQLType(TimeSpan timeSpan)
+        public static string TimeSpanToSQL(TimeSpan timeSpan)
         {
             return timeSpan.ToString(@"dd\.hh\:mm");
         }

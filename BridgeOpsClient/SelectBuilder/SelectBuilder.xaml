@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        Title="SelectBuilder" SizeToContent="WidthAndHeight" UseLayoutRounding="True" MinWidth="800">
+        Title="Select Query Builder" SizeToContent="WidthAndHeight" UseLayoutRounding="True" MinWidth="800">
     <Grid Margin="10 10 10 10" x:Name="grdMain">
         <Grid.Resources>
             <Style TargetType="ComboBox">
@@ -28,6 +28,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <!-- Table Selection -->
         <Label Content="Table" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
@@ -81,5 +82,12 @@
                 </Grid>
             </StackPanel>
         </ScrollViewer>
+        <Grid Grid.Row="2" Grid.ColumnSpan="4" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" x:Name="Run" Content="Run" Width="50" Margin="5 20 0 10" HorizontalAlignment="Left"
+                    Click="Run_Click"/>
+        </Grid>
     </Grid>
 </Window>

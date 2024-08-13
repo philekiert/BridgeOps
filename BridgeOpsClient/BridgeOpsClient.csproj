@@ -8,10 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
+    <None Remove="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\SharedClasses\ColumnRecord.cs" Link="ColumnRecord.cs" />
     <Compile Include="..\SharedClasses\Glo.cs" Link="Glo.cs" />
     <Compile Include="..\SharedClasses\MathHelper.cs" Link="MathHelper.cs" />
     <Compile Include="..\SharedClasses\SendReceiveClasses.cs" Link="SendReceiveClasses.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
+    <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
   </ItemGroup>
 
   <ItemGroup>

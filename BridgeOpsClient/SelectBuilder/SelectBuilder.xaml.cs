@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using SendReceiveClasses;
 
 namespace BridgeOpsClient
 {
@@ -283,6 +284,20 @@ namespace BridgeOpsClient
 
         List<string> columnNameList = new();
 
+        private string GetProperColumnName(string column)
+        {
+            if (column.EndsWith('*'))
+                return column;
+            // All column names are displayed as "."
+            int split = column.IndexOf('.') + 1;
+            string table = column.Remove(split - 1);
+            var dictionary = ColumnRecord.GetDictionary(table, false);
+            if (dictionary == null)
+                return "";
+            return table + "." +
+                   ColumnRecord.ReversePrintName(column.Substring(split, column.Length - split), dictionary);
+        }
+
         public void UpdateColumns()
         {
             List<string> tableNames = new();
@@ -345,6 +360,138 @@ namespace BridgeOpsClient
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateColumns();
+        }
+
+        private void Run_Click(object sender, RoutedEventArgs e)
+        {
+            BuildQuery();
+        }
+
+        private bool BuildQuery()
+        {
+            bool Abort(string message)
+            {
+                MessageBox.Show(message);
+                return false;
+            }
+
+            string table;
+            List<string> joinTables = new();
+            List<string> joinColumns1 = new();
+            List<string> joinColumns2 = new();
+            List<string> joinTypes = new();
+            List<string> selectColumns = new();
+            List<string> columnAliases = new();
+            List<string> whereColumns = new();
+            List<string> whereOperators = new();
+            List<string?> whereValues = new();
+            List<bool> whereValueTypesNeedQuotes = new();
+            List<string> whereAndOrs = new();
+            List<int> whereBracketsOpen = new();
+            List<int> whereBracketsClose = new();
+            List<string> selectOrderBys = new();
+
+            // Table
+            if (cmbTable.SelectedIndex < 0 || cmbTable.Text == "")
+                return Abort("Must select a table to query.");
+            table = cmbTable.Text;
+
+            // Columns
+            if (columns.Count == 0)
+                return Abort("Must select at least one column.");
+            for (int i = 0; i < columns.Count; ++i)
+            {
+                PageSelectBuilderColumn col = Column(i);
+                if (col.cmbColumn.SelectedIndex < 0 || col.cmbColumn.Text == "")
+                    return Abort("All column fields must contain a selection.");
+                selectColumns.Add(GetProperColumnName(col.cmbColumn.Text));
+                columnAliases.Add(col.txtAlias.Text);
+            }
+
+            // Joins
+            for (int i = 0; i < joins.Count; ++i)
+            {
+                PageSelectBuilderJoin join = Join(i);
+                if (join.cmbTable.SelectedIndex < 0 || join.cmbTable.Text == "")
+                    return Abort("All JOINs must reference a table.");
+                if (join.cmbColumn1.SelectedIndex < 0 || join.cmbColumn1.Text == "" ||
+                    join.cmbColumn2.SelectedIndex < 0 || join.cmbColumn2.Text == "")
+                    return Abort("All JOINs must state which columns to join the tables on.");
+                joinTables.Add(join.cmbTable.Text);
+                joinColumns1.Add(GetProperColumnName(join.cmbTable.Text + "." + join.cmbColumn1.Text));
+                joinColumns2.Add(GetProperColumnName(join.cmbColumn2.Text));
+                joinTypes.Add(join.cmbType.Text);
+            }
+
+            // Where
+            for (int i = 0; i < wheres.Count; ++i)
+            {
+                PageSelectBuilderWhere where = Where(i);
+                if (where.cmbColumn.SelectedIndex < 0 || where.cmbColumn.Text == "")
+                    return Abort("All WHERE clauses must reference a column.");
+                if (!where.cmbOperator.Text.Contains("NULL"))
+                    if (ColumnRecord.IsTypeInt(where.type) && !int.TryParse(where.txtValue.Text, out _))
+                        return Abort("All values for INT fields must be a whole number.");
+                whereColumns.Add(GetProperColumnName(where.cmbColumn.Text));
+                whereOperators.Add(where.cmbOperator.Text);
+                whereAndOrs.Add(where.cmbAndOr.Text); // Ignored for the first condition in SQL statement.
+                if (where.cmbOperator.Text.Contains("NULL"))
+                    whereValues.Add(null);
+                else
+                {
+                    if (where.txtValue.Visibility == Visibility.Visible)
+                        whereValues.Add(where.txtValue.Text);
+                    else if (where.dtmValue.Visibility == Visibility.Visible)
+                        whereValues.Add(SqlAssist.DateTimeToSQL(where.dtmValue.GetDateTime(), false));
+                    else if (where.datValue.Visibility == Visibility.Visible)
+                        whereValues.Add(SqlAssist.DateTimeToSQL(where.dtmValue.GetDateTime(), true));
+                    else if (where.timValue.Visibility == Visibility.Visible)
+                        whereValues.Add(SqlAssist.TimeSpanToSQL(where.timValue.GetTime()));
+                    else if (where.chkValue.Visibility == Visibility.Visible)
+                        whereValues.Add(where.chkValue.IsChecked == true ? "1" : "0");
+                    else
+                        return Abort("All WHERE clauses must either be null or contain a value.");
+                }
+                whereValueTypesNeedQuotes.Add(!ColumnRecord.IsTypeInt(where.type) &&
+                                              where.type != "BIT" &&
+                                              !where.type.Contains("BOOLEAN"));
+            }
+
+            // Order By
+            for (int i = 0; i < orderBys.Count; ++i)
+            {
+                PageSelectBuilderOrderBy orderBy = OrderBy(i);
+                if (orderBy.cmbOrderBy.SelectedIndex < 0 || orderBy.cmbOrderBy.Text == "")
+                    return Abort("All ORDER BY fields must have a column selected.");
+                selectOrderBys.Add(GetProperColumnName(orderBy.cmbOrderBy.Text));
+            }
+
+            SelectRequest selectRequest = new(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                              table, chkDistinct.IsChecked == true,
+                                              joinTables, joinColumns1, joinColumns2, joinTypes,
+                                              selectColumns, columnAliases,
+                                              whereColumns, whereOperators, whereValues, whereValueTypesNeedQuotes,
+                                              whereBracketsOpen, whereBracketsClose, whereAndOrs,
+                                              selectOrderBys);
+
+            // Get where brackets.
+            int andCount = 0;
+            int orCount = 0;
+            foreach (string s in whereAndOrs)
+                if (s == "AND")
+                    ++andCount;
+                else
+                    ++orCount;
+            if (andCount > 0 && orCount > 0)
+            {
+                MessageBox.Show("This tool is currently unable to handle mixing AND and OR operators between " +
+                                "conditions. You will need to run this command directly using SQL Server.");
+                return false;
+            }
+            //SelectBuilderBracketsAddition bracketsAddition = new(selectRequest.SqlSelect());
+            //bracketsAddition.Show();
+
+            return true;
         }
     }
 }

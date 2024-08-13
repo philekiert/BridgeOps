@@ -20,6 +20,8 @@ namespace BridgeOpsClient
         public SelectBuilder selectBuilder;
         public Frame frame;
 
+        public string type = "";
+
         public PageSelectBuilderWhere(SelectBuilder selectBuilder, Frame frame)
         {
             InitializeComponent();
@@ -29,7 +31,7 @@ namespace BridgeOpsClient
                 btnUp.IsEnabled = false;
                 btnDown.IsEnabled = false;
 
-                cmbAndOr.Visibility = Visibility.Hidden;
+                cmbAndOr.Visibility = Visibility.Collapsed;
             }
 
             this.selectBuilder = selectBuilder;
@@ -57,7 +59,7 @@ namespace BridgeOpsClient
             btnDown.IsEnabled = Grid.GetRow(frame) < selectBuilder.wheres.Count - 1;
 
             // Makes sense to update the AND/OR selector here.
-            cmbAndOr.Visibility = btnUp.IsEnabled ? Visibility.Visible : Visibility.Hidden;
+            cmbAndOr.Visibility = btnUp.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -74,12 +76,11 @@ namespace BridgeOpsClient
                 datValue.Visibility = Visibility.Collapsed;
                 timValue.Visibility = Visibility.Collapsed;
                 chkValue.Visibility = Visibility.Collapsed;
-                cmbOperator.Items.Clear();
+                cmbOperator.ItemsSource = new List<string>() { };
             }
 
-            string type = "";
-
             string newColumn = "";
+            
             if (cmbColumn.SelectedIndex >= 0)
                 newColumn = (string)cmbColumn.Items[cmbColumn.SelectedIndex];
             else
@@ -104,35 +105,34 @@ namespace BridgeOpsClient
             }
 
             type = dictionary[column].type;
-            txtValue.Visibility = ColumnRecord.IsTypeString(type) || ColumnRecord.IsTypeInt(type) ?
-                                                                     Visibility.Visible :
-                                                                     Visibility.Collapsed;
-            dtmValue.Visibility = type == "DATETIME" ? Visibility.Visible : Visibility.Collapsed;
-            datValue.Visibility = type == "DATE" ? Visibility.Visible : Visibility.Collapsed;
-            timValue.Visibility = type == "TIME" ? Visibility.Visible : Visibility.Collapsed;
-            chkValue.Visibility = type.Contains("BOOL") || type == "BIT" ? Visibility.Visible : Visibility.Collapsed;
 
-            if (txtValue.Visibility == Visibility.Visible)
-            {
-                if (ColumnRecord.IsTypeString(type))
-                    cmbOperator.ItemsSource = new List<string>() { "=", "LIKE" };
-                else // if int
-                    cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=, >=" };
-            }
-            else if (dtmValue.Visibility == Visibility.Visible)
-                cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=, >=" };
-            else if (datValue.Visibility == Visibility.Visible)
-                cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=, >=" };
-            else if (timValue.Visibility == Visibility.Visible)
-                cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=, >=" };
-            else if (chkValue.Visibility == Visibility.Visible)
-            {
-                cmbOperator.ItemsSource = new List<string>() { "=" };
-                cmbOperator.IsEnabled = false;
-            }
-            else
-                return;
+            if (ColumnRecord.IsTypeString(type))
+                cmbOperator.ItemsSource = new List<string>() { "=", "LIKE", "IS NULL", "IS NOT NULL" };
+            else if (type == "BIT" || type.Contains("BOOL"))
+                cmbOperator.ItemsSource = new List<string>() { "=", "IS NULL", "IS NOT NULL" };
+            else // if int
+                cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=", ">=", "IS NULL", "IS NOT NULL" };
             cmbOperator.SelectedIndex = 0;
+        }
+
+        private void cmbOperator_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsLoaded || cmbOperator.SelectedIndex < 0)
+                return;
+
+            string operatorText = (string)cmbOperator.Items[cmbOperator.SelectedIndex];
+
+            txtValue.Visibility = (ColumnRecord.IsTypeString(type) || ColumnRecord.IsTypeInt(type)) &&
+                                  !operatorText.Contains("NULL") ?
+                                  Visibility.Visible : Visibility.Collapsed;
+            dtmValue.Visibility = type == "DATETIME" && !operatorText.Contains("NULL") ?
+                                  Visibility.Visible : Visibility.Collapsed;
+            datValue.Visibility = type == "DATE" && !operatorText.Contains("NULL") ?
+                                  Visibility.Visible : Visibility.Collapsed;
+            timValue.Visibility = type == "TIME" && !operatorText.Contains("NULL") ?
+                                  Visibility.Visible : Visibility.Collapsed;
+            chkValue.Visibility = (type.Contains("BOOL") || type == "BIT") && !operatorText.Contains("NULL") ?
+                                  Visibility.Visible : Visibility.Collapsed;
         }
     }
 }
