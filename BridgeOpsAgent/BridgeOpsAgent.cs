@@ -48,7 +48,7 @@ internal class BridgeOpsAgent
 
         // This will count up each time SqlServerNudge() gets no response. If it exceeds maxMissedNudges, the session
         // is terminated.
-        public int missedNudges = 0;
+        private int missedNudges = 0;
         public int MissedNudges { get { return missedNudges; } }
 
         public NetworkStream? stream;
