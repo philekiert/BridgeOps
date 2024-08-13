@@ -1227,6 +1227,11 @@ namespace SendReceiveClasses
         public List<string> whereColumns;
         public List<string> whereOperators;
         public List<string?> whereValues;
+        public List<bool> whereValueTypesNeedQuotes;
+        public List<string> whereAndOrs;
+        public List<int> whereBracketsOpen;
+        public List<int> whereBracketsClose;
+        public List<string> orderBy;
 
         public SelectRequest(string sessionID, int columnRecordID,
                              string table, bool distinct,
@@ -1234,7 +1239,10 @@ namespace SendReceiveClasses
                              List<string> joinColumns1, List<string> joinColumns2,
                              List<string> joinTypes,
                              List<string> columns, List<string> columnAliases,
-                             List<string> whereColumns, List<string> whereOperators, List<string> whereValues)
+                             List<string> whereColumns, List<string> whereOperators,
+                             List<string?> whereValues, List<bool> whereValueTypesNeedQuotes,
+                             List<int> whereBracketsOpen, List<int> whereBracketsClose, List<string> whereAndOrs,
+                             List<string> orderBy)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -1249,6 +1257,11 @@ namespace SendReceiveClasses
             this.whereColumns = whereColumns;
             this.whereOperators = whereOperators;
             this.whereValues = whereValues;
+            this.whereValueTypesNeedQuotes = whereValueTypesNeedQuotes;
+            this.whereAndOrs = whereAndOrs;
+            this.whereBracketsOpen = whereBracketsOpen;
+            this.whereBracketsClose = whereBracketsClose;
+            this.orderBy = orderBy;
         }
 
         public void Prepare()
@@ -1265,8 +1278,8 @@ namespace SendReceiveClasses
             if (!SqlAssist.CheckOperators(whereOperators))
                 whereOperators.Clear();
             SqlAssist.SecureValue(whereValues);
-
-
+            SqlAssist.AddQuotes(whereValues, whereValueTypesNeedQuotes);
+            SqlAssist.SecureColumn(orderBy);
         }
 
         public bool Validate()
@@ -1276,7 +1289,55 @@ namespace SendReceiveClasses
                    joinTables.Count == joinTypes.Count &&
                    columns.Count == columnAliases.Count &&
                    whereColumns.Count == whereOperators.Count &&
-                   whereOperators.Count == whereValues.Count;
+                   whereOperators.Count == whereValues.Count &&
+                   whereValues.Count == whereValueTypesNeedQuotes.Count &&
+                   whereBracketsOpen.Count == whereBracketsClose.Count &&
+                   (whereColumns.Count == 0 || whereAndOrs.Count == whereColumns.Count - 1) &&
+                   orderBy.Count <= columns.Count;
+        }
+
+        public string SqlSelect()
+        {
+            if (!Validate())
+                return "";
+
+            // SELECT columns
+            StringBuilder str = new("SELECT ");
+            for (int i = 0; i < columns.Count; ++i)
+                str.Append(columnAliases[i] == "" ? $"{columns[i]}, " : $"{columns[i]} AS {columnAliases[i]}, ");
+
+            // Get rid of the trailing ",", leaving the space
+            str.Remove(str.Length - 2, 1);
+
+            str.Append($" FROM {table} ");
+
+            // JOINs
+            for (int i = 0; i < joinTables.Count; ++i)
+                str.Append($"{joinTypes[i]} JOIN {joinTables[i]} ON {joinColumns1[i]} = {joinColumns2[i]} ");
+
+            // WHEREs
+            if (whereColumns.Count > 0)
+            {
+                str.Append("WHERE ");
+                for (int i = 0; i < whereColumns.Count; ++i)
+                {
+                    if (i > 0)
+                        str.Append($"{whereAndOrs[i]} ");
+                    str.Append($"{whereColumns[i]} {whereOperators[i]} {whereValues[i]} ");
+                }
+            }
+
+            // ORDER BY
+            if (orderBy.Count > 0)
+            {
+                str.Append("ORDER BY ");
+                for (int i = 0; i < orderBy.Count; ++i)
+                    str.Append(string.Join(", ", orderBy));
+            }
+
+            str.Append(';');
+
+            return str.ToString();
         }
     }
 
@@ -1610,7 +1671,7 @@ namespace SendReceiveClasses
         public static bool CheckOperators(List<string> toCheck)
         {
             foreach (string s in operators)
-                if (!operators.Contains(s)
+                if (!operators.Contains(s))
                     return false;
             return true;
         }

@@ -24,10 +24,12 @@ namespace BridgeOpsClient
         public List<Frame> joins = new();
         public List<Frame> columns = new();
         public List<Frame> wheres = new();
+        public List<Frame> orderBys = new();
 
         public PageSelectBuilderJoin Join(int index) { return (PageSelectBuilderJoin)joins[index].Content; }
         public PageSelectBuilderColumn Column(int index) { return (PageSelectBuilderColumn)columns[index].Content; }
         public PageSelectBuilderWhere Where(int index) { return (PageSelectBuilderWhere)wheres[index].Content; }
+        public PageSelectBuilderOrderBy OrderBy(int index) { return (PageSelectBuilderOrderBy)orderBys[index].Content; }
 
         private void btnAddJoin_Click(object sender, RoutedEventArgs e)
         {
@@ -72,6 +74,21 @@ namespace BridgeOpsClient
             for (int i = 0; i < wheres.Count - 1; ++i)
                 Where(i).ToggleUpDownButtons();
             where.ToggleUpDownButtons();
+        }
+
+        private void btnAddOrderBy_Click(object sender, RoutedEventArgs e)
+        {
+            grdOrderBys.RowDefinitions.Add(new RowDefinition());
+            Frame frame = new();
+            PageSelectBuilderOrderBy orderBy = new(this, frame);
+            frame.Content = orderBy;
+            orderBys.Add(frame);
+            grdOrderBys.Children.Add(frame);
+            Grid.SetRow(frame, orderBys.Count - 1);
+            Grid.SetColumnSpan(frame, 4);
+            for (int i = 0; i < orderBys.Count - 1; ++i)
+                OrderBy(i).ToggleUpDownButtons();
+            orderBy.ToggleUpDownButtons();
         }
 
         public void MoveRow(object row, Frame frame, bool up)
@@ -139,6 +156,27 @@ namespace BridgeOpsClient
                 for (int i = 0; i < wheres.Count; ++i)
                     ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
             }
+            else if (row is PageSelectBuilderOrderBy)
+            {
+                int index = orderBys.IndexOf(frame);
+
+                if (up && index > 0)
+                {
+                    orderBys.RemoveAt(index);
+                    orderBys.Insert(index - 1, frame);
+                }
+                else if (!up && index < orderBys.Count - 1)
+                {
+                    orderBys.RemoveAt(index);
+                    orderBys.Insert(index + 1, frame);
+                }
+                else return;
+
+                for (int i = 0; i < orderBys.Count; ++i)
+                    Grid.SetRow(orderBys[i], i);
+                for (int i = 0; i < orderBys.Count; ++i)
+                    ((PageSelectBuilderOrderBy)orderBys[i].Content).ToggleUpDownButtons();
+            }
             else return;
 
             ResetTabIndices();
@@ -201,6 +239,23 @@ namespace BridgeOpsClient
                 for (int i = 0; i < wheres.Count; ++i)
                     ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
             }
+            else if (row is PageSelectBuilderOrderBy)
+            {
+                for (int i = 0; i < orderBys.Count; ++i)
+                    if (orderBys[i].Content == row && !removed)
+                    {
+                        grdOrderBys.Children.Remove(orderBys[i]);
+                        orderBys.RemoveAt(i);
+                        --i;
+                        removed = true;
+                        grdOrderBys.RowDefinitions.RemoveAt(0);
+                    }
+                    else
+                        Grid.SetRow(orderBys[i], i);
+
+                for (int i = 0; i < orderBys.Count; ++i)
+                    ((PageSelectBuilderOrderBy)orderBys[i].Content).ToggleUpDownButtons();
+            }
             else return;
 
             ResetTabIndices();
@@ -220,6 +275,10 @@ namespace BridgeOpsClient
             btnAddWhere.TabIndex = tabStop++;
             for (i = 0; i < wheres.Count; ++i)
                 wheres[i].TabIndex = i + tabStop;
+            tabStop += i;
+            btnAddOrderBy.TabIndex = tabStop++;
+            for (i = 0; i < orderBys.Count; ++i)
+                orderBys[i].TabIndex = i + tabStop;
         }
 
         List<string> columnNameList = new();
@@ -279,17 +338,13 @@ namespace BridgeOpsClient
             }
             for (int i = 0; i < wheres.Count; ++i)
                 Where(i).cmbColumn.ItemsSource = columnList;
+            for (int i = 0; i < orderBys.Count; ++i)
+                OrderBy(i).cmbOrderBy.ItemsSource = columnList;
         }
 
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateColumns();
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            Width += 1;
-            UpdateLayout();
         }
     }
 }

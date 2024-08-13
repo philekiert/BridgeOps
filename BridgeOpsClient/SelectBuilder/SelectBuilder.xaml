@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        Title="SelectBuilder" SizeToContent="WidthAndHeight" UseLayoutRounding="True" MinWidth="800"
-        Loaded="Window_Loaded">
+        Title="SelectBuilder" SizeToContent="WidthAndHeight" UseLayoutRounding="True" MinWidth="800">
     <Grid Margin="10 10 10 10" x:Name="grdMain">
         <Grid.Resources>
             <Style TargetType="ComboBox">
@@ -57,22 +56,28 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
                     </Grid.RowDefinitions>
                     <!-- Join Selection -->
                     <Button x:Name="btnAddJoin" Click="btnAddJoin_Click" Grid.Row="0" Grid.Column="0"
-                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+" />
+                            Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+" />
                     <Label Grid.Row="0" Grid.Column="1" Content="Table Joins"/>
                     <Grid x:Name="grdJoins" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                     <!-- Column Selection -->
                     <Button x:Name="btnAddColumn" Click="btnAddColumn_Click" Grid.Row="2" Grid.Column="0"
-                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
+                            Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
                     <Label Grid.Row="2" Grid.Column="1" Content="Columns to Display" Grid.ColumnSpan="2"/>
                     <Grid x:Name="grdColumns" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                     <!-- WHERE Selection -->
                     <Button x:Name="btnAddWhere" Click="btnAddWhere_Click" Grid.Row="4" Grid.Column="0"
-                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
+                            Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
                     <Label Grid.Row="4" Grid.Column="1" Content="Where Clauses" Grid.ColumnSpan="2"/>
                     <Grid x:Name="grdWheres" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
+                    <Button x:Name="btnAddOrderBy" Click="btnAddOrderBy_Click"  Grid.Row="6" Grid.Column="0"
+                            Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
+                    <Label Grid.Row="6" Grid.Column="1" Content="Order By" Grid.ColumnSpan="2"/>
+                    <Grid x:Name="grdOrderBys" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                 </Grid>
             </StackPanel>
         </ScrollViewer>
