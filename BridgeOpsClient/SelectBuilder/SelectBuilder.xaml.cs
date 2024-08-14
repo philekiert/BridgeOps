@@ -362,11 +362,7 @@ namespace BridgeOpsClient
             UpdateColumns();
         }
 
-        private void Run_Click(object sender, RoutedEventArgs e)
-        {
-            BuildQuery();
-        }
-
+        private SelectRequest selectRequest = new();
         private bool BuildQuery()
         {
             bool Abort(string message)
@@ -423,6 +419,11 @@ namespace BridgeOpsClient
                 joinTypes.Add(join.cmbType.Text);
             }
 
+            for (int i = 0; i < joinTables.Count - 1; ++i)
+                for (int j = i + 1; j < joinTables.Count; ++i)
+                    if (joinTables[i] == joinTables[j])
+                        return Abort("Each table cannot be selected more than once.");
+
             // Where
             for (int i = 0; i < wheres.Count; ++i)
             {
@@ -466,32 +467,42 @@ namespace BridgeOpsClient
                 selectOrderBys.Add(GetProperColumnName(orderBy.cmbOrderBy.Text));
             }
 
-            SelectRequest selectRequest = new(App.sd.sessionID, ColumnRecord.columnRecordID,
-                                              table, chkDistinct.IsChecked == true,
-                                              joinTables, joinColumns1, joinColumns2, joinTypes,
-                                              selectColumns, columnAliases,
-                                              whereColumns, whereOperators, whereValues, whereValueTypesNeedQuotes,
-                                              whereBracketsOpen, whereBracketsClose, whereAndOrs,
-                                              selectOrderBys);
-
-            // Get where brackets.
-            int andCount = 0;
-            int orCount = 0;
-            foreach (string s in whereAndOrs)
-                if (s == "AND")
-                    ++andCount;
-                else
-                    ++orCount;
-            if (andCount > 0 && orCount > 0)
-            {
-                MessageBox.Show("This tool is currently unable to handle mixing AND and OR operators between " +
-                                "conditions. You will need to run this command directly using SQL Server.");
-                return false;
-            }
-            //SelectBuilderBracketsAddition bracketsAddition = new(selectRequest.SqlSelect());
-            //bracketsAddition.Show();
+            selectRequest = new(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                table, chkDistinct.IsChecked == true,
+                                joinTables, joinColumns1, joinColumns2, joinTypes,
+                                selectColumns, columnAliases,
+                                whereColumns, whereOperators, whereValues, whereValueTypesNeedQuotes,
+                                whereBracketsOpen, whereBracketsClose, whereAndOrs,
+                                selectOrderBys);
 
             return true;
+        }
+
+        private void DisplayCode()
+        {
+            txtCode.Text = selectRequest.SqlSelect();
+        }
+
+        private void btnRun_Click(object sender, RoutedEventArgs e)
+        {
+            if (BuildQuery())
+            {
+                DisplayCode();
+                tabOutput.Focus();
+                List<string?> columnNames;
+                List<List<object?>> rows;
+                App.SendSelectRequest(selectRequest, out columnNames, out rows);
+                dtgOutput.Update(columnNames, rows);
+            }
+        }
+
+        private void btnDisplayCode_Click(object sender, RoutedEventArgs e)
+        {
+            if (BuildQuery())
+                DisplayCode();
+            else
+                txtCode.Text = "SQL code could not be generated.";
+            tabCode.Focus();
         }
     }
 }

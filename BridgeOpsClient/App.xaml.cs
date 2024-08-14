@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using DocumentFormat.OpenXml.Spreadsheet;
 using SendReceiveClasses;
 using static BridgeOpsClient.CustomControls.SqlDataGrid;
 
@@ -851,6 +852,48 @@ namespace BridgeOpsClient
                 }
             }
         }
+        public static bool SendSelectRequest(SelectRequest req,
+                                             out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_SELECT);
+                            sr.WriteAndFlush(stream, sr.Serialise(req));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                columnNames = result.columnNames;
+                                rows = result.rows;
+                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
+                                return true;
+                            }
+                            else if (response == Glo.CLIENT_SESSION_INVALID)
+                                SessionInvalidated();
+                            throw new Exception();
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Could not run or return query.");
+                        columnNames = new();
+                        rows = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
 
         public static bool SelectWide(string table, string value,
                                       out List<string?> columnNames, out List<List<object?>> rows,
@@ -1131,6 +1174,12 @@ namespace BridgeOpsClient
                             DateTime dt;
                             DateTime.TryParse(rows[n][i].ToString(), out dt);
                             rows[n][i] = dt;
+                        }
+                        else if (columnTypes[i] == "TimeSpan")
+                        {
+                            TimeSpan ts;
+                            TimeSpan.TryParse(rows[n][i].ToString(), out ts);
+                            rows[n][i] = ts;
                         }
                         else if (columnTypes[i] == "Boolean")
                         {

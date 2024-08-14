@@ -235,6 +235,21 @@ internal class BridgeOpsAgent
     private static void LogError(Exception e) { LogError("", e); }
     private static void LogError(string s) { LogError(s, null); }
 
+    // For if we want to let a client know that a request failed in a catch block.
+    private static void SafeFail(NetworkStream stream)
+    {
+        try { stream.WriteByte(Glo.CLIENT_REQUEST_FAILED); } catch { }
+    }
+    private static void SafeFail(NetworkStream stream, byte signal)
+    {
+        try { stream.WriteByte(signal); } catch { }
+    }
+    private static void SafeFail(NetworkStream stream, string message)
+    {
+        try { stream.WriteByte(Glo.CLIENT_CONFIRM_MORE_TO_FOLLOW);
+              sr.WriteAndFlush(stream, message); } catch { }
+    }
+
     // Network Configuration
     private static int portInbound = Glo.PORT_INBOUND_DEFAULT;
     private static int portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
@@ -705,6 +720,8 @@ internal class BridgeOpsAgent
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_QUICK)
+                    ClientSelectQuick(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT)
                     ClientSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_WIDE)
                     ClientSelectWide(stream, sqlConnect);
@@ -1303,7 +1320,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run query, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1312,7 +1329,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelect(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectQuick(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1373,11 +1390,43 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run or return query, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
             if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelect(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        // This function does not support historical searches.
+
+        try
+        {
+            sqlConnect.Open();
+            SelectRequest req = sr.Deserialise<SelectRequest>(sr.ReadString(stream));
+
+            if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+
+            SelectResult result = new(com.ExecuteReader());
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
                 sqlConnect.Close();
         }
     }
@@ -1424,10 +1473,8 @@ internal class BridgeOpsAgent
             if (req.value != "") // In that case, just select everything.
             {
                 foreach (KeyValuePair<string, ColumnRecord.Column> kvp in columns)
-                {
                     if (ColumnRecord.IsTypeString(kvp.Value))
                         conditions.Add(kvp.Key + " LIKE \'%" + req.value + "%'");
-                }
 
                 command += " WHERE " + string.Join(" OR ", conditions);
             }
@@ -1446,7 +1493,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run or return query, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1560,7 +1607,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run update, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1617,7 +1664,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't delete record, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1659,7 +1706,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             // This will almost certainly because someone deleted the contact in the meantime, so respond with this.
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
+            SafeFail(stream, Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             LogError("Couldn't create or modify organisation/contact link, see error:", e);
         }
         finally
@@ -1690,7 +1737,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run or return query, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1720,7 +1767,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't select history, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1806,7 +1853,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't build historical record, see error:", e);
-            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            SafeFail(stream);
         }
         finally
         {
@@ -1940,10 +1987,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             if (sqlConnect.State == System.Data.ConnectionState.Open)
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
-                sr.WriteAndFlush(stream, e.Message);
-            }
+                SafeFail(stream, e.Message);
 
             LogError(e);
         }
@@ -2024,7 +2068,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             if (sqlConnect.State == ConnectionState.Open)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                SafeFail(stream);
 
             LogError(e);
         }

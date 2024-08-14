@@ -1212,7 +1212,7 @@ namespace SendReceiveClasses
         }
     }
 
-    struct SelectRequest
+    public struct SelectRequest // Public due to App.SendSelectRequest() being public.
     {
         public string sessionID;
         public int columnRecordID;
@@ -1300,12 +1300,16 @@ namespace SendReceiveClasses
             if (!Validate())
                 return "";
 
+            Prepare();
+
             // SELECT columns
             StringBuilder str = new("SELECT ");
+            if (distinct)
+                str.Append("DISTINCT ");
             for (int i = 0; i < columns.Count; ++i)
             {
                 if (i > 0)
-                    str.Append("       ");
+                    str.Append($"{(distinct ? "                " : "       ")}");
                 str.Append(columnAliases[i] == "" ? $"{columns[i]},\n" : $"{columns[i]} AS {columnAliases[i]},\n");
             }
 
@@ -1318,16 +1322,32 @@ namespace SendReceiveClasses
             for (int i = 0; i < joinTables.Count; ++i)
                 str.Append($"{joinTypes[i]} JOIN {joinTables[i]} ON {joinColumns1[i]} = {joinColumns2[i]}\n");
 
-            // WHEREs
+            // WHEREs (sort left-associatively)
+            bool foundAnd = false;
+            bool foundOr = false;
+            foreach (string andOr in whereAndOrs)
+            {
+                if (!foundAnd && andOr == "AND")
+                    foundAnd = true;
+                else if (!foundOr && andOr == "OR")
+                    foundOr = true;
+                if (foundAnd && foundOr)
+                    break;
+            }
+            bool addBrackets = foundAnd && foundOr; // Brackets only needed if true.
             if (whereColumns.Count > 0)
             {
                 str.Append("WHERE ");
+                if (addBrackets)
+                    for (int i = 0; i < whereColumns.Count; ++i)
+                        str.Append('(');
                 for (int i = 0; i < whereColumns.Count; ++i)
                 {
                     if (i > 0)
                         str.Append($"{(whereAndOrs[i] == "OR" ? "   " : "  ")}{whereAndOrs[i]} ");
                     str.Append($"{whereColumns[i]} {whereOperators[i]}" +
-                               $"{(whereValues[i] == null ? "\n" : " " + whereValues[i] + "\n")}");
+                               $"{(whereValues[i] == null ? "" : " " + whereValues[i])}" +
+                               $"{(addBrackets ? ")\n" : "\n")}");
                 }
             }
 
