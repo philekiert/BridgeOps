@@ -670,11 +670,11 @@ public class ConsoleController
                             else
                             {
                                 DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp);
-                                row[i] = $"'{SqlAssist.DateTimeToSQLType(dto.DateTime)}'";
+                                row[i] = $"'{SqlAssist.DateTimeToSQL(dto.DateTime, false)}'";
                             }
                         }
                         else if (DateTime.TryParse(row[i], out dateTime))
-                            row[i] = $"'{SqlAssist.DateTimeToSQLType(dateTime)}'";
+                            row[i] = $"'{SqlAssist.DateTimeToSQL(dateTime, false)}'";
                     }
                 }
 
@@ -688,7 +688,7 @@ public class ConsoleController
                 bldr.Append(insertInto + string.Join(',', headers) + values + rowString + "); ");
                 bldr.Append(insertRegisterInto + string.Join(',', headersRegister) +
                             values + rowString + registersOn +
-                            "'" + SqlAssist.DateTimeToSQLType(DateTime.Now) + "'); ");
+                            "'" + SqlAssist.DateTimeToSQL(DateTime.Now, false) + "'); ");
                 bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
 
                 // Attempt insert, and if it fails, store the row for review by the user.
@@ -867,7 +867,7 @@ public class ConsoleController
                                    $"1, " + // Switch on the register.
                                    $"1, " + // Admin account should always be 1 after database creation.
                                    $"'Set parent to imported value.', " +
-                                   $"'{SqlAssist.DateTimeToSQLType(DateTime.Now)}'); ");
+                                   $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}'); ");
                 bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
 
                 // Attempt update, and if it fails, store the row for review by the user.

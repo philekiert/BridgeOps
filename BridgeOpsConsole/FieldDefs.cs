@@ -101,11 +101,11 @@ public class FieldDefs
         defs.Add("Organisation ID", new Definition(12, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
         defs.Add("Organisation Organisation ID", new Definition(12, Glo.Tab.PARENT_ID, typeOrgID, false, false, false));
         defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, true, false, false));
-        defs.Add("Organisation Notes", new Definition(12, "Notes", "TEXT", false, false, false));
+        defs.Add("Organisation Notes", new Definition(12, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Contact
         defs.Add("Contact ID", new Definition(7, Glo.Tab.CONTACT_ID, typeContactID, false, true, true));
-        defs.Add("Contact Notes", new Definition(7, "Notes", "TEXT", false, false, false));
+        defs.Add("Contact Notes", new Definition(7, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // User
         defs.Add("Login ID", new Definition(5, Glo.Tab.LOGIN_ID, typeLoginID, false, true, true));
@@ -116,12 +116,12 @@ public class FieldDefs
         defs.Add("Login Edit Permissions", new Definition(5, Glo.Tab.LOGIN_EDIT_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
         defs.Add("Login Delete Permissions", new Definition(5, Glo.Tab.LOGIN_DELETE_PERMISSIONS, "TINYINT UNSIGNED", false, false, false));
         defs.Add("Login Enabled", new Definition(5, Glo.Tab.LOGIN_ENABLED, "BOOLEAN", false, false, false));
-        defs.Add("Login View Settings", new Definition(5, Glo.Tab.LOGIN_VIEW_SETTINGS, "TEXT", false, false, false));
+        defs.Add("Login View Settings", new Definition(5, Glo.Tab.LOGIN_VIEW_SETTINGS, "VARCHAR(MAX)", false, false, false));
 
         // Asset
         defs.Add("Asset ID", new Definition(5, Glo.Tab.ASSET_ID, typeAssetID, false, true, false));
         defs.Add("Asset Organisation ID", new Definition(5, Glo.Tab.ORGANISATION_ID, typeOrgID, false, false, false));
-        defs.Add("Asset Notes", new Definition(5, "Notes", "TEXT", false, false, false));
+        defs.Add("Asset Notes", new Definition(5, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Resource
         defs.Add("Resource ID", new Definition(8, Glo.Tab.RESOURCE_ID, typeResourceID, false, true, true));
@@ -141,7 +141,7 @@ public class FieldDefs
         defs.Add("Conference Buffer", new Definition(10, Glo.Tab.CONFERENCE_BUFFER, "TIME", false, false, false));
         defs.Add("Conference Organisation ID", new Definition(10, Glo.Tab.ORGANISATION_ID, typeOrgID, false, false, false));
         defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
-        defs.Add("Conference Notes", new Definition(10, "Notes", "TEXT", false, false, false));
+        defs.Add("Conference Notes", new Definition(10, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Conference Type
         defs.Add("Conference Type ID", new Definition(15, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, true, true));
@@ -258,7 +258,7 @@ public class FieldDefs
                      "\n" +
                      "# Fields cannot be renamed.\n" +
                      "# All values must be placed at the end of a line after a double-space, with no white space afterwards.\n" +
-                     "# VARCHAR length values must be between 1 and 8000.\n" +
+                     "# VARCHAR length values must be between 1 and 65535.\n" +
                      "# Type values are limited to TINYINT, SMALLINT and INT.\n" +
                      "\n" +
                      "# Primary key value MUST be placed above all others. Any placed out of order will be ignored.\n" +
@@ -381,7 +381,7 @@ public class FieldDefs
                         "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT (these cannot accept [allowed] values)" +
                         "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
                         "\n#      Date: DATE (cannot accept [allowed] values)" +
-                        "\n#      Text: VARCHAR(0 - 8000), TEXT (only VARCHAR can accept [allowed] values)" +
+                        "\n#      Text: VARCHAR(0 - 65535), VARCHAR(MAX) (either can accept [allowed] values)" +
                         "\n#      Boolean: BOOLEAN (cannot accept [allowed] values)" +
                         "\n#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +
                         "\n" +

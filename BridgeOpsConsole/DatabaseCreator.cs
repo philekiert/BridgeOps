@@ -405,7 +405,7 @@ public class DatabaseCreator
                 else
                     column += "CREATE TABLE " + fieldDefs.TableName(def.Key) + " (";
                 // UNSIGNED is not supported in SQL Server.
-                column += def.Value.columnName + " " + 
+                column += def.Value.columnName + " " +
                           (def.Value.sqlType == "BOOLEAN" ? "BIT" : def.Value.sqlType).Replace(" UNSIGNED", "");
 
                 // Auto Increment keys.
@@ -683,7 +683,7 @@ public class DatabaseCreator
                     }
                     if (!invalidated)
                     {
-                        if (type.StartsWith("VARCHAR"))
+                        if (type.StartsWith("VARCHAR") && type != "VARCHAR(MAX)")
                         {
                             if (int.TryParse(fieldDefs.ExtractVARCHARLength(type), out varcharLength))
                             {
@@ -710,21 +710,21 @@ public class DatabaseCreator
                         }
                         else if (type.StartsWith("VARCHAR")) // length already validated above :)
                         {
-                            foreach (string a in allowArr)
-                            {
-                                if (a.Length > varcharLength || a.Contains("' OR ["))
+                            if (type != "VARCHAR(MAX)")
+                                foreach (string a in allowArr)
                                 {
-                                    invalidated = true;
-                                    break;
+                                    if (a.Length > varcharLength || a.Contains("' OR ["))
+                                    {
+                                        invalidated = true;
+                                        break;
+                                    }
                                 }
-                            }
                         }
                         else
                         {
                             // SQL Server doesn't like BOOLEAN, but this is corrected to BIT in CreateDatabase().
                             bool isOtherType = type == "FLOAT" ||
                                                type == "DATE" ||
-                                               type == "TEXT" ||
                                                type == "BOOLEAN";
                             if (isOtherType && foundAllowList)
                                 invalidated = true;
