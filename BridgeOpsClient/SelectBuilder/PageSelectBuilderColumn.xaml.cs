@@ -59,5 +59,20 @@ namespace BridgeOpsClient
         {
             selectBuilder.UpdateColumns();
         }
+
+        private void cmbColumn_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbColumn.SelectedItem != null)
+                if (((string)cmbColumn.SelectedItem).EndsWith('*'))
+                {
+                    lblAlias.Visibility = Visibility.Collapsed;
+                    txtAlias.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    lblAlias.Visibility = Visibility.Visible;
+                    txtAlias.Visibility = Visibility.Visible;
+                }
+        }
     }
 }

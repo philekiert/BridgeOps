@@ -1232,6 +1232,7 @@ namespace SendReceiveClasses
         public List<int> whereBracketsOpen;
         public List<int> whereBracketsClose;
         public List<string> orderBy;
+        public List<bool> orderByAsc;
 
         public SelectRequest(string sessionID, int columnRecordID,
                              string table, bool distinct,
@@ -1242,7 +1243,8 @@ namespace SendReceiveClasses
                              List<string> whereColumns, List<string> whereOperators,
                              List<string?> whereValues, List<bool> whereValueTypesNeedQuotes,
                              List<int> whereBracketsOpen, List<int> whereBracketsClose, List<string> whereAndOrs,
-                             List<string> orderBy)
+                             List<string> orderBy,
+                             List<bool> orderByAsc)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -1262,6 +1264,7 @@ namespace SendReceiveClasses
             this.whereBracketsOpen = whereBracketsOpen;
             this.whereBracketsClose = whereBracketsClose;
             this.orderBy = orderBy;
+            this.orderByAsc = orderByAsc;
         }
 
         public void Prepare()
@@ -1278,7 +1281,6 @@ namespace SendReceiveClasses
             if (!SqlAssist.CheckOperators(whereOperators))
                 whereOperators.Clear();
             SqlAssist.SecureValue(whereValues);
-            SqlAssist.AddQuotes(whereValues, whereValueTypesNeedQuotes);
             SqlAssist.SecureColumn(orderBy);
         }
 
@@ -1292,7 +1294,8 @@ namespace SendReceiveClasses
                    whereOperators.Count == whereValues.Count &&
                    whereValues.Count == whereValueTypesNeedQuotes.Count &&
                    whereBracketsOpen.Count == whereBracketsClose.Count &&
-                   (whereColumns.Count == 0 || whereAndOrs.Count != whereColumns.Count - 1);
+                   (whereColumns.Count == 0 || whereAndOrs.Count != whereColumns.Count - 1) &&
+                   orderBy.Count == orderByAsc.Count;
         }
 
         public string SqlSelect()
@@ -1345,9 +1348,11 @@ namespace SendReceiveClasses
                 {
                     if (i > 0)
                         str.Append($"{(whereAndOrs[i] == "OR" ? "   " : "  ")}{whereAndOrs[i]} ");
-                    str.Append($"{whereColumns[i]} {whereOperators[i]}" +
-                               $"{(whereValues[i] == null ? "" : " " + whereValues[i])}" +
-                               $"{(addBrackets ? ")\n" : "\n")}");
+                    str.Append($"{whereColumns[i]} {whereOperators[i]}");
+                    if (whereValues[i] != null)
+                        str.Append(whereValueTypesNeedQuotes[i] ?
+                                   " " + SqlAssist.AddQuotes(whereValues[i]!) : " " + whereValues[i]);
+                    str.Append(addBrackets ? ")\n" : "\n");
                 }
             }
 
@@ -1359,7 +1364,7 @@ namespace SendReceiveClasses
                 {
                     if (i > 0)
                         str.Append("         ");
-                    str.Append(orderBy[i] + ",\n");
+                    str.Append(orderBy[i] + (orderByAsc[i] ? " ASC" : " DESC") + ",\n");
                 }
                 // Get rid of the trailing ",", leaving the new line.
                 str = str.Remove(str.Length - 2, 1);
@@ -1690,7 +1695,7 @@ namespace SendReceiveClasses
             }
         }
 
-        private static HashSet<string> joinTypes = new() { "INNER", "OUTER", "LEFT", "RIGHT" };
+        private static HashSet<string> joinTypes = new() { "INNER", "LEFT", "RIGHT", "LEFT OUTER", "RIGHT OUTER", "FULL OUTER" };
         private static HashSet<string> operators = new() { "=", "<", ">", "<=", ">=", "LIKE", "IS NULL", "IS NOT NULL" };
         public static bool CheckJoinTypes(List<string> toCheck)
         {

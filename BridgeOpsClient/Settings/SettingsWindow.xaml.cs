@@ -216,6 +216,8 @@ namespace BridgeOpsClient
                                                     col.Value.type == "BIT" ? "BOOLEAN" : col.Value.type,
                                                     col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
                                                     string.Join("; ", col.Value.allowed) };
+                        if (col.Value.type == "VARCHAR" && col.Value.restriction == Int32.MaxValue)
+                            row[3] = "VARCHAR(MAX)";
                         rows.Add(row);
                     }
                 }

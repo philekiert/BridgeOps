@@ -20,6 +20,8 @@ namespace BridgeOpsClient
         public SelectBuilder()
         {
             InitializeComponent();
+
+            dtgOutput.EnableMultiSelect();
         }
 
         public List<Frame> joins = new();
@@ -386,6 +388,7 @@ namespace BridgeOpsClient
             List<int> whereBracketsOpen = new();
             List<int> whereBracketsClose = new();
             List<string> selectOrderBys = new();
+            List<bool> orderByAsc = new();
 
             // Table
             if (cmbTable.SelectedIndex < 0 || cmbTable.Text == "")
@@ -401,7 +404,7 @@ namespace BridgeOpsClient
                 if (col.cmbColumn.SelectedIndex < 0 || col.cmbColumn.Text == "")
                     return Abort("All column fields must contain a selection.");
                 selectColumns.Add(GetProperColumnName(col.cmbColumn.Text));
-                columnAliases.Add(col.txtAlias.Text);
+                columnAliases.Add(col.txtAlias.Visibility == Visibility.Visible ? col.txtAlias.Text : "");
             }
 
             // Joins
@@ -420,7 +423,7 @@ namespace BridgeOpsClient
             }
 
             for (int i = 0; i < joinTables.Count - 1; ++i)
-                for (int j = i + 1; j < joinTables.Count; ++i)
+                for (int j = i + 1; j < joinTables.Count; ++j)
                     if (joinTables[i] == joinTables[j])
                         return Abort("Each table cannot be selected more than once.");
 
@@ -465,6 +468,7 @@ namespace BridgeOpsClient
                 if (orderBy.cmbOrderBy.SelectedIndex < 0 || orderBy.cmbOrderBy.Text == "")
                     return Abort("All ORDER BY fields must have a column selected.");
                 selectOrderBys.Add(GetProperColumnName(orderBy.cmbOrderBy.Text));
+                orderByAsc.Add(orderBy.cmbAscDesc.Text == "ASC");
             }
 
             selectRequest = new(App.sd.sessionID, ColumnRecord.columnRecordID,
@@ -473,7 +477,7 @@ namespace BridgeOpsClient
                                 selectColumns, columnAliases,
                                 whereColumns, whereOperators, whereValues, whereValueTypesNeedQuotes,
                                 whereBracketsOpen, whereBracketsClose, whereAndOrs,
-                                selectOrderBys);
+                                selectOrderBys, orderByAsc);
 
             return true;
         }

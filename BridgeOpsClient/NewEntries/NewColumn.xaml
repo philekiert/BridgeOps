@@ -42,7 +42,7 @@
         <ComboBox Grid.Row="3" Grid.Column="1" Margin="10 2 10 2" x:Name="cmbType"
                   SelectionChanged="cmbType_SelectionChanged">
             <ComboBoxItem Content="VARCHAR"/>
-            <ComboBoxItem Content="TEXT"/>
+            <ComboBoxItem Content="VARCHAR(MAX)"/>
             <ComboBoxItem Content="TINYINT"/>
             <ComboBoxItem Content="SMALLINT"/>
             <ComboBoxItem Content="INT"/>

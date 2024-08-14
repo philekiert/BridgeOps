@@ -221,9 +221,9 @@ public static class ColumnRecord
     }
 
     public static bool IsTypeString(string type)
-    { return type == "TEXT" || type == "VARCHAR"; }
+    { return type == "VARCHAR"; }
     public static bool IsTypeString(Column col)
-    { return col.type == "TEXT" || col.type == "VARCHAR"; }
+    { return col.type == "VARCHAR"; }
     public static bool IsTypeInt(string type)
     { return type.Contains("INT"); }
     public static bool IsTypeInt(Column col)
@@ -306,7 +306,7 @@ public static class ColumnRecord
                 if (int.TryParse(restriction, out r))
                 {
                     type = "VARCHAR";
-                    max = r;
+                    max = r == -1 ? Int32.MaxValue : r;
                 }
                 else if (type == "TINYINT")
                     max = 255;
@@ -314,12 +314,12 @@ public static class ColumnRecord
                     max = 32_767;
                 else if (type == "BIGINT")
                     max = 9_223_372_036_854_775_807;
-                else if (type == "INT" || type == "TEXT")
+                else if (type == "INT")
                     max = 2_147_483_647;
                 // else max remains 0 for dates.
 
                 Column col = new Column(type, max, allowedArr, "");
-
+   
 
                 // Add column to the relevant Dictionary, using the column name as the key.
                 if (table == "Organisation")

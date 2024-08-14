@@ -246,7 +246,7 @@ internal class BridgeOpsAgent
     }
     private static void SafeFail(NetworkStream stream, string message)
     {
-        try { stream.WriteByte(Glo.CLIENT_CONFIRM_MORE_TO_FOLLOW);
+        try { stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
               sr.WriteAndFlush(stream, message); } catch { }
     }
 
@@ -345,7 +345,7 @@ internal class BridgeOpsAgent
             }
             reader.Close();
 
-            // Get the max lengths of varchars. TEXT will be 
+            // Get the max lengths of varchars.
             sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
                                         "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS " +
                                         "WHERE TABLE_NAME != 'OrganisationOrder' AND " +
@@ -361,8 +361,6 @@ internal class BridgeOpsAgent
                 if (!reader.IsDBNull(3))
                 {
                     int lengthInt = reader.GetInt32(3);
-                    // Limit TEXT length to 65535, as SQL Server returns this value as bytes allowed, not characters.
-                    //length = (lengthInt > 65535 ? 65535 : lengthInt).ToString(); (See note above about compatibilty)
                     length = lengthInt.ToString();
                 }
                 columns.Add(new string[] { reader.GetString(0), reader.GetString(1), reader.GetString(2), length });
@@ -393,7 +391,7 @@ internal class BridgeOpsAgent
                     column[3] = ""; // No need to track limit for TEXT as it's always the same.
                 }
                 else // varchar (char is not used by the application)
-                    fileText += column[3];
+                    fileText += column[3]; // VARCHAR(MAX) will show up as -1 here.
                 if (checkConstraints.ContainsKey(column[0] + column[1]))
                 {
                     foreach (string s in checkConstraints[column[0] + column[1]])

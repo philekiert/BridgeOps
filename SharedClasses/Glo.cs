@@ -110,7 +110,7 @@ public static class Glo
     public const string NETWORK_SETTINGS_PORT_OUTBOUND = "outbound port: ";
 
 
-    public const string TEXT = "TEXT";
+    public const string VARCHARMAX = "VARCHAR(MAX)";
     public const string INT = "INT";
     public const string SMALLINT = "SMALLINT";
     public const string TINYINT = "TINYINT";

@@ -5,13 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Select Query Builder" SizeToContent="WidthAndHeight" UseLayoutRounding="True">
+        Title="Select Query Builder" Width="1000" Height="500" UseLayoutRounding="True"
+        MinWidth="810">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="600"/>
-            <ColumnDefinition Width="*" MinWidth="400"/>
+            <ColumnDefinition Width="*" MinWidth="500"/>
+            <ColumnDefinition Width="*" MinWidth="300"/>
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0" Margin="10 10 10 10" x:Name="grdMain" MinWidth="800">
+        <Grid Grid.Column="0" Margin="10 10 10 10" x:Name="grdMain">
             <Grid.Resources>
                 <Style TargetType="ComboBox">
                     <Setter Property="Margin" Value="10 5 10 5"/>

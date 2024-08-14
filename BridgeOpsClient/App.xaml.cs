@@ -874,8 +874,22 @@ namespace BridgeOpsClient
                                 ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
                                 return true;
                             }
-                            else if (response == Glo.CLIENT_SESSION_INVALID)
+                            columnNames = new();
+                            rows = new();
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
                                 SessionInvalidated();
+                                return false;
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                MessageBox.Show("The SQL query could not be run. See error:\n\n" +
+                                                sr.ReadString(stream));
+                                columnNames = new();
+                                rows = new();
+                                return false;
+
+                            }
                             throw new Exception();
                         }
                         throw new Exception();

@@ -47,9 +47,13 @@ namespace BridgeOpsClient
             txtColumnName.IsEnabled = !integral;
             txtFriendlyName.IsEnabled = integral;
             txtFriendlyName.Text = columnDetails.friendlyName;
-            cmbType.Text = columnDetails.type == "BIT" ? "BOOLEAN" : columnDetails.type;
             txtLimit.Text = columnDetails.restriction.ToString();
             txtAllowed.Text = string.Join("\r\n", columnDetails.allowed);
+
+            if (columnDetails.type == "VARCHAR" && columnDetails.restriction == Int32.MaxValue)
+                cmbType.SelectedIndex = 1;
+            else
+                cmbType.Text = columnDetails.type == "BIT" ? "BOOLEAN" : columnDetails.type;
 
             if (integral) // If integral to the database's structure, not as in integer
             {
@@ -64,6 +68,19 @@ namespace BridgeOpsClient
                     cmbType.Text = columnDetails.type;
                     cmbType.SelectedIndex = cmbType.SelectedIndex;
                     updatingTypeOptions = false;
+                }
+                else if (columnDetails.type.StartsWith("VARCHAR"))
+                {
+                    updatingTypeOptions = true;
+                    cmbType.Items.RemoveAt(2);
+                    cmbType.Items.RemoveAt(2);
+                    cmbType.Items.RemoveAt(2);
+                    cmbType.Items.RemoveAt(2);
+                    cmbType.Items.RemoveAt(2);
+                    cmbType.Items.RemoveAt(2);
+                    updatingTypeOptions = false;
+                    if (columnDetails.restriction == Int32.MaxValue)
+                        cmbType.SelectedIndex = 1;
                 }
                 else
                     cmbType.IsEnabled = false;
@@ -91,9 +108,11 @@ namespace BridgeOpsClient
                     txtLimit.IsEnabled = true;
                     txtLimit.Text = "";
                     txtAllowed.IsEnabled = !integral;
+                    if (columnDetails.type == "VARCHAR" && columnDetails.restriction <= 65535)
+                        txtLimit.Text = columnDetails.restriction.ToString();
                     break;
-                case "TEXT":
-                    txtLimit.Text = "2,147,483,647";
+                case "VARCHAR(MAX)":
+                    txtLimit.Text = "2^31-1";
                     break;
                 case "TINYINT":
                     txtLimit.Text = "255";
@@ -156,7 +175,6 @@ namespace BridgeOpsClient
 
         private void VARCHAR(ref SendReceiveClasses.TableModification mod)
         {
-            // Make sure that 
             if (mod.columnType != "VARCHAR")
                 return;
 
@@ -195,9 +213,9 @@ namespace BridgeOpsClient
                         MessageBox.Show("Max value must be greater than 0.");
                         return false;
                     }
-                    if (limit > 8000)
+                    if (limit > 65535)
                     {
-                        MessageBox.Show("Max value must be greater than 0.");
+                        MessageBox.Show("Max value must be less than 65536.");
                         return false;
                     }
                 }

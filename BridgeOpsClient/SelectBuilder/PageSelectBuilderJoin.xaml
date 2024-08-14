@@ -58,11 +58,13 @@
         <ComboBox Grid.Row="0" Grid.Column="8" MinWidth="80" Margin="0 5 10 5"
                   x:Name="cmbColumn2"/>
         <Label Content="Type" Grid.Row="0" Grid.Column="9" Margin="0 0 -7 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="0" Width="66" x:Name="cmbType">
+        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="4" Width="104" x:Name="cmbType">
             <ComboBoxItem Content="INNER"/>
-            <ComboBoxItem Content="OUTER"/>
             <ComboBoxItem Content="LEFT"/>
             <ComboBoxItem Content="RIGHT"/>
+            <ComboBoxItem Content="LEFT OUTER"/>
+            <ComboBoxItem Content="RIGHT OUTER"/>
+            <ComboBoxItem Content="FULL OUTER"/>
         </ComboBox>
     </Grid>
 </Page>
