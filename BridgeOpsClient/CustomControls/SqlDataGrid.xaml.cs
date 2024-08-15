@@ -508,15 +508,30 @@ namespace BridgeOpsClient.CustomControls
 
             // Add rows.
             cell = sheet.Cell(2, 1);
-            List<Row> selectedOrdered = dtg.SelectedItems.Cast<Row>().ToList();
-            object?[] rowObjects = new object?[dtg.Columns.Count];
-            foreach (Row row in selectedOrdered.OrderBy(r => dtg.Items.IndexOf(r)))
+            if (dtg.SelectionMode == DataGridSelectionMode.Extended)
             {
-                for (n = 0; n < row.items.Count; ++n)
-                    rowObjects[n] = row.items[order[n]];
+                List<Row> selectedOrdered = dtg.SelectedItems.Cast<Row>().ToList();
+                object?[] rowObjects = new object?[dtg.Columns.Count];
+                foreach (Row row in selectedOrdered.OrderBy(r => dtg.Items.IndexOf(r)))
+                {
+                    for (n = 0; n < row.items.Count; ++n)
+                        rowObjects[n] = row.items[order[n]];
 
-                cell.InsertData(rowObjects, true);
-                cell = cell.CellBelow();
+                    cell.InsertData(rowObjects, true);
+                    cell = cell.CellBelow();
+                }
+            }
+            else // Export whole table if multi-select isn't an option.
+            {
+                foreach (Row row in dtg.Items)
+                {
+                    object?[] rowObjects = new object?[dtg.Columns.Count];
+                    for (n = 0; n < row.items.Count; ++n)
+                        rowObjects[n] = row.items[order[n]];
+
+                    cell.InsertData(rowObjects, true);
+                    cell = cell.CellBelow();
+                }
             }
 
             // Apply suitable column widths.
