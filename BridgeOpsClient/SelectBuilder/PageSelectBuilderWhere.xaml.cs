@@ -17,12 +17,12 @@ namespace BridgeOpsClient
 {
     public partial class PageSelectBuilderWhere : Page
     {
-        public SelectBuilder selectBuilder;
+        public PageSelectBuilder selectBuilder;
         public Frame frame;
 
         public string type = "";
 
-        public PageSelectBuilderWhere(SelectBuilder selectBuilder, Frame frame)
+        public PageSelectBuilderWhere(PageSelectBuilder selectBuilder, Frame frame)
         {
             InitializeComponent();
 

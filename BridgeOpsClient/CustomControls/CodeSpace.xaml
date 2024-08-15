@@ -10,8 +10,8 @@
          FontFamily="/BridgeOpsClient;component/Resources/Fonts/Roboto Mono/#Roboto Mono Medium"
          FontSize="13"
          Foreground="#eee"
+         TextWrapping="NoWrap"
          ScrollViewer.HorizontalScrollBarVisibility="Auto"
-         ScrollViewer.VerticalScrollBarVisibility="Visible"
-         
+         ScrollViewer.VerticalScrollBarVisibility="Auto"
          >
 </TextBox>

@@ -17,10 +17,10 @@ namespace BridgeOpsClient
 {
     public partial class PageSelectBuilderJoin : Page
     {
-        public SelectBuilder selectBuilder;
+        public PageSelectBuilder selectBuilder;
         public Frame frame;
 
-        public PageSelectBuilderJoin(SelectBuilder selectBuilder, Frame frame)
+        public PageSelectBuilderJoin(PageSelectBuilder selectBuilder, Frame frame)
         {
             InitializeComponent();
 

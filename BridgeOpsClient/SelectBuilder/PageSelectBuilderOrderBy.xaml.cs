@@ -20,10 +20,10 @@ namespace BridgeOpsClient
     /// </summary>
     public partial class PageSelectBuilderOrderBy : Page
     {
-        public SelectBuilder selectBuilder;
+        public PageSelectBuilder selectBuilder;
         public Frame frame;
 
-        public PageSelectBuilderOrderBy(SelectBuilder selectBuilder, Frame frame)
+        public PageSelectBuilderOrderBy(PageSelectBuilder selectBuilder, Frame frame)
         {
             InitializeComponent();
 

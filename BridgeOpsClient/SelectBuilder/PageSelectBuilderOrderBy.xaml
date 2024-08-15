@@ -33,7 +33,7 @@
                 Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
         <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
                 Padding="0 -2 0 0" Margin="-1 5 20 5" Width="24" Content="▼"/>
-        <ComboBox Grid.Row="0" Grid.Column="3" MinWidth="100" Width="Auto" Margin="0 5 10 5"
+        <ComboBox Grid.Row="0" Grid.Column="3" MinWidth="80" Width="Auto" Margin="0 5 10 5"
                   x:Name="cmbOrderBy"/>
         <ComboBox Grid.Row="0" Grid.Column="4" Width="60" Margin="0 5 10 5" SelectedIndex="1"
                   x:Name="cmbAscDesc">

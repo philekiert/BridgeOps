@@ -8,107 +8,32 @@
         Title="Select Query Builder" Width="1000" Height="500" UseLayoutRounding="True"
         MinWidth="810">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="500"/>
-            <ColumnDefinition Width="*" MinWidth="300"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0" Margin="10 10 10 10" x:Name="grdMain">
-            <Grid.Resources>
-                <Style TargetType="ComboBox">
-                    <Setter Property="Margin" Value="10 5 10 5"/>
-                </Style>
-                <Style TargetType="TextBox">
-                    <Setter Property="Margin" Value="10 5 10 5"/>
-                </Style>
-                <Style TargetType="Label">
-                    <Setter Property="VerticalAlignment" Value="Center"/>
-                </Style>
-            </Grid.Resources>
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MaxWidth="50"/>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <!-- Table Selection -->
-            <Label Content="Table" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
-            <ComboBox x:Name="cmbTable" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
-                      Margin="3 5 0 5" Width="150" MaxWidth="200" HorizontalAlignment="Left"
-                      SelectionChanged="cmbTable_SelectionChanged">
-                <ComboBoxItem Content="Organisation"/>
-                <ComboBoxItem Content="OrganisationChange"/>
-                <ComboBoxItem Content="OrganisationContacts"/>
-                <ComboBoxItem Content="Asset"/>
-                <ComboBoxItem Content="AssetChange"/>
-                <ComboBoxItem Content="Contact"/>
-            </ComboBox>
-            <Label Content="Remove Duplicate Rows" x:Name="lblDistinct" Grid.Row="0" Grid.Column="3"/>
-            <CheckBox Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" x:Name="chkDistinct"/>
-            <ScrollViewer Grid.Row="1" Grid.ColumnSpan="4" HorizontalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
-                        <!-- Join Selection -->
-                        <Button x:Name="btnAddJoin" Click="btnAddJoin_Click" Grid.Row="0" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+" />
-                        <Label Grid.Row="0" Grid.Column="1" Content="Table Joins"/>
-                        <Grid x:Name="grdJoins" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
-                        <!-- Column Selection -->
-                        <Button x:Name="btnAddColumn" Click="btnAddColumn_Click" Grid.Row="2" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
-                        <Label Grid.Row="2" Grid.Column="1" Content="Columns to Display" Grid.ColumnSpan="2"/>
-                        <Grid x:Name="grdColumns" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
-                        <!-- WHERE Selection -->
-                        <Button x:Name="btnAddWhere" Click="btnAddWhere_Click" Grid.Row="4" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
-                        <Label Grid.Row="4" Grid.Column="1" Content="Where Clauses" Grid.ColumnSpan="2"/>
-                        <Grid x:Name="grdWheres" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
-                        <Button x:Name="btnAddOrderBy" Click="btnAddOrderBy_Click"  Grid.Row="6" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
-                        <Label Grid.Row="6" Grid.Column="1" Content="Order By" Grid.ColumnSpan="2"/>
-                        <Grid x:Name="grdOrderBys" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
-                    </Grid>
-                </StackPanel>
-            </ScrollViewer>
-            <Grid Grid.Row="2" Grid.ColumnSpan="4" >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" x:Name="btnRun" Content="Run" Width="50" Margin="5 20 0 10"
-                        HorizontalAlignment="Left" Click="btnRun_Click"/>
-                <Button Grid.Column="1" x:Name="btnDisplayCode" Content="Display Code" Width="100" Margin="10 20 0 10"
-                        HorizontalAlignment="Left" Click="btnDisplayCode_Click"/>
-            </Grid>
-        </Grid>
-        <GridSplitter Grid.Column="0" x:Name="spltConfData" Width="5"
-                      HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
-        <TabControl Grid.Column="1">
-            <TabItem Header="Output" x:Name="tabOutput">
-                <customcontrols:SqlDataGrid x:Name="dtgOutput"/>
-            </TabItem>
-            <TabItem Header="Query Code" x:Name="tabCode">
-                <customcontrols:CodeSpace x:Name="txtCode" IsReadOnly="True"/>
-            </TabItem>
+        <Button x:Name="btnAddTab" Grid.Column="0" Content="+" Click="btnAddTab_Click"
+                Padding="0 -2 0 0" Margin="10 10 5 10" Width="24" Height="24"/>
+        <Button x:Name="btnRemoveTab" Grid.Column="1" Content="-" Click="btnRemoveTab_Click"
+                Padding="0 -2 0 0" Margin="5 10 5 10" Width="24" Height="24" IsEnabled="False"/>
+        <Button x:Name="btnMoveLeft" Grid.Column="2" Content="◀" Click="btnMoveLeft_Click"
+                Padding="0 -2 0 0" Margin="5 10 0 10" Width="24" Height="24" IsEnabled="False"/>
+        <Button x:Name="btnMoveRight" Grid.Column="3" Content="▶" Click="btnMoveRight_Click"
+                Padding="0 -2 0 0" Margin="-1 10 5 10" Width="24" Height="24" IsEnabled="False"/>
+        <Label x:Name="lblTabName" Content="Tab Name" Grid.Column="4" Width="Auto" Margin="10 10 5 10"/>
+        <TextBox x:Name="txtTabName" Grid.Column="5" Width="300" Margin="5 10 5 10" Height="24"
+                 VerticalContentAlignment="Center" TextChanged="txtTabName_TextChanged"/>
+        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="7"
+                    SelectionChanged="tabControl_SelectionChanged">
         </TabControl>
     </Grid>
 </Window>
