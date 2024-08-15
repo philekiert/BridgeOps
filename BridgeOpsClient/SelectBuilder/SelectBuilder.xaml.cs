@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using SendReceiveClasses;
+using ClosedXML.Excel;
 
 namespace BridgeOpsClient
 {
@@ -35,6 +36,11 @@ namespace BridgeOpsClient
             };
             tabControl.Items.Add(tabItem);
             tabControl.SelectedItem = tabItem;
+        }
+
+        PageSelectBuilder GetBuilder(TabItem tabItem)
+        {
+            return (PageSelectBuilder)((Frame)(tabItem.Content)).Content;
         }
 
         private void btnAddTab_Click(object sender, RoutedEventArgs e)
@@ -114,6 +120,49 @@ namespace BridgeOpsClient
         private void txtTabName_TextChanged(object sender, TextChangedEventArgs e)
         {
             ((TabItem)tabControl.SelectedItem).Header = txtTabName.Text;
+        }
+
+        private void btnExportAllPages_Click(object sender, RoutedEventArgs e)
+        {
+            XLWorkbook xl = new();
+
+            foreach (TabItem tab in tabControl.Items)
+            {
+                List<string?> columnNames;
+                List<List<object?>> rows;
+                if (!GetBuilder(tab).Run(out columnNames, out rows, false))
+                    return;
+
+                PageSelectBuilder builder = GetBuilder(tab);
+                IXLWorksheet sheet = xl.AddWorksheet((string)tab.Header);
+
+                // Add headers.
+                IXLCell cell = sheet.Cell(1, 1);
+                int columnCount = 0;
+                foreach (string? s in columnNames)
+                {
+                    cell.Value = s;
+                    cell = cell.CellRight();
+                    ++columnCount;
+                }
+
+                // Add rows.
+                cell = sheet.Cell(2, 1);
+                foreach (var row in rows)
+                {
+                    cell.InsertData(row, true);
+                    cell = cell.CellBelow();
+                }
+
+                // Apply suitable column widths.
+                FileExport.AutoWidthColumns(columnCount, sheet);
+            }
+
+            // Save as...
+            string fileName;
+            if (!FileExport.GetSaveFileName(out fileName))
+                return;
+            FileExport.SaveFile(xl, fileName);
         }
     }
 }

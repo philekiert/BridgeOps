@@ -24,6 +24,7 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             dtgOutput.EnableMultiSelect();
+            dtgOutput.AddWipeButton();
         }
 
         public List<Frame> joins = new();
@@ -366,9 +367,14 @@ namespace BridgeOpsClient
             UpdateColumns();
         }
 
+
+        // Used for retaining friendly names as we don't have the dictionaries to help us in the output stage.
+        private List<string> chosenColumnNames = new();
         private SelectRequest selectRequest = new();
         private bool BuildQuery()
         {
+            chosenColumnNames = new();
+
             bool Abort(string message)
             {
                 MessageBox.Show(message);
@@ -405,8 +411,25 @@ namespace BridgeOpsClient
                 PageSelectBuilderColumn col = Column(i);
                 if (col.cmbColumn.SelectedIndex < 0 || col.cmbColumn.Text == "")
                     return Abort("All column fields must contain a selection.");
-                selectColumns.Add(GetProperColumnName(col.cmbColumn.Text));
-                columnAliases.Add(col.txtAlias.Visibility == Visibility.Visible ? col.txtAlias.Text : "");
+                string colText = col.cmbColumn.Text;
+                string colName = colText.Substring(colText.IndexOf('.') + 1);
+                if (colText.EndsWith("*"))
+                {
+                    string colTable = colText.Remove(colText.IndexOf('.'));
+                    var dictionary = ColumnRecord.GetDictionary(colTable, true);
+                    foreach (var kvp in dictionary!)
+                    {
+                        selectColumns.Add(colTable + "." + kvp.Key);
+                        columnAliases.Add("");
+                        chosenColumnNames.Add(ColumnRecord.GetPrintName(kvp));
+                    }
+                }
+                else
+                {
+                    selectColumns.Add(GetProperColumnName(col.cmbColumn.Text));
+                    columnAliases.Add(col.txtAlias.Visibility == Visibility.Visible ? col.txtAlias.Text : "");
+                    chosenColumnNames.Add(col.txtAlias.Text == "" ? colName : col.txtAlias.Text);
+                }
             }
 
             // Joins
@@ -491,15 +514,34 @@ namespace BridgeOpsClient
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
+            Run(out _, out _, true);
+        }
+
+        public bool Run(out List<string?> columnNames, out List<List<object?>> rows, bool fillGrid)
+        {
             if (BuildQuery())
             {
                 DisplayCode();
                 tabOutput.Focus();
-                List<string?> columnNames;
-                List<List<object?>> rows;
                 App.SendSelectRequest(selectRequest, out columnNames, out rows);
-                dtgOutput.Update(columnNames, rows);
+                if (columnNames.Count == chosenColumnNames.Count)
+                    for (int i = 0; i < columnNames.Count; ++i)
+                        columnNames[i] = chosenColumnNames[i];
+                if (fillGrid)
+                    try
+                    {
+                        dtgOutput.Update(columnNames, rows);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
+                        return false;
+                    }
+                return true;
             }
+            columnNames = new();
+            rows = new();
+            return false;
         }
 
         private void btnDisplayCode_Click(object sender, RoutedEventArgs e)

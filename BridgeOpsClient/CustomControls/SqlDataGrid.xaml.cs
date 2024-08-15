@@ -259,6 +259,14 @@ namespace BridgeOpsClient.CustomControls
             dtg.SelectionMode = DataGridSelectionMode.Extended;
             mnuSelectAll.IsEnabled = true;
         }
+        public void AddWipeButton()
+        {
+            MenuItem menuItem = new() { Header = "Wipe" };
+            menuItem.Click += btnWipe_Click;
+            AddSeparator(false);
+            AddContextMenuItem(menuItem, false);
+
+        }
 
         private void contextShowHideColumnsToggle(object sender, RoutedEventArgs e)
         {
@@ -475,19 +483,9 @@ namespace BridgeOpsClient.CustomControls
         private void mnuExportSpreadsheet_Click(object sender, RoutedEventArgs e)
         {
             // Save as...
-            Microsoft.Win32.SaveFileDialog saveDialog = new();
-            DateTime now = DateTime.Now;
-            saveDialog.FileName = $"Data Export {now.ToString("yyyy-MM-dd HHmmss")}.xlsx";
-            saveDialog.DefaultExt = ".xlsx";
-            saveDialog.Filter = "Excel Workbook|*.xlsx|Excel Macro-Enabled Workbook|*.xlsm";
-            bool? result = saveDialog.ShowDialog();
-            if (result != true)
+            string fileName;
+            if (!FileExport.GetSaveFileName(out fileName))
                 return;
-            if (!saveDialog.FileName.EndsWith(".xlsx") && !saveDialog.FileName.EndsWith(".xlsm"))
-            {
-                MessageBox.Show("Invalid file path");
-                return;
-            }
 
             // Create a new workbook.
             XLWorkbook xl = new();
@@ -522,26 +520,10 @@ namespace BridgeOpsClient.CustomControls
             }
 
             // Apply suitable column widths.
-            IXLColumn column = sheet.Column(1);
-            for (int i = 0; i < columnCount; ++i)
-            { 
-                column.AdjustToContents();
-                // Width is defined as 'number of characters'. God know what that means in real terms, but 50 seems
-                // okay I guess?
-                if (column.Width > 50) 
-                    column.Width = 50;
-                column = column.ColumnRight();
-            }
+            FileExport.AutoWidthColumns(columnCount, sheet);
 
             // Write file to disk.
-            try
-            {
-                xl.SaveAs(saveDialog.FileName);
-            }
-            catch (Exception err)
-            {
-                MessageBox.Show("Could not save file, see error: " + err.Message);
-            }
+            FileExport.SaveFile(xl, fileName);
         }
     }
 }

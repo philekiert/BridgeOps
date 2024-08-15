@@ -48,13 +48,7 @@ namespace BridgeOpsClient
 
             txtSearch.Focus();
 
-            dtgResults.AddSeparator(false);
-            MenuItem item = new()
-            {
-                Header = "Wipe"
-            };
-            item.Click += dtgResults.btnWipe_Click;
-            dtgResults.AddContextMenuItem(item, false);
+            dtgResults.AddWipeButton();
 
         }
 

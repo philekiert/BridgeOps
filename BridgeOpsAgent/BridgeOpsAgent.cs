@@ -1326,7 +1326,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-
+    
     private static void ClientSelectQuick(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
