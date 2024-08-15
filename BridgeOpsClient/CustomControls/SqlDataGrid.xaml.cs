@@ -506,6 +506,8 @@ namespace BridgeOpsClient.CustomControls
                 ++n;
             }
 
+            int columnCount = n;
+
             // Add rows.
             cell = sheet.Cell(2, 1);
             List<Row> selectedOrdered = dtg.SelectedItems.Cast<Row>().ToList();
@@ -517,6 +519,18 @@ namespace BridgeOpsClient.CustomControls
 
                 cell.InsertData(rowObjects, true);
                 cell = cell.CellBelow();
+            }
+
+            // Apply suitable column widths.
+            IXLColumn column = sheet.Column(1);
+            for (int i = 0; i < columnCount; ++i)
+            { 
+                column.AdjustToContents();
+                // Width is defined as 'number of characters'. God know what that means in real terms, but 50 seems
+                // okay I guess?
+                if (column.Width > 50) 
+                    column.Width = 50;
+                column = column.ColumnRight();
             }
 
             // Write file to disk.
