@@ -89,8 +89,8 @@ namespace BridgeOpsClient
             menuDatabaseNewOrganisation.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewAsset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewContact.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
-            menuDatabaseNewConferenceType.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCE_TYPES];
-            menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
+            //menuDatabaseNewConferenceType.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCE_TYPES];
+            //menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
