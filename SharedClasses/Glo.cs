@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Reflection.Metadata;
+using System.Xml.Linq;
 
 public static class Glo
 {
@@ -22,6 +23,7 @@ public static class Glo
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
     public const string LOG_ERROR_AGENT = "agent-error-log.txt";
+    public const string FOLDER_QUERY_BUILDER_PRESETS = "Query Builder Presets";
 
     // Client/Agent Function Specifiers
     public const int CLIENT_PULL_COLUMN_RECORD = 0;
@@ -56,6 +58,10 @@ public static class Glo
     public const int CLIENT_SELECT_HISTORICAL_RECORD = 43;
     public const int CLIENT_TABLE_MODIFICATION = 50;
     public const int CLIENT_COLUMN_ORDER_UPDATE = 51;
+    public const int CLIENT_SELECT_BUILDER_PRESET_SAVE = 60;
+    public const int CLIENT_SELECT_BUILDER_PRESET_LOAD = 61;
+    public const int CLIENT_SELECT_BUILDER_PRESET_DELETE = 62;
+    public const int CLIENT_SELECT_BUILDER_PRESET_RENAME = 63;
 
     public const int SERVER_CLIENT_NUDGE = 0;           // Not yet implemented
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;
@@ -225,6 +231,12 @@ public static class Glo
         public static int LongToInt(long val)
         {
             return val > int.MaxValue ? int.MaxValue : (int)val;
+        }
+
+        public static string SettingsFolder()
+        {
+            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                                          "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
         }
     }
 }
