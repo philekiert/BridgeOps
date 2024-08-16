@@ -14,6 +14,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
 using System.Data;
+using System.Text.Json.Nodes;
 using System.Threading.Channels;
 using System.Reflection.PortableExecutable;
 using System.Xml.Schema;
@@ -246,8 +247,12 @@ internal class BridgeOpsAgent
     }
     private static void SafeFail(NetworkStream stream, string message)
     {
-        try { stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
-              sr.WriteAndFlush(stream, message); } catch { }
+        try
+        {
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+            sr.WriteAndFlush(stream, message);
+        }
+        catch { }
     }
 
     // Network Configuration
@@ -737,6 +742,14 @@ internal class BridgeOpsAgent
                     ClientColumnModification(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_COLUMN_ORDER_UPDATE)
                     ClientColumnOrderUpdate(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE)
+                    ClientSaveSelectBuilderPreset(stream);
+                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_LOAD)
+                    ClientLoadSelectBuilder(stream);
+                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_DELETE)
+                    ClientDeleteSelectBuilderPreset(stream);
+                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_RENAME)
+                    ClientRenameSelectBuilderPreset(stream);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -1326,7 +1339,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-    
+
     private static void ClientSelectQuick(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
@@ -1984,9 +1997,7 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            if (sqlConnect.State == System.Data.ConnectionState.Open)
-                SafeFail(stream, e.Message);
-
+            SafeFail(stream, e.Message);
             LogError(e);
         }
         finally
@@ -2065,9 +2076,7 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            if (sqlConnect.State == ConnectionState.Open)
-                SafeFail(stream);
-
+            SafeFail(stream);
             LogError(e);
         }
         finally
@@ -2075,6 +2084,186 @@ internal class BridgeOpsAgent
             if (sqlConnect.State == ConnectionState.Open)
                 sqlConnect.Close();
             updatingColumnRecord = false;
+        }
+    }
+
+    // Permission restricted.
+    private static void ClientSaveSelectBuilderPreset(NetworkStream stream)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            // No need to check record ID for this, if it fails, it fails.
+            string jsonString = sr.ReadString(stream);
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_REPORTS, Glo.PERMISSION_CREATE))
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+            }
+
+            // Don't serialise the whole thing because it'll just waste time.
+            int index = jsonString.IndexOf("\",");
+            string name = jsonString.Substring(9, index - 9);
+            string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string folder = Path.Combine(documents, "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+            string file = Path.Combine(folder, name + ".pre");
+            if (File.Exists(file))
+                throw new Exception("Preset name already exists.");
+            File.WriteAllText(file, jsonString);
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+            LogError(e);
+        }
+        finally
+        {
+            stream.Close();
+        }
+    }
+
+    private static void ClientLoadSelectBuilder(NetworkStream stream)
+    {
+        // This method is used both for getting the preset list and loading a specific preset.
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            string presetName = sr.ReadString(stream);
+            bool list = presetName == "/"; // Forward slashes are disallowed in preset names.
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+            }
+
+            string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string folder = Path.Combine(documents, "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            if (!Directory.Exists(folder))
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                sr.WriteAndFlush(stream, "");
+            }
+
+            if (list)
+            {
+                List<string> files = new();
+                foreach (string s in Directory.GetFiles(folder))
+                    files.Add(Path.GetFileName(s));
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                sr.WriteAndFlush(stream, string.Join('/', files));
+            }
+            else
+            {
+                string jsonString = File.ReadAllText(Path.Combine(folder, presetName + ".pre"));
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                sr.WriteAndFlush(stream, jsonString);
+            }
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+            LogError(e);
+        }
+        finally
+        {
+            stream.Close();
+        }
+    }
+
+    // Permission restricted.
+    private static void ClientDeleteSelectBuilderPreset(NetworkStream stream)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            // No need to check record ID for this, if it fails, it fails.
+            string file = sr.ReadString(stream) + ".pre";
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_REPORTS, Glo.PERMISSION_DELETE))
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+            }
+
+            string folder = Glo.Fun.SettingsFolder();
+            File.Delete(Path.Combine(folder, file));
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+            LogError(e);
+        }
+        finally
+        {
+            stream.Close();
+        }
+    }
+
+    // Permission restricted.
+    private static void ClientRenameSelectBuilderPreset(NetworkStream stream)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            // No need to check record ID for this, if it fails, it fails.
+            string[] files = sr.ReadString(stream).Split('/');
+            string oldName = files[0] + ".pre";
+            string newName = files[1] + ".pre";
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_REPORTS, Glo.PERMISSION_EDIT))
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+            }
+
+            string folder = Glo.Fun.SettingsFolder();
+            File.Move(Path.Combine(folder, oldName), Path.Combine(folder, newName));
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+            LogError(e);
+        }
+        finally
+        {
+            stream.Close();
         }
     }
 }
