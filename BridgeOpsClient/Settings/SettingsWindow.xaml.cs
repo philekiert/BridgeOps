@@ -367,7 +367,8 @@ namespace BridgeOpsClient
 
         private void dtgUsers_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            btnUserLogOut.IsEnabled = !(dtgUsers.GetCurrentlySelectedID() == App.sd.loginID.ToString());
+            btnUserLogOut.IsEnabled = !(dtgUsers.GetCurrentlySelectedID() == App.sd.loginID.ToString()) &&
+                                      !(dtgUsers.GetCurrentlySelectedCell(4) == "Inactive");
             ((MenuItem)dtgUsers.mnuData.Items[0]).IsEnabled = btnUserLogOut.IsEnabled;
         }
 

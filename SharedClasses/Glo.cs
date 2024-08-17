@@ -12,9 +12,14 @@ public static class Glo
 
 
     // Files and Folder Traversal
+#if DEBUG
     public const string PATH_AGENT = "..\\..\\..\\..\\BridgeOpsAgent\\bin\\Debug\\net6.0\\";
-    public const string EXE_AGENT = "BridgeOpsAgent.exe";
     public const string PATH_CONSOLE = "..\\..\\..\\..\\BridgeOpsConsole\\bin\\Debug\\net6.0\\";
+#else
+    public const string PATH_AGENT = "";
+    public const string PATH_CONSOLE = "";
+#endif
+    public const string EXE_AGENT = "BridgeOpsAgent.exe";
     public const string EXE_CONSOLE = "BridgeOpsConsole.exe";
     public static string PathConfigFiles
     { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "Config Files"); } }

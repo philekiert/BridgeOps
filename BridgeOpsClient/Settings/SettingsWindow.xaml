@@ -35,7 +35,7 @@
                                 Click="btnUserAdd_Click"/>
                         <Button Grid.Column="2" Content="Log Out" Width="70" x:Name="btnUserLogOut"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
-                                Click="btnUserLogOut_Click"/>
+                                Click="btnUserLogOut_Click" IsEnabled="False"/>
                     </Grid>
                 </Grid>
             </TabItem>
