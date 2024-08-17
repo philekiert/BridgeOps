@@ -44,23 +44,18 @@ namespace BridgeOpsClient
 
         private void btnUp_Click(object sender, RoutedEventArgs e)
         {
-            selectBuilder.MoveRow(this, frame, true);
+            selectBuilder.MoveRow(new(frame, this), true);
         }
 
         private void btnDown_Click(object sender, RoutedEventArgs e)
         {
-            selectBuilder.MoveRow(this, frame, false);
+            selectBuilder.MoveRow(new(frame, this), false);
         }
 
         public void ToggleUpDownButtons()
         {
             btnUp.IsEnabled = Grid.GetRow(frame) > 0;
             btnDown.IsEnabled = Grid.GetRow(frame) < selectBuilder.orderBys.Count - 1;
-        }
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            selectBuilder.UpdateColumns();
         }
     }
 }

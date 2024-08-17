@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="Select Query Builder" Width="1000" Height="500" UseLayoutRounding="True"
-        MinWidth="810">
+        MinWidth="1000">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,21 +21,41 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
+        
+        <!-- Tab Control -->
         <Button x:Name="btnAddTab" Grid.Column="0" Content="+" Click="btnAddTab_Click"
                 Padding="0 -2 0 0" Margin="10 10 5 10" Width="24" Height="24"/>
         <Button x:Name="btnRemoveTab" Grid.Column="1" Content="-" Click="btnRemoveTab_Click"
                 Padding="0 -2 0 0" Margin="5 10 5 10" Width="24" Height="24" IsEnabled="False"/>
         <Button x:Name="btnMoveLeft" Grid.Column="2" Content="◀" Click="btnMoveLeft_Click"
-                Padding="0 -2 0 0" Margin="5 10 0 10" Width="24" Height="24" IsEnabled="False"/>
+                Padding="-1 -2 0 0" Margin="5 10 0 10" Width="24" Height="24" IsEnabled="False"/>
         <Button x:Name="btnMoveRight" Grid.Column="3" Content="▶" Click="btnMoveRight_Click"
                 Padding="0 -2 0 0" Margin="-1 10 5 10" Width="24" Height="24" IsEnabled="False"/>
-        <Label x:Name="lblTabName" Content="Tab Name" Grid.Column="4" Width="Auto" Margin="10 10 5 10"/>
-        <TextBox x:Name="txtTabName" Grid.Column="5" Width="300" Margin="5 10 5 10" Height="24"
+        <Label x:Name="lblTabName" Content="Tab Name" Grid.Column="4" Width="Auto" Margin="10 10 10 10"/>
+        <TextBox x:Name="txtTabName" Grid.Column="5" Width="150" Margin="0 10 5 10" Height="24"
                  VerticalContentAlignment="Center" TextChanged="txtTabName_TextChanged"/>
         <Button x:Name="btnExportAllPages" Grid.Column="6" Width="100" Content="Export All Pages"
-                Height="24" Margin="20 10 10 10" Click="btnExportAllPages_Click"/>
-        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="8"
+                Height="24" Margin="20 10 5 10" Click="btnExportAllPages_Click"/>
+        
+        <!-- Preset Control -->
+        <Label Content="Presets" Grid.Column="8" VerticalAlignment="Center" Margin="10 10 10 10"/>
+        <ComboBox x:Name="cmbPresets" Grid.Column="9" Margin="0 10 10 10" Width="250"
+                  SelectionChanged="cmbPresets_SelectionChanged"/>
+        <Button x:Name="btnAddPreset" Grid.Column="10" Content="+" Click="btnAddPreset_Click"
+                Padding="0 -2 0 0" Margin="0 10 0 10" Width="24" Height="24"/>
+        <Button x:Name="btnRemovePreset" Grid.Column="11" Content="-" Click="btnRemovePreset_Click"
+                Padding="0 -2 0 0" Margin="-1 10 5 10" Width="24" Height="24" IsEnabled="False"/>
+        <Button x:Name="btnRenamePreset" Grid.Column="12" Width="60" Content="Rename"
+                Height="24" Margin="5 10 10 10" Click="btnRenamePreset_Click"/>
+
+        <!-- Start of lower section -->
+        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="13"
                     SelectionChanged="tabControl_SelectionChanged">
         </TabControl>
     </Grid>

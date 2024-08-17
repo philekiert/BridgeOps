@@ -33,9 +33,9 @@ namespace BridgeOpsClient
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Auto login for dev purposes.
-            //txtUsername.Text = "admin";
-            //txtPassword.Text = "admin";
-            //btnLogIn_Click(btnLogIn, new());
+            txtUsername.Text = "admin";
+            pwdPassword.Password = "admin";
+            btnLogIn_Click(btnLogIn, new());
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)

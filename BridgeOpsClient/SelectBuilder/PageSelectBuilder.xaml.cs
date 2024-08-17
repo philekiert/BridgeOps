@@ -27,161 +27,181 @@ namespace BridgeOpsClient
             dtgOutput.AddWipeButton();
         }
 
-        public List<Frame> joins = new();
-        public List<Frame> columns = new();
-        public List<Frame> wheres = new();
-        public List<Frame> orderBys = new();
+        public struct FrameContent
+        {
+            // Frame.Content isn't accessible immediately after assignment, so can't be called right away. Use this
+            // struct to store the associated content so it can be called right away.
+            public Frame frame;
+            public object page;
+            public FrameContent(Frame frame, object page)
+            {
+                this.frame = frame;
+                this.page = page;
+                frame.Content = page;
+            }
+        }
+        public List<FrameContent> joins = new();
+        public List<FrameContent> columns = new();
+        public List<FrameContent> wheres = new();
+        public List<FrameContent> orderBys = new();
 
-        public PageSelectBuilderJoin Join(int index) { return (PageSelectBuilderJoin)joins[index].Content; }
-        public PageSelectBuilderColumn Column(int index) { return (PageSelectBuilderColumn)columns[index].Content; }
-        public PageSelectBuilderWhere Where(int index) { return (PageSelectBuilderWhere)wheres[index].Content; }
-        public PageSelectBuilderOrderBy OrderBy(int index) { return (PageSelectBuilderOrderBy)orderBys[index].Content; }
+        public PageSelectBuilderJoin Join(int index) { return (PageSelectBuilderJoin)joins[index].page; }
+        public PageSelectBuilderColumn Column(int index) { return (PageSelectBuilderColumn)columns[index].page; }
+        public PageSelectBuilderWhere Where(int index) { return (PageSelectBuilderWhere)wheres[index].page; }
+        public PageSelectBuilderOrderBy OrderBy(int index) { return (PageSelectBuilderOrderBy)orderBys[index].page; }
 
-        private void btnAddJoin_Click(object sender, RoutedEventArgs e)
+        private void btnAddJoin_Click(object sender, RoutedEventArgs e) { AddJoin(); }
+        public PageSelectBuilderJoin AddJoin()
         {
             grdJoins.RowDefinitions.Add(new RowDefinition());
             Frame frame = new();
             PageSelectBuilderJoin join = new(this, frame);
-            frame.Content = join;
-            joins.Add(frame);
+            joins.Add(new FrameContent(frame, join));
             grdJoins.Children.Add(frame);
             Grid.SetRow(frame, joins.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < joins.Count - 1; ++i)
                 Join(i).ToggleUpDownButtons();
             join.ToggleUpDownButtons();
+            return join;
         }
 
-        private void btnAddColumn_Click(object sender, RoutedEventArgs e)
+        private void btnAddColumn_Click(object sender, RoutedEventArgs e) { AddColumn(); }
+        public PageSelectBuilderColumn AddColumn()
         {
             grdColumns.RowDefinitions.Add(new RowDefinition());
             Frame frame = new();
             PageSelectBuilderColumn column = new(this, frame);
-            frame.Content = column;
-            columns.Add(frame);
+            columns.Add(new FrameContent(frame, column));
+            UpdateColumns();
             grdColumns.Children.Add(frame);
             Grid.SetRow(frame, columns.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < columns.Count - 1; ++i)
                 Column(i).ToggleUpDownButtons();
             column.ToggleUpDownButtons();
+            return column;
         }
 
-        private void btnAddWhere_Click(object sender, RoutedEventArgs e)
+        private void btnAddWhere_Click(object sender, RoutedEventArgs e) { AddWhere(); }
+        public PageSelectBuilderWhere AddWhere()
         {
             grdWheres.RowDefinitions.Add(new RowDefinition());
             Frame frame = new();
             PageSelectBuilderWhere where = new(this, frame);
-            frame.Content = where;
-            wheres.Add(frame);
+            wheres.Add(new FrameContent(frame, where));
+            UpdateColumns();
             grdWheres.Children.Add(frame);
             Grid.SetRow(frame, wheres.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < wheres.Count - 1; ++i)
                 Where(i).ToggleUpDownButtons();
             where.ToggleUpDownButtons();
+            return where;
         }
 
-        private void btnAddOrderBy_Click(object sender, RoutedEventArgs e)
+        private void btnAddOrderBy_Click(object sender, RoutedEventArgs e) { AddOrderBy(); }
+        public PageSelectBuilderOrderBy AddOrderBy()
         {
             grdOrderBys.RowDefinitions.Add(new RowDefinition());
             Frame frame = new();
             PageSelectBuilderOrderBy orderBy = new(this, frame);
-            frame.Content = orderBy;
-            orderBys.Add(frame);
+            orderBys.Add(new FrameContent(frame, orderBy));
+            UpdateColumns();
             grdOrderBys.Children.Add(frame);
             Grid.SetRow(frame, orderBys.Count - 1);
             Grid.SetColumnSpan(frame, 4);
             for (int i = 0; i < orderBys.Count - 1; ++i)
                 OrderBy(i).ToggleUpDownButtons();
             orderBy.ToggleUpDownButtons();
+            return orderBy;
         }
 
-        public void MoveRow(object row, Frame frame, bool up)
+        public void MoveRow(FrameContent frameContent, bool up)
         {
-            if (row is PageSelectBuilderJoin)
+            if (frameContent.page is PageSelectBuilderJoin)
             {
-                int index = joins.IndexOf(frame);
+                int index = joins.IndexOf(frameContent);
 
                 if (up && index > 0)
                 {
                     joins.RemoveAt(index);
-                    joins.Insert(index - 1, frame);
+                    joins.Insert(index - 1, frameContent);
                 }
                 else if (!up && index < joins.Count - 1)
                 {
                     joins.RemoveAt(index);
-                    joins.Insert(index + 1, frame);
+                    joins.Insert(index + 1, frameContent);
                 }
                 else return;
 
                 for (int i = 0; i < joins.Count; ++i)
-                    Grid.SetRow(joins[i], i);
+                    Grid.SetRow(joins[i].frame, i);
                 for (int i = 0; i < joins.Count; ++i)
-                    ((PageSelectBuilderJoin)joins[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderJoin)joins[i].page).ToggleUpDownButtons();
             }
-            else if (row is PageSelectBuilderColumn)
+            else if (frameContent.page is PageSelectBuilderColumn)
             {
-                int index = columns.IndexOf(frame);
+                int index = columns.IndexOf(frameContent);
 
                 if (up && index > 0)
                 {
                     columns.RemoveAt(index);
-                    columns.Insert(index - 1, frame);
+                    columns.Insert(index - 1, frameContent);
                 }
                 else if (!up && index < columns.Count - 1)
                 {
                     columns.RemoveAt(index);
-                    columns.Insert(index + 1, frame);
+                    columns.Insert(index + 1, frameContent);
                 }
                 else return;
 
                 for (int i = 0; i < columns.Count; ++i)
-                    Grid.SetRow(columns[i], i);
+                    Grid.SetRow(columns[i].frame, i);
                 for (int i = 0; i < columns.Count; ++i)
-                    ((PageSelectBuilderColumn)columns[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderColumn)columns[i].page).ToggleUpDownButtons();
             }
-            else if (row is PageSelectBuilderWhere)
+            else if (frameContent.page is PageSelectBuilderWhere)
             {
-                int index = wheres.IndexOf(frame);
+                int index = wheres.IndexOf(frameContent);
 
                 if (up && index > 0)
                 {
                     wheres.RemoveAt(index);
-                    wheres.Insert(index - 1, frame);
+                    wheres.Insert(index - 1, frameContent);
                 }
                 else if (!up && index < wheres.Count - 1)
                 {
                     wheres.RemoveAt(index);
-                    wheres.Insert(index + 1, frame);
+                    wheres.Insert(index + 1, frameContent);
                 }
                 else return;
 
                 for (int i = 0; i < wheres.Count; ++i)
-                    Grid.SetRow(wheres[i], i);
+                    Grid.SetRow(wheres[i].frame, i);
                 for (int i = 0; i < wheres.Count; ++i)
-                    ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderWhere)wheres[i].page).ToggleUpDownButtons();
             }
-            else if (row is PageSelectBuilderOrderBy)
+            else if (frameContent.page is PageSelectBuilderOrderBy)
             {
-                int index = orderBys.IndexOf(frame);
+                int index = orderBys.IndexOf(frameContent);
 
                 if (up && index > 0)
                 {
                     orderBys.RemoveAt(index);
-                    orderBys.Insert(index - 1, frame);
+                    orderBys.Insert(index - 1, frameContent);
                 }
                 else if (!up && index < orderBys.Count - 1)
                 {
                     orderBys.RemoveAt(index);
-                    orderBys.Insert(index + 1, frame);
+                    orderBys.Insert(index + 1, frameContent);
                 }
                 else return;
 
                 for (int i = 0; i < orderBys.Count; ++i)
-                    Grid.SetRow(orderBys[i], i);
+                    Grid.SetRow(orderBys[i].frame, i);
                 for (int i = 0; i < orderBys.Count; ++i)
-                    ((PageSelectBuilderOrderBy)orderBys[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderOrderBy)orderBys[i].page).ToggleUpDownButtons();
             }
             else return;
 
@@ -195,72 +215,72 @@ namespace BridgeOpsClient
             if (row is PageSelectBuilderJoin)
             {
                 for (int i = 0; i < joins.Count; ++i)
-                    if (joins[i].Content == row && !removed)
+                    if (joins[i].page == row && !removed)
                     {
-                        grdJoins.Children.Remove(joins[i]);
+                        grdJoins.Children.Remove(joins[i].frame);
                         joins.RemoveAt(i);
                         --i;
                         removed = true;
                         grdJoins.RowDefinitions.RemoveAt(0);
                     }
                     else
-                        Grid.SetRow(joins[i], i);
+                        Grid.SetRow(joins[i].frame, i);
 
                 for (int i = 0; i < joins.Count; ++i)
-                    ((PageSelectBuilderJoin)joins[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderJoin)joins[i].page).ToggleUpDownButtons();
 
                 UpdateColumns();
             }
             else if (row is PageSelectBuilderColumn)
             {
                 for (int i = 0; i < columns.Count; ++i)
-                    if (columns[i].Content == row && !removed)
+                    if (columns[i].page == row && !removed)
                     {
-                        grdColumns.Children.Remove(columns[i]);
+                        grdColumns.Children.Remove(columns[i].frame);
                         columns.RemoveAt(i);
                         --i;
                         removed = true;
                         grdColumns.RowDefinitions.RemoveAt(0);
                     }
                     else
-                        Grid.SetRow(columns[i], i);
+                        Grid.SetRow(columns[i].frame, i);
 
                 for (int i = 0; i < columns.Count; ++i)
-                    ((PageSelectBuilderColumn)columns[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderColumn)columns[i].page).ToggleUpDownButtons();
             }
             else if (row is PageSelectBuilderWhere)
             {
                 for (int i = 0; i < wheres.Count; ++i)
-                    if (wheres[i].Content == row && !removed)
+                    if (wheres[i].page == row && !removed)
                     {
-                        grdWheres.Children.Remove(wheres[i]);
+                        grdWheres.Children.Remove(wheres[i].frame);
                         wheres.RemoveAt(i);
                         --i;
                         removed = true;
                         grdWheres.RowDefinitions.RemoveAt(0);
                     }
                     else
-                        Grid.SetRow(wheres[i], i);
+                        Grid.SetRow(wheres[i].frame, i);
 
                 for (int i = 0; i < wheres.Count; ++i)
-                    ((PageSelectBuilderWhere)wheres[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderWhere)wheres[i].page).ToggleUpDownButtons();
             }
             else if (row is PageSelectBuilderOrderBy)
             {
                 for (int i = 0; i < orderBys.Count; ++i)
-                    if (orderBys[i].Content == row && !removed)
+                    if (orderBys[i].page == row && !removed)
                     {
-                        grdOrderBys.Children.Remove(orderBys[i]);
+                        grdOrderBys.Children.Remove(orderBys[i].frame);
                         orderBys.RemoveAt(i);
                         --i;
                         removed = true;
                         grdOrderBys.RowDefinitions.RemoveAt(0);
                     }
                     else
-                        Grid.SetRow(orderBys[i], i);
+                        Grid.SetRow(orderBys[i].frame, i);
 
                 for (int i = 0; i < orderBys.Count; ++i)
-                    ((PageSelectBuilderOrderBy)orderBys[i].Content).ToggleUpDownButtons();
+                    ((PageSelectBuilderOrderBy)orderBys[i].page).ToggleUpDownButtons();
             }
             else return;
 
@@ -272,26 +292,26 @@ namespace BridgeOpsClient
             int i = 0;
             int tabStop = 2; // Start on 3 due to controls above.
             for (i = 0; i < joins.Count; ++i)
-                joins[i].TabIndex = i + tabStop;
+                joins[i].frame.TabIndex = i + tabStop;
             tabStop += i;
             btnAddColumn.TabIndex = tabStop++;
             for (i = 0; i < columns.Count; ++i)
-                columns[i].TabIndex = i + tabStop;
+                columns[i].frame.TabIndex = i + tabStop;
             tabStop += i;
             btnAddWhere.TabIndex = tabStop++;
             for (i = 0; i < wheres.Count; ++i)
-                wheres[i].TabIndex = i + tabStop;
+                wheres[i].frame.TabIndex = i + tabStop;
             tabStop += i;
             btnAddOrderBy.TabIndex = tabStop++;
             for (i = 0; i < orderBys.Count; ++i)
-                orderBys[i].TabIndex = i + tabStop;
+                orderBys[i].frame.TabIndex = i + tabStop;
         }
 
         List<string> columnNameList = new();
 
-        private string GetProperColumnName(string column)
+        public string GetProperColumnName(string column)
         {
-            if (column.EndsWith('*'))
+            if (column == "" || column.EndsWith('*'))
                 return column;
             // All column names are displayed as "."
             int split = column.IndexOf('.') + 1;

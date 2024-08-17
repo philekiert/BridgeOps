@@ -2087,6 +2087,8 @@ internal class BridgeOpsAgent
         }
     }
 
+    static object selectBuilderPresetFileLock = new();
+
     // Permission restricted.
     private static void ClientSaveSelectBuilderPreset(NetworkStream stream)
     {
@@ -2116,12 +2118,15 @@ internal class BridgeOpsAgent
             string name = jsonString.Substring(9, index - 9);
             string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string folder = Path.Combine(documents, "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-            string file = Path.Combine(folder, name + ".pre");
-            if (File.Exists(file))
-                throw new Exception("Preset name already exists.");
-            File.WriteAllText(file, jsonString);
+            lock (selectBuilderPresetFileLock)
+            {
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+                string file = Path.Combine(folder, name + ".pre");
+                if (File.Exists(file))
+                    throw new Exception("Preset name already exists.");
+                File.WriteAllText(file, jsonString);
+            }
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)
@@ -2153,9 +2158,8 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string folder = Path.Combine(documents, "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
-            if (!Directory.Exists(folder))
+            string folder = Glo.Fun.SettingsFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            if (!Directory.Exists(folder)) // In this case, we succeed with no files to report.
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 sr.WriteAndFlush(stream, "");
@@ -2164,14 +2168,21 @@ internal class BridgeOpsAgent
             if (list)
             {
                 List<string> files = new();
-                foreach (string s in Directory.GetFiles(folder))
-                    files.Add(Path.GetFileName(s));
+                lock (selectBuilderPresetFileLock)
+                {
+                    foreach (string s in Directory.GetFiles(folder))
+                        files.Add(Path.GetFileName(s));
+                }
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 sr.WriteAndFlush(stream, string.Join('/', files));
             }
             else
             {
-                string jsonString = File.ReadAllText(Path.Combine(folder, presetName + ".pre"));
+                string jsonString;
+                lock (selectBuilderPresetFileLock)
+                {
+                    jsonString = File.ReadAllText(Path.Combine(folder, presetName + ".pre"));
+                }
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 sr.WriteAndFlush(stream, jsonString);
             }
@@ -2211,8 +2222,11 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.SettingsFolder();
-            File.Delete(Path.Combine(folder, file));
+            string folder = Glo.Fun.SettingsFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            lock (selectBuilderPresetFileLock)
+            {
+                File.Delete(Path.Combine(folder, file));
+            }
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)
@@ -2252,8 +2266,11 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.SettingsFolder();
-            File.Move(Path.Combine(folder, oldName), Path.Combine(folder, newName));
+            string folder = Glo.Fun.SettingsFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            lock (selectBuilderPresetFileLock)
+            {
+                File.Move(Path.Combine(folder, oldName), Path.Combine(folder, newName));
+            }
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)

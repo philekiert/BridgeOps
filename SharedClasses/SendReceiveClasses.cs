@@ -176,6 +176,12 @@ namespace SendReceiveClasses
 
     //   S E S S I O N   M A N A G E M E N T
 
+    struct SessionIDs
+    {
+        public string sessionID;
+        public string columnRecordID;
+    }
+
     struct LoginRequest
     {
         public string username;

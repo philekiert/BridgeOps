@@ -45,12 +45,12 @@ namespace BridgeOpsClient
 
         private void btnUp_Click(object sender, RoutedEventArgs e)
         {
-            selectBuilder.MoveRow(this, frame, true);
+            selectBuilder.MoveRow(new(frame, this), true);
         }
 
         private void btnDown_Click(object sender, RoutedEventArgs e)
         {
-            selectBuilder.MoveRow(this, frame, false);
+            selectBuilder.MoveRow(new(frame, this), false);
         }
 
         public void ToggleUpDownButtons()
@@ -60,11 +60,6 @@ namespace BridgeOpsClient
 
             // Makes sense to update the AND/OR selector here.
             cmbAndOr.Visibility = btnUp.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            selectBuilder.UpdateColumns();
         }
 
         private void cmbColumn_SelectionChanged(object sender, SelectionChangedEventArgs e)

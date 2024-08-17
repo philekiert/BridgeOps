@@ -233,10 +233,15 @@ public static class Glo
             return val > int.MaxValue ? int.MaxValue : (int)val;
         }
 
-        public static string SettingsFolder()
+        public static string SettingFolder()
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                          "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
+                                          "BridgeOps");
+        }
+        public static string SettingsFolder(string subdir)
+        {
+            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                                          "BridgeOps", subdir);
         }
     }
 }

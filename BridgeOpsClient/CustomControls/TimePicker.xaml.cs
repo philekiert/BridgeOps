@@ -39,6 +39,13 @@ namespace BridgeOpsClient.CustomControls
             return new TimeSpan(hour, minute, 0);
         }
 
+        public void SetTime(long ticks) { SetTime(new TimeSpan(ticks)); }
+        public void SetTime(TimeSpan timeSpan)
+        {
+            txtHour.Text = timeSpan.Hours.ToString();
+            txtMinute.Text = timeSpan.Minutes.ToString();
+        }
+
         private void txtMinutes_TextChanged(object sender, TextChangedEventArgs e)
         { EnforceValueRestriction((TextBox)sender, maxHours); }
 

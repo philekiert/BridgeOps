@@ -30,6 +30,11 @@ namespace BridgeOpsClient
     {
         public static bool IsLoggedIn { get { return sd.sessionID != ""; } }
 
+        public static void DisplayError(string error) { DisplayError(error, ""); }
+        public static void DisplayError(string error, string additional)
+        {
+            MessageBox.Show(additional == "" ? error : $"{error} See error:\n\n{additional}");
+        }
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
         public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action";
 
@@ -1167,7 +1172,8 @@ namespace BridgeOpsClient
             }
         }
 
-        static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes, List<List<object?>> rows)
+        static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes,
+                                                                       List<List<object?>> rows)
         {
             for (int n = 0; n < rows.Count; ++n)
             {
@@ -1209,6 +1215,42 @@ namespace BridgeOpsClient
                 }
 #pragma warning restore CS8600
 #pragma warning restore CS8602
+            }
+        }
+
+        public static bool SendJsonObject(byte fncByte, JsonObject jsonObject)
+        {
+            try
+            {
+                lock (streamLock)
+                {
+                    using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                    {
+                        if (stream == null)
+                            throw new Exception(NO_NETWORK_STREAM);
+
+                        stream.WriteByte(fncByte);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        sr.WriteAndFlush(stream, jsonObject.ToJsonString());
+
+                        int response = sr.ReadByte(stream);
+
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                            throw new Exception(PERMISSION_DENIED);
+                        if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            throw new Exception(sr.ReadString(stream));
+                        if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        throw new Exception();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                DisplayError("Unable to send Json Object to agent.", e.Message);
+                return false;
             }
         }
 

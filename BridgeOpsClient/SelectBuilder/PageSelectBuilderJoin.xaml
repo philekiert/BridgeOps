@@ -4,8 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:BridgeOpsClient"
-      mc:Ignorable="d"
-      Loaded="Page_Loaded">
+      mc:Ignorable="d">
 
     <Grid Width="Auto">
         <Grid.Resources>
@@ -58,7 +57,7 @@
         <ComboBox Grid.Row="0" Grid.Column="8" MinWidth="80" Margin="0 5 10 5"
                   x:Name="cmbColumn2"/>
         <Label Content="Type" Grid.Row="0" Grid.Column="9" Margin="0 0 -7 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="4" Width="104" x:Name="cmbType">
+        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="0" Width="104" x:Name="cmbType">
             <ComboBoxItem Content="INNER"/>
             <ComboBoxItem Content="LEFT"/>
             <ComboBoxItem Content="RIGHT"/>

@@ -146,7 +146,7 @@ namespace BridgeOpsClient
             if (!edit) // If adding.
             {
                 SendReceiveClasses.TableModification mod = new(App.sd.sessionID, ColumnRecord.columnRecordID,
-                                                               cmbTable.Text, txtColumnName.Text,
+                                                               cmbTable.Text, ColumnName,
                                                                cmbType.Text, allowed);
                 VARCHAR(ref mod);
                 SendToServer(mod);
@@ -163,7 +163,7 @@ namespace BridgeOpsClient
                         ColumnRecord.columnRecordID,
                         cmbTable.Text,
                         originalColumn,
-                        txtColumnName.Text != originalColumn ? txtColumnName.Text : null,
+                        ColumnName != originalColumn ? ColumnName : null,
                         txtFriendlyName.Text != originalFriendly ? txtFriendlyName.Text : null,
                         cmbType.Text != originalType || varcharMaxChanged ? cmbType.Text : null,
                         allowed);
@@ -185,6 +185,7 @@ namespace BridgeOpsClient
             if (limit <= 8000)
                 mod.columnType = $"VARCHAR({limit})";
         }
+        private string ColumnName { get { return txtColumnName.Text.Replace(' ', '_'); } }
 
         private bool ConfirmLegalValues()
         {
@@ -238,7 +239,7 @@ namespace BridgeOpsClient
         private void StoreOriginalValues()
         {
             originalTable = cmbTable.Text;
-            originalColumn = txtColumnName.Text;
+            originalColumn = ColumnName;
             originalFriendly = txtFriendlyName.Text;
             originalType = cmbType.Text;
             int.TryParse(txtLimit.Text, out originalMax);
@@ -251,7 +252,7 @@ namespace BridgeOpsClient
 
             bool altered = originalTable != cmbTable.Text ||
 
-                           originalColumn != txtColumnName.Text ||
+                           originalColumn != ColumnName ||
                            originalFriendly != txtFriendlyName.Text ||
                            originalType != (string)((ComboBoxItem)cmbType.Items[cmbType.SelectedIndex]).Content ||
                            originalMax != newMax ||
