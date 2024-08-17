@@ -11,22 +11,17 @@
     <TabControl>
         <TabItem Header="Organisation">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="38*"/>
-                    <ColumnDefinition Width="26*"/>
-                    <ColumnDefinition Width="51*"/>
-                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" x:Name="lblViewingChange"
-                       Content="Viewing change" Background="#F45" Height="0" Padding="5 1" Grid.ColumnSpan="3"/>
-                <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0 10 0 0">
+                       Content="Viewing change" Background="#F45" Height="0" Padding="5 1"/>
+                <Grid Grid.Row="1" Margin="0 10 0 0">
                     <Grid.Resources>
                         <Style TargetType="TextBox">
                             <Setter Property="Margin" Value="10 5 10 5"/>
@@ -51,14 +46,14 @@
                     <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo"
                              TextChanged="ValueChanged"/>
                 </Grid>
-                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="405" Margin="10,10,0,10" Grid.ColumnSpan="3"/>
+                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="405" Margin="10,10,0,10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Center"
                        Margin="10,0,0,0" Height="26"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Center"
                          Margin="10,0,10,0" TextWrapping="Wrap" Width="500" Height="150"
                          VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
-                         TextChanged="ValueChanged" Grid.ColumnSpan="3"/>
-                <Grid Grid.Row="5" Grid.ColumnSpan="3">
+                         TextChanged="ValueChanged"/>
+                <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
