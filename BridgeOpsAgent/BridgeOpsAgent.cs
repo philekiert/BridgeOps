@@ -2123,8 +2123,6 @@ internal class BridgeOpsAgent
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
                 string file = Path.Combine(folder, name + ".pre");
-                if (File.Exists(file))
-                    throw new Exception("Preset name already exists.");
                 File.WriteAllText(file, jsonString);
             }
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);

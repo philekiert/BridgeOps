@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Select Query Builder" Width="1000" Height="500" UseLayoutRounding="True"
-        MinWidth="1000">
+        Title="Select Query Builder" Width="1000" Height="600" UseLayoutRounding="True"
+        MinWidth="1080">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,13 +26,14 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         
         <!-- Tab Control -->
         <Button x:Name="btnAddTab" Grid.Column="0" Content="+" Click="btnAddTab_Click"
-                Padding="0 -2 0 0" Margin="10 10 5 10" Width="24" Height="24"/>
+                Padding="0 -2 0 0" Margin="10 10 0 10" Width="24" Height="24"/>
         <Button x:Name="btnRemoveTab" Grid.Column="1" Content="-" Click="btnRemoveTab_Click"
-                Padding="0 -2 0 0" Margin="5 10 5 10" Width="24" Height="24" IsEnabled="False"/>
+                Padding="0 -2 0 0" Margin="-1 10 5 10" Width="24" Height="24" IsEnabled="False"/>
         <Button x:Name="btnMoveLeft" Grid.Column="2" Content="◀" Click="btnMoveLeft_Click"
                 Padding="-1 -2 0 0" Margin="5 10 0 10" Width="24" Height="24" IsEnabled="False"/>
         <Button x:Name="btnMoveRight" Grid.Column="3" Content="▶" Click="btnMoveRight_Click"
@@ -52,10 +53,12 @@
         <Button x:Name="btnRemovePreset" Grid.Column="11" Content="-" Click="btnRemovePreset_Click"
                 Padding="0 -2 0 0" Margin="-1 10 5 10" Width="24" Height="24" IsEnabled="False"/>
         <Button x:Name="btnRenamePreset" Grid.Column="12" Width="60" Content="Rename"
-                Height="24" Margin="5 10 10 10" Click="btnRenamePreset_Click"/>
+                Height="24" Margin="5 10 5 10" Click="btnRenamePreset_Click" IsEnabled="False"/>
+        <Button x:Name="btnSaveChanges" Grid.Column="13" Width="88" Content="Save Changes"
+                Height="24" Margin="5 10 10 10" Click="btnSaveChanges_Click" IsEnabled="False"/>
 
         <!-- Start of lower section -->
-        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="13"
+        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="14"
                     SelectionChanged="tabControl_SelectionChanged">
         </TabControl>
     </Grid>

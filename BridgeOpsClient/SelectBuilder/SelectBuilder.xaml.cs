@@ -32,7 +32,6 @@ namespace BridgeOpsClient
             cmbPresets.SelectedIndex = 0;
 
             btnAddPreset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_REPORTS];
-            btnRenamePreset.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_REPORTS];
         }
 
         private PageSelectBuilder AddTab()
@@ -201,77 +200,7 @@ namespace BridgeOpsClient
             if (name == "")
                 return;
 
-            JsonObject json = new();
-            json["Name"] = name;
-            json["TabCount"] = tabControl.Items.Count;
-
-            int tabIndex = 0;
-            foreach (TabItem tabItem in tabControl.Items)
-            {
-                JsonObject jsonTab = new();
-                jsonTab["Name"] = (string)tabItem.Header;
-                PageSelectBuilder pageSelectBuilder = (PageSelectBuilder)((Frame)(tabItem.Content)).Content;
-                jsonTab["Table"] = pageSelectBuilder.cmbTable.Text;
-                jsonTab["Distinct"] = pageSelectBuilder.chkDistinct.IsChecked == true;
-                jsonTab["JoinCount"] = pageSelectBuilder.joins.Count;
-                jsonTab["ColumnCount"] = pageSelectBuilder.columns.Count;
-                jsonTab["WhereCount"] = pageSelectBuilder.wheres.Count;
-                jsonTab["OrderByCount"] = pageSelectBuilder.orderBys.Count;
-                for (int i = 0; i < pageSelectBuilder.joins.Count; ++i)
-                {
-                    PageSelectBuilderJoin join = pageSelectBuilder.Join(i);
-                    JsonObject jsonJoin = new();
-                    jsonJoin["Table"] = join.cmbTable.Text;
-                    if (join.cmbColumn1.Text == "")
-                        jsonJoin["Column1"] = "";
-                    else
-                        jsonJoin["Column1"] = pageSelectBuilder.GetProperColumnName(join.cmbTable.Text + "." +
-                                                                                    join.cmbColumn1.Text);
-                    jsonJoin["Column2"] = pageSelectBuilder.GetProperColumnName(join.cmbColumn2.Text);
-                    jsonJoin["Type"] = join.cmbType.Text;
-                    jsonTab["Join" + i.ToString()] = jsonJoin;
-                }
-                for (int i = 0; i < pageSelectBuilder.columns.Count; ++i)
-                {
-                    PageSelectBuilderColumn column = pageSelectBuilder.Column(i);
-                    JsonObject jsonColumn = new();
-                    jsonColumn["Column"] = pageSelectBuilder.GetProperColumnName(column.cmbColumn.Text);
-                    jsonColumn["Alias"] = column.txtAlias.Text;
-                    jsonTab["Column" + i.ToString()] = jsonColumn;
-                }
-                for (int i = 0; i < pageSelectBuilder.wheres.Count; ++i)
-                {
-                    PageSelectBuilderWhere where = pageSelectBuilder.Where(i);
-                    JsonObject jsonWhere = new();
-                    jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
-                    jsonWhere["Operator"] = where.cmbOperator.Text;
-                    jsonWhere["ValueText"] = where.txtValue.Text;
-                    jsonWhere["ValueDateTime"] = where.dtmValue.GetDateTime();
-                    jsonWhere["ValueDate"] = where.datValue.SelectedDate;
-                    jsonWhere["ValueTime"] = where.timValue.GetTime().Ticks;
-                    jsonWhere["ValueBool"] = where.chkValue.IsChecked == true;
-                    jsonTab["Where" + i.ToString()] = jsonWhere;
-                }
-                for (int i = 0; i < pageSelectBuilder.orderBys.Count; ++i)
-                {
-                    PageSelectBuilderOrderBy orderBy = pageSelectBuilder.OrderBy(i);
-                    JsonObject jsonOrderBy = new();
-                    jsonOrderBy["Column"] = pageSelectBuilder.GetProperColumnName(orderBy.cmbOrderBy.Text);
-                    jsonOrderBy["AscDesc"] = orderBy.cmbAscDesc.Text;
-                    jsonTab["OrderBy" + i.ToString()] = jsonOrderBy;
-                }
-
-                json[tabIndex.ToString()] = jsonTab;
-                ++tabIndex;
-            }
-
-            if (App.SendJsonObject(Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE, json))
-            {
-                skipPresetLoad = true;
-                PresetLoad(true);
-                cmbPresets.SelectedItem = name;
-                skipPresetLoad = false;
-            }
+            SavePreset(name);
         }
 
         private void ApplyLoadedPreset(string jsonString)
@@ -350,6 +279,82 @@ namespace BridgeOpsClient
             blockTabInfoUpdate = false;
         }
 
+        private void SavePreset(string name)
+        {
+
+            JsonObject json = new();
+            json["Name"] = name;
+            json["TabCount"] = tabControl.Items.Count;
+
+            int tabIndex = 0;
+            foreach (TabItem tabItem in tabControl.Items)
+            {
+                JsonObject jsonTab = new();
+                jsonTab["Name"] = (string)tabItem.Header;
+                PageSelectBuilder pageSelectBuilder = (PageSelectBuilder)((Frame)(tabItem.Content)).Content;
+                jsonTab["Table"] = pageSelectBuilder.cmbTable.Text;
+                jsonTab["Distinct"] = pageSelectBuilder.chkDistinct.IsChecked == true;
+                jsonTab["JoinCount"] = pageSelectBuilder.joins.Count;
+                jsonTab["ColumnCount"] = pageSelectBuilder.columns.Count;
+                jsonTab["WhereCount"] = pageSelectBuilder.wheres.Count;
+                jsonTab["OrderByCount"] = pageSelectBuilder.orderBys.Count;
+                for (int i = 0; i < pageSelectBuilder.joins.Count; ++i)
+                {
+                    PageSelectBuilderJoin join = pageSelectBuilder.Join(i);
+                    JsonObject jsonJoin = new();
+                    jsonJoin["Table"] = join.cmbTable.Text;
+                    if (join.cmbColumn1.Text == "")
+                        jsonJoin["Column1"] = "";
+                    else
+                        jsonJoin["Column1"] = pageSelectBuilder.GetProperColumnName(join.cmbTable.Text + "." +
+                                                                                    join.cmbColumn1.Text);
+                    jsonJoin["Column2"] = pageSelectBuilder.GetProperColumnName(join.cmbColumn2.Text);
+                    jsonJoin["Type"] = join.cmbType.Text;
+                    jsonTab["Join" + i.ToString()] = jsonJoin;
+                }
+                for (int i = 0; i < pageSelectBuilder.columns.Count; ++i)
+                {
+                    PageSelectBuilderColumn column = pageSelectBuilder.Column(i);
+                    JsonObject jsonColumn = new();
+                    jsonColumn["Column"] = pageSelectBuilder.GetProperColumnName(column.cmbColumn.Text);
+                    jsonColumn["Alias"] = column.txtAlias.Text;
+                    jsonTab["Column" + i.ToString()] = jsonColumn;
+                }
+                for (int i = 0; i < pageSelectBuilder.wheres.Count; ++i)
+                {
+                    PageSelectBuilderWhere where = pageSelectBuilder.Where(i);
+                    JsonObject jsonWhere = new();
+                    jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
+                    jsonWhere["Operator"] = where.cmbOperator.Text;
+                    jsonWhere["ValueText"] = where.txtValue.Text;
+                    jsonWhere["ValueDateTime"] = where.dtmValue.GetDateTime();
+                    jsonWhere["ValueDate"] = where.datValue.SelectedDate;
+                    jsonWhere["ValueTime"] = where.timValue.GetTime().Ticks;
+                    jsonWhere["ValueBool"] = where.chkValue.IsChecked == true;
+                    jsonTab["Where" + i.ToString()] = jsonWhere;
+                }
+                for (int i = 0; i < pageSelectBuilder.orderBys.Count; ++i)
+                {
+                    PageSelectBuilderOrderBy orderBy = pageSelectBuilder.OrderBy(i);
+                    JsonObject jsonOrderBy = new();
+                    jsonOrderBy["Column"] = pageSelectBuilder.GetProperColumnName(orderBy.cmbOrderBy.Text);
+                    jsonOrderBy["AscDesc"] = orderBy.cmbAscDesc.Text;
+                    jsonTab["OrderBy" + i.ToString()] = jsonOrderBy;
+                }
+
+                json[tabIndex.ToString()] = jsonTab;
+                ++tabIndex;
+            }
+
+            if (App.SendJsonObject(Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE, json))
+            {
+                skipPresetLoad = true;
+                PresetLoad(true);
+                cmbPresets.SelectedItem = name;
+                skipPresetLoad = false;
+            }
+        }
+
         private void PresetLoad(bool list)
         {
             try
@@ -423,6 +428,8 @@ namespace BridgeOpsClient
             if (cmbPresets.SelectedIndex == 0)
             {
                 btnRemovePreset.IsEnabled = false;
+                btnRenamePreset.IsEnabled = false;
+                btnSaveChanges.IsEnabled = false;
 
                 if (lastSelectedIndex > 0)
                 {
@@ -435,6 +442,8 @@ namespace BridgeOpsClient
             else if (cmbPresets.SelectedIndex > 0)
             {
                 btnRemovePreset.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_REPORTS];
+                btnRenamePreset.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_REPORTS];
+                btnSaveChanges.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_REPORTS];
 
                 if (!skipPresetLoad)
                     PresetLoad(false);
@@ -554,6 +563,11 @@ namespace BridgeOpsClient
                 return retainTableName ? table + "." + name : name;
             }
             catch { return ""; }
+        }
+
+        private void btnSaveChanges_Click(object sender, RoutedEventArgs e)
+        {
+            SavePreset(cmbPresets.Text);
         }
     }
 }
