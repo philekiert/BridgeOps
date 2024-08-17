@@ -304,7 +304,7 @@ namespace BridgeOpsClient
             {
                 mainWindow.ToggleLogInOut(false);
                 if (mainWindow.IsLoaded)
-                    MessageBox.Show("Session is no longer valid. Please copy any unsaved work, then log out and back in.");
+                    MessageBox.Show("Session is no longer valid. Please copy any unsaved work, then log back in.");
             }
         }
 
