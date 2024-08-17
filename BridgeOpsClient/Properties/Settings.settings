@@ -6,10 +6,10 @@
       <Value Profile="(Default)">127.0.0.1</Value>
     </Setting>
     <Setting Name="portOutbound" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">52344</Value>
+      <Value Profile="(Default)">52343</Value>
     </Setting>
     <Setting Name="portInbound" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">52343</Value>
+      <Value Profile="(Default)">52344</Value>
     </Setting>
   </Settings>
 </SettingsFile>

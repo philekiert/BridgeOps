@@ -108,11 +108,13 @@ namespace BridgeOpsClient
             else // if int
                 cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=", ">=", "IS NULL", "IS NOT NULL" };
             cmbOperator.SelectedIndex = 0;
+
+            cmbOperator_SelectionChanged(sender, e);
         }
 
         private void cmbOperator_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!IsLoaded || cmbOperator.SelectedIndex < 0)
+            if (cmbOperator.SelectedIndex < 0)
                 return;
 
             string operatorText = (string)cmbOperator.Items[cmbOperator.SelectedIndex];
