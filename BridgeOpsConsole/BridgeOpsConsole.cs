@@ -48,7 +48,7 @@ internal class BridgeOpsConsole
         else
             Writer.Negative("Agent process not yet running.");
 
-        if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK))
+        if (File.Exists(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK)))
             con.ParseNetworkSettings(false);
         else
             Writer.Negative("Network config file not found.");

@@ -16,13 +16,15 @@ public static class Glo
     public const string EXE_AGENT = "BridgeOpsAgent.exe";
     public const string PATH_CONSOLE = "..\\..\\..\\..\\BridgeOpsConsole\\bin\\Debug\\net6.0\\";
     public const string EXE_CONSOLE = "BridgeOpsConsole.exe";
-    public const string PATH_CONFIG_FILES = "..\\..\\..\\..\\BridgeOpsConsole\\bin\\Debug\\net6.0\\Config Files\\";
+    public static string PathConfigFiles
+    { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "Config Files"); } }
+    public static string PathAgentErrorLog
+    { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "agent-error-log.txt"); } }
     public const string CONFIG_TYPE_OVERRIDES = "type-overrides.txt";
     public const string CONFIG_COLUMN_ADDITIONS = "column-additions.txt";
     public const string CONFIG_NETWORK = "network-config.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
-    public const string LOG_ERROR_AGENT = "agent-error-log.txt";
     public const string FOLDER_QUERY_BUILDER_PRESETS = "Query Builder Presets";
 
     // Client/Agent Function Specifiers
@@ -233,12 +235,12 @@ public static class Glo
             return val > int.MaxValue ? int.MaxValue : (int)val;
         }
 
-        public static string SettingFolder()
+        public static string ApplicationFolder()
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                                           "BridgeOps");
         }
-        public static string SettingsFolder(string subdir)
+        public static string ApplicationFolder(string subdir)
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                                           "BridgeOps", subdir);

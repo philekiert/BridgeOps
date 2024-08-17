@@ -130,29 +130,26 @@ public class ConsoleController
         // Database
         menu = MENU_DATABASE;
         AddCommand("load type overrides", ValType.None, menu, LoadTypeOverrides,
-                   "Load type overrides from file \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_TYPE_OVERRIDES +
+                   "Load type overrides from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) +
                    "\". File path is relevant to the path of this executable.");
         AddCommand("create type overrides", ValType.None, menu, CreateTypeOverrides,
-                   "Generate default values and output to \"" + Glo.PATH_CONFIG_FILES +
-                   Glo.CONFIG_TYPE_OVERRIDES + "\". File path is relevant to the path of this executable.");
+                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\". File path is relevant to the path of this executable.");
         AddCommand("reset type verrides", ValType.None, menu, ResetTypeOverrides,
                    "Reset type overrides to default types.");
         AddCommand("view current types", ValType.None, menu, ViewCurrentValuesWithOverrides,
                    "View the list of columns in their respective tables with the currently loaded overrides. Does " +
                    "not include column additions.");
         AddCommand("load column additions", ValType.None, menu, LoadColumnAdditions,
-                   "Load column additions from file \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_COLUMN_ADDITIONS +
+                   "Load column additions from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) +
                    "\". File path is relevant to the path of this executable.");
         AddCommand("create column additions", ValType.None, menu, CreateColumnAdditions,
-                   "Create a new column additions template file under \"" + Glo.PATH_CONFIG_FILES +
-                   Glo.CONFIG_COLUMN_ADDITIONS + "\". File path is relevant to the path of this executable.");
+                   "Create a new column additions template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) + "\". File path is relevant to the path of this executable.");
         AddCommand("wipe column additions", ValType.None, menu, WipeColumnAdditions,
                    "Wipe all loaded column additions. Does not affect the column additions template file.");
         AddCommand("create friendly names", ValType.None, menu, CreateFriendlyNames,
-                   "Create a new friendly names template file under \"" + Glo.PATH_CONFIG_FILES +
-                   Glo.CONFIG_FRIENDLY_NAMES + "\". File path is relevant to the path of this executable.");
+                   "Create a new friendly names template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES) + "\". File path is relevant to the path of this executable.");
         AddCommand("load friendly names", ValType.None, menu, LoadFriendlyNames,
-                   "Load friendly names from \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES +
+                   "Load friendly names from \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES) +
                    "\". File path is relevent to the path of this executable.");
         AddCommand("wipe friendly names", ValType.None, menu, WipeFriendlyNaemes,
                    "Wipe all loaded friendly names. Does not affect the friendly names file.");
@@ -163,18 +160,18 @@ public class ConsoleController
 
         // Data
         menu = MENU_DATA;
-        AddCommand("import assets", ValType.String, menu, ImportAssets,
-                   "Import assets from a specified .csv file. Full file path is required, " +
-                   "make sure to read docs before proceeding.");
-        AddCommand("import asset parents", ValType.String, menu, ImportAssetParents,
-                   "Import asset parents from a specified .csv file. Full file path is required, " +
-                   "make sure to read docs before proceeding.");
         AddCommand("import organisations", ValType.String, menu, ImportOrganisations,
                    "Import organisations from a specified .csv file. " +
                    "Full file path is required, make sure to read docs before proceeding.");
         AddCommand("import organisation parents", ValType.String, menu, ImportOrganisationParents,
                    "Import organisation parents from a specified .csv file. " +
                    "Full file path is required, make sure to read docs before proceeding.");
+        AddCommand("import assets", ValType.String, menu, ImportAssets,
+                   "Import assets from a specified .csv file. Full file path is required, " +
+                   "make sure to read docs before proceeding.");
+        AddCommand("import asset parents", ValType.String, menu, ImportAssetParents,
+                   "Import asset parents from a specified .csv file. Full file path is required, " +
+                   "make sure to read docs before proceeding.");
         AddCommand("generate test data", ValType.Int, menu, GenerateTestData,
                    "Outputs C:/Organisations.csv with the specified number of randomly generated organisations, " +
                    "along with C:/Assets.csv filled by assets with randomly assigned parents.");
@@ -196,10 +193,10 @@ public class ConsoleController
         // Network
         menu = MENU_NETWORK;
         AddCommand("parse network config", ValType.None, menu, ParseNetworkSettings,
-                   "Check to make sure \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK +
+                   "Check to make sure \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) +
                    "\" is legible for agent. File path is relevent to the path of this executable.");
         AddCommand("create network config", ValType.None, menu, CreateNetworkSettings,
-                   "Generate default values and output to \"" + Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK +
+                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) +
                     "\". File path is relevant to the path of this executable.");
     }
 
@@ -389,9 +386,9 @@ public class ConsoleController
     {
         dbCreate.friendlyNames.Clear();
 
-        if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES))
+        if (File.Exists(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES)))
         {
-            string[] lines = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES);
+            string[] lines = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES));
             int relevantLinesFound = 0;
             for (int l = 0; l < lines.Length; ++l)
             {
@@ -437,7 +434,7 @@ public class ConsoleController
                        " is already present, this will overwrite it. Continue?");
         if (Writer.YesNo())
         {
-            File.WriteAllText(Glo.PATH_CONFIG_FILES + Glo.CONFIG_FRIENDLY_NAMES,
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES),
                             "# To use this file, simply write the table name, followed by the column name, followed" +
                             "# by the name you wish to be used, separated by ';;'. For example (omitting  the '# '):" +
                             "\n" +
@@ -512,8 +509,11 @@ public class ConsoleController
 
         try
         {
-            File.WriteAllText("C:\\Organisations.csv", o.ToString());
-            File.WriteAllText("C:\\Assets.csv", a.ToString());
+            string folder = Glo.Fun.ApplicationFolder("Data Import");
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder, "Organisations.csv"), o.ToString());
+            File.WriteAllText(Path.Combine(folder, "Assets.csv"), a.ToString());
         }
         catch
         {
@@ -534,14 +534,15 @@ public class ConsoleController
     private int ImportRecords(string table, string primaryKey)
     {
         commandValString = commandValString.Replace("\"", "");
-        if (!File.Exists(commandValString))
+        string fileName = Path.Combine(Glo.Fun.ApplicationFolder("Data Import"), commandValString);
+        if (!File.Exists(fileName))
         {
             Writer.Negative("File not found.");
             return 1;
         }
 
         // This is the simplest way I can find to parse a CSV file without a third party library.
-        Microsoft.VisualBasic.FileIO.TextFieldParser parser = new(commandValString);
+        Microsoft.VisualBasic.FileIO.TextFieldParser parser = new(fileName);
         parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
         parser.SetDelimiters(",");
 
@@ -716,7 +717,7 @@ public class ConsoleController
         // Write any failed inserts to a CSV file for the user to review.
         if (failed.Count > 0)
         {
-            string errorFileName = GetErrorCSVPath(commandValString);
+            string errorFileName = GetErrorCSVPath(fileName);
             string count = failed.Count == 1 ? "There was 1 failure." : "There were " + failed.Count + " failures.";
             Writer.Negative(count + " Generating " + errorFileName + " for review.");
 
@@ -754,15 +755,16 @@ public class ConsoleController
     private int ImportRecordParents(string table, string primaryKey)
     {
         commandValString = commandValString.Replace("\"", "");
+        string fileName = Path.Combine(Glo.Fun.ApplicationFolder("Data Import"), commandValString);
 
-        if (!File.Exists(commandValString))
+        if (!File.Exists(fileName))
         {
             Writer.Negative("File not found.");
             return 1;
         }
 
         // This is the simplest way I can find to parse a CSV file without a third party library.
-        Microsoft.VisualBasic.FileIO.TextFieldParser parser = new(commandValString);
+        Microsoft.VisualBasic.FileIO.TextFieldParser parser = new(fileName);
         parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
         parser.SetDelimiters(",");
 
@@ -896,7 +898,7 @@ public class ConsoleController
         // Write any failed inserts to a CSV file for the user to review.
         if (failed.Count > 0)
         {
-            string errorFileName = GetErrorCSVPath(commandValString);
+            string errorFileName = GetErrorCSVPath(fileName);
             string count = failed.Count == 1 ? "There was 1 recorded failure." : "There were " + failed.Count +
                                                                                  " recorded failures.";
             Writer.Negative(count + " Generating " + errorFileName + " for review.");
@@ -1100,7 +1102,7 @@ public class ConsoleController
             else
             {
                 Writer.Negative("It looks like the process was started, but has since terminated. See " +
-                                Glo.LOG_ERROR_AGENT + " for details.");
+                                Glo.PathAgentErrorLog + " for details.");
             }
         }
         else
@@ -1152,7 +1154,7 @@ public class ConsoleController
         // Agent also reads from this file, so 
         try
         {
-            File.WriteAllText(Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK, settings);
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK), settings);
             Writer.Affirmative("Network config file written successfully.");
         }
         catch (Exception e)
@@ -1175,7 +1177,7 @@ public class ConsoleController
     {
         Writer.Message("\nParsing " + Glo.CONFIG_NETWORK + "...");
 
-        string[] settings = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK);
+        string[] settings = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK));
 
         int inboundPort = Glo.PORT_INBOUND_DEFAULT; // Store inboundPort to make sure outboundPort isn't the same.
         int iVal;

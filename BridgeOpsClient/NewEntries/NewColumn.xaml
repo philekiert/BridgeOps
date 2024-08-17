@@ -46,7 +46,6 @@
             <ComboBoxItem Content="TINYINT"/>
             <ComboBoxItem Content="SMALLINT"/>
             <ComboBoxItem Content="INT"/>
-            <ComboBoxItem Content="BIGINT"/>
             <ComboBoxItem Content="DATE"/>
             <ComboBoxItem Content="BOOLEAN"/>
         </ComboBox>

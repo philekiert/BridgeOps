@@ -17,7 +17,12 @@ using static System.Net.Mime.MediaTypeNames;
 public class DatabaseCreator
 {
     public const string DATABASE_NAME = "BridgeOps";
-    public const string DATABASE_FILEPATH = "C:\\BridgeOps_Data.mdf";
+    public const string DATABASE_FILENAME = "BridgeOps_Data.mdf";
+    public const string DATABASE_LOGNAME = "BridgeOps_Log.ldf";
+    public static string DatabaseFilePath
+    { get { return Path.Combine(Glo.Fun.ApplicationFolder(), DATABASE_FILENAME); } }
+    public static string DatabaseLogPath
+    { get { return Path.Combine(Glo.Fun.ApplicationFolder(), DATABASE_LOGNAME); } }
     FieldDefs fieldDefs;
 
     SqlConnection sqlConnect = new SqlConnection();
@@ -76,7 +81,7 @@ public class DatabaseCreator
         try
         {
             Writer.Message("\nReading " + Glo.CONFIG_TYPE_OVERRIDES + "...");
-            string[] lines = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_TYPE_OVERRIDES);
+            string[] lines = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES));
 
             int valuesRead = 0;
             int valuesChanged = 0;
@@ -299,23 +304,23 @@ public class DatabaseCreator
             }
         }
         else
-            Writer.Message("Database file '" + DATABASE_FILEPATH + "' not found.", ConsoleColor.Red);
+            Writer.Message("Database file '" + DatabaseFilePath + "' not found.", ConsoleColor.Red);
     }
     public void CreateDatabase()
     {
         Writer.Message("Creating database and log file...");
         string creation = "CREATE DATABASE " + DATABASE_NAME + " ON PRIMARY (" +
                             "NAME = " + DATABASE_NAME + "_Data, " +
-                            "FILENAME = '" + DATABASE_FILEPATH + "', " +
+                            "FILENAME = '" + DatabaseFilePath + "', " +
                             "SIZE = 2GB, MAXSIZE = 10GB, FILEGROWTH = 10%) " +
                           "LOG ON (" +
                             "NAME = BridgeOps_Log, " +
-                            "FILENAME = 'C:\\BridgeOps_Log.ldf', " +
+                            "FILENAME = '" + DatabaseLogPath + "', " +
                             "SIZE = 1GB, MAXSIZE = 5GB, FILEGROWTH = 10%)";
 
         if (SendCommandSQL(creation))
         {
-            Writer.Affirmative(string.Format("Database created successfully as '{0}'.", DATABASE_FILEPATH));
+            Writer.Affirmative(string.Format("Database created successfully as '{0}'.", DatabaseFilePath));
             try
             {
                 OpenSQL();
@@ -611,9 +616,9 @@ public class DatabaseCreator
     {
         columnAdditions.Clear();
 
-        if (File.Exists(Glo.PATH_CONFIG_FILES + Glo.CONFIG_COLUMN_ADDITIONS))
+        if (File.Exists(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS)))
         {
-            string[] lines = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_COLUMN_ADDITIONS);
+            string[] lines = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS));
             int readsFailed = 0;
             int readSuccesses = 0;
 
@@ -807,7 +812,7 @@ public class DatabaseCreator
 
     private bool CheckDatabaseFileExistence()
     {
-        return File.Exists(DATABASE_FILEPATH);
+        return File.Exists(DatabaseFilePath);
     }
     private bool SwitchToDatabase(string dbName)
     {

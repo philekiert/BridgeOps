@@ -331,9 +331,9 @@ public class FieldDefs
         try
         {
             // Automatically generates the file if one isn't present.
-            if (!Directory.Exists(Glo.PATH_CONFIG_FILES))
-                Directory.CreateDirectory(Glo.PATH_CONFIG_FILES);
-            File.WriteAllText(Glo.PATH_CONFIG_FILES + Glo.CONFIG_TYPE_OVERRIDES, text);
+            if (!Directory.Exists(Glo.PathConfigFiles))
+                Directory.CreateDirectory(Glo.PathConfigFiles);
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES), text);
             Writer.Affirmative("Overrides file written successfully.");
         }
         catch (System.Exception e)
@@ -380,7 +380,7 @@ public class FieldDefs
                         "\n#    database creation." +
                         "\n#  - Only the [allowed] section is optional and can be omitted." +
                         "\n#  - [type] is restricted to the following values:" +
-                        "\n#      Integral: TINYINT, SMALLINT, INT, BIGINT (these cannot accept [allowed] values)" +
+                        "\n#      Integral: TINYINT, SMALLINT, INT (these cannot accept [allowed] values)" +
                         "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
                         "\n#      Date: DATE (cannot accept [allowed] values)" +
                         "\n#      Text: VARCHAR(0 - 65535), VARCHAR(MAX) (either can accept [allowed] values)" +
@@ -394,7 +394,7 @@ public class FieldDefs
                         "\n";
         try
         {
-            File.WriteAllText(Glo.PATH_CONFIG_FILES + Glo.CONFIG_COLUMN_ADDITIONS, template);
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS), template);
             Writer.Affirmative("Column additions file written successfully.");
         }
         catch (Exception e)

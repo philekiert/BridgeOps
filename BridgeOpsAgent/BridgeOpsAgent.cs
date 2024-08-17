@@ -225,12 +225,16 @@ internal class BridgeOpsAgent
     {
         lock (logErrorLock)
         {
-            string error = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
-            if (context.Length > 0)
-                error += "   " + context;
-            if (e != null)
-                error += "   " + e.Message;
-            File.AppendAllText(Glo.LOG_ERROR_AGENT, error + "\n");
+            try
+            {
+                string error = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+                if (context.Length > 0)
+                    error += "   " + context;
+                if (e != null)
+                    error += "   " + e.Message;
+                File.AppendAllText(Glo.PathAgentErrorLog, error + "\n");
+            }
+            catch { }
         }
     }
     private static void LogError(Exception e) { LogError("", e); }
@@ -264,7 +268,7 @@ internal class BridgeOpsAgent
         int valuesSet = 0;
         try
         {
-            string[] networkConfig = File.ReadAllLines(Glo.PATH_CONFIG_FILES + Glo.CONFIG_NETWORK);
+            string[] networkConfig = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK));
             foreach (string s in networkConfig)
             {
                 if (s.Length > Glo.NETWORK_SETTINGS_LENGTH && !s.StartsWith("# "))
@@ -448,7 +452,7 @@ internal class BridgeOpsAgent
             columnRecord = fileText.Remove(fileText.Length - 1);
 
             // Automatically generates a file for debugging if one isn't present.
-            File.WriteAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD, columnRecord);
+            File.WriteAllText(Glo.Fun.ApplicationFolder(Glo.CONFIG_COLUMN_RECORD), columnRecord);
 
             return true;
         }
@@ -467,7 +471,8 @@ internal class BridgeOpsAgent
     {
         try
         {
-            string init = fromFile ? File.ReadAllText(Glo.PATH_AGENT + Glo.CONFIG_COLUMN_RECORD) : columnRecord;
+            string init = fromFile ? File.ReadAllText(Glo.Fun.ApplicationFolder(Glo.CONFIG_COLUMN_RECORD)) :
+                                     columnRecord;
             if (!ColumnRecord.Initialise(init))
                 throw new Exception();
             else
@@ -2156,7 +2161,7 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.SettingsFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
             if (!Directory.Exists(folder)) // In this case, we succeed with no files to report.
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -2220,7 +2225,7 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.SettingsFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
             lock (selectBuilderPresetFileLock)
             {
                 File.Delete(Path.Combine(folder, file));
@@ -2264,7 +2269,7 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.SettingsFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
             lock (selectBuilderPresetFileLock)
             {
                 File.Move(Path.Combine(folder, oldName), Path.Combine(folder, newName));

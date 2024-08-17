@@ -63,8 +63,8 @@ namespace BridgeOpsClient
                     // Restrict to only other INT types.
                     cmbType.Items.RemoveAt(0);
                     cmbType.Items.RemoveAt(0);
-                    cmbType.Items.RemoveAt(4);
-                    cmbType.Items.RemoveAt(4);
+                    cmbType.Items.RemoveAt(3);
+                    cmbType.Items.RemoveAt(3);
                     cmbType.Text = columnDetails.type;
                     cmbType.SelectedIndex = cmbType.SelectedIndex;
                     updatingTypeOptions = false;
@@ -72,7 +72,6 @@ namespace BridgeOpsClient
                 else if (columnDetails.type.StartsWith("VARCHAR"))
                 {
                     updatingTypeOptions = true;
-                    cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
