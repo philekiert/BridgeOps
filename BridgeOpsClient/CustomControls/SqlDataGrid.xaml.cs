@@ -261,7 +261,7 @@ namespace BridgeOpsClient.CustomControls
         }
         public void AddWipeButton()
         {
-            MenuItem menuItem = new() { Header = "Wipe" };
+            MenuItem menuItem = new() { Header = "Clear View" };
             menuItem.Click += btnWipe_Click;
             AddSeparator(false);
             AddContextMenuItem(menuItem, false);

@@ -34,6 +34,23 @@ internal class BridgeOpsConsole
         }
         Environment.CurrentDirectory = currentDir;
 
+        // Create application folders if needed.
+        Glo.Fun.ExistsOrCreateFolder(Glo.PathConfigFiles);
+
+        // Read or create SQL server name file.
+        string serverNameFile = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SQL_SERVER_NAME);
+        if (File.Exists(serverNameFile))
+        {
+            DatabaseCreator.sqlServerName = File.ReadAllLines(serverNameFile)[0];
+            Writer.Affirmative($"SQL Server name read as {DatabaseCreator.sqlServerName}");
+        }
+        else
+        {
+            File.WriteAllText(serverNameFile,
+                              Glo.SQL_SERVER_NAME_DEFAULT);
+            Writer.Neutral($"{Glo.CONFIG_SQL_SERVER_NAME} not found. Created with default name.");
+        }
+
         FieldDefs fieldDefs = new FieldDefs();
         fieldDefs.DefineFields();
         DatabaseCreator dbCreate = new DatabaseCreator(fieldDefs);

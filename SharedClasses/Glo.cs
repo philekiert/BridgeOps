@@ -9,6 +9,7 @@ public static class Glo
     public const string PIPE_CONSOLE = "BridgeOpsConsole";
     public const int PORT_INBOUND_DEFAULT = 61_152;
     public const int PORT_OUTBOUND_DEFAULT = 61_153;
+    public const string SQL_SERVER_NAME_DEFAULT = "SQLEXPRESS";
 
 
     // Files and Folder Traversal
@@ -28,6 +29,7 @@ public static class Glo
     public const string CONFIG_TYPE_OVERRIDES = "type-overrides.txt";
     public const string CONFIG_COLUMN_ADDITIONS = "column-additions.txt";
     public const string CONFIG_NETWORK = "network-config.txt";
+    public const string CONFIG_SQL_SERVER_NAME = "sql-server-name.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
     public const string FOLDER_QUERY_BUILDER_PRESETS = "Query Builder Presets";
@@ -240,6 +242,12 @@ public static class Glo
             return val > int.MaxValue ? int.MaxValue : (int)val;
         }
 
+        public static void ExistsOrCreateFolder() { ExistsOrCreateFolder(ApplicationFolder()); }
+        public static void ExistsOrCreateFolder(string folder)
+        {
+            if (!System.IO.Directory.Exists(folder))
+                System.IO.Directory.CreateDirectory(folder);
+        }
         public static string ApplicationFolder()
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),

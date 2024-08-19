@@ -452,6 +452,7 @@ internal class BridgeOpsAgent
             columnRecord = fileText.Remove(fileText.Length - 1);
 
             // Automatically generates a file for debugging if one isn't present.
+            Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder(Glo.CONFIG_COLUMN_RECORD));
             File.WriteAllText(Glo.Fun.ApplicationFolder(Glo.CONFIG_COLUMN_RECORD), columnRecord);
 
             return true;
@@ -509,12 +510,18 @@ internal class BridgeOpsAgent
     }
 
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
-    private static string connectionString = "server=localhost\\SQLEXPRESS;" +
-                                             "integrated security=SSPI;" +
-                                             //"user id=sa; password=^2*Re98E;" +
-                                             "encrypt=false;" +
-                                             "database=BridgeOps;" +
-                                             "Application Name=BridgeOpsAgent;";
+    private static string sqlServerName = Glo.SQL_SERVER_NAME_DEFAULT;
+    private static string ConnectionString
+    {
+        get
+        {
+            return $"server=localhost\\{sqlServerName};" +
+                    "integrated security=SSPI;" +
+                    "encrypt=false;" +
+                    "database=BridgeOps;" +
+                    "Application Name=BridgeOpsAgent;";
+        }
+    }
 
     private static void Main(string[] args)
     {
@@ -528,7 +535,16 @@ internal class BridgeOpsAgent
                 Thread.Sleep(5000);
             firstRun = false;
 
-            SqlConnection sqlConnect = new SqlConnection(connectionString);
+            Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder(Glo.PathConfigFiles));
+
+            // Get the name of the SQL server instance.
+            if (File.Exists(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SQL_SERVER_NAME)))
+                sqlServerName = File.ReadAllLines(Glo.CONFIG_SQL_SERVER_NAME)[0];
+            else
+                LogError($"Unable to locate BridgeOps/{Glo.CONFIG_SQL_SERVER_NAME}. " +
+                         $"Connecting using default SLQ Server instance name: {sqlServerName}.");
+
+            SqlConnection sqlConnect = new SqlConnection(ConnectionString);
 
             try
             {
@@ -583,7 +599,7 @@ internal class BridgeOpsAgent
         // If the database is inactive for more than a few minutes, we see a very slight delay to the next query. This
         // causes logins to fail for some inexplicable reason when developing on one machine.
 
-        SqlConnection sqlConnect = new SqlConnection(connectionString);
+        SqlConnection sqlConnect = new SqlConnection(ConnectionString);
         while (true)
         {
             Thread.Sleep(120_000); // Sleep for two minutes.
@@ -683,7 +699,7 @@ internal class BridgeOpsAgent
     private static void HandleClientListenAccept(IAsyncResult result)
     {
         // I believe each thread will need its own dedicated SqlConnection object.
-        SqlConnection sqlConnect = new SqlConnection(connectionString);
+        SqlConnection sqlConnect = new SqlConnection(ConnectionString);
 
         if (result.AsyncState != null)
         {
@@ -2125,8 +2141,7 @@ internal class BridgeOpsAgent
             string folder = Path.Combine(documents, "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
             lock (selectBuilderPresetFileLock)
             {
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
+                Glo.Fun.ExistsOrCreateFolder(folder);
                 string file = Path.Combine(folder, name + ".pre");
                 File.WriteAllText(file, jsonString);
             }

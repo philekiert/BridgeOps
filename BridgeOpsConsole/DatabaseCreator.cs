@@ -39,12 +39,11 @@ public class DatabaseCreator
          * records of all other databases running on the SQL Server instance. */
         try
         {
-            sqlConnect = new SqlConnection("server=localhost\\SQLEXPRESS;" +
-                                           "integrated security=SSPI;" +
-                                           //"user id=sa; password=^2*Re98E;" +
-                                           "encrypt=false;" +
-                                           "database=master;" +
-                                           "Application Name=BridgeOpsConsole;");
+            sqlConnect = new SqlConnection($"server=localhost\\{sqlServerName};" +
+                                            "integrated security=SSPI;" +
+                                            "encrypt=false;" +
+                                            "database=master;" +
+                                            "Application Name=BridgeOpsConsole;");
             sqlCommand = new SqlCommand("", sqlConnect);
 
             // Test opening a connection and operating on sqlConnect.
@@ -810,6 +809,7 @@ public class DatabaseCreator
             sqlConnect.Close();
     }
 
+    public static string sqlServerName = Glo.SQL_SERVER_NAME_DEFAULT;
     private bool CheckDatabaseFileExistence()
     {
         return File.Exists(DatabaseFilePath);
@@ -827,12 +827,11 @@ public class DatabaseCreator
                 SendCommandSQL("USE " + dbName);
 
                 sqlConnect.Dispose();
-                sqlConnect.ConnectionString = "server=localhost\\SQLEXPRESS;" +
-                                              "integrated security=SSPI;" +
-                                              //"user id=sa; password=^2*Re98E;" +
-                                              "encrypt=false;" +
-                                              "database=" + dbName + ";" +
-                                              "Application Name=BridgeOpsConsole;";
+                sqlConnect.ConnectionString = $"server=localhost\\{sqlServerName};" +
+                                               "integrated security=SSPI;" +
+                                               "encrypt=false;" +
+                                               "database=" + dbName + ";" +
+                                               "Application Name=BridgeOpsConsole;";
 
                 Writer.Affirmative(string.Format("Switched from {0} to {1}.", oldDb, dbName));
 
