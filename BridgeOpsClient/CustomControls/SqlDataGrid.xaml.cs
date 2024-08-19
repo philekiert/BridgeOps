@@ -229,6 +229,29 @@ namespace BridgeOpsClient.CustomControls
                 return "";
             return id;
         }
+        public List<string> GetCurrentlySelectedIDs()
+        {
+            List<string> ids = new();
+
+            try
+            {
+                foreach (Row row in dtg.SelectedItems)
+                {
+                    object? o = row.items[0];
+                    if (o == null)
+                        return new();
+                    string? id = o.ToString();
+                    if (id == null)
+                        return new();
+                    ids.Add(id);
+                }
+                return ids;
+            }
+            catch
+            {
+                return new();
+            }
+        }
 
         private void StoreViewSettings()
         {
@@ -437,6 +460,16 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
+        public MenuItem AddContextMenuItem(string name, bool top, RoutedEventHandler function)
+        {
+            MenuItem menuItem = new() { Header = name };
+            menuItem.Click += function;
+            if (top)
+                mnuData.Items.Insert(0, menuItem);
+            else
+                mnuData.Items.Add(menuItem);
+            return menuItem;
+        }
         public void AddContextMenuItem(MenuItem item, bool top)
         {
             if (top)
@@ -450,6 +483,15 @@ namespace BridgeOpsClient.CustomControls
                 mnuData.Items.Insert(0, new Separator());
             else
                 mnuData.Items.Add(new Separator());
+        }
+        public void ToggleContextMenuItem(string text, bool enabled)
+        {
+            foreach (object o in mnuData.Items)
+                if (o is MenuItem mi && (string)mi.Header == text)
+                {
+                    mi.IsEnabled = enabled;
+                    return;
+                }
         }
 
         private void mnuCopy_Click(object sender, RoutedEventArgs e)

@@ -184,5 +184,18 @@ namespace BridgeOpsClient
             foreach (PageDatabaseView view in views)
                             view.RepeatSearch(identity);
         }
+
+        public void ReflectPermissions()
+        {
+            // When logging in, it could be that a PageDatabaseView is already open. If that's the case some buttons
+            // may need updating.
+            foreach (PageDatabaseView view in views)
+            {
+                view.dtgResults.ToggleContextMenuItem("Update Selected",
+                                                      App.sd.editPermissions[Glo.PERMISSION_RECORDS]);
+                view.dtgResults.ToggleContextMenuItem("Delete Selected",
+                                                      App.sd.deletePermissions[Glo.PERMISSION_RECORDS]);
+            }
+        }
     }
 }

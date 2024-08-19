@@ -646,6 +646,10 @@ namespace BridgeOpsClient
                         {
                             MessageBox.Show("The foreign key could no longer be found.");
                         }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError("Could not insert new record. See error:\n\n" + sr.ReadString(stream));
+                        }
                     }
                     returnID = "";
                     return false;
@@ -705,6 +709,8 @@ namespace BridgeOpsClient
         }
 
         public static bool SendDelete(string table, string column, string id, bool isString)
+        { return SendDelete(table, column, new List<string>() { id }, isString); }
+        public static bool SendDelete(string table, string column, List<string> ids, bool isString)
         {
             lock (streamLock)
             {
@@ -714,7 +720,7 @@ namespace BridgeOpsClient
                     if (stream != null)
                     {
                         DeleteRequest req = new DeleteRequest(sd.sessionID, ColumnRecord.columnRecordID,
-                                                              table, column, id, isString);
+                                                              table, column, ids, isString);
 
                         stream.WriteByte(Glo.CLIENT_DELETE);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
@@ -733,6 +739,11 @@ namespace BridgeOpsClient
                         {
                             MessageBox.Show("The record could no longer be found.");
                         }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError("Could not delete record. See Error:", sr.ReadString(stream));
+                        }
+                        else throw new Exception();
                     }
                     return false;
                 }

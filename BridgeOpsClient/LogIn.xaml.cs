@@ -102,6 +102,9 @@ namespace BridgeOpsClient
 
                 // No need to warn if this fails, it will simply fail and be reset/rebuilt on the user's next logout.
                 App.PullUserSettings();
+
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.ReflectPermissions();
             }
             else
             {

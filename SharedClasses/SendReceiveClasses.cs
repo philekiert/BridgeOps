@@ -1460,11 +1460,11 @@ namespace SendReceiveClasses
         public int columnRecordID;
         public string table;
         public string column;
-        public string id;
+        public List<string> id;
         public bool needsQuotes;
 
         public DeleteRequest(string sessionID, int columnRecordID,
-                             string table, string column, string id, bool isString)
+                             string table, string column, List<string> id, bool isString)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -1476,9 +1476,13 @@ namespace SendReceiveClasses
 
         public string SqlDelete()
         {
+            string[] conditions = new string[id.Count];
+            for (int i = 0; i < id.Count; ++i)
+                conditions[i] = column + " = " +
+                                SqlAssist.AddQuotes(SqlAssist.SecureValue(id[i]), needsQuotes);
+
             return "DELETE FROM " + table +
-                   " WHERE " + SqlAssist.SecureColumn(column) + " = " +
-                               SqlAssist.AddQuotes(SqlAssist.SecureValue(id), needsQuotes) + ';';
+                   " WHERE " + string.Join(" OR ", conditions) + ';';
         }
     }
 

@@ -50,6 +50,10 @@ namespace BridgeOpsClient
 
             dtgResults.AddWipeButton();
 
+            dtgResults.AddContextMenuItem("Update Selected", false, btnUpdate_Click).IsEnabled =
+                App.sd.editPermissions[Glo.PERMISSION_RECORDS];
+            dtgResults.AddContextMenuItem("Delete Selected", false, btnDelete_Click).IsEnabled =
+                App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
         }
 
         public void PopulateColumnComboBox()
@@ -287,6 +291,37 @@ namespace BridgeOpsClient
             txtSearch.Text = "";
 
             btnClear.IsEnabled = false;
+        }
+
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            string table = "Organisation";
+            if (dtgResults.identity == 1)
+                table = "Asset";
+            else if (dtgResults.identity == 2)
+                table = "Contact";
+        }
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (!App.DeleteConfirm(dtgResults.dtg.SelectedItems.Count > 1))
+                return;
+
+            string table = "Organisation";
+            string column = Glo.Tab.ORGANISATION_ID;
+            if (dtgResults.identity == 1)
+            {
+                table = "Asset";
+                column = Glo.Tab.ASSET_ID;
+            }
+            else if (dtgResults.identity == 2)
+            {
+                table = "Contact";
+                column = Glo.Tab.CONTACT_ID;
+            }
+
+            if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), true) &&
+                MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches(dtgResults.identity);
         }
 
         // Bring up selected organisation on double-click.

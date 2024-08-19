@@ -1302,16 +1302,13 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            try
-            {
-                LogError("Couldn't create new contact. See error:", e);
-                if (e.Message.Contains("FOREIGN KEY"))
-                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY);
-                else
-                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
-            }
-            catch { }
-
+            LogError("Couldn't create new contact. See error:", e);
+            if (e.Message.Contains("FOREIGN KEY"))
+                SafeFail(stream, Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY);
+            else if (e.Message.Contains("PRIMARY KEY"))
+                SafeFail(stream, "Record ID already exists.");
+            else
+                SafeFail(stream, e.Message);
         }
         finally
         {
@@ -1640,7 +1637,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run update, see error:", e);
-            SafeFail(stream);
+            SafeFail(stream, e.Message);
         }
         finally
         {
@@ -1697,7 +1694,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't delete record, see error:", e);
-            SafeFail(stream);
+            SafeFail(stream, e.Message);
         }
         finally
         {
