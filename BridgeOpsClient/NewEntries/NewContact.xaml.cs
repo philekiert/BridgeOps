@@ -198,6 +198,9 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DeleteConfirm(false))
+                return;
+
             if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, id, false))
             {
                 changeMade = true;

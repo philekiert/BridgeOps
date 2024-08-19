@@ -537,11 +537,12 @@ internal class BridgeOpsAgent
 
             Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder(Glo.PathConfigFiles));
 
+            string serverNameFile = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SQL_SERVER_NAME);
             // Get the name of the SQL server instance.
-            if (File.Exists(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SQL_SERVER_NAME)))
-                sqlServerName = File.ReadAllLines(Glo.CONFIG_SQL_SERVER_NAME)[0];
+            if (File.Exists(serverNameFile))
+                sqlServerName = File.ReadAllLines(serverNameFile)[0];
             else
-                LogError($"Unable to locate BridgeOps/{Glo.CONFIG_SQL_SERVER_NAME}. " +
+                LogError($"Unable to locate \"BridgeOps/{Glo.CONFIG_SQL_SERVER_NAME}\". " +
                          $"Connecting using default SLQ Server instance name: {sqlServerName}.");
 
             SqlConnection sqlConnect = new SqlConnection(ConnectionString);

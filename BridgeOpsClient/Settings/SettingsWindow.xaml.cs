@@ -268,6 +268,9 @@ namespace BridgeOpsClient
 
         private void btnColumnRemove_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DeleteConfirm(false))
+                return;
+
             string table = dtgColumns.GetCurrentlySelectedCell(0);
             string column = dtgColumns.GetCurrentlySelectedCell(1);
             if (table == "" || column == "")

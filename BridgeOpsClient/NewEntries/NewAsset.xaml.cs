@@ -262,6 +262,9 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DeleteConfirm(false))
+                return;
+
             if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id, true))
             {
                 if (MainWindow.pageDatabase != null)

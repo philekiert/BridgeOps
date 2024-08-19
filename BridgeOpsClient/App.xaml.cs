@@ -1265,6 +1265,14 @@ namespace BridgeOpsClient
                 Environment.Exit(0);
             }
         }
+
+        public static bool DeleteConfirm(bool multiple)
+        {
+            return MessageBox.Show("Are you sure? It will be impossible to recover " +
+                                  $"{(multiple ? "these items." : "this item")}",
+                                   "Confirm Deletion",
+                                   MessageBoxButton.OKCancel) == MessageBoxResult.OK;
+        }
     }
 
     public class SessionDetails

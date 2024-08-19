@@ -54,7 +54,8 @@ namespace BridgeOpsClient
                 btnEdit.IsEnabled = false;
                 btnResetPassword.IsEnabled = false;
             }
-            if (!App.sd.deletePermissions[Glo.PERMISSION_USER_ACC_MGMT])
+            if (!App.sd.deletePermissions[Glo.PERMISSION_USER_ACC_MGMT] ||
+                id == App.sd.loginID)
             {
                 btnDelete.IsEnabled = false;
             }
@@ -212,6 +213,9 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DeleteConfirm(false))
+                return;
+
             if (App.SendDelete("Login", Glo.Tab.LOGIN_ID, id.ToString(), false))
             {
                 didSomething = true;

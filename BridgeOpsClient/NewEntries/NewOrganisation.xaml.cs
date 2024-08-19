@@ -314,6 +314,9 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DeleteConfirm(false))
+                return;
+
             if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id, true))
             {
                 if (MainWindow.pageDatabase != null)

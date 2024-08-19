@@ -453,6 +453,9 @@ namespace BridgeOpsClient
 
         private void btnRemovePreset_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DeleteConfirm(false))
+                return;
+
             try
             {
                 lock (App.streamLock)
