@@ -9,7 +9,7 @@ class Writer
     static void Sym(ConsoleColor color)
     {
         Console.ForegroundColor = color;
-        Console.Write("●");
+        Console.Write("//");
         Console.ForegroundColor = ConsoleColor.White;
         Console.Write(" ");
     }
