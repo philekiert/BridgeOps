@@ -215,95 +215,94 @@ public class DatabaseCreator
 
     public void DeleteDatabase()
     {
-        if (CheckDatabaseFileExistence())
+        if (!CheckDatabaseFileExistence())
         {
-            Writer.Message("Are you sure you want to delete the database? " +
-                           "This will permanently delete all data - there is no way to undo this.");
-            if (Writer.YesNo())
-            {
-                int n = 0;
-                while (n < 5)
-                {
-                    ++n;
-                    if (n != 5)
-                        Console.WriteLine("\n          DESTRUCT SEQUENCE");
+            Writer.Message("Database file '" + DatabaseFilePath + "' not found.", ConsoleColor.Red);
+            Writer.Message("Proceeding with DROP command anyway, just in case SQL Server still thinks it's there.");
+        }
 
-                    if (n == 1)
+        Writer.Message("Are you sure you want to delete the database? " +
+                       "This will permanently delete all data - there is no way to undo this.");
+        if (Writer.YesNo())
+        {
+            int n = 0;
+            while (n < 5)
+            {
+                ++n;
+                if (n != 5)
+                    Console.WriteLine("\n          DESTRUCT SEQUENCE");
+
+                if (n == 1)
+                {
+                    Console.Write("                 ONE\n");
+                    Console.Write("              CODE: ");
+                    string? read = Console.ReadLine();
+                    if (read == "11A")
+                        continue;
+                    else
+                        break;
+                }
+                else if (n == 2)
+                {
+                    Console.Write("                 TWO\n");
+                    Console.Write("             CODE: ");
+                    string? read = Console.ReadLine();
+                    if (read == "11A2B")
+                        continue;
+                    else
+                        break;
+                }
+                else if (n == 3)
+                {
+                    Console.Write("                THREE\n");
+                    Console.Write("             CODE: ");
+                    string? read = Console.ReadLine();
+                    if (read == "1B2B3")
+                        continue;
+                    else
+                        break;
+                }
+                else if (n == 4)
+                {
+                    Console.Write("              COMPLETED\n");
+                    Console.Write("             AND ENGAGED\n");
+                    Console.Write("\n\n");
+                    Console.Write("              AWAITING\n");
+                    Console.Write("             FINAL CODE\n");
+                    Console.Write("         CODE: ");
+                    if (Console.ReadLine() == "000DESTRUCT0")
+                        continue;
+                    else
+                        break;
+                }
+                else // if n == 5
+                {
+                    try
                     {
-                        Console.Write("                 ONE\n");
-                        Console.Write("              CODE: ");
-                        string? read = Console.ReadLine();
-                        if (read == "11A")
-                            continue;
-                        else
-                            break;
-                    }
-                    else if (n == 2)
-                    {
-                        Console.Write("                 TWO\n");
-                        Console.Write("             CODE: ");
-                        string? read = Console.ReadLine();
-                        if (read == "11A2B")
-                            continue;
-                        else
-                            break;
-                    }
-                    else if (n == 3)
-                    {
-                        Console.Write("                THREE\n");
-                        Console.Write("             CODE: ");
-                        string? read = Console.ReadLine();
-                        if (read == "1B2B3")
-                            continue;
-                        else
-                            break;
-                    }
-                    else if (n == 4)
-                    {
-                        Console.Write("              COMPLETED\n");
-                        Console.Write("             AND ENGAGED\n");
-                        Console.Write("\n\n");
-                        Console.Write("              AWAITING\n");
-                        Console.Write("             FINAL CODE\n");
-                        Console.Write("         CODE: ");
-                        if (Console.ReadLine() == "000DESTRUCT0")
-                            continue;
-                        else
-                            break;
-                    }
-                    else // if n == 5
-                    {
-                        try
+                        Console.WriteLine("");
+                        SwitchToDatabase("master");
+                        if (SendCommandSQL("DROP DATABASE " + DATABASE_NAME))
                         {
                             Console.WriteLine("");
-                            SwitchToDatabase("master");
-                            if (SendCommandSQL("DROP DATABASE " + DATABASE_NAME))
-                            {
-                                Console.WriteLine("");
-                                Writer.Affirmative("Database deleted.");
-                            }
-                            else
-                                Writer.Message("\nIs the database in use by another application, possibly the agent?");
+                            Writer.Affirmative("Database deleted.");
                         }
-                        catch (Exception e)
-                        {
-                            Writer.Message("\nSomething went wrong when attempting to delete the database. See error:",
-                                           ConsoleColor.Red);
-                            Writer.Message(e.Message, ConsoleColor.Red);
-                        }
+                        else
+                            Writer.Message("\nIs the database in use by another application, possibly the agent?");
+                    }
+                    catch (Exception e)
+                    {
+                        Writer.Message("\nSomething went wrong when attempting to delete the database. See error:",
+                                       ConsoleColor.Red);
+                        Writer.Message(e.Message, ConsoleColor.Red);
                     }
                 }
+            }
 
-                if (n != 5)
-                    Writer.Message("\nCode incorrect. Destruct sequence aborted.", ConsoleColor.Red);
-            }
-            else
-            {
-                Writer.Message("Destruct sequence aborted.");
-            }
+            if (n != 5)
+                Writer.Message("\nCode incorrect. Destruct sequence aborted.", ConsoleColor.Red);
         }
         else
-            Writer.Message("Database file '" + DatabaseFilePath + "' not found.", ConsoleColor.Red);
+            Writer.Message("Destruct sequence aborted.");
     }
     public void CreateDatabase()
     {
