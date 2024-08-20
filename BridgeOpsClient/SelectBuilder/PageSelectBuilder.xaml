@@ -51,7 +51,8 @@
             </ComboBox>
             <Label Content="Remove Duplicate Rows" x:Name="lblDistinct" Grid.Row="0" Grid.Column="3"/>
             <CheckBox Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" x:Name="chkDistinct"/>
-            <ScrollViewer Grid.Row="1" Grid.ColumnSpan="4" HorizontalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="1" Grid.ColumnSpan="4"
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>

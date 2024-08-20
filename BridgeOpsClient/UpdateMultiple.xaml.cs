@@ -141,10 +141,16 @@ namespace BridgeOpsClient
 
             object value;
 
-            if (column.allowed.Length > 0)
+            List<string> allowed = column.allowed.ToList<string>();
+            if ((table == "Asset" && key == Glo.Tab.ORGANISATION_ID) ||
+                (table == "Organisation" && key == Glo.Tab.PARENT_ID))
+            {
+                // Allowed will always be empty if we get here as the user cannot add an allowed list to core columns.
+                allowed = App.GetOrganisationList().ToList();
+            }
+            if (allowed.Count > 0)
             {
                 value = (cmbTemplate.LoadContent() as ComboBox)!;
-                List<string> allowed = column.allowed.ToList();
                 allowed.Insert(0, "");
                 ((ComboBox)value).ItemsSource = allowed;
             }

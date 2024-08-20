@@ -55,9 +55,6 @@ namespace BridgeOpsClient
             btnDown.IsEnabled = Grid.GetRow(frame) < selectBuilder.columns.Count - 1;
         }
 
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-        }
 
         private void cmbColumn_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

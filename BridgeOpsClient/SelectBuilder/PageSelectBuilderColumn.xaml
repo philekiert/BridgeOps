@@ -42,6 +42,6 @@
         <Label x:Name="lblAlias" Content="Alias" Grid.Row="0" Grid.Column="5" Margin="0 0 -6 0"
                Visibility="Collapsed"/>
         <TextBox Grid.Row="0" Grid.Column="6" Width="100" x:Name="txtAlias"
-                 Visibility="Collapsed"/>
+                 Visibility="Collapsed" VerticalContentAlignment="Center"/>
     </Grid>
 </Page>
