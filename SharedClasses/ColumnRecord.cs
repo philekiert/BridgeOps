@@ -42,13 +42,13 @@ public static class ColumnRecord
         else
             return key.Replace('_', ' ');
     }
-    public static string ReversePrintName(string key, Dictionary<string, Column> dictionary)
+    public static string ReversePrintName(string name, Dictionary<string, Column> dictionary)
     {
-        key = key.Replace(' ', '_');
-        if (dictionary.ContainsKey(key))
-            return key;
+        name = name.Replace(' ', '_');
+        if (dictionary.ContainsKey(name))
+            return name;
         foreach (var kvp in dictionary)
-            if (kvp.Value.friendlyName.Replace(' ', '_') == key)
+            if (kvp.Value.friendlyName.Replace(' ', '_') == name)
                 return kvp.Key;
         return "";
     }

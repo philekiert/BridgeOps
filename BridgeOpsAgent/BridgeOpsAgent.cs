@@ -733,6 +733,8 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_RESOURCE ||
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
+                else if (fncByte == Glo.CLIENT_UPDATE)
+                    ClientUpdate(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_UPDATE_ORGANISATION ||
                          fncByte == Glo.CLIENT_UPDATE_CONTACT ||
                          fncByte == Glo.CLIENT_UPDATE_ASSET ||
@@ -1648,6 +1650,52 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
+    private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            UpdateRequest req = sr.Deserialise<UpdateRequest>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID, columnRecordID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            // Determine whether or not the user has the required permission, given the table name.
+            int category = Glo.Fun.GetPermissionRelevancy(req.table);
+
+            if (category == -1 ||
+                !CheckSessionPermission(clientSessions[req.sessionID], category, Glo.PERMISSION_EDIT))
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                return;
+            }
+
+            SqlCommand com = new SqlCommand(req.SqlUpdate(), sqlConnect);
+
+            if (com.ExecuteNonQuery() == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
+            else
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                if (req.table == "Resource")
+                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+            }
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't delete record, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    // Permission restricted.
     private static void ClientDelete(NetworkStream stream, SqlConnection sqlConnect)
     {
         try
@@ -1661,17 +1709,7 @@ internal class BridgeOpsAgent
             }
 
             // Determine whether or not the user has the required permission, given the table name.
-            int category = -1;
-            if (req.table == "Organisation" || req.table == "Asset" || req.table == "Contact")
-                category = Glo.PERMISSION_RECORDS;
-            if (req.table == "Conference")
-                category = Glo.PERMISSION_CONFERENCES;
-            if (req.table == "Resource")
-                category = Glo.PERMISSION_RESOURCES;
-            if (req.table == "ConferenceType")
-                category = Glo.PERMISSION_CONFERENCE_TYPES;
-            if (req.table == "Login")
-                category = Glo.PERMISSION_USER_ACC_MGMT;
+            int category = Glo.Fun.GetPermissionRelevancy(req.table);
 
             if (category == -1 ||
                 !CheckSessionPermission(clientSessions[req.sessionID], category, Glo.PERMISSION_DELETE))

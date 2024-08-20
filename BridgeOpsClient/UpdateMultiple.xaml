@@ -1,0 +1,74 @@
+﻿<Window x:Class="BridgeOpsClient.UpdateMultiple"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
+        mc:Ignorable="d"
+        Title="Update Multiple" SizeToContent="Height" ResizeMode="NoResize"
+        MinWidth="500" MaxWidth="500">
+    <Window.Resources>
+        <DataTemplate x:Key="fieldRemoveButton">
+            <Button Grid.Column="0" Content="-" Click="btnRemove_Click"
+                    Padding="0 -2 0 0" Margin="10 10 0 10" Width="24" Height="24" IsEnabled="True"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldSelector">
+            <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" Width="200"
+                      SelectionChanged="ComboBox_SelectionChanged"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldTxt">
+            <TextBox Grid.Column="2" Margin="0 10 10 10" VerticalContentAlignment="Center" MinWidth="200"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldCmb">
+            <ComboBox Grid.Column="2" Margin="0 10 10 10" MinWidth="200"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldDtm">
+            <customcontrols:DateTimePicker Grid.Column="2" Margin="0 10 10 10"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldDat">
+            <DatePicker Grid.Column="2" Margin="0 10 10 10"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldTim">
+            <customcontrols:TimePicker Grid.Column="2" Margin="0 10 10 10"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldNum">
+            <customcontrols:NumberEntry Grid.Column="2" Margin="0 10 10 10" Width="200"/>
+        </DataTemplate>
+        <DataTemplate x:Key="fieldChk">
+            <CheckBox Grid.Column="2" Margin="0 10 10 10" VerticalAlignment="Center"/>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!-- Add Field -->
+        <Button x:Name="btnAddColumn" Click="btnAdd_Click" Grid.Row="0" Grid.Column="0"
+                Padding="0 -2 0 0" Margin="10 10 10 10" Width="24" Height="24" Content="+"
+                HorizontalAlignment="Left"/>
+        <Label Content="Add Field" Grid.Row="0" Grid.Column="1" Margin="0 10 10 10"/>
+
+        <!-- Fields Section -->
+        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" MaxWidth="790" MaxHeight="600" MinHeight="100"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid x:Name="grdFields">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Update -->
+        <Button x:Name="btnUpdate" Content="Update" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                HorizontalAlignment="Left" Height="24" Width="60" Margin="10 20 10 10" IsEnabled="False"
+                Click="btnUpdate_Click"/>
+    </Grid>
+</Window>

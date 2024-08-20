@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SendReceiveClasses;
 using static BridgeOpsClient.CustomControls.SqlDataGrid;
@@ -699,6 +700,52 @@ namespace BridgeOpsClient
                 catch
                 {
                     MessageBox.Show("Could not run table update.");
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
+            }
+        }
+
+        public static bool SendUpdate(UpdateRequest req)
+        {
+            lock (streamLock)
+            {
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
+                {
+                    if (stream != null)
+                    {
+                        stream.WriteByte(Glo.CLIENT_UPDATE);
+                        sr.WriteAndFlush(stream, sr.Serialise(req));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                        {
+                            SessionInvalidated();
+                        }
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                        {
+                            MessageBox.Show(PERMISSION_DENIED);
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
+                        {
+                            MessageBox.Show("The record could no longer be found.");
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError("Could not update record. See Error:", sr.ReadString(stream));
+                        }
+                        else throw new Exception();
+                    }
+                    return false;
+                }
+                catch
+                {
+                    MessageBox.Show("Could not update record.");
                     return false;
                 }
                 finally

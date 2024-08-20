@@ -176,12 +176,6 @@ namespace SendReceiveClasses
 
     //   S E S S I O N   M A N A G E M E N T
 
-    struct SessionIDs
-    {
-        public string sessionID;
-        public string columnRecordID;
-    }
-
     struct LoginRequest
     {
         public string username;
@@ -1454,6 +1448,73 @@ namespace SendReceiveClasses
         }
     }
 
+    public struct UpdateRequest
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public string table;
+        public List<string> columns;
+        public List<string?> values;
+        public List<bool> columnsNeedQuotes;
+        public string idColumn;
+        public List<string> ids;
+        public bool idQuotes;
+
+        public UpdateRequest(string sessionID, int columnRecordID,
+                             string table, List<string> columns, List<string?> values, List<bool> columnsNeedQuotes,
+                             string idColumn, List<string> ids, bool idQuotes)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.table = table;
+            this.columns = columns;
+            this.values = values;
+            this.columnsNeedQuotes = columnsNeedQuotes;
+            this.idColumn = idColumn;
+            this.ids = ids;
+            this.idQuotes = idQuotes;
+        }
+
+        private void Prepare()
+        {
+            table = SqlAssist.SecureColumn(table);
+            SqlAssist.SecureColumn(columns);
+            SqlAssist.SecureValue(values);
+            idColumn = SqlAssist.SecureColumn(idColumn);
+            SqlAssist.SecureValue(ids!);
+        }
+
+        private bool Validate()
+        {
+            return columns.Count > 0 &&
+                   columns.Count == values.Count &&
+                   columns.Count == columnsNeedQuotes.Count &&
+                   ids.Count > 0;
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            if (!Validate())
+                return "";
+
+            StringBuilder str = new("UPDATE " + table + " SET ");
+            List<string> setters = new();
+            for (int i = 0; i < columns.Count; ++i)
+                setters.Add(SqlAssist.Setter(columns[i], SqlAssist.AddQuotes(values[i], columnsNeedQuotes[i])));
+            str.Append(string.Join(", ", setters));
+            str.Append(" WHERE ");
+            List<string> wheres = new();
+            foreach (string id in ids)
+            {
+                wheres.Add(SqlAssist.Setter(idColumn, SqlAssist.AddQuotes(id, idQuotes)));
+            }
+            str.Append(string.Join(" OR ", wheres));
+            return str.Append(';').ToString();
+        }
+    }
+
     struct DeleteRequest
     {
         public string sessionID;
@@ -1780,8 +1841,10 @@ namespace SendReceiveClasses
         {
             return '\'' + val + '\'';
         }
-        public static string AddQuotes(string val, bool needsQuotes)
+        public static string AddQuotes(string? val, bool needsQuotes)
         {
+            if (val == null)
+                return "";
             return needsQuotes ? '\'' + val + '\'' : val;
         }
         public static void AddQuotes(List<string?> vals)

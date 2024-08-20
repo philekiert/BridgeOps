@@ -295,11 +295,34 @@ namespace BridgeOpsClient
 
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
+            if (dtgResults.dtg.SelectedItems.Count < 1)
+            {
+                MessageBox.Show("You must select at least one item to update.");
+                return;
+            }
+
             string table = "Organisation";
+            string idColumn = Glo.Tab.ORGANISATION_ID;
+            bool needsQuotes = true; ;
             if (dtgResults.identity == 1)
+            {
                 table = "Asset";
+                idColumn = Glo.Tab.ASSET_ID;
+            }
             else if (dtgResults.identity == 2)
+            {
+                needsQuotes = true;
                 table = "Contact";
+                idColumn = Glo.Tab.CONTACT_ID;
+            }
+
+            var columns = ColumnRecord.GetDictionary(table, true);
+            if (columns == null)
+                return;
+
+            UpdateMultiple updateMultiple = new(dtgResults.identity, table, columns,
+                                                idColumn, dtgResults.GetCurrentlySelectedIDs(), needsQuotes);
+            updateMultiple.ShowDialog();
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
@@ -308,6 +331,7 @@ namespace BridgeOpsClient
 
             string table = "Organisation";
             string column = Glo.Tab.ORGANISATION_ID;
+            bool needsQuotes = true; ;
             if (dtgResults.identity == 1)
             {
                 table = "Asset";
@@ -315,11 +339,12 @@ namespace BridgeOpsClient
             }
             else if (dtgResults.identity == 2)
             {
+                needsQuotes = true;
                 table = "Contact";
                 column = Glo.Tab.CONTACT_ID;
             }
 
-            if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), true) &&
+            if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), needsQuotes) &&
                 MainWindow.pageDatabase != null)
                 MainWindow.pageDatabase.RepeatSearches(dtgResults.identity);
         }

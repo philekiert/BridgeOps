@@ -48,14 +48,15 @@ public static class Glo
     public const int CLIENT_NEW_CONFERENCE_TYPE = 11;
     public const int CLIENT_NEW_CONFERENCE = 12;
     public const int CLIENT_NEW_RESOURCE = 13;
-    public const int CLIENT_UPDATE_LOGIN = 14;
-    public const int CLIENT_UPDATE_ORGANISATION = 15;
-    public const int CLIENT_UPDATE_CONTACT = 16;
-    public const int CLIENT_UPDATE_ASSET = 17;
-    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 18;
-    public const int CLIENT_UPDATE_CONFERENCE = 19;
-    public const int CLIENT_UPDATE_RESOURCE = 20;
-    public const int CLIENT_UPDATE_CHANGE_REASON = 21;
+    public const int CLIENT_UPDATE = 14;
+    public const int CLIENT_UPDATE_LOGIN = 15;
+    public const int CLIENT_UPDATE_ORGANISATION = 16;
+    public const int CLIENT_UPDATE_CONTACT = 17;
+    public const int CLIENT_UPDATE_ASSET = 18;
+    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 19;
+    public const int CLIENT_UPDATE_CONFERENCE = 20;
+    public const int CLIENT_UPDATE_RESOURCE = 21;
+    public const int CLIENT_UPDATE_CHANGE_REASON = 22;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT_QUICK = 31;
     public const int CLIENT_SELECT = 32;
@@ -203,6 +204,20 @@ public static class Glo
             for (int n = 0; n < 6; ++n)
                 permissions += 1 << n;
             return permissions;
+        }
+        public static int GetPermissionRelevancy(string table)
+        {
+            if (table == "Organisation" || table == "Asset" || table == "Contact")
+                return PERMISSION_RECORDS;
+            if (table == "Conference")
+                return PERMISSION_CONFERENCES;
+            if (table == "Resource")
+                return PERMISSION_RESOURCES;
+            if (table == "ConferenceType")
+                return PERMISSION_CONFERENCE_TYPES;
+            if (table == "Login")
+                return PERMISSION_USER_ACC_MGMT;
+            else return -1;
         }
 
         public static bool ColumnRemovalAllowed(string table, string column)
