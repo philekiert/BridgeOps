@@ -388,7 +388,7 @@ namespace SendReceiveClasses
                 if (table == "Organisation" || table == "Asset")
                 {
                     command += $"ALTER TABLE {table}Change ";
-                    command += $"ADD {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} BIT;";
+                    command += $"ADD {column}{Glo.Tab.CHANGE_SUFFIX} BIT;";
                     command += $"ALTER TABLE {table}Change ";
                     command += $"ADD {column} {columnType}; ";
                 }
@@ -408,7 +408,7 @@ namespace SendReceiveClasses
                 if (table == "Organisation" || table == "Asset")
                 {
                     command += $"ALTER TABLE {table}Change DROP COLUMN {column};";
-                    command += $"ALTER TABLE {table}Change DROP COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX};";
+                    command += $"ALTER TABLE {table}Change DROP COLUMN {column}{Glo.Tab.CHANGE_SUFFIX};";
                 }
 
                 // Column orders are handled in the agent code, and the SQL command is added in a nested transaction.
@@ -434,8 +434,8 @@ namespace SendReceiveClasses
                     if (table == "Organisation" || table == "Asset")
                     {
                         commands.Add($"EXEC sp_rename '{table}Change." +
-                                     $"{column}{Glo.Tab.CHANGE_REGISTER_SUFFIX}', " +
-                                     $"'{columnRename}{Glo.Tab.CHANGE_REGISTER_SUFFIX}', 'COLUMN';");
+                                     $"{column}{Glo.Tab.CHANGE_SUFFIX}', " +
+                                     $"'{columnRename}{Glo.Tab.CHANGE_SUFFIX}', 'COLUMN';");
                         commands.Add($"EXEC sp_rename '{table}Change." +
                                      $"{column}', '{columnRename}', 'COLUMN';");
                     }
@@ -474,7 +474,7 @@ namespace SendReceiveClasses
                     {
                         commands.Add($"ALTER TABLE {table}Change ALTER COLUMN {column} {columnType};");
                         commands.Add($"ALTER TABLE {table}Change " +
-                                     $"ALTER COLUMN {column}{Glo.Tab.CHANGE_REGISTER_SUFFIX} {columnType};");
+                                     $"ALTER COLUMN {column}{Glo.Tab.CHANGE_SUFFIX} {columnType};");
                     }
                 }
                 if (allowed.Count > 0)
@@ -563,11 +563,13 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int columnRecordID;
-        public string organisationID;
-        public string? parentOrgID;
+        public int organisationID;
+        public string? organisationRef;
+        public string? parentOrgRef;
         public string? dialNo;
         public string? notes;
-        public bool parentOrgIdChanged;
+        public bool organisationRefChanged;
+        public bool parentOrgRefChanged;
         public bool dialNoChanged;
         public bool notesChanged;
         public List<string> additionalCols;
@@ -576,7 +578,7 @@ namespace SendReceiveClasses
         public string changeReason;
 
         public Organisation(string sessionID, int columnRecordID,
-                            string organisationID, string? parentOrgID,
+                            int organisationID, string? organisationRef, string? parentOrgRef,
                             string? dialNo, string? notes, List<string> additionalCols,
                                                            List<string?> additionalVals,
                                                            List<bool> additionalNeedsQuotes)
@@ -584,13 +586,15 @@ namespace SendReceiveClasses
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
             this.organisationID = organisationID;
-            this.parentOrgID = parentOrgID;
+            this.organisationRef = organisationRef;
+            this.parentOrgRef = parentOrgRef;
             this.dialNo = dialNo;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
             this.additionalNeedsQuotes = additionalNeedsQuotes;
-            parentOrgIdChanged = false;
+            organisationRefChanged = false;
+            parentOrgRefChanged = false;
             dialNoChanged = false;
             notesChanged = false;
             changeReason = "";
@@ -598,9 +602,10 @@ namespace SendReceiveClasses
         private void Prepare()
         {
             // Make sure the columns and values are safe, then add quotes where needed.
-            organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
-            if (parentOrgID != null)
-                parentOrgID = SqlAssist.AddQuotes(SqlAssist.SecureValue(parentOrgID));
+            if (organisationRef != null)
+                organisationRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationRef));
+            if (parentOrgRef != null)
+                parentOrgRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(parentOrgRef));
             if (dialNo != null)
                 dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(dialNo));
             if (notes != null)
@@ -616,12 +621,12 @@ namespace SendReceiveClasses
             Prepare();
 
             string com = SqlAssist.InsertInto("Organisation",
-                                              SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_ID,
-                                                                                  Glo.Tab.PARENT_ID,
+                                              SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_REF,
+                                                                                  Glo.Tab.PARENT_REF,
                                                                                   Glo.Tab.DIAL_NO,
                                                                                   Glo.Tab.NOTES),
-                                              SqlAssist.ValConcat(additionalVals, organisationID,
-                                                                                  parentOrgID,
+                                              SqlAssist.ValConcat(additionalVals, organisationRef,
+                                                                                  parentOrgRef,
                                                                                   dialNo,
                                                                                   notes));
             // Create a first change instance.
@@ -630,7 +635,7 @@ namespace SendReceiveClasses
             int initialCount = additionalCols.Count;
             for (int i = 0; i < initialCount; ++i)
             {
-                additionalCols.Add(additionalCols[i] + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalCols.Add(additionalCols[i] + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add("1");
             }
             com += SqlAssist.InsertInto("OrganisationChange",
@@ -639,18 +644,21 @@ namespace SendReceiveClasses
                                                             Glo.Tab.CHANGE_TIME,
                                                             Glo.Tab.LOGIN_ID,
                                                             Glo.Tab.CHANGE_REASON,
-                                                            Glo.Tab.PARENT_ID,
-                                                            Glo.Tab.PARENT_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX,
+                                                            Glo.Tab.ORGANISATION_REF,
+                                                            Glo.Tab.ORGANISATION_REF + Glo.Tab.CHANGE_SUFFIX,
+                                                            Glo.Tab.PARENT_REF,
+                                                            Glo.Tab.PARENT_REF + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.DIAL_NO,
-                                                            Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_REGISTER_SUFFIX,
+                                                            Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.NOTES,
-                                                            Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX),
+                                                            Glo.Tab.NOTES + Glo.Tab.CHANGE_SUFFIX),
                                         SqlAssist.ValConcat(additionalVals,
-                                                            organisationID,
+                                                            "SCOPE_IDENTITY()",
                                                             '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                             loginID.ToString(),
                                                             "'Created new organisation.'",
-                                                            parentOrgID, "1",
+                                                            organisationRef, "1",
+                                                            parentOrgRef, "1",
                                                             dialNo, "1",
                                                             notes, "1")); ;
             return SqlAssist.Transaction(com);
@@ -661,8 +669,10 @@ namespace SendReceiveClasses
             Prepare();
 
             List<string> setters = new();
-            if (parentOrgIdChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.PARENT_ID, parentOrgID));
+            if (organisationRefChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_REF, organisationRef));
+            if (parentOrgRefChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.PARENT_REF, parentOrgRef));
             if (dialNoChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo));
             if (notesChanged)
@@ -680,24 +690,31 @@ namespace SendReceiveClasses
                 additionalVals.Add("1");
             }
             // Put the other values into additionals for the sake of simplicity this time around.
-            if (parentOrgIdChanged)
+            if (organisationRefChanged)
             {
-                additionalCols.Add(Glo.Tab.PARENT_ID);
-                additionalCols.Add(Glo.Tab.PARENT_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                additionalVals.Add(parentOrgID);
+                additionalCols.Add(Glo.Tab.ORGANISATION_REF);
+                additionalCols.Add(Glo.Tab.ORGANISATION_REF + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(organisationRef);
+                additionalVals.Add("1");
+            }
+            if (parentOrgRefChanged)
+            {
+                additionalCols.Add(Glo.Tab.PARENT_REF);
+                additionalCols.Add(Glo.Tab.PARENT_REF + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(parentOrgRef);
                 additionalVals.Add("1");
             }
             if (dialNoChanged)
             {
                 additionalCols.Add(Glo.Tab.DIAL_NO);
-                additionalCols.Add(Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalCols.Add(Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add(dialNo);
                 additionalVals.Add("1");
             }
             if (notesChanged)
             {
                 additionalCols.Add(Glo.Tab.NOTES);
-                additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add(notes);
                 additionalVals.Add("1");
             }
@@ -709,7 +726,7 @@ namespace SendReceiveClasses
                                                            Glo.Tab.LOGIN_ID,
                                                            Glo.Tab.CHANGE_REASON),
                                        SqlAssist.ValConcat(additionalVals,
-                                                           organisationID,
+                                                           organisationID.ToString(),
                                                            '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                            loginID.ToString(),
                                                            changeReason == null ? "''" : changeReason));
@@ -722,10 +739,12 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int columnRecordID;
-        public string assetID;
-        public string? organisationID;
+        public int assetID;
+        public string? assetRef;
+        public string? organisationRef;
         public string? notes;
-        public bool organisationIdChanged = false;
+        public bool assetRefChanged = false;
+        public bool organisationRefChanged = false;
         public bool notesChanged = false;
         public List<string> additionalCols;
         public List<string?> additionalVals;
@@ -733,7 +752,7 @@ namespace SendReceiveClasses
         public string changeReason;
 
         public Asset(string sessionID, int columnRecordID,
-                     string assetID, string? organisationID, string? notes,
+                     int assetID, string? assetRef, string? organisationRef, string? notes,
                      List<string> additionalCols,
                      List<string?> additionalVals,
                      List<bool> additionalNeedsQuotes)
@@ -741,7 +760,8 @@ namespace SendReceiveClasses
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
             this.assetID = assetID;
-            this.organisationID = organisationID;
+            this.assetRef = assetRef;
+            this.organisationRef = organisationRef;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
@@ -752,9 +772,10 @@ namespace SendReceiveClasses
         private void Prepare()
         {
             // Make sure the columns and values are safe, then add quotes where needed.
-            assetID = SqlAssist.AddQuotes(SqlAssist.SecureValue(assetID));
-            if (organisationID != null)
-                organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+            if (assetRef != null)
+                assetRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(assetRef));
+            if (organisationRef != null)
+                organisationRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationRef));
             if (notes != null)
                 notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
             SqlAssist.SecureColumn(additionalCols);
@@ -768,11 +789,11 @@ namespace SendReceiveClasses
             Prepare();
 
             string com = SqlAssist.InsertInto("Asset",
-                                              SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_ID,
-                                                                                  Glo.Tab.ORGANISATION_ID,
+                                              SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_REF,
+                                                                                  Glo.Tab.ORGANISATION_REF,
                                                                                   Glo.Tab.NOTES),
-                                              SqlAssist.ValConcat(additionalVals, assetID,
-                                                                                  organisationID,
+                                              SqlAssist.ValConcat(additionalVals, assetRef,
+                                                                                  organisationRef,
                                                                                   notes));
             // Create a first change instance.
             additionalCols.RemoveRange(additionalCols.Count - 3, 3); // ColConcat and ValConcat added the main fields
@@ -780,7 +801,7 @@ namespace SendReceiveClasses
             int initialCount = additionalCols.Count;
             for (int i = 0; i < initialCount; ++i)
             {
-                additionalCols.Add(additionalCols[i] + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalCols.Add(additionalCols[i] + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add("1");
             }
             com += SqlAssist.InsertInto("AssetChange",
@@ -789,16 +810,19 @@ namespace SendReceiveClasses
                                                             Glo.Tab.CHANGE_TIME,
                                                             Glo.Tab.LOGIN_ID,
                                                             Glo.Tab.CHANGE_REASON,
-                                                            Glo.Tab.ORGANISATION_ID,
-                                                            Glo.Tab.ORGANISATION_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX,
+                                                            Glo.Tab.ASSET_REF,
+                                                            Glo.Tab.ASSET_REF + Glo.Tab.CHANGE_SUFFIX,
+                                                            Glo.Tab.ORGANISATION_REF,
+                                                            Glo.Tab.ORGANISATION_REF + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.NOTES,
-                                                            Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX),
+                                                            Glo.Tab.NOTES + Glo.Tab.CHANGE_SUFFIX),
                                         SqlAssist.ValConcat(additionalVals,
-                                                            assetID,
+                                                            "SCOPE_IDENTITY()",
                                                             '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                             loginID.ToString(),
                                                             "'Created new asset.'",
-                                                            organisationID, "1",
+                                                            assetRef, "1",
+                                                            organisationRef, "1",
                                                             notes, "1"));
             return SqlAssist.Transaction(com);
         }
@@ -808,8 +832,10 @@ namespace SendReceiveClasses
             Prepare();
 
             List<string> setters = new();
-            if (organisationIdChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_ID, organisationID));
+            if (assetRefChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.ASSET_REF, assetRef));
+            if (organisationRefChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_REF, organisationRef));
             if (notesChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
@@ -825,17 +851,24 @@ namespace SendReceiveClasses
                 additionalVals.Add("1");
             }
             // Put the other values into additionals for the sake of simplicity this time around.
-            if (organisationIdChanged)
+            if (assetRefChanged)
             {
-                additionalCols.Add(Glo.Tab.ORGANISATION_ID);
-                additionalCols.Add(Glo.Tab.ORGANISATION_ID + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                additionalVals.Add(organisationID);
+                additionalCols.Add(Glo.Tab.ASSET_REF);
+                additionalCols.Add(Glo.Tab.ASSET_REF + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(assetRef);
+                additionalVals.Add("1");
+            }
+            if (organisationRefChanged)
+            {
+                additionalCols.Add(Glo.Tab.ORGANISATION_REF);
+                additionalCols.Add(Glo.Tab.ORGANISATION_REF + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(organisationRef);
                 additionalVals.Add("1");
             }
             if (notesChanged)
             {
                 additionalCols.Add(Glo.Tab.NOTES);
-                additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_REGISTER_SUFFIX);
+                additionalCols.Add(Glo.Tab.NOTES + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add(notes);
                 additionalVals.Add("1");
             }
@@ -847,11 +880,10 @@ namespace SendReceiveClasses
                                                             Glo.Tab.LOGIN_ID,
                                                             Glo.Tab.CHANGE_REASON),
                                         SqlAssist.ValConcat(additionalVals,
-                                                            assetID,
+                                                            assetID.ToString(),
                                                             '\'' + SqlAssist.DateTimeToSQL(DateTime.Now, false) + '\'',
                                                             loginID.ToString(),
                                                             changeReason == null ? "" : changeReason));
-
             return SqlAssist.Transaction(com);
         }
     }
@@ -1012,7 +1044,7 @@ namespace SendReceiveClasses
                                                                             Glo.Tab.CONFERENCE_START,
                                                                             Glo.Tab.CONFERENCE_END,
                                                                             Glo.Tab.CONFERENCE_BUFFER,
-                                                                            Glo.Tab.ORGANISATION_ID,
+                                                                            Glo.Tab.ORGANISATION_REF,
                                                                             Glo.Tab.RECURRENCE_ID,
                                                                             "Notes"),
                                         SqlAssist.ValConcat(additionalVals, typeID.ToString(),
@@ -1452,6 +1484,7 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int columnRecordID;
+        public int loginID;
         public string table;
         public List<string> columns;
         public List<string?> values;
@@ -1459,13 +1492,15 @@ namespace SendReceiveClasses
         public string idColumn;
         public List<string> ids;
         public bool idQuotes;
+        public string changeReason = "";
 
-        public UpdateRequest(string sessionID, int columnRecordID,
+        public UpdateRequest(string sessionID, int columnRecordID, int loginID,
                              string table, List<string> columns, List<string?> values, List<bool> columnsNeedQuotes,
                              string idColumn, List<string> ids, bool idQuotes)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
+            this.loginID = loginID;
             this.table = table;
             this.columns = columns;
             this.values = values;
@@ -1482,6 +1517,7 @@ namespace SendReceiveClasses
             SqlAssist.SecureValue(values);
             idColumn = SqlAssist.SecureColumn(idColumn);
             SqlAssist.SecureValue(ids!);
+            changeReason = SqlAssist.SecureValue(changeReason);
         }
 
         private bool Validate()
@@ -1489,29 +1525,68 @@ namespace SendReceiveClasses
             return columns.Count > 0 &&
                    columns.Count == values.Count &&
                    columns.Count == columnsNeedQuotes.Count &&
-                   ids.Count > 0;
+                   ids.Count > 0 &&
+                   !(table == "Organisation" && columns.Contains(Glo.Tab.ORGANISATION_REF)); // Not allowed.
         }
 
         public string SqlUpdate()
         {
             Prepare();
 
+            SqlAssist.AddQuotes(values, columnsNeedQuotes);
+
             if (!Validate())
                 return "";
+
+            List<string> commands = new();
+
+            // We'll need the organisation or reference ids 
 
             StringBuilder str = new("UPDATE " + table + " SET ");
             List<string> setters = new();
             for (int i = 0; i < columns.Count; ++i)
-                setters.Add(SqlAssist.Setter(columns[i], SqlAssist.AddQuotes(values[i], columnsNeedQuotes[i])));
+                setters.Add(SqlAssist.Setter(columns[i], values[i]));
             str.Append(string.Join(", ", setters));
             str.Append(" WHERE ");
             List<string> wheres = new();
             foreach (string id in ids)
-            {
                 wheres.Add(SqlAssist.Setter(idColumn, SqlAssist.AddQuotes(id, idQuotes)));
+            str.Append(string.Join(" OR ", wheres) + ";");
+            commands.Add(str.ToString());
+
+            // Add records to the change log if this is for the organisation or asset table.
+            if (table == "Asset" || table == "Organisation")
+            {
+                // Note that we don't need to worry about organisation references changing in the organisation table,
+                // as this isn't allowed for generic updates. That must be done through the NewOrganisation window in
+                // the client.
+
+                // Add register columns and switch them all on.
+                int count = columns.Count;
+                for (int i = 0; i < count; ++i)
+                    columns.Add(columns[i] + Glo.Tab.CHANGE_SUFFIX);
+                for (int i = 0; i < count; ++i)
+                    values.Add("1");
+
+
+                foreach (string id in ids)
+                    commands.Add($"INSERT INTO {table}Change ({idColumn}, " +
+                                                            $"{Glo.Tab.CHANGE_TIME}, " +
+                                                            $"{Glo.Tab.LOGIN_ID}, " +
+                                                            $"{Glo.Tab.CHANGE_REASON}, " +
+                                                            $"{string.Join(", ", columns)}) " +
+                                 $"VALUES ({id}, " +
+                                         $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                         $"{loginID}, " +
+                                         $"'{changeReason}', " +
+                                         $"{string.Join(", ", values)});" // Quotes were already added previously.
+                        );
             }
-            str.Append(string.Join(" OR ", wheres));
-            return str.Append(';').ToString();
+
+            if (commands.Count > 1)
+                return SqlAssist.Transaction(commands.ToArray());
+            else
+                return commands[0];
         }
     }
 
@@ -1519,31 +1594,106 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int columnRecordID;
+        public int loginID;
         public string table;
         public string column;
-        public List<string> id;
+        public List<string?> ids;
         public bool needsQuotes;
 
-        public DeleteRequest(string sessionID, int columnRecordID,
-                             string table, string column, List<string> id, bool isString)
+        public DeleteRequest(string sessionID, int columnRecordID, int loginID,
+                             string table, string column, List<string> ids, bool needsQuotes)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
+            this.loginID = loginID;
             this.table = table;
             this.column = column;
-            this.id = id;
-            this.needsQuotes = isString;
+            this.ids = ids!;
+            this.needsQuotes = needsQuotes;
+        }
+
+        public void Prepare()
+        {
+            table = SqlAssist.SecureColumn(table);
+            column = SqlAssist.SecureColumn(column);
+            SqlAssist.SecureValue(ids);
         }
 
         public string SqlDelete()
         {
-            string[] conditions = new string[id.Count];
-            for (int i = 0; i < id.Count; ++i)
-                conditions[i] = column + " = " +
-                                SqlAssist.AddQuotes(SqlAssist.SecureValue(id[i]), needsQuotes);
+            Prepare();
 
-            return "DELETE FROM " + table +
-                   " WHERE " + string.Join(" OR ", conditions) + ';';
+            List<string> commands = new();
+
+            // Organisation deletions are a tad more complicated, because change log alterations need to be made
+            // for any referencing assets or organisations.
+            if (table == "Organisation")
+            {
+                // Has to be declared here as it can only be declared once.
+                commands.Add($"DECLARE @orgRef VARCHAR(MAX)");
+
+                foreach (string? id in ids)
+                {
+                    if (id == null)
+                        continue;
+
+                    // Affected organisations.
+                    commands.Add($"SET @orgRef = (SELECT TOP 1 {Glo.Tab.ORGANISATION_REF} " +
+                                                 "FROM Organisation WHERE " +
+                                                $"{Glo.Tab.ORGANISATION_ID} = {id}); " +
+
+                                 "WITH orgs AS ( SELECT " +
+                                $"{Glo.Tab.ORGANISATION_ID} FROM Organisation " +
+                                $"WHERE {Glo.Tab.PARENT_REF} = @orgRef) " +
+                                $"INSERT INTO OrganisationChange ({Glo.Tab.ORGANISATION_ID}, " +
+                                                                $"{Glo.Tab.LOGIN_ID}, " +
+                                                                $"{Glo.Tab.CHANGE_TIME}, " +
+                                                                $"{Glo.Tab.CHANGE_REASON}, " +
+                                                                $"{Glo.Tab.PARENT_REF}, " +
+                                                                $"{Glo.Tab.PARENT_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                                $"SELECT {Glo.Tab.ORGANISATION_ID}, " +
+                                       $"{loginID}, " +
+                                       $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                       $"'Parent organisation ' + @orgRef + ' was deleted.', " +
+                                       $"NULL, 1 " +
+                                 "FROM orgs; ");
+                    commands.Add($"UPDATE Organisation SET {Glo.Tab.PARENT_REF} = NULL " +
+                                 $"WHERE {Glo.Tab.PARENT_REF} = @orgRef;"
+                                 );
+
+                    // Affected assets.
+                    commands.Add("WITH assets AS ( SELECT " +
+                                $"{Glo.Tab.ASSET_ID} FROM Asset " +
+                                $"WHERE {Glo.Tab.ORGANISATION_REF} = @orgRef) " +
+                                $"INSERT INTO AssetChange ({Glo.Tab.ASSET_ID}, " +
+                                                         $"{Glo.Tab.LOGIN_ID}, " +
+                                                         $"{Glo.Tab.CHANGE_TIME}, " +
+                                                         $"{Glo.Tab.CHANGE_REASON}, " +
+                                                         $"{Glo.Tab.ORGANISATION_REF}, " +
+                                                         $"{Glo.Tab.ORGANISATION_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                                $"SELECT {Glo.Tab.ASSET_ID}, " +
+                                       $"{loginID}, " +
+                                       $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                       $"'Organisation ' + @orgRef + ' was deleted.', " +
+                                       $"NULL, 1 " +
+                                $"FROM assets;");
+                }
+            }
+
+            // Actually delete the record.
+
+            string[] conditions = new string[ids.Count];
+            for (int i = 0; i < ids.Count; ++i)
+                conditions[i] = column + " = " +
+                                SqlAssist.AddQuotes(ids[i], needsQuotes);
+
+            commands.Add("DELETE FROM " + table +
+                         " WHERE " + string.Join(" OR ", conditions) + ';');
+
+            if (commands.Count > 1)
+                return SqlAssist.Transaction(commands.ToArray());
+            else
+                return commands[0];
         }
     }
 
@@ -1551,38 +1701,38 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int columnRecordID;
-        public string organisationID;
+        public string organisationRef;
         public int contactID;
         public bool unlink;
 
         public LinkContactRequest(string sessionID, int columnRecordID,
-                                  string organisationID, int contactID, bool unlink)
+                                  string organisationRef, int contactID, bool unlink)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
-            this.organisationID = organisationID;
+            this.organisationRef = organisationRef;
             this.contactID = contactID;
             this.unlink = unlink;
         }
 
         private void Prepare()
         {
-            organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+            organisationRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationRef));
         }
 
         public string SqlInsert()
         {
             Prepare();
             return SqlAssist.InsertInto("OrganisationContacts",
-                                        Glo.Tab.ORGANISATION_ID + ", " + Glo.Tab.CONTACT_ID,
-                                        organisationID + ", " + contactID.ToString());
+                                        Glo.Tab.ORGANISATION_REF + ", " + Glo.Tab.CONTACT_ID,
+                                        organisationRef + ", " + contactID.ToString());
         }
 
         public string SqlDelete()
         {
             Prepare();
             return "DELETE FROM OrganisationContacts " +
-                   "WHERE " + Glo.Tab.ORGANISATION_ID + " = " + organisationID +
+                   "WHERE " + Glo.Tab.ORGANISATION_REF + " = " + organisationRef +
                   " AND " + Glo.Tab.CONTACT_ID + " = " + contactID.ToString() + ";";
         }
     }
@@ -1591,18 +1741,18 @@ namespace SendReceiveClasses
     {
         public string sessionID;
         public int columnRecordID;
-        public string organisationID;
+        public string organisationRef;
 
-        public LinkedContactSelectRequest(string sessionID, int columnRecordID, string organisationID)
+        public LinkedContactSelectRequest(string sessionID, int columnRecordID, string organisationRef)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
-            this.organisationID = organisationID;
+            this.organisationRef = organisationRef;
         }
 
         private void Prepare()
         {
-            organisationID = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationID));
+            organisationRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationRef));
         }
 
         public string SqlSelect()
@@ -1612,9 +1762,9 @@ namespace SendReceiveClasses
             return "SELECT Contact.* FROM Contact" +
                   " JOIN OrganisationContacts ON OrganisationContacts." + Glo.Tab.CONTACT_ID +
                         " = Contact." + Glo.Tab.CONTACT_ID +
-                  " JOIN Organisation ON Organisation." + Glo.Tab.ORGANISATION_ID +
-                        " = OrganisationContacts." + Glo.Tab.ORGANISATION_ID +
-                  " WHERE Organisation." + Glo.Tab.ORGANISATION_ID + " = " + organisationID + ";";
+                  " JOIN Organisation ON Organisation." + Glo.Tab.ORGANISATION_REF +
+                        " = OrganisationContacts." + Glo.Tab.ORGANISATION_REF +
+                  " WHERE Organisation." + Glo.Tab.ORGANISATION_REF + " = " + organisationRef + ";";
         }
     }
 
@@ -1623,9 +1773,9 @@ namespace SendReceiveClasses
         public string sessionID;
         public int columnRecordID;
         public string tableName;
-        public string recordID;
+        public int recordID;
 
-        public SelectHistoryRequest(string sessionID, int columnRecordID, string tableName, string recordID)
+        public SelectHistoryRequest(string sessionID, int columnRecordID, string tableName, int recordID)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -1636,7 +1786,6 @@ namespace SendReceiveClasses
         private void Prepare()
         {
             tableName = SqlAssist.SecureColumn(tableName);
-            recordID = SqlAssist.AddQuotes(SqlAssist.SecureValue(recordID));
         }
 
         public string SqlSelect()
@@ -1651,7 +1800,7 @@ namespace SendReceiveClasses
                   " FROM " + tableName + // LEFT JOIN here because we want to include records with NULL login IDs.
                   " LEFT JOIN " + "Login ON " + tableName + "." + Glo.Tab.LOGIN_ID + " = Login." + Glo.Tab.LOGIN_ID +
                   " WHERE " + (tableName == "AssetChange" ? Glo.Tab.ASSET_ID : Glo.Tab.ORGANISATION_ID)
-                            + " = " + recordID +
+                            + " = " + recordID.ToString() +
                   " ORDER BY " + Glo.Tab.CHANGE_TIME + " DESC;";
         }
     }
@@ -1662,10 +1811,10 @@ namespace SendReceiveClasses
         public int columnRecordID;
         public string tableName;
         public string changeID;
-        public string recordID;
+        public int recordID;
 
         public SelectHistoricalRecordRequest(string sessionID, int columnRecordID,
-                                             string tableName, string changeID, string recordID)
+                                             string tableName, string changeID, int recordID)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -1678,7 +1827,6 @@ namespace SendReceiveClasses
         {
             tableName = SqlAssist.SecureColumn(tableName);
             changeID = SqlAssist.SecureValue(changeID);
-            recordID = SqlAssist.AddQuotes(SqlAssist.SecureValue(recordID));
         }
 
         public string SqlSelect()
@@ -1953,9 +2101,13 @@ namespace SendReceiveClasses
         public static string DateTimeToSQL(DateTime dateTime, bool dateOnly)
         {
             if (dateOnly)
+            {
                 return dateTime.ToString("yyyy-MM-dd");
+            }
             else
-                return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            {
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            }
         }
         public static string TimeSpanToSQL(TimeSpan timeSpan)
         {

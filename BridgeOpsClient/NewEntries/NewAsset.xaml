@@ -35,10 +35,10 @@
                         <RowDefinition/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Label Content="Asset ID" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID" />
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetID"/>
-                    <Label Content="Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgID" Margin="10 2 10 2"
+                    <Label Content="Asset Reference" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetRef"/>
+                    <Label Content="Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgRef" Margin="10 2 10 2"
                              SelectionChanged="ValueChanged"/>
                 </Grid>
                 <custom:DataInputTable x:Name="ditAsset" Grid.Row="2" MaxHeight="405" Margin="10 10 0 10"/>

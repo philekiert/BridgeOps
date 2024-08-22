@@ -175,7 +175,7 @@ public class DatabaseCreator
                             if (readSuccess)
                             {
                                 ++valuesRead;
-                                if (showFileReadSuccesses)
+                                //if (showFileReadSuccesses)
                                     Writer.Affirmative(key + " read as " + def.sqlType);
                             }
                             else
@@ -187,16 +187,16 @@ public class DatabaseCreator
                         Writer.Negative(key + " couldn't be read as it was placed below non-primary keys.");
                 }
             }
-            if (!showFileReadSuccesses)
-            {
+            //if (!showFileReadSuccesses)
+            //{
                 if (valuesRead > 0)
                     Writer.Affirmative(valuesRead.ToString() + " value overrides read successfully, " +
                                                                 valuesChanged + " differed from current values.");
                 else
                     Writer.Neutral("0 value overrides read successfully.");
-            }
-            else
-                Writer.Neutral(valuesChanged.ToString() + " settings differed from current values.");
+            //}
+            //else
+            //    Writer.Neutral(valuesChanged.ToString() + " settings differed from current values.");
         }
         catch
         {
@@ -225,7 +225,7 @@ public class DatabaseCreator
                        "This will permanently delete all data - there is no way to undo this.");
         if (Writer.YesNo())
         {
-            int n = 0;
+            int n = 4;
             while (n < 5)
             {
                 ++n;
@@ -418,28 +418,30 @@ public class DatabaseCreator
 
             // Entity Table Strings
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
-                            ", CONSTRAINT fk_ParentOrgID FOREIGN KEY (Parent_ID) REFERENCES Organisation (Organisation_ID) );";
+                            ", CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference)" + 
+                            ", CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference) );";
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
             login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
-                     ", CONSTRAINT nq_Username UNIQUE (Username) );";
+                     ", CONSTRAINT u_Username UNIQUE (Username) );";
             asset += ", CONSTRAINT pk_AssetID PRIMARY KEY (Asset_ID)" +
-                     ", CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE SET NULL );";
+                     ", CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE" +
+                     ", CONSTRAINT u_AssetRef UNIQUE (Asset_Reference) );";
             resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID) );";
             conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
                           ", CONSTRAINT fk_ConfResource FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID)" +
                           ", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
-                          ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE SET NULL );";
+                          ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE);";
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
             conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
                                     ", CONSTRAINT fk_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
 
             // Supplemental Tables Strings
-            dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
-                      ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
-            connections += ", CONSTRAINT pk_ConfID_DialNo PRIMARY KEY (Conference_ID, Dial_No)" +
+            //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
+            //          ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE );";
+            connections += ", CONSTRAINT pk_ConfID_DialNo PRIMARY KEY (Conference_ID, Organisation_Reference)" +
                            ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
-                           ", CONSTRAINT fk_ConnectionDialNo FOREIGN KEY (Dial_No) REFERENCES DialNo (Dial_No) );";
+                           ", CONSTRAINT fk_ConnectionDialNo FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE );";
             conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
                                 ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
@@ -449,8 +451,8 @@ public class DatabaseCreator
                            ", CONSTRAINT fk_AssetChange_AssetID FOREIGN KEY (Asset_ID) REFERENCES Asset (Asset_ID) ON DELETE CASCADE );";
 
             // Junction Tables Strings
-            junctionOrgContacts += ", CONSTRAINT pk_jncContacts_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
-                                   ", CONSTRAINT fk_jncContacts_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
+            junctionOrgContacts += ", CONSTRAINT pk_jncContacts_OrgID_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID)" +
+                                   ", CONSTRAINT fk_jncContacts_OrgID FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE" +
                                    ", CONSTRAINT fk_jncContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
             //junctionOrgEngineers += ", CONSTRAINT pk_jncEngs_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
             //                        ", CONSTRAINT fk_jncEngs_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
@@ -483,8 +485,8 @@ public class DatabaseCreator
             SendCommandSQL(conference);
             Writer.Message("Creating Recurrence table...");
             SendCommandSQL(conferenceRecurrence);
-            Writer.Message("Creating Dial No table...");
-            SendCommandSQL(dialNo);
+            //Writer.Message("Creating Dial No table...");
+            //SendCommandSQL(dialNo);
             Writer.Message("Creating Connection table...");
             SendCommandSQL(connections);
             Writer.Message("Creating Organisation Change table...");
@@ -530,7 +532,7 @@ public class DatabaseCreator
                     string table = addition.table + "Change";
 
                     string command = "ALTER TABLE " + table + " ADD ";
-                    command += addition.column + Glo.Tab.CHANGE_REGISTER_SUFFIX + " BIT, ";
+                    command += addition.column + Glo.Tab.CHANGE_SUFFIX + " BIT, ";
                     command += addition.column + " " + (addition.type == "BOOLEAN" ? "BIT" : addition.type) + ";";
 
                     if (SendCommandSQL(command))
@@ -865,7 +867,7 @@ public class DatabaseCreator
                 sqlCommand = new SqlCommand("", sqlConnect);
             sqlCommand.CommandText = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS" +
                                    $" WHERE TABLE_NAME = '{table}' AND" +
-                                   $" COLUMN_NAME LIKE '%{Glo.Tab.CHANGE_REGISTER_SUFFIX}';";
+                                   $" COLUMN_NAME LIKE '%{Glo.Tab.CHANGE_SUFFIX}';";
 
             using (SqlDataReader reader = sqlCommand.ExecuteReader())
                 while (reader.Read())

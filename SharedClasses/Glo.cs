@@ -24,6 +24,8 @@ public static class Glo
     public const string EXE_CONSOLE = "BridgeOpsConsole.exe";
     public static string PathConfigFiles
     { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "Config Files"); } }
+    public static string PathImportFiles
+    { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "Data Import"); } }
     public static string PathAgentErrorLog
     { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "agent-error-log.txt"); } }
     public const string CONFIG_TYPE_OVERRIDES = "type-overrides.txt";
@@ -135,17 +137,19 @@ public static class Glo
     public static class Tab
     {
         public const string ORGANISATION_ID = "Organisation_ID";
-        public const string PARENT_ID = "Parent_ID";
+        public const string ORGANISATION_REF = "Organisation_Reference";
+        public const string PARENT_REF = "Parent_Reference";
         public const string DIAL_NO = "Dial_No";
 
         public const string CHANGE_ID = "Change_ID";
         public const string CHANGE_TIME = "Time";
         public const string CHANGE_REASON = "Reason";
-        public const string CHANGE_REGISTER_SUFFIX = "_Register";
+        public const string CHANGE_SUFFIX = "_Register";
 
         public const string CONTACT_ID = "Contact_ID";
 
         public const string ASSET_ID = "Asset_ID";
+        public const string ASSET_REF = "Asset_Reference";
 
         public const string CONFERENCE_TYPE_ID = "Type_ID";
         public const string ORGANISATION_RESOURCE_ROW = "Resource_Row";
@@ -179,8 +183,8 @@ public static class Glo
         public const string FRIENDLY_COLUMN = "ColumnName";
         public const string FRIENDLY_NAME = "FriendlyName";
 
-        public const int ORGANISATION_STATIC_COUNT = 4;
-        public const int ASSET_STATIC_COUNT = 3;
+        public const int ORGANISATION_STATIC_COUNT = 5;
+        public const int ASSET_STATIC_COUNT = 4;
         public const int CONTACT_STATIC_COUNT = 2;
         public const int CONFERENCE_STATIC_COUNT = 11;
 
@@ -225,11 +229,13 @@ public static class Glo
             return column != "Notes" &&
                 !((table == "Organisation" &&
                     (column == Glo.Tab.ORGANISATION_ID ||
-                     column == Glo.Tab.PARENT_ID ||
+                     column == Glo.Tab.ORGANISATION_REF ||
+                     column == Glo.Tab.PARENT_REF ||
                      column == Glo.Tab.DIAL_NO)) ||
                   (table == "Asset" &&
                     (column == Glo.Tab.ASSET_ID ||
-                     column == Glo.Tab.ORGANISATION_ID)) ||
+                     column == Glo.Tab.ASSET_REF ||
+                     column == Glo.Tab.ORGANISATION_REF)) ||
                   (table == "Contact" &&
                     (column == Glo.Tab.CONTACT_ID)) ||
                   (table == "Conference" &&
@@ -241,7 +247,7 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_START ||
                      column == Glo.Tab.CONFERENCE_END ||
                      column == Glo.Tab.CONFERENCE_BUFFER ||
-                     column == Glo.Tab.ORGANISATION_ID ||
+                     column == Glo.Tab.ORGANISATION_REF ||
                      column == Glo.Tab.RECURRENCE_ID)));
         }
 

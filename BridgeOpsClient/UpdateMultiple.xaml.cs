@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BridgeOpsClient.DialogWindows;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -142,8 +143,8 @@ namespace BridgeOpsClient
             object value;
 
             List<string> allowed = column.allowed.ToList<string>();
-            if ((table == "Asset" && key == Glo.Tab.ORGANISATION_ID) ||
-                (table == "Organisation" && key == Glo.Tab.PARENT_ID))
+            if ((table == "Asset" && key == Glo.Tab.ORGANISATION_REF) ||
+                (table == "Organisation" && key == Glo.Tab.PARENT_REF))
             {
                 // Allowed will always be empty if we get here as the user cannot add an allowed list to core columns.
                 allowed = App.GetOrganisationList().ToList();
@@ -189,7 +190,7 @@ namespace BridgeOpsClient
 
         private bool AssembleUpdate()
         {
-            request = new(App.sd.sessionID, ColumnRecord.columnRecordID,
+            request = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                           table, new(), new(), new(), idColumn, ids, idsNeedQuotes);
 
             HashSet<string> nameDuplicateCheck = new();
@@ -267,6 +268,18 @@ namespace BridgeOpsClient
                 request.values.Add(value);
                 request.columnsNeedQuotes.Add(needsQuotes);
             }
+
+            // Record the change reason if needed.
+            if (table == "Organisation" || table == "Asset")
+            {
+                DialogChangeReason dialogChangeReason = new(table);
+                bool? result = dialogChangeReason.ShowDialog();
+                if (result != null && result == true)
+                    request.changeReason = dialogChangeReason.txtReason.Text;
+                else
+                    return false;
+            }
+
 
             return true;
         }

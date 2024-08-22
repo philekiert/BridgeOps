@@ -88,6 +88,11 @@ namespace BridgeOpsClient
                 cmbColumn.Items.RemoveAt(0); // Removed Contact_ID as it's not required.
 
             cmbColumn.SelectedIndex = 0;
+
+            txtSearch.IsEnabled = cmbColumn.Items.Count > 0;
+            btnSearch.IsEnabled = cmbColumn.Items.Count > 0;
+            btnWideSearch.IsEnabled = cmbColumn.Items.Count > 0;
+            txtSearch.Text = "";
         }
 
         struct Row
@@ -272,7 +277,7 @@ namespace BridgeOpsClient
         }
         private void cmbColumn_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cmbColumn.SelectedIndex != -1)
+            if (cmbColumn.SelectedIndex != -1 && fieldValues.Count > 0)
                 txtSearch.Text = fieldValues[cmbColumn.SelectedIndex];
         }
 

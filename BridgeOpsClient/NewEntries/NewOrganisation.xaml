@@ -36,10 +36,10 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-                    <Label Content="Organisation ID" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgID"
+                    <Label Content="Organisation Reference" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgRef"
                              TextChanged="ValueChanged" />
-                    <Label Content="Parent Organisation ID" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"/>
+                    <Label Content="Parent Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2"
                               SelectionChanged="ValueChanged"/>
                     <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>

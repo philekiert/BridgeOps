@@ -200,7 +200,7 @@ public static class ColumnRecord
         else if (table == "OrganisationContacts") // Not present in the column record.
             return new Dictionary<string, Column>()
             {
-                { Glo.Tab.ORGANISATION_ID, organisation[Glo.Tab.ORGANISATION_ID] },
+                { Glo.Tab.ORGANISATION_REF, organisation[Glo.Tab.ORGANISATION_REF] },
                 { Glo.Tab.CONTACT_ID, contact[Glo.Tab.CONTACT_ID] }
             };
         else

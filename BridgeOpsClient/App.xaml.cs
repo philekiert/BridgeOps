@@ -300,7 +300,7 @@ namespace BridgeOpsClient
 
         public static string[] GetOrganisationList()
         {
-            string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_ID);
+            string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_REF);
             if (organisationArray == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
@@ -322,6 +322,13 @@ namespace BridgeOpsClient
 
         public static bool EditOrganisation(string id)
         {
+            int idInt;
+            if (!int.TryParse(id, out idInt))
+            {
+                MessageBox.Show("Could not discern record ID.");
+                return false;
+            }
+
             List<string> organisationList = GetOrganisationList().ToList();
             organisationList.Insert(0, "");
 
@@ -339,7 +346,7 @@ namespace BridgeOpsClient
                     // We would expect data for every field. If the count is different, the operation must have failed.
                     if (rows[0].Count == ColumnRecord.organisation.Count)
                     {
-                        NewOrganisation org = new(id);
+                        NewOrganisation org = new(idInt);
                         org.cmbOrgParentID.ItemsSource = organisationList;
                         org.PopulateExistingData(rows[0]);
                         org.Show();
@@ -357,6 +364,13 @@ namespace BridgeOpsClient
 
         public static bool EditAsset(string id)
         {
+            int idInt;
+            if (!int.TryParse(id, out idInt))
+            {
+                MessageBox.Show("Could not discern record ID.");
+                return false;
+            }
+
             List<string> organisationList = GetOrganisationList().ToList();
             organisationList.Insert(0, "");
 
@@ -374,9 +388,9 @@ namespace BridgeOpsClient
                     // We expect data for every field. If the count is different, the operation must have failed.
                     if (rows[0].Count == ColumnRecord.asset.Count)
                     {
-                        NewAsset asset = new NewAsset(id);
-                        asset.cmbOrgID.ItemsSource = organisationList;
-                        asset.Populate(rows[0]);
+                        NewAsset asset = new NewAsset(idInt);
+                        asset.cmbOrgRef.ItemsSource = organisationList;
+                        asset.PopulateExistingData(rows[0]);
                         asset.Show();
                     }
                     else
@@ -765,7 +779,7 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        DeleteRequest req = new DeleteRequest(sd.sessionID, ColumnRecord.columnRecordID,
+                        DeleteRequest req = new DeleteRequest(sd.sessionID, ColumnRecord.columnRecordID, sd.loginID,
                                                               table, column, ids, isString);
 
                         stream.WriteByte(Glo.CLIENT_DELETE);
@@ -1026,7 +1040,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool LinkContact(string organisationID, int contactID, bool unlink)
+        public static bool LinkContact(string organisationRef, int contactID, bool unlink)
         {
             lock (streamLock)
             {
@@ -1036,7 +1050,7 @@ namespace BridgeOpsClient
                     if (stream != null)
                     {
                         LinkContactRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
-                                                     organisationID, contactID, unlink);
+                                                     organisationRef, contactID, unlink);
 
                         stream.WriteByte(Glo.CLIENT_LINK_CONTACT);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
@@ -1116,6 +1130,15 @@ namespace BridgeOpsClient
         public static bool SelectHistory(string table, string id,
                                          out List<string?> columnNames, out List<List<object?>> rows)
         {
+            int idInt;
+            if (!int.TryParse(id, out idInt))
+            {
+                MessageBox.Show("Could not run or return history list. ID doesn't appear to be an integer.");
+                columnNames = new();
+                rows = new();
+                return false;
+            }
+
             lock (streamLock)
             {
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
@@ -1123,7 +1146,7 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        SelectHistoryRequest req = new(sd.sessionID, ColumnRecord.columnRecordID, table, id);
+                        SelectHistoryRequest req = new(sd.sessionID, ColumnRecord.columnRecordID, table, idInt);
                         stream.WriteByte(Glo.CLIENT_SELECT_HISTORY);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         int response = stream.ReadByte();
@@ -1155,7 +1178,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool BuildHistorical(string table, string changeID, string recordID, out List<object?> data)
+        public static bool BuildHistorical(string table, string changeID, int recordID, out List<object?> data)
         {
             lock (streamLock)
             {

@@ -21,8 +21,9 @@ namespace BridgeOpsClient
     public partial class NewAsset : Window
     {
         bool edit = false;
-        string id = "";
-        string? originalOrgID = "";
+        int id;
+        string? originalRef = "";
+        string? originalOrg = "";
         string? originalNotes = "";
 
         public bool changeMade = false;
@@ -48,9 +49,9 @@ namespace BridgeOpsClient
 
             ApplyPermissions();
 
-            txtAssetID.Focus();
+            txtAssetRef.Focus();
         }
-        public NewAsset(string id)
+        public NewAsset(int id)
         {
             InitializeComponent();
             InitialiseFields();
@@ -60,14 +61,11 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
             this.id = id;
-            Title = "Asset " + id;
-
-            txtAssetID.Text = id;
-            txtAssetID.IsReadOnly = true;
+            Title = "Asset";
 
             ApplyPermissions();
         }
-        public NewAsset(string id, string record)
+        public NewAsset(int id, string record)
         {
             InitializeComponent();
             InitialiseFields();
@@ -76,11 +74,8 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Hidden;
             btnDelete.Visibility = Visibility.Hidden;
             this.id = id;
-            Title = "Asset " + id + " Change";
 
-            txtAssetID.Text = id;
-            txtAssetID.IsReadOnly = true;
-            cmbOrgID.IsEditable = true; // This makes it so we can set the value without loading the list of IDs.
+            cmbOrgRef.IsEditable = true; // This makes it so we can set the value without loading the list of IDs.
             ToggleFieldsEnabled(false);
 
             tabChangeLog.IsEnabled = false;
@@ -93,41 +88,50 @@ namespace BridgeOpsClient
             ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtAssetID.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset["Asset_ID"].restriction);
-            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset["Notes"].restriction);
+            txtAssetRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset[Glo.Tab.ASSET_REF].restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset[Glo.Tab.NOTES].restriction);
 
             // Implement friendly names.
-            if (ColumnRecord.asset["Asset_ID"].friendlyName != "")
-                lblAssetID.Content = ColumnRecord.asset["Asset_ID"].friendlyName;
-            if (ColumnRecord.asset["Organisation_ID"].friendlyName != "")
-                lblOrgID.Content = ColumnRecord.asset["Organisation_ID"].friendlyName;
-            if (ColumnRecord.asset["Notes"].friendlyName != "")
-                lblNotes.Content = ColumnRecord.asset["Notes"].friendlyName;
+            if (ColumnRecord.asset[Glo.Tab.ASSET_REF].friendlyName != "")
+                lblAssetID.Content = ColumnRecord.asset[Glo.Tab.ASSET_REF].friendlyName;
+            if (ColumnRecord.asset[Glo.Tab.ORGANISATION_REF].friendlyName != "")
+                lblOrgID.Content = ColumnRecord.asset[Glo.Tab.ORGANISATION_REF].friendlyName;
+            if (ColumnRecord.asset[Glo.Tab.NOTES].friendlyName != "")
+                lblNotes.Content = ColumnRecord.asset[Glo.Tab.NOTES].friendlyName;
         }
 
-        public void Populate(List<object?> data)
+        public void PopulateExistingData(List<object?> data)
         {
 #pragma warning disable CS8602
             // This method will not be called if the data has a different Count than expected.
             if (data[1] != null)
-                cmbOrgID.Text = data[1].ToString();
+                txtAssetRef.Text = data[1].ToString();
             else
-                cmbOrgID.Text = null;
+                cmbOrgRef.Text = null;
             if (data[2] != null)
-                txtNotes.Text = data[2].ToString();
+                cmbOrgRef.Text = data[2].ToString();
+            else
+                cmbOrgRef.Text = null;
+            if (data[3] != null)
+                txtNotes.Text = data[3].ToString();
             else
                 txtNotes.Text = null;
 
             // Store the original values to check if any changes have been made to the data. The same takes place
             // in the data input table.
-            originalOrgID = cmbOrgID.Text;
+            originalRef = txtAssetRef.Text;
+            originalOrg = cmbOrgRef.Text;
             originalNotes = txtNotes.Text;
 
-            ditAsset.Populate(data.GetRange(3, data.Count - 3));
+            ditAsset.Populate(data.GetRange(4, data.Count - 4));
             if (edit)
                 ditAsset.RememberStartingValues();
             ditAsset.ValueChangedHandler = AnyInteraction;
 #pragma warning restore CS8602
+
+            Title = "Asset " + originalRef;
+            if (!edit)
+                Title += " Change";
         }
 
         private void GetHistory()
@@ -136,7 +140,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.SelectHistory("AssetChange", id, out columnNames, out rows))
+            if (App.SelectHistory("AssetChange", id.ToString(), out columnNames, out rows))
             {
                 foreach (List<object?> row in rows)
                     if (row[2] == null)
@@ -152,7 +156,7 @@ namespace BridgeOpsClient
         {
             if (ditAsset.ScoopValues())
             {
-                if (txtAssetID.Text == "")
+                if (txtAssetRef.Text == "")
                 {
                     MessageBox.Show("You must input a value for Asset ID");
                     return;
@@ -164,8 +168,8 @@ namespace BridgeOpsClient
                 newAsset.sessionID = App.sd.sessionID;
                 newAsset.columnRecordID = ColumnRecord.columnRecordID;
 
-                newAsset.assetID = txtAssetID.Text;
-                newAsset.organisationID = cmbOrgID.Text.Length == 0 ? null : cmbOrgID.Text;
+                newAsset.assetRef = txtAssetRef.Text;
+                newAsset.organisationRef = cmbOrgRef.Text.Length == 0 ? null : cmbOrgRef.Text;
                 newAsset.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
                 ditAsset.ExtractValues(out newAsset.additionalCols, out newAsset.additionalVals);
@@ -177,9 +181,9 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset))
                 {
+                    changeMade = true;
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(1);
-                    changeMade = true;
                     Close();
                 }
             }
@@ -196,6 +200,12 @@ namespace BridgeOpsClient
         {
             if (ditAsset.ScoopValues())
             {
+                if (txtAssetRef.Text == "")
+                {
+                    MessageBox.Show("You must input a value for Asset ID");
+                    return;
+                }
+
                 Asset asset = new Asset();
                 asset.sessionID = App.sd.sessionID;
                 asset.columnRecordID = ColumnRecord.columnRecordID;
@@ -226,10 +236,15 @@ namespace BridgeOpsClient
                 asset.additionalVals = vals;
 
                 // Add the known fields if changed.
-                if ((string?)cmbOrgID.SelectedItem != originalOrgID)
+                if (txtAssetRef.Text != originalRef)
                 {
-                    asset.organisationID = cmbOrgID.Text;
-                    asset.organisationIdChanged = true;
+                    asset.assetRef = txtAssetRef.Text;
+                    asset.assetRefChanged = true;
+                }
+                if ((string?)cmbOrgRef.SelectedItem != originalOrg)
+                {
+                    asset.organisationRef = cmbOrgRef.Text;
+                    asset.organisationRefChanged = true;
                 }
                 if (txtNotes.Text != originalNotes)
                 {
@@ -265,7 +280,7 @@ namespace BridgeOpsClient
             if (!App.DeleteConfirm(false))
                 return;
 
-            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id, true))
+            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id.ToString(), true))
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
@@ -297,7 +312,8 @@ namespace BridgeOpsClient
 
         private void ToggleFieldsEnabled(bool enabled)
         {
-            cmbOrgID.IsEnabled = enabled;
+            txtAssetRef.IsReadOnly = !enabled;
+            cmbOrgRef.IsEnabled = enabled;
             txtNotes.IsReadOnly = !enabled;
             ditAsset.ToggleFieldsEnabled(enabled);
             btnEdit.IsEnabled = enabled;
@@ -315,7 +331,7 @@ namespace BridgeOpsClient
             if (App.BuildHistorical("Asset", selectedID, id, out data))
             {
                 NewAsset viewAsset = new(id, dtgChangeLog.GetCurrentlySelectedCell(1));
-                viewAsset.Populate(data);
+                viewAsset.PopulateExistingData(data);
                 viewAsset.ToggleFieldsEnabled(false);
                 viewAsset.lblViewingChange.Height = 20;
                 viewAsset.lblViewingChange.Content = "Viewing change at " + dtgChangeLog.GetCurrentlySelectedCell(1);
@@ -330,8 +346,9 @@ namespace BridgeOpsClient
             if (!IsLoaded)
                 return false;
 
-            string currentOrgID = cmbOrgID.SelectedItem == null ? "" : (string)cmbOrgID.SelectedItem;
-            btnEdit.IsEnabled = originalOrgID != currentOrgID ||
+            string currentOrgID = cmbOrgRef.SelectedItem == null ? "" : (string)cmbOrgRef.SelectedItem;
+            btnEdit.IsEnabled = originalRef != txtAssetRef.Text ||
+                                originalOrg != currentOrgID ||
                                 originalNotes != txtNotes.Text ||
                                 ditAsset.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.

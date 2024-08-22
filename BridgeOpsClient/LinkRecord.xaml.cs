@@ -45,7 +45,7 @@ namespace BridgeOpsClient
 
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            id = dtg.GetCurrentlySelectedID();
+            id = dtg.GetCurrentlySelectedCell(0);
             Close();
         }
     }

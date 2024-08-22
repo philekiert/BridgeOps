@@ -134,7 +134,7 @@ public class ConsoleController
                    "\". File path is relevant to the path of this executable.");
         AddCommand("create type overrides", ValType.None, menu, CreateTypeOverrides,
                    "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\". File path is relevant to the path of this executable.");
-        AddCommand("reset type verrides", ValType.None, menu, ResetTypeOverrides,
+        AddCommand("reset type overrides", ValType.None, menu, ResetTypeOverrides,
                    "Reset type overrides to default types.");
         AddCommand("view current types", ValType.None, menu, ViewCurrentValuesWithOverrides,
                    "View the list of columns in their respective tables with the currently loaded overrides. Does " +
@@ -160,6 +160,10 @@ public class ConsoleController
 
         // Data
         menu = MENU_DATA;
+        AddCommand("import", ValType.None, menu, ImportAuto,
+                   "Import organisations from a Organisations.csv and assets from Assets.csv, " +
+                   "followed by the parents defined in each." +
+                   "Full file path is required, make sure to read docs before proceeding.");
         AddCommand("import organisations", ValType.String, menu, ImportOrganisations,
                    "Import organisations from a specified .csv file. " +
                    "Full file path is required, make sure to read docs before proceeding.");
@@ -330,8 +334,8 @@ public class ConsoleController
 
     private int LoadTypeOverrides()
     {
-        Writer.Message("View each override success or failure as the file is read?");
-        dbCreate.showFileReadSuccesses = Writer.YesNo();
+        //Writer.Message("View each override success or failure as the file is read?");
+        //dbCreate.showFileReadSuccesses = Writer.YesNo();
         dbCreate.LoadOverridesFromFile();
 
         return 0;
@@ -361,8 +365,9 @@ public class ConsoleController
 
     private int LoadColumnAdditions()
     {
-        Writer.Message("View each column success or failure as the file is read?");
-        dbCreate.LoadAdditionalColumns(Writer.YesNo());
+        //Writer.Message("View each column success or failure as the file is read?");
+        //dbCreate.LoadAdditionalColumns(Writer.YesNo());
+        dbCreate.LoadAdditionalColumns(true);
 
         return 0;
     }
@@ -481,8 +486,8 @@ public class ConsoleController
                                           "Mars Colony",
                                           "Titan Shipyards",
                                           "Europa Deep Exploration Centre" };
-        StringBuilder o = new("TEXT,TEXT,TEXT,TEXT\nOrganisation_ID,Parent_ID,Dial_No,Notes\n");
-        StringBuilder a = new("TEXT,TEXT,TEXT\nAsset_ID,Organisation_ID,Notes\n");
+        StringBuilder o = new("TEXT,TEXT,TEXT,TEXT\nOrganisation_Reference,Parent_Reference,Dial_No,Notes\n");
+        StringBuilder a = new("TEXT,TEXT,TEXT\nAsset_Reference,Organisation_Reference,Notes\n");
 
         o.AppendLine("Sol Space Agency");
         o.AppendLine($"{parents[0]},Sol Space Agency");
@@ -529,12 +534,27 @@ public class ConsoleController
 
     // These methods are barely optimised due to time restrictions and how often this feature is likely to be used.
     // Keep "Organisation" and "Asset" capitalised.
-    private int ImportOrganisations() { return ImportRecords("Organisation", Glo.Tab.ORGANISATION_ID); }
-    private int ImportAssets() { return ImportRecords("Asset", Glo.Tab.ASSET_ID); }
-    private int ImportRecords(string table, string primaryKey)
+    private int ImportAuto()
+    {
+        commandValString = "Organisations.csv";
+        if (ImportOrganisations() == 1)
+            return 1;
+        if (ImportOrganisationParents() == 1)
+            return 1;
+        commandValString = "Assets.csv";
+        if (ImportAssets() == 1)
+            return 1;
+        if (ImportAssetParents() == 1)
+            return 1;
+
+        return 0;
+    }
+    private int ImportOrganisations() { return ImportRecords("Organisation", Glo.Tab.ORGANISATION_REF); }
+    private int ImportAssets() { return ImportRecords("Asset", Glo.Tab.ASSET_REF); }
+    private int ImportRecords(string table, string refKey)
     {
         commandValString = commandValString.Replace("\"", "");
-        string fileName = Path.Combine(Glo.Fun.ApplicationFolder("Data Import"), commandValString);
+        string fileName = Path.Combine(Glo.PathImportFiles, commandValString);
         if (!File.Exists(fileName))
         {
             Writer.Negative("File not found.");
@@ -566,9 +586,9 @@ public class ConsoleController
 
         // The second line should be the header names, so parse this second.
         string[]? headers = parser.ReadFields();
-        if (headers == null || !headers.Contains(primaryKey))
+        if (headers == null || !headers.Contains(refKey))
         {
-            Writer.Negative("No " + primaryKey + " header found. This is the primary key for the " +
+            Writer.Negative("No " + refKey + " header found. This is a necessary key for the " +
                             table + " table and must be present.");
             parser.Close();
             return 1;
@@ -576,7 +596,7 @@ public class ConsoleController
         // Record the ID index, necessary for some error reporting below.
         int idIndex = -1; // This code cannot end with -1, was we already made sure primaryKey is present above.
         for (int i = 0; i < headers.Length; ++i)
-            if (headers[i] == primaryKey)
+            if (headers[i] == refKey)
             {
                 idIndex = i;
                 break;
@@ -594,7 +614,7 @@ public class ConsoleController
         if (table == "Organisation")
         {
             for (int i = 0; i < headers.Length; ++i)
-                if (headers[i] == Glo.Tab.PARENT_ID)
+                if (headers[i] == Glo.Tab.PARENT_REF)
                 {
                     parentIndex = i;
                     break;
@@ -603,7 +623,7 @@ public class ConsoleController
         else // if Asset
         {
             for (int i = 0; i < headers.Length; ++i)
-                if (headers[i] == Glo.Tab.ORGANISATION_ID)
+                if (headers[i] == Glo.Tab.ORGANISATION_REF)
                 {
                     parentIndex = i;
                     break;
@@ -619,13 +639,14 @@ public class ConsoleController
         List<string> headersRegister = new(headers);
         List<string> allTableColumnNames = dbCreate.GetAllColumnNames(table + "Change");
         foreach (string s in allTableColumnNames)
-            if (s.EndsWith(Glo.Tab.CHANGE_REGISTER_SUFFIX))
+            if (s.EndsWith(Glo.Tab.CHANGE_SUFFIX))
             {
                 // There will always be a value in front of the list of 1's due to an ID needing to be present.
                 registersOn += ",1";
                 headersRegister.Add(s);
             }
         headersRegister.AddRange(new string[] { Glo.Tab.LOGIN_ID, Glo.Tab.CHANGE_REASON, Glo.Tab.CHANGE_TIME });
+        headersRegister.Add(table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID);
         string register = "Imported " + (table == "Organisation" ? "organisation." : "asset.");
         registersOn += $",1,'{register}', "; // 1 is always admin due to the database creation process.
 
@@ -689,7 +710,7 @@ public class ConsoleController
                 bldr.Append(insertInto + string.Join(',', headers) + values + rowString + "); ");
                 bldr.Append(insertRegisterInto + string.Join(',', headersRegister) +
                             values + rowString + registersOn +
-                            "'" + SqlAssist.DateTimeToSQL(DateTime.Now, false) + "'); ");
+                            "'" + SqlAssist.DateTimeToSQL(DateTime.Now, false) + "', SCOPE_IDENTITY()); ");
                 bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
 
                 // Attempt insert, and if it fails, store the row for review by the user.
@@ -750,12 +771,12 @@ public class ConsoleController
         parser.Close();
         return 0;
     }
-    private int ImportOrganisationParents() { return ImportRecordParents("Organisation", Glo.Tab.ORGANISATION_ID); }
-    private int ImportAssetParents() { return ImportRecordParents("Asset", Glo.Tab.ASSET_ID); }
-    private int ImportRecordParents(string table, string primaryKey)
+    private int ImportOrganisationParents() { return ImportRecordParents("Organisation", Glo.Tab.ORGANISATION_REF); }
+    private int ImportAssetParents() { return ImportRecordParents("Asset", Glo.Tab.ASSET_REF); }
+    private int ImportRecordParents(string table, string refKey)
     {
         commandValString = commandValString.Replace("\"", "");
-        string fileName = Path.Combine(Glo.Fun.ApplicationFolder("Data Import"), commandValString);
+        string fileName = Path.Combine(Glo.PathImportFiles, commandValString);
 
         if (!File.Exists(fileName))
         {
@@ -788,10 +809,10 @@ public class ConsoleController
 
         // The second line should be the header names, so parse this second.
         string[]? headers = parser.ReadFields();
-        string parentColName = (table == "Organisation" ? Glo.Tab.PARENT_ID : Glo.Tab.ORGANISATION_ID);
-        if (headers == null || !(headers.Contains(primaryKey) && headers.Contains(parentColName)))
+        string parentColName = (table == "Organisation" ? Glo.Tab.PARENT_REF : Glo.Tab.ORGANISATION_REF);
+        if (headers == null || !(headers.Contains(refKey) && headers.Contains(parentColName)))
         {
-            Writer.Negative(primaryKey + " and " + parentColName + " columns must be present.");
+            Writer.Negative(refKey + " and " + parentColName + " columns must be present.");
             parser.Close();
             return 1;
         }
@@ -810,7 +831,7 @@ public class ConsoleController
             for (int i = 0; i < headers.Length && (parentIndex == -1 || idIndex == -1); ++i)
                 if (headers[i] == parentColName)
                     parentIndex = i;
-                else if (headers[i] == primaryKey)
+                else if (headers[i] == refKey)
                     idIndex = i;
         }
         else // if Asset
@@ -818,7 +839,7 @@ public class ConsoleController
             for (int i = 0; i < headers.Length && (parentIndex == -1 || idIndex == -1); ++i)
                 if (headers[i] == parentColName)
                     parentIndex = i;
-                else if (headers[i] == primaryKey)
+                else if (headers[i] == refKey)
                     idIndex = i;
         }
 
@@ -854,17 +875,21 @@ public class ConsoleController
 
                 // Create a transaction for the inserts into the main and change tables.
                 StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
-                bldr.Append("UPDATE " + table +
-                           " SET " + parentColName + " = " + row[parentIndex] +
-                           " WHERE " + primaryKey + " = " + row[idIndex] + "; ");
+                string primaryKey = table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID;
+                bldr.Append($"DECLARE @id INT; " +
+                            $"SELECT @id = {primaryKey} FROM {table} " +
+                            $"WHERE {refKey} = {row[idIndex]}; " +
+                             "UPDATE " + table +
+                             " SET " + parentColName + " = " + row[parentIndex] +
+                             " WHERE " + refKey + " = " + row[idIndex] + "; ");
                 bldr.Append($"INSERT INTO {table}Change " +
                                    $"({primaryKey}, " +
                                    $"{parentColName}, " +
-                                   $"{parentColName + Glo.Tab.CHANGE_REGISTER_SUFFIX}, " +
+                                   $"{parentColName + Glo.Tab.CHANGE_SUFFIX}, " +
                                    $"{Glo.Tab.LOGIN_ID}, " +
                                    $"{Glo.Tab.CHANGE_REASON}, " +
                                    $"{Glo.Tab.CHANGE_TIME})" +
-                            $"VALUES({row[idIndex]}, " +
+                            $"VALUES(@id, " +
                                    $"{row[parentIndex]}, " +
                                    $"1, " + // Switch on the register.
                                    $"1, " + // Admin account should always be 1 after database creation.

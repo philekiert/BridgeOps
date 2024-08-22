@@ -23,10 +23,13 @@ namespace BridgeOpsClient
     public partial class NewOrganisation : Window
     {
         bool edit = false;
-        string id = "";
+        int id;
+        int idInt;
+        string? originalRef = "";
         string? originalParent = "";
         string? originalDialNo = "";
         string? originalNotes = "";
+
         public void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -57,9 +60,9 @@ namespace BridgeOpsClient
 
             ApplyPermissions();
 
-            txtOrgID.Focus();
+            txtOrgRef.Focus();
         }
-        public NewOrganisation(string id)
+        public NewOrganisation(int id)
         {
             InitializeComponent();
             InitialiseFields();
@@ -69,18 +72,11 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Visible;
             btnDelete.Visibility = Visibility.Visible;
             this.id = id;
-            Title = "Organisation " + id;
-
-            txtOrgID.Text = id;
-            txtOrgID.IsReadOnly = true;
-
-            // Sort out contact and asset tables.
-            PopulateAssets();
-            PopulateContacts();
+            Title = "Organisation";
 
             ApplyPermissions();
         } // Edit existing record.
-        public NewOrganisation(string id, string record) // History lookup.
+        public NewOrganisation(int id, string record) // History lookup.
         {
             InitializeComponent();
             InitialiseFields();
@@ -89,10 +85,7 @@ namespace BridgeOpsClient
             btnEdit.Visibility = Visibility.Hidden;
             btnDelete.Visibility = Visibility.Hidden;
             this.id = id;
-            Title = "Organisation " + id + " Change";
 
-            txtOrgID.Text = id;
-            txtOrgID.IsReadOnly = true;
             cmbOrgParentID.IsEditable = true; // This makes it so we can set the value without loading the list of IDs.
             ToggleFieldsEnabled(false);
 
@@ -107,19 +100,19 @@ namespace BridgeOpsClient
             ditOrganisation.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtOrgID.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation["Organisation_ID"].restriction);
-            txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation["Dial_No"].restriction);
-            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation["Notes"].restriction);
+            txtOrgRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF].restriction);
+            txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation[Glo.Tab.DIAL_NO].restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation[Glo.Tab.NOTES].restriction);
 
             // Implement friendly names.
-            if (ColumnRecord.organisation["Organisation_ID"].friendlyName != "")
-                lblOrgID.Content = ColumnRecord.organisation["Organisation_ID"].friendlyName;
-            if (ColumnRecord.organisation["Parent_ID"].friendlyName != "")
-                lblOrgParentID.Content = ColumnRecord.organisation["Parent_ID"].friendlyName;
-            if (ColumnRecord.organisation["Dial_No"].friendlyName != "")
-                lblDialNo.Content = ColumnRecord.organisation["Dial_No"].friendlyName;
-            if (ColumnRecord.organisation["Notes"].friendlyName != "")
-                lblNotes.Content = ColumnRecord.organisation["Notes"].friendlyName;
+            if (ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF].friendlyName != "")
+                lblOrgID.Content = ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF].friendlyName;
+            if (ColumnRecord.organisation[Glo.Tab.PARENT_REF].friendlyName != "")
+                lblOrgParentID.Content = ColumnRecord.organisation[Glo.Tab.PARENT_REF].friendlyName;
+            if (ColumnRecord.organisation[Glo.Tab.DIAL_NO].friendlyName != "")
+                lblDialNo.Content = ColumnRecord.organisation[Glo.Tab.DIAL_NO].friendlyName;
+            if (ColumnRecord.organisation[Glo.Tab.NOTES].friendlyName != "")
+                lblNotes.Content = ColumnRecord.organisation[Glo.Tab.NOTES].friendlyName;
 
             dtgAssets.canHideColumns = true;
             dtgAssets.identity = 3;
@@ -129,20 +122,27 @@ namespace BridgeOpsClient
 
         public void PopulateAssets()
         {
+            if (originalRef == null)
+                return;
+
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_ID, id, Conditional.Equals, out columnNames, out rows, false))
-                dtgAssets.Update(ColumnRecord.asset, columnNames, rows, Glo.Tab.ORGANISATION_ID);
+            if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_REF, originalRef, Conditional.Equals,
+                              out columnNames, out rows, false))
+                dtgAssets.Update(ColumnRecord.asset, columnNames, rows, Glo.Tab.ORGANISATION_REF);
         }
         public void PopulateContacts()
         {
+            if (originalRef == null)
+                return;
+
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.LinkedContactSelect(id, out columnNames, out rows))
+            if (App.LinkedContactSelect(originalRef, out columnNames, out rows))
                 dtgContacts.Update(ColumnRecord.contact, columnNames, rows, Glo.Tab.CONTACT_ID);
         }
 
@@ -151,31 +151,61 @@ namespace BridgeOpsClient
 #pragma warning disable CS8602
             // This method will not be called if the data has a different Count than expected.
             if (data[1] != null)
-                cmbOrgParentID.Text = data[1].ToString();
+                txtOrgRef.Text = data[1].ToString();
+            else
+                txtOrgRef.Text = null;
+            if (data[2] != null)
+                cmbOrgParentID.Text = data[2].ToString();
             else
                 cmbOrgParentID.Text = null;
-            if (data[2] != null)
-                txtDialNo.Text = data[2].ToString();
+            if (data[3] != null)
+                txtDialNo.Text = data[3].ToString();
             else
                 txtDialNo.Text = null;
-            if (data[3] != null)
-                txtNotes.Text = data[3].ToString();
+            if (data[4] != null)
+                txtNotes.Text = data[4].ToString();
             else
                 txtNotes.Text = null;
 
             // Store the original values to check if any changes have been made to the data. The same takes place
             // in the data input table.
-            originalParent = cmbOrgParentID.Text == null ? "" : cmbOrgParentID.Text;
+            originalRef = txtOrgRef.Text;
+            originalParent = cmbOrgParentID.Text;
             originalDialNo = txtDialNo.Text;
             originalNotes = txtNotes.Text;
 
             ditOrganisation.ValueChangedHandler = AnyInteraction; // Must be set before Populate().
-            ditOrganisation.Populate(data.GetRange(4, data.Count - 4));
+            ditOrganisation.Populate(data.GetRange(5, data.Count - 5));
             if (edit)
                 ditOrganisation.RememberStartingValues();
 
             btnEdit.IsEnabled = false;
 #pragma warning restore CS8602
+
+            Title = "Organisation " + originalRef;
+            if (!edit)
+                Title += " Change";
+
+            // Sort out contact and asset tables.
+            PopulateAssets();
+            PopulateContacts();
+        }
+
+        private void GetHistory()
+        {
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+
+            if (App.SelectHistory("OrganisationChange", id.ToString(), out columnNames, out rows))
+            {
+                foreach (List<object?> row in rows)
+                    if (row[2] == null)
+                        row[2] = "[Deleted]";
+                dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                                    { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
+                                    Glo.Tab.CHANGE_ID);
+            }
         }
 
         public string[]? organisationList;
@@ -183,7 +213,7 @@ namespace BridgeOpsClient
         {
             if (ditOrganisation.ScoopValues())
             {
-                if (txtOrgID.Text == "")
+                if (txtOrgRef.Text == "")
                 {
                     MessageBox.Show("You must input a value for Organisation ID");
                     return;
@@ -195,8 +225,8 @@ namespace BridgeOpsClient
                 newOrg.sessionID = App.sd.sessionID;
                 newOrg.columnRecordID = ColumnRecord.columnRecordID;
 
-                newOrg.organisationID = txtOrgID.Text;
-                newOrg.parentOrgID = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
+                newOrg.organisationRef = txtOrgRef.Text;
+                newOrg.parentOrgRef = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
                 newOrg.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
                 newOrg.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
@@ -209,9 +239,9 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, newOrg))
                 {
-                    Close();
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(0);
+                    Close();
                 }
             }
             else
@@ -227,6 +257,12 @@ namespace BridgeOpsClient
         {
             if (ditOrganisation.ScoopValues())
             {
+                if (txtOrgRef.Text == "")
+                {
+                    MessageBox.Show("You must input a value for Organisation ID");
+                    return;
+                }
+
                 Organisation org = new Organisation();
                 org.sessionID = App.sd.sessionID;
                 org.columnRecordID = ColumnRecord.columnRecordID;
@@ -257,10 +293,15 @@ namespace BridgeOpsClient
                 org.additionalVals = vals;
 
                 // Add the known fields if changed.
+                if (txtOrgRef.Text != originalRef)
+                {
+                    org.organisationRef = txtOrgRef.Text;
+                    org.organisationRefChanged = true;
+                }
                 if ((string?)cmbOrgParentID.SelectedItem != originalParent)
                 {
-                    org.parentOrgID = cmbOrgParentID.Text;
-                    org.parentOrgIdChanged = true;
+                    org.parentOrgRef = cmbOrgParentID.Text;
+                    org.parentOrgRefChanged = true;
                 }
                 if (txtDialNo.Text != originalDialNo)
                 {
@@ -295,29 +336,12 @@ namespace BridgeOpsClient
             }
         }
 
-        private void GetHistory()
-        {
-            // Error message is displayed by App.SelectAll() if something goes wrong.
-            List<string?> columnNames;
-            List<List<object?>> rows;
-
-            if (App.SelectHistory("OrganisationChange", id, out columnNames, out rows))
-            {
-                foreach (List<object?> row in rows)
-                    if (row[2] == null)
-                        row[2] = "[Deleted]";
-                dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
-                                    { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
-                                    Glo.Tab.CHANGE_ID);
-            }
-        }
-
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (!App.DeleteConfirm(false))
                 return;
 
-            if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id, true))
+            if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id.ToString(), true))
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(0);
@@ -345,12 +369,15 @@ namespace BridgeOpsClient
 
         private void btnAssetNew_Click(object sender, RoutedEventArgs e)
         {
+            if (originalRef == null)
+                return;
+
             NewAsset newAsset = new();
 
             // Set cmbOrgID to editable but disabled in order to hold the ID without fetching the list from the agent.
-            newAsset.cmbOrgID.IsEditable = true;
-            newAsset.cmbOrgID.Text = id;
-            newAsset.cmbOrgID.IsEnabled = false;
+            newAsset.cmbOrgRef.IsEditable = true;
+            newAsset.cmbOrgRef.Text = originalRef;
+            newAsset.cmbOrgRef.IsEnabled = false;
 
             newAsset.ShowDialog();
             if (newAsset.changeMade)
@@ -359,16 +386,20 @@ namespace BridgeOpsClient
 
         private void btnAssetAdd_Click(object sender, RoutedEventArgs e)
         {
+            if (originalRef == null)
+                return;
+
             LinkRecord lr = new("Asset", ColumnRecord.asset);
             lr.ShowDialog();
             string? assetID = lr.id;
-            if (assetID == null)
+            int assetIdInt;
+            if (assetID == null || !int.TryParse(assetID, out assetIdInt))
                 return;
 
             Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
-                                    assetID, id, null, new(), new(), new());
-            asset.organisationIdChanged = true;
-            asset.changeReason = "Added to organisation " + id + ".";
+                                    assetIdInt, null, originalRef, null, new(), new(), new());
+            asset.organisationRefChanged = true;
+            asset.changeReason = "Added to organisation " + originalRef + ".";
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
             {
                 if (MainWindow.pageDatabase != null)
@@ -378,16 +409,19 @@ namespace BridgeOpsClient
 
         private void btnAssetRemove_Click(object sender, RoutedEventArgs e)
         {
-            string? assetID = dtgAssets.GetCurrentlySelectedID();
-            if (assetID == null)
+            if (originalRef == null)
+                return;
+
+            int assetID;
+            if (!int.TryParse(dtgAssets.GetCurrentlySelectedID(), out assetID))
             {
                 MessageBox.Show("Could not discern asset ID from record.");
                 return;
             }
             Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
-                                    assetID, null, null, new(), new(), new());
-            asset.organisationIdChanged = true;
-            asset.changeReason = "Removed from organisation " + id + ".";
+                                    assetID, null, null, null, new(), new(), new());
+            asset.organisationRefChanged = true;
+            asset.changeReason = "Removed from organisation " + originalRef + ".";
             if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
             {
                 if (MainWindow.pageDatabase != null)
@@ -404,6 +438,9 @@ namespace BridgeOpsClient
 
         private void btnContactsNew_Click(object sender, RoutedEventArgs e)
         {
+            if (originalRef == null)
+                return;
+
             NewContact newContact = new();
             newContact.requireIdBack = true;
             newContact.isDialog = true;
@@ -416,7 +453,7 @@ namespace BridgeOpsClient
                 if (int.TryParse(newContact.id, out contactID))
                 {
                     // Error message presented by LinkContact() if needed.
-                    App.LinkContact(id, contactID, false);
+                    App.LinkContact(originalRef, contactID, false);
                     PopulateContacts();
                 }
                 else
@@ -429,6 +466,9 @@ namespace BridgeOpsClient
 
         private void btnContactsAdd_Click(object sender, RoutedEventArgs e)
         {
+            if (originalRef == null)
+                return;
+
             LinkRecord lr = new("Contact", ColumnRecord.contact);
             lr.ShowDialog();
             int contactIdInt;
@@ -436,12 +476,15 @@ namespace BridgeOpsClient
                 return;
 
             // Error message handled in LinkContact().
-            if (App.LinkContact(id, contactIdInt, false))
+            if (App.LinkContact(originalRef, contactIdInt, false))
                 PopulateContacts();
         }
 
         private void btnContactsRemove_Click(object sender, RoutedEventArgs e)
         {
+            if (originalRef == null)
+                return;
+
             string? contactID = dtgContacts.GetCurrentlySelectedID();
             int contactIdInt;
             if (contactID == null || !int.TryParse(contactID, out contactIdInt))
@@ -449,7 +492,7 @@ namespace BridgeOpsClient
                 MessageBox.Show("Could not discern contact ID from record.");
                 return;
             }
-            if (App.LinkContact(id, contactIdInt, true))
+            if (App.LinkContact(originalRef, contactIdInt, true))
                 PopulateContacts();
             else
                 MessageBox.Show("Could not update specified asset.");
@@ -478,6 +521,7 @@ namespace BridgeOpsClient
 
         private void ToggleFieldsEnabled(bool enabled)
         {
+            txtOrgRef.IsReadOnly = !enabled;
             cmbOrgParentID.IsEnabled = enabled;
             txtDialNo.IsReadOnly = !enabled;
             txtNotes.IsReadOnly = !enabled;
@@ -513,7 +557,8 @@ namespace BridgeOpsClient
                 return false;
 
             string currentParent = cmbOrgParentID.SelectedItem == null ? "" : (string)cmbOrgParentID.SelectedItem;
-            btnEdit.IsEnabled = originalParent != currentParent ||
+            btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
+                                originalParent != currentParent ||
                                 originalDialNo != txtDialNo.Text ||
                                 originalNotes != txtNotes.Text ||
                                 ditOrganisation.CheckForValueChanges();

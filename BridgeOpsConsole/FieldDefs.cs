@@ -82,10 +82,12 @@ public class FieldDefs
     public Dictionary<string, Definition> defs = new Dictionary<string, Definition>();
 
     // Primary Key Types (defaults used only for override txt file generation)
-    public string typeOrgID = "VARCHAR(20)";
+    public string typeOrgID = "INT UNSIGNED";
+    public string typeOrgRef = "VARCHAR(30)";
     public string typeContactID = "SMALLINT UNSIGNED";
     public string typeLoginID = "SMALLINT UNSIGNED";
-    public string typeAssetID = "VARCHAR(10)";
+    public string typeAssetID = "INT UNSIGNED";
+    public string typeAssetRef = "VARCHAR(10)";
     public string typeResourceID = "SMALLINT UNSIGNED";
     public string typeResourceCapacity = "INT UNSIGNED";
     public string typeConfID = "INT UNSIGNED";
@@ -100,8 +102,9 @@ public class FieldDefs
         // During database creation, table names are discerned with TableName().
 
         // Organisation
-        defs.Add("Organisation ID", new Definition(12, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
-        defs.Add("Organisation Organisation ID", new Definition(12, Glo.Tab.PARENT_ID, typeOrgID, false, false, false));
+        defs.Add("Organisation ID", new Definition(12, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, true));
+        defs.Add("Organisation Reference", new Definition(12, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
+        defs.Add("Organisation Organisation Reference", new Definition(12, Glo.Tab.PARENT_REF, typeOrgRef, false, false, false));
         defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, true, false, false));
         defs.Add("Organisation Notes", new Definition(12, "Notes", "VARCHAR(MAX)", false, false, false));
 
@@ -121,8 +124,9 @@ public class FieldDefs
         defs.Add("Login View Settings", new Definition(5, Glo.Tab.LOGIN_VIEW_SETTINGS, "VARCHAR(MAX)", false, false, false));
 
         // Asset
-        defs.Add("Asset ID", new Definition(5, Glo.Tab.ASSET_ID, typeAssetID, false, true, false));
-        defs.Add("Asset Organisation ID", new Definition(5, Glo.Tab.ORGANISATION_ID, typeOrgID, false, false, false));
+        defs.Add("Asset ID", new Definition(5, Glo.Tab.ASSET_ID, typeAssetID, false, true, true));
+        defs.Add("Asset Reference", new Definition(5, Glo.Tab.ASSET_REF, typeAssetRef, false, true, false));
+        defs.Add("Asset Organisation Reference", new Definition(5, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, false, false));
         defs.Add("Asset Notes", new Definition(5, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Resource
@@ -141,7 +145,7 @@ public class FieldDefs
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
         defs.Add("Conference Buffer", new Definition(10, Glo.Tab.CONFERENCE_BUFFER, "TIME", false, false, false));
-        defs.Add("Conference Organisation ID", new Definition(10, Glo.Tab.ORGANISATION_ID, typeOrgID, false, false, false));
+        defs.Add("Conference Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, false, false));
         defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
         defs.Add("Conference Notes", new Definition(10, "Notes", "VARCHAR(MAX)", false, false, false));
 
@@ -156,13 +160,13 @@ public class FieldDefs
 
         // ----- SUPPLEMENTARY TABLES ----- //
 
-        // Dial No (for faster site lookups)
-        defs.Add("Dial No", new Definition(7, Glo.Tab.DIAL_NO, typeDialNo, false, true, false));
-        defs.Add("Dial No Organisation ID", new Definition(7, "Organisation_ID", typeOrgID, false, false, false));
+        // Dial No (for faster site lookups) // Scrapped in favour of indexing the Dial No column.
+        //defs.Add("Dial No", new Definition(7, Glo.Tab.DIAL_NO, typeDialNo, false, true, false));
+        //defs.Add("Dial No Organisation Reference", new Definition(7, Glo.Tab.ORGANISATION_REF, typeOrgID, false, false, false));
 
         // Site Connections
         defs.Add("Connection Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, false));
-        defs.Add("Connection Dial No", new Definition(10, Glo.Tab.DIAL_NO, typeDialNo, false, true, false));
+        defs.Add("Connection Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
         defs.Add("Connection Connection Time", new Definition(10, "Connection_Time", "DATETIME", false, false, false));
         defs.Add("Connection Disconnection Time", new Definition(10, "Disconnection_Time", "DATETIME", false, false, false));
 
@@ -184,8 +188,8 @@ public class FieldDefs
                 if (d.Value.columnName != Glo.Tab.ORGANISATION_ID) // Already stated above, makes up part of the composite key.
                 {
                     // All of these should have canOverride set to false.
-                    additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
+                    additionsKeys.Add(d.Key + Glo.Tab.CHANGE_SUFFIX);
+                    additionsValues.Add(new Definition(19, d.Value.columnName + Glo.Tab.CHANGE_SUFFIX, "BOOLEAN", false, false, false));
                     additionsKeys.Add(d.Key);
                     additionsValues.Add(new Definition(19, d.Value.columnName, d.Value.sqlType, false, false, false));
                 }
@@ -207,8 +211,8 @@ public class FieldDefs
                 if (d.Value.columnName != Glo.Tab.ASSET_ID) // Already stated above, makes up part of the composite key.
                 {
                     // All of these should have canOverride set to false. Bool must come first due to the way Agent.ClientSelectHistory() works.
-                    additionsKeys.Add(d.Key + Glo.Tab.CHANGE_REGISTER_SUFFIX);
-                    additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_REGISTER_SUFFIX, "BOOLEAN", false, false, false));
+                    additionsKeys.Add(d.Key + Glo.Tab.CHANGE_SUFFIX);
+                    additionsValues.Add(new Definition(12, d.Value.columnName + Glo.Tab.CHANGE_SUFFIX, "BOOLEAN", false, false, false));
                     additionsKeys.Add(d.Key);
                     additionsValues.Add(new Definition(12, d.Value.columnName, d.Value.sqlType, false, false, false));
                 }
@@ -220,7 +224,7 @@ public class FieldDefs
         // ----- MANY-TO-MANY JUNCTION TABLES ----- //
 
         // Organisation Contacts
-        defs.Add("Organisation Contacts Organisation ID", new Definition(21, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
+        defs.Add("Organisation Contacts Organisation Reference", new Definition(21, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
         defs.Add("Organisation Contacts Contact ID", new Definition(21, Glo.Tab.CONTACT_ID, typeContactID, false, true, false));
 
         // Organisation Engineers
@@ -268,18 +272,19 @@ public class FieldDefs
 
         // The primary keys need setting before anything else. These can be hard coded as they're far less likely to change.
 
-        str += "\n# Primary Keys" +
+        str += "\n# Primary/Foreign Keys" +
                "\n# ------------" +
                "\n" +
-               "\nOrganisation ID:                      Max Length = " + ExtractVARCHARLength(typeOrgID) +
+               "\nOrganisation ID:                      Type = " + typeOrgID +
+               "\nOrganisation Reference:               Max Length = " + ExtractVARCHARLength(typeOrgRef) +
+               "\nAsset ID:                             Type = " + typeAssetID +
+               "\nAsset Reference:                      Max Length = " + ExtractVARCHARLength(typeAssetRef) +
                "\nContact ID:                           Type = " + typeContactID +
                "\nLogin ID:                             Type = " + typeLoginID +
-               "\nAsset ID:                             Max Length = " + ExtractVARCHARLength(typeAssetID) +
                "\nResource ID:                          Type = " + typeResourceID +
                "\nConference Type ID:                   Type = " + typeConfTypeID +
                "\nConference ID:                        Type = " + typeConfID +
                "\nConference Recurrence Recurrence ID:  Type = " + typeRecurrenceID +
-               "\nDial No:                              Fixed Length = " + ExtractVARCHARLength(typeDialNo) +
                "\nOrganisation Change ID:               Type = " + typeOrgChangeID +
                "\nAsset Change ID:                      Type = " + typeAssetChangeID +
                "\n" +

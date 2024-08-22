@@ -227,7 +227,7 @@ internal class BridgeOpsAgent
         {
             try
             {
-                string error = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+                string error = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
                 if (context.Length > 0)
                     error += "   " + context;
                 if (e != null)
@@ -452,7 +452,7 @@ internal class BridgeOpsAgent
             columnRecord = fileText.Remove(fileText.Length - 1);
 
             // Automatically generates a file for debugging if one isn't present.
-            Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder(Glo.CONFIG_COLUMN_RECORD));
+            Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder());
             File.WriteAllText(Glo.Fun.ApplicationFolder(Glo.CONFIG_COLUMN_RECORD), columnRecord);
 
             return true;
@@ -1383,8 +1383,8 @@ internal class BridgeOpsAgent
             string command = "";
             if (historical)
                 command = "SELECT DISTINCT " + (req.table == "Organisation" ?
-                                                Glo.Tab.ORGANISATION_ID :
-                                                Glo.Tab.ASSET_ID)
+                                                Glo.Tab.ORGANISATION_REF :
+                                                Glo.Tab.ASSET_REF)
                                                 + " FROM " + req.table + "Change";
             else
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
@@ -1410,7 +1410,7 @@ internal class BridgeOpsAgent
 
             if (historical)
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
-                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
+                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_REF : Glo.Tab.ASSET_REF) +
                           " IN (" + command + ");";
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
@@ -1495,8 +1495,8 @@ internal class BridgeOpsAgent
             string command = "";
             if (historical)
                 command = "SELECT DISTINCT " + (req.table == "Organisation" ?
-                                                Glo.Tab.ORGANISATION_ID :
-                                                Glo.Tab.ASSET_ID)
+                                                Glo.Tab.ORGANISATION_REF :
+                                                Glo.Tab.ASSET_REF)
                                                 + " FROM " + req.table + "Change";
             else
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
@@ -1513,7 +1513,7 @@ internal class BridgeOpsAgent
 
             if (historical)
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
-                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
+                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_REF : Glo.Tab.ASSET_REF) +
                           " IN (" + command + ");";
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
@@ -1702,6 +1702,7 @@ internal class BridgeOpsAgent
         {
             sqlConnect.Open();
             DeleteRequest req = sr.Deserialise<DeleteRequest>(sr.ReadString(stream));
+
             if (!CheckSessionValidity(req.sessionID, columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);

@@ -51,23 +51,25 @@ namespace BridgeOpsClient.CustomControls
                    at the moment. It's here because the affected column names have dedicated fields. */
                 if (table == "Contact")
                 {
-                    if (col.Key == "Contact_ID" ||
-                        col.Key == "Notes")
+                    if (col.Key == Glo.Tab.CONTACT_ID ||
+                        col.Key == Glo.Tab.NOTES)
                         skip = true;
                 }
                 else if (table == "Organisation")
                 {
-                    if (col.Key == "Organisation_ID" ||
-                        col.Key == "Parent_ID" ||
-                        col.Key == "Dial_No" ||
-                        col.Key == "Notes")
+                    if (col.Key == Glo.Tab.ORGANISATION_ID ||
+                        col.Key == Glo.Tab.ORGANISATION_REF ||
+                        col.Key == Glo.Tab.PARENT_REF ||
+                        col.Key == Glo.Tab.DIAL_NO ||
+                        col.Key == Glo.Tab.NOTES)
                         skip = true;
                 }
                 else if (table == "Asset")
                 {
-                    if (col.Key == "Asset_ID" ||
-                        col.Key == "Organisation_ID" ||
-                        col.Key == "Notes")
+                    if (col.Key == Glo.Tab.ASSET_ID ||
+                        col.Key == Glo.Tab.ASSET_REF ||
+                        col.Key == Glo.Tab.ORGANISATION_REF ||
+                        col.Key == Glo.Tab.NOTES)
                         skip = true;
                 }
 
