@@ -620,6 +620,11 @@ namespace SendReceiveClasses
         {
             Prepare();
 
+            // Not allowed under any circumstances.
+            if (organisationRef == null || organisationRef == "" ||
+                organisationRef == "''" || organisationRef == "NULL")
+                return "";
+
             string com = SqlAssist.InsertInto("Organisation",
                                               SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_REF,
                                                                                   Glo.Tab.PARENT_REF,
@@ -667,6 +672,22 @@ namespace SendReceiveClasses
         public string SqlUpdate(int loginID)
         {
             Prepare();
+
+            List<string> commands = new();
+
+            if (organisationRefChanged)
+            {
+                // Not allowed under any circumstances:
+                if (organisationRef == null || organisationRef == "" ||
+                    organisationRef == "''" || organisationRef == "NULL")
+                    return "";
+
+                // Get the old reference ID here before we got changing it.
+                commands.Add($"DECLARE @orgRef VARCHAR(MAX) = (SELECT TOP 1 {Glo.Tab.ORGANISATION_REF} " +
+                                                             $"FROM Organisation " +
+                                                             $"WHERE {Glo.Tab.ORGANISATION_ID} = {organisationID});");
+                commands.Add($"ALTER TABLE Organisation DROP CONSTRAINT fk_ParentOrgRef;");
+            }
 
             List<string> setters = new();
             if (organisationRefChanged)
@@ -731,7 +752,56 @@ namespace SendReceiveClasses
                                                            loginID.ToString(),
                                                            changeReason == null ? "''" : changeReason));
 
-            return SqlAssist.Transaction(command);
+            commands.Add(command);
+
+            if (organisationRefChanged && organisationRef != null)
+            {
+                // Update any affected organisations.
+                commands.Add("WITH orgs AS ( SELECT " +
+                            $"{Glo.Tab.ORGANISATION_ID} FROM Organisation " +
+                            $"WHERE {Glo.Tab.PARENT_REF} = @orgRef AND {Glo.Tab.ORGANISATION_REF} != @orgRef) " +
+                            $"INSERT INTO OrganisationChange ({Glo.Tab.ORGANISATION_ID}, " +
+                                                            $"{Glo.Tab.LOGIN_ID}, " +
+                                                            $"{Glo.Tab.CHANGE_TIME}, " +
+                                                            $"{Glo.Tab.CHANGE_REASON}, " +
+                                                            $"{Glo.Tab.PARENT_REF}, " +
+                                                            $"{Glo.Tab.PARENT_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                            $"SELECT {Glo.Tab.ORGANISATION_ID}, " +
+                                   $"{loginID}, " +
+                                   $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                   $"'Parent organisation ''' + @orgRef + ''' was renamed to '{organisationRef}'.', " +
+                                   $"{organisationRef}, 1 " +
+                             "FROM orgs;");
+                commands.Add($"UPDATE Organisation SET {Glo.Tab.PARENT_REF} = {organisationRef} " +
+                             $"WHERE {Glo.Tab.PARENT_REF} = @orgRef;"
+                             );
+
+                // Provide affected assets with change records.
+                commands.Add("WITH assets AS ( SELECT " +
+                            $"{Glo.Tab.ASSET_ID} FROM Asset " +
+                            $"WHERE {Glo.Tab.ORGANISATION_REF} = @orgRef) " +
+                            $"INSERT INTO AssetChange ({Glo.Tab.ASSET_ID}, " +
+                                                     $"{Glo.Tab.LOGIN_ID}, " +
+                                                     $"{Glo.Tab.CHANGE_TIME}, " +
+                                                     $"{Glo.Tab.CHANGE_REASON}, " +
+                                                     $"{Glo.Tab.ORGANISATION_REF}, " +
+                                                     $"{Glo.Tab.ORGANISATION_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                            $"SELECT {Glo.Tab.ASSET_ID}, " +
+                                   $"{loginID}, " +
+                                   $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                   $"'Organisation ''' + @orgRef + ''' was renamed to '{organisationRef}'.', " +
+                                   $"{organisationRef}, 1 " +
+                            $"FROM assets;");
+            }
+
+            if (organisationRefChanged)
+            {
+                commands.Add($"ALTER TABLE Organisation " +
+                             $"ADD CONSTRAINT fk_ParentOrgRef FOREIGN KEY({Glo.Tab.PARENT_REF}) " +
+                             $"REFERENCES Organisation({Glo.Tab.ORGANISATION_REF});");
+            }
+
+            return SqlAssist.Transaction(commands.ToArray());
         }
     }
 
@@ -788,6 +858,11 @@ namespace SendReceiveClasses
         {
             Prepare();
 
+            // Not allowed under any circumstances.
+            if (assetRef == null || assetRef == "" ||
+                assetRef == "''" || assetRef == "NULL")
+                return "";
+
             string com = SqlAssist.InsertInto("Asset",
                                               SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_REF,
                                                                                   Glo.Tab.ORGANISATION_REF,
@@ -830,6 +905,12 @@ namespace SendReceiveClasses
         public string SqlUpdate(int loginID)
         {
             Prepare();
+
+            // Not allowed under any circumstances.
+            if (assetRefChanged)
+                if (assetRef == null || assetRef == "" ||
+                    assetRef == "''" || assetRef == "NULL")
+                    return "";
 
             List<string> setters = new();
             if (assetRefChanged)
@@ -1642,21 +1723,21 @@ namespace SendReceiveClasses
                                                  "FROM Organisation WHERE " +
                                                 $"{Glo.Tab.ORGANISATION_ID} = {id}); " +
 
-                                 "WITH orgs AS ( SELECT " +
-                                $"{Glo.Tab.ORGANISATION_ID} FROM Organisation " +
-                                $"WHERE {Glo.Tab.PARENT_REF} = @orgRef) " +
-                                $"INSERT INTO OrganisationChange ({Glo.Tab.ORGANISATION_ID}, " +
-                                                                $"{Glo.Tab.LOGIN_ID}, " +
-                                                                $"{Glo.Tab.CHANGE_TIME}, " +
-                                                                $"{Glo.Tab.CHANGE_REASON}, " +
-                                                                $"{Glo.Tab.PARENT_REF}, " +
-                                                                $"{Glo.Tab.PARENT_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
-                                $"SELECT {Glo.Tab.ORGANISATION_ID}, " +
-                                       $"{loginID}, " +
-                                       $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
-                                       $"'Parent organisation ' + @orgRef + ' was deleted.', " +
-                                       $"NULL, 1 " +
-                                 "FROM orgs; ");
+                                  "WITH orgs AS ( SELECT " +
+                                 $"{Glo.Tab.ORGANISATION_ID} FROM Organisation " +
+                                 $"WHERE {Glo.Tab.PARENT_REF} = @orgRef) " +
+                                 $"INSERT INTO OrganisationChange ({Glo.Tab.ORGANISATION_ID}, " +
+                                                                 $"{Glo.Tab.LOGIN_ID}, " +
+                                                                 $"{Glo.Tab.CHANGE_TIME}, " +
+                                                                 $"{Glo.Tab.CHANGE_REASON}, " +
+                                                                 $"{Glo.Tab.PARENT_REF}, " +
+                                                                 $"{Glo.Tab.PARENT_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                                 $"SELECT {Glo.Tab.ORGANISATION_ID}, " +
+                                        $"{loginID}, " +
+                                        $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                        $"'Parent organisation ''' + @orgRef + ''' was deleted.', " +
+                                        $"NULL, 1 " +
+                                  "FROM orgs; ");
                     commands.Add($"UPDATE Organisation SET {Glo.Tab.PARENT_REF} = NULL " +
                                  $"WHERE {Glo.Tab.PARENT_REF} = @orgRef;"
                                  );
@@ -1674,7 +1755,7 @@ namespace SendReceiveClasses
                                 $"SELECT {Glo.Tab.ASSET_ID}, " +
                                        $"{loginID}, " +
                                        $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
-                                       $"'Organisation ' + @orgRef + ' was deleted.', " +
+                                       $"'Organisation ''' + @orgRef + ''' was deleted.', " +
                                        $"NULL, 1 " +
                                 $"FROM assets;");
                 }
