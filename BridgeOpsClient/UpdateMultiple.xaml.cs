@@ -79,7 +79,8 @@ namespace BridgeOpsClient
         {
             columnNames = new();
             foreach (var kvp in columns)
-                if (kvp.Key != idColumn)
+                if (kvp.Key != idColumn && !(table == "Organisation" && kvp.Key == Glo.Tab.ORGANISATION_REF) &&
+                                           !(table == "Asset" && kvp.Key == Glo.Tab.ASSET_REF))
                     columnNames.Add(ColumnRecord.GetPrintName(kvp));
         }
 
