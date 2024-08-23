@@ -14,7 +14,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <TextBox Grid.Row="0" Grid.ColumnSpan="2" x:Name="txtReason"
-                     Width="300" Height="100" Margin="10"/>
+                     Width="300" Height="100" Margin="10" AcceptsReturn="True"/>
             <Button Grid.Row="1" x:Name="btnSubmit" Content="Submit" Margin="10 0 10 10" Width="60"
                     Click="btnSubmit_Click"/>
         </Grid>
