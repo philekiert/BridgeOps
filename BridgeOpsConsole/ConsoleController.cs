@@ -760,7 +760,7 @@ public class ConsoleController
             {
                 // Make data safe for CSV file again.
                 for (int i = 0; i < line.Count; ++i)
-                    if (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n'))
+                    if (line[i] != null && (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n')))
                         line[i] = "\"" + line[i].Replace("\"", "\"\"") + "\"";
                 File.AppendAllText(errorFileName, string.Join(',', line) + "\n");
             }
@@ -873,6 +873,9 @@ public class ConsoleController
                         row[i] = row[i].Replace("'", "''");
                 }
 
+                if (row[parentIndex] == "NULL")
+                    continue;
+
                 // Create a transaction for the inserts into the main and change tables.
                 StringBuilder bldr = new StringBuilder("BEGIN TRANSACTION; BEGIN TRY ");
                 string primaryKey = table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID;
@@ -893,7 +896,7 @@ public class ConsoleController
                                    $"{row[parentIndex]}, " +
                                    $"1, " + // Switch on the register.
                                    $"1, " + // Admin account should always be 1 after database creation.
-                                   $"'Set parent to imported value, ''{row[parentIndex]}''.', " +
+                                   $"'Set parent to imported value, '{row[parentIndex]}'.', " +
                                    $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}'); ");
                 bldr.Append("COMMIT TRANSACTION; END TRY BEGIN CATCH ROLLBACK TRANSACTION; THROW; END CATCH;");
 
