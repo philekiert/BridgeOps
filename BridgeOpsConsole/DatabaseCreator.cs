@@ -506,6 +506,10 @@ public class DatabaseCreator
             //Writer.Message("Creating Conference Resource junction table...");
             //SendCommandSQL(junctionConfResource);
 
+            Writer.Message("\nCreating index on organisation and asset reference columns...");
+            SendCommandSQL($"CREATE UNIQUE INDEX index_orgRef ON Organisation ({Glo.Tab.ORGANISATION_REF});");
+            SendCommandSQL($"CREATE UNIQUE INDEX index_assetRef ON Asset ({Glo.Tab.ASSET_REF});");
+
             Writer.Message("\nApplying column additions...");
             foreach (ColumnAddition addition in columnAdditions)
             {

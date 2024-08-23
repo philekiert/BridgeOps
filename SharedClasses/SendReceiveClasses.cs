@@ -130,7 +130,6 @@ namespace SendReceiveClasses
                                                                           TokenImpersonationLevel.Impersonation);
         }
 
-        // Only use this if you don't need to do stuff with the client afterwards.
         public NetworkStream? NewClientNetworkStream(IPEndPoint ep)
         {
             try
@@ -138,7 +137,7 @@ namespace SendReceiveClasses
                 TcpClient client = new TcpClient();
                 client.Connect(ep);
                 NetworkStream stream = client.GetStream();
-                stream.ReadTimeout = 5000;
+                stream.ReadTimeout = 30000;
                 return stream;
             }
             catch
@@ -1649,7 +1648,9 @@ namespace SendReceiveClasses
                 for (int i = 0; i < count; ++i)
                     values.Add("1");
 
-
+                // I tried this all in one command together using INSERT INTO / SELECT / FROM, but there was literally
+                // no speed increase with 24,000-odd records. I'll leave it like this as I feel like it's slightly
+                // more readable.
                 foreach (string id in ids)
                     commands.Add($"INSERT INTO {table}Change ({idColumn}, " +
                                                             $"{Glo.Tab.CHANGE_TIME}, " +
@@ -1710,55 +1711,58 @@ namespace SendReceiveClasses
             // for any referencing assets or organisations.
             if (table == "Organisation")
             {
-                // Has to be declared here as it can only be declared once.
-                commands.Add($"DECLARE @orgRef VARCHAR(MAX)");
+                StringBuilder idList = new();
+                foreach (string? s in ids)
+                    if (s != null)
+                        idList.Append(s + ", ");
+                // Remove the last ", "
+                idList.Remove(idList.Length - 2, 2);
 
-                foreach (string? id in ids)
-                {
-                    if (id == null)
-                        continue;
+                // Update affected organisations.
+                commands.Add($"WITH orgs AS ( SELECT " +
+                             $"{Glo.Tab.ORGANISATION_ID}, {Glo.Tab.PARENT_REF} FROM Organisation " +
+                             $"WHERE {Glo.Tab.PARENT_REF} IN ( "+
+                                 $"SELECT {Glo.Tab.ORGANISATION_REF} " +
+                                 $"FROM Organisation " +
+                                 $"WHERE {Glo.Tab.ORGANISATION_ID} IN ({idList}))) " +
+                             $"INSERT INTO OrganisationChange ({Glo.Tab.ORGANISATION_ID}, " +
+                                                             $"{Glo.Tab.LOGIN_ID}, " +
+                                                             $"{Glo.Tab.CHANGE_TIME}, " +
+                                                             $"{Glo.Tab.CHANGE_REASON}, " +
+                                                             $"{Glo.Tab.PARENT_REF}, " +
+                                                             $"{Glo.Tab.PARENT_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                             $"SELECT {Glo.Tab.ORGANISATION_ID}, " +
+                                    $"{loginID}, " +
+                                    $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                    $"'Parent organisation ''' + {Glo.Tab.PARENT_REF} + ''' was deleted.', " +
+                                    $"NULL, 1 " +
+                              "FROM orgs; ");
+                commands.Add($"UPDATE Organisation SET {Glo.Tab.PARENT_REF} = NULL " +
+                             $"WHERE {Glo.Tab.PARENT_REF} IN ( "+
+                                 $"SELECT {Glo.Tab.ORGANISATION_REF} " +
+                                 $"FROM Organisation " +
+                                 $"WHERE {Glo.Tab.ORGANISATION_ID} IN ({idList}));"
+                             );
 
-                    // Affected organisations.
-                    commands.Add($"SET @orgRef = (SELECT TOP 1 {Glo.Tab.ORGANISATION_REF} " +
-                                                 "FROM Organisation WHERE " +
-                                                $"{Glo.Tab.ORGANISATION_ID} = {id}); " +
-
-                                  "WITH orgs AS ( SELECT " +
-                                 $"{Glo.Tab.ORGANISATION_ID} FROM Organisation " +
-                                 $"WHERE {Glo.Tab.PARENT_REF} = @orgRef) " +
-                                 $"INSERT INTO OrganisationChange ({Glo.Tab.ORGANISATION_ID}, " +
-                                                                 $"{Glo.Tab.LOGIN_ID}, " +
-                                                                 $"{Glo.Tab.CHANGE_TIME}, " +
-                                                                 $"{Glo.Tab.CHANGE_REASON}, " +
-                                                                 $"{Glo.Tab.PARENT_REF}, " +
-                                                                 $"{Glo.Tab.PARENT_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
-                                 $"SELECT {Glo.Tab.ORGANISATION_ID}, " +
-                                        $"{loginID}, " +
-                                        $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
-                                        $"'Parent organisation ''' + @orgRef + ''' was deleted.', " +
-                                        $"NULL, 1 " +
-                                  "FROM orgs; ");
-                    commands.Add($"UPDATE Organisation SET {Glo.Tab.PARENT_REF} = NULL " +
-                                 $"WHERE {Glo.Tab.PARENT_REF} = @orgRef;"
-                                 );
-
-                    // Affected assets.
-                    commands.Add("WITH assets AS ( SELECT " +
-                                $"{Glo.Tab.ASSET_ID} FROM Asset " +
-                                $"WHERE {Glo.Tab.ORGANISATION_REF} = @orgRef) " +
-                                $"INSERT INTO AssetChange ({Glo.Tab.ASSET_ID}, " +
-                                                         $"{Glo.Tab.LOGIN_ID}, " +
-                                                         $"{Glo.Tab.CHANGE_TIME}, " +
-                                                         $"{Glo.Tab.CHANGE_REASON}, " +
-                                                         $"{Glo.Tab.ORGANISATION_REF}, " +
-                                                         $"{Glo.Tab.ORGANISATION_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
-                                $"SELECT {Glo.Tab.ASSET_ID}, " +
-                                       $"{loginID}, " +
-                                       $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
-                                       $"'Organisation ''' + @orgRef + ''' was deleted.', " +
-                                       $"NULL, 1 " +
-                                $"FROM assets;");
-                }
+                // Affected assets.
+                commands.Add("WITH assets AS ( SELECT " +
+                            $"{Glo.Tab.ASSET_ID}, {Glo.Tab.ORGANISATION_REF} FROM Asset " +
+                            $"WHERE {Glo.Tab.ORGANISATION_REF} IN (" +
+                                 $"SELECT {Glo.Tab.ORGANISATION_REF} " +
+                                 $"FROM Organisation " +
+                                 $"WHERE {Glo.Tab.ORGANISATION_ID} IN ({idList}))) " +
+                            $"INSERT INTO AssetChange ({Glo.Tab.ASSET_ID}, " +
+                                                     $"{Glo.Tab.LOGIN_ID}, " +
+                                                     $"{Glo.Tab.CHANGE_TIME}, " +
+                                                     $"{Glo.Tab.CHANGE_REASON}, " +
+                                                     $"{Glo.Tab.ORGANISATION_REF}, " +
+                                                     $"{Glo.Tab.ORGANISATION_REF}{Glo.Tab.CHANGE_SUFFIX}) " +
+                            $"SELECT {Glo.Tab.ASSET_ID}, " +
+                                   $"{loginID}, " +
+                                   $"'{SqlAssist.DateTimeToSQL(DateTime.Now, false)}', " +
+                                   $"'Organisation ''' + {Glo.Tab.ORGANISATION_REF} + ''' was deleted.', " +
+                                   $"NULL, 1 " +
+                            $"FROM assets;");
             }
 
             // Actually delete the record.
@@ -2194,5 +2198,10 @@ namespace SendReceiveClasses
         {
             return timeSpan.ToString(@"dd\.hh\:mm");
         }
+
+        public static string RebuildOrganisationRefIndex
+        { get { return "ALTER INDEX index_orgRef ON Organisation REBUILD"; } }
+        public static string RebuildAssetRefIndex
+        { get { return "ALTER INDEX index_assetRef ON Asset REBUILD"; } }
     }
 }

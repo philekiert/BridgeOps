@@ -509,6 +509,14 @@ internal class BridgeOpsAgent
         }
     }
 
+    private static void RebuildIndices(SqlConnection sqlConnect)
+    {
+        // Rebuild table indices, now's as good a time as any (and better than most).
+        SqlCommand com = new SqlCommand(SqlAssist.RebuildOrganisationRefIndex + " " + SqlAssist.RebuildAssetRefIndex,
+                                        sqlConnect);
+        com.ExecuteNonQuery();
+    }
+
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string sqlServerName = Glo.SQL_SERVER_NAME_DEFAULT;
     private static string ConnectionString
@@ -550,20 +558,26 @@ internal class BridgeOpsAgent
             try
             {
                 sqlConnect.Open();
-                // Send a pointless but minimal query just to make sure we have a working connection.
-                SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 Username FROM Login;", sqlConnect);
-                sqlCommand.ExecuteNonQuery();
+                // REDUNTANT: Send a pointless but minimal query just to make sure we have a working connection.
+                //SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 Username FROM Login;", sqlConnect);
+
+                // Rebuild table indices, now's as good a time as any (and better than most). Also doubles up as a
+                // quick SQL connection test.
+                RebuildIndices(sqlConnect);
                 // If we got this far in the try/catch, we're in business.
                 successfulSqlConnection = true;
 
                 // Catches its own exception and logs its own error.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
+                if (!columnRecordIntact)
+                    LogError("Couldn't rebuild the column record, retry in 5 seconds.");
                 columnRecordIntact = ParseColumnRecord(false);
+                if (!columnRecordIntact)
+                    LogError("Couldn't parse the newly built column record, retry in 5 seconds.");
             }
             catch (Exception e)
             {
                 LogError("Couldn't interact with database, retry in 5 seconds. See error:", e);
-                Thread.Sleep(5_000); // Wait 5 seconds for the next retry.
             }
             finally
             {
@@ -1430,7 +1444,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-
+    
     private static void ClientSelect(NetworkStream stream, SqlConnection sqlConnect)
     {
         // This function does not support historical searches.
@@ -1727,6 +1741,10 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand(req.SqlDelete(), sqlConnect);
 
+            // Organisation deletions can be really heavy if a lot of assets will be affected and the deletion count
+            // is upwards of 1000.
+            if (req.table == "Organisation" && req.ids.Count > 1000)
+                com.CommandTimeout = 180;
             if (com.ExecuteNonQuery() == 0)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
             else
