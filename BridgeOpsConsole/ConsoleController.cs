@@ -206,9 +206,12 @@ public class ConsoleController
 
     public int ProcessCommand(string command)
     {
-        if (commandDefs.ContainsKey(command) && (commandDefs[command].menu == currentMenu ||
-            commandDefs[command].menu == MENU_GLOBAL) && commandDefs[command].valType == ValType.None)
-            return commandDefs[command].method();
+        if (commandDefs.ContainsKey(command))
+        {
+            if ((commandDefs[command].menu == currentMenu || commandDefs[command].menu == MENU_GLOBAL) &&
+                commandDefs[command].valType == ValType.None)
+                return commandDefs[command].method();
+        }
         else // Split up command to see if it's a command that takes a value.
         {
             int valueStart = command.LastIndexOf(' ') + 1;
@@ -948,7 +951,7 @@ public class ConsoleController
             {
                 // Make data safe for CSV file again.
                 for (int i = 0; i < line.Count; ++i)
-                    if (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n'))
+                    if (line[i] != null && (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n')))
                         line[i] = "\"" + line[i].Replace("\"", "\"\"") + "\"";
                 File.AppendAllText(errorFileName, string.Join(',', line) + "\n");
             }
