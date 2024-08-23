@@ -36,8 +36,9 @@ namespace BridgeOpsClient
                 btnEdit.IsEnabled = false;
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
                 btnDelete.IsEnabled = false;
-            if (App.sd.admin)
-                btnCorrectReason.IsEnabled = true;
+
+            btnCorrectReason.IsEnabled = App.sd.admin;
+            txtAssetRef.IsEnabled = App.sd.admin || !edit;
         }
 
         public NewAsset()
@@ -145,6 +146,7 @@ namespace BridgeOpsClient
                 foreach (List<object?> row in rows)
                     if (row[2] == null)
                         row[2] = "[deleted]";
+                dtgChangeLog.maxLengthOverrides = new Dictionary<string, int> { { "Reason", -1 } };
                 dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
                                    { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows,
                                    Glo.Tab.CHANGE_ID);

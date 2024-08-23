@@ -1551,6 +1551,9 @@ internal class BridgeOpsAgent
                 if (target == Glo.CLIENT_UPDATE_ORGANISATION)
                 {
                     Organisation update = sr.Deserialise<Organisation>(sr.ReadString(stream));
+                    // If the organisation reference is being changed, reject if not admin off the bat.
+                    if (update.organisationRefChanged)
+                        permission = clientSessions[update.sessionID].admin;
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
@@ -1559,6 +1562,9 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_UPDATE_ASSET)
                 {
                     Asset update = sr.Deserialise<Asset>(sr.ReadString(stream));
+                    // If the asset reference is being changed, reject if not admin off the bat.
+                    if (update.assetRefChanged)
+                        permission = clientSessions[update.sessionID].admin;
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))

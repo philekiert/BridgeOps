@@ -46,8 +46,9 @@ namespace BridgeOpsClient
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
                 btnDelete.IsEnabled = false;
-            if (App.sd.admin)
-                btnCorrectReason.IsEnabled = true;
+
+            btnCorrectReason.IsEnabled = App.sd.admin;
+            txtOrgRef.IsEnabled = App.sd.admin || !edit;
         }
 
         public NewOrganisation() // New organisation.
@@ -202,6 +203,7 @@ namespace BridgeOpsClient
                 foreach (List<object?> row in rows)
                     if (row[2] == null)
                         row[2] = "[Deleted]";
+                dtgChangeLog.maxLengthOverrides = new Dictionary<string, int> { { "Reason", -1 } };
                 dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
                                     { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
                                     Glo.Tab.CHANGE_ID);
