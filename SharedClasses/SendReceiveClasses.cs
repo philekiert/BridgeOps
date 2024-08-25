@@ -521,6 +521,14 @@ namespace SendReceiveClasses
         public List<int> contactOrder = new();
         public List<int> conferenceOrder = new();
 
+        public struct Header
+        {
+            public int position;
+            public string name;
+
+            public Header(int position, string name) { this.position = position; this.name = name; }
+        }
+
         public ColumnOrdering(string sessionID, int columnRecordID, List<int> organisationOrder,
                                                                     List<int> assetOrder,
                                                                     List<int> contactOrder,

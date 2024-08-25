@@ -31,22 +31,21 @@ namespace BridgeOpsClient
         class Entry
         {
             public int index;
-            public int orderIndex;
+            public int displayIndex;
             public string name;
             public string Name { get { return name; } }
             public enum Kind { column, header, integral }
             public Kind kind;
             public bool Greyed { get { return kind == Kind.integral; } }
             public bool Bold { get { return kind == Kind.header; } }
-            public Entry(int index, int orderIndex, string name, Kind kind)
+            public Entry(int index, int displayIndex, string name, Kind kind)
             {
                 this.index = index;
-                this.orderIndex = orderIndex;
+                this.displayIndex = displayIndex;
                 this.name = name;
                 this.kind = kind;
             }
         }
-
         // 0: Organisation
         // 1: Asset
         // 2: Contact
@@ -104,8 +103,8 @@ namespace BridgeOpsClient
                     ++i;
                 }
 
-                entryLists[n] = entryLists[n].OrderBy(e => e.orderIndex).ToList();
-                entryListOriginals[n] = entryListOriginals[n].OrderBy(e => e.orderIndex).ToList();
+                entryLists[n] = entryLists[n].OrderBy(e => e.displayIndex).ToList();
+                entryListOriginals[n] = entryListOriginals[n].OrderBy(e => e.displayIndex).ToList();
             }
         }
 
@@ -159,8 +158,9 @@ namespace BridgeOpsClient
 
             // Update each entry's ordered index.
             for (int i = 0; i < entries.Count; ++i)
-                (entries[i]).orderIndex = i;
+                (entries[i]).displayIndex = i;
 
+            ReapplyIndices();
             QuickRefreshList();
 
             // Reselect
@@ -170,7 +170,7 @@ namespace BridgeOpsClient
             // Mark the table in bold if changes have been made.
             bool changed = false;
             for (int i = 0; i < entriesOriginal.Count && i < entries.Count; ++i)
-                if (entries[i].orderIndex != entriesOriginal[i].orderIndex ||
+                if (entries[i].displayIndex != entriesOriginal[i].displayIndex ||
                     entries[i].name != entriesOriginal[i].name)
                 {
                     ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Bold;
@@ -267,6 +267,58 @@ namespace BridgeOpsClient
             // Legal values are checked rigorously by the agent, so we don't need to worry so much about that here.
             // The button will also not be enabled if there have been no changes.
 
+            // Start by assembling the lists of orderings and headers.
+
+            List<int> organisationOrder = new();
+            List<int> assetOrder = new();
+            List<int> contactOrder = new();
+            List<int> conferenceOrder = new();
+
+            List<SendReceiveClasses.ColumnOrdering.Header> organisationHeaders = new();
+            List<SendReceiveClasses.ColumnOrdering.Header> assetHeaders = new();
+            List<SendReceiveClasses.ColumnOrdering.Header> contactHeaders = new();
+            List<SendReceiveClasses.ColumnOrdering.Header> conferenceHeaders = new();
+
+            for (int n = 0; n < 4; ++n)
+            {
+                List<int> order;
+                List<SendReceiveClasses.ColumnOrdering.Header> headers;
+                if (n == 0)
+                {
+                    order = organisationOrder;
+                    headers = organisationHeaders;
+                }
+                else if (n == 1)
+                {
+                    order = assetOrder;
+                    headers = assetHeaders;
+                }
+                else if (n == 2)
+                {
+                    order = contactOrder;
+                    headers = contactHeaders;
+                }
+                else // if 3
+                {
+                    order = conferenceOrder;
+                    headers = conferenceHeaders;
+                }
+
+                int i = 0;
+                int headersFound = 0; // Used as a modifier to make sure we're referencing correct indices.
+                foreach (Entry entry in entryLists[n])
+                {
+                    if (entry.kind == Entry.Kind.header)
+                    {
+                        headers.Add(new(entry.displayIndex - headersFound, entry.name));
+                        ++headersFound;
+                    }
+                    else
+                        order.Add(entry.index); // orderIndex has been calculated ignoring headers.
+                    ++i;
+                }
+            }
+
             lock (App.streamLock)
             {
                 NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
@@ -274,16 +326,16 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        //stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
+                        stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
 
-                        //SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
-                        //                                                    ColumnRecord.columnRecordID,
-                        //                                                    organisationOrder,
-                        //                                                    assetOrder,
-                        //                                                    contactOrder,
-                        //                                                    conferenceOrder);
+                        SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
+                                                                            ColumnRecord.columnRecordID,
+                                                                            organisationOrder,
+                                                                            assetOrder,
+                                                                            contactOrder,
+                                                                            conferenceOrder);
 
-                        //App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
+                        App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
@@ -325,6 +377,7 @@ namespace BridgeOpsClient
         {
             Entry newColumn = new(entries.Count, entries.Count, "New Column", Entry.Kind.header);
             entries.Add(newColumn);
+            ReapplyIndices();
             QuickRefreshList();
             lstColumns.SelectedItem = newColumn;
             lstColumns.ScrollIntoView(newColumn);
@@ -342,7 +395,7 @@ namespace BridgeOpsClient
             ReorderColumnsRenameHeader renameHeader = new(entry.name);
             if (renameHeader.ShowDialog() == false)
                 return;
-            entries[entry.orderIndex].name = renameHeader.name;
+            entries[entry.displayIndex].name = renameHeader.name;
             QuickRefreshList();
             lstColumns.SelectedItem = entry;
         }
@@ -350,9 +403,7 @@ namespace BridgeOpsClient
         private void ReapplyIndices()
         {
             for (int i = 0; i < entries.Count; ++i)
-            {
-                entries[i].orderIndex = i;
-            }
+                entries[i].displayIndex = i;
         }
 
         private void QuickRefreshList()
