@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -19,36 +20,93 @@ namespace BridgeOpsClient
     {
         public ReorderColumns()
         {
-            GetColumnOrders();
             InitializeComponent();
 
+            GetEntryLists();
             ChangeTable();
 
             cmbTable.Focus();
         }
 
-        // Use our own order lists here to allow for recall when switching between tables.
-        List<int> organisationOrder = new();
-        List<int> assetOrder = new();
-        List<int> contactOrder = new();
-        List<int> conferenceOrder = new();
+        class Entry
+        {
+            public int index;
+            public int orderIndex;
+            public string name;
+            public string Name { get { return name; } }
+            public enum Kind { column, header, integral }
+            public Kind kind;
+            public bool Greyed { get { return kind == Kind.integral; } }
+            public bool Bold { get { return kind == Kind.header; } }
+            public Entry(int index, int orderIndex, string name, Kind kind)
+            {
+                this.index = index;
+                this.orderIndex = orderIndex;
+                this.name = name;
+                this.kind = kind;
+            }
+        }
 
-        List<int> order = new();
-        List<int> orderComparison = new();
+        // 0: Organisation
+        // 1: Asset
+        // 2: Contact
+        // 3: Conference
+        List<Entry>[] entryLists = new List<Entry>[4];
+        List<Entry>[] entryListOriginals = new List<Entry>[4];
+        List<Entry> entries = new();
+        List<Entry> entriesOriginal = new();
 
         int upperLimit = 0;
         int lowerLimit = 0;
 
-        private void GetColumnOrders()
+        private void GetEntryLists()
         {
-            organisationOrder.Clear();
-            assetOrder.Clear();
-            contactOrder.Clear();
-            conferenceOrder.Clear();
-            organisationOrder.AddRange(ColumnRecord.organisationOrder);
-            assetOrder.AddRange(ColumnRecord.assetOrder);
-            contactOrder.AddRange(ColumnRecord.contactOrder);
-            conferenceOrder.AddRange(ColumnRecord.conferenceOrder);
+            for (int i = 0; i < entryLists.Length; ++i)
+            {
+                entryLists[i] = new();
+                entryListOriginals[i] = new();
+            }
+
+            Dictionary<string, ColumnRecord.Column> dictionary;
+            List<int> order;
+            for (int n = 0; n < 4; ++n)
+            {
+                if (n == 0)
+                {
+                    dictionary = ColumnRecord.organisation;
+                    order = ColumnRecord.organisationOrder;
+                }
+                else if (n == 1)
+                {
+                    dictionary = ColumnRecord.asset;
+                    order = ColumnRecord.assetOrder;
+                }
+                else if (n == 2)
+                {
+                    dictionary = ColumnRecord.contact;
+                    order = ColumnRecord.contactOrder;
+                }
+                else // if 3
+                {
+                    dictionary = ColumnRecord.conference;
+                    order = ColumnRecord.conferenceOrder;
+                }
+
+                string[] table = new string[] { "Organisation", "Asset", "Contact", "Conference" };
+                int i = 0;
+                foreach (KeyValuePair<string, ColumnRecord.Column> kvp in dictionary)
+                {
+                    string printName = ColumnRecord.GetPrintName(kvp);
+                    Entry.Kind type = Glo.Fun.ColumnRemovalAllowed(table[n], kvp.Key) ? Entry.Kind.column :
+                                                                                        Entry.Kind.integral;
+                    entryLists[n].Add(new Entry(i, order[i], printName, type));
+                    entryListOriginals[n].Add(new Entry(i, order[i], printName, type));
+                    ++i;
+                }
+
+                entryLists[n] = entryLists[n].OrderBy(e => e.orderIndex).ToList();
+                entryListOriginals[n] = entryListOriginals[n].OrderBy(e => e.orderIndex).ToList();
+            }
         }
 
         private void ChangeTable()
@@ -56,66 +114,19 @@ namespace BridgeOpsClient
             if (lstColumns == null)
                 return;
 
-            lstColumns.Items.Clear();
+            entries = entryLists[cmbTable.SelectedIndex];
+            entriesOriginal = entryListOriginals[cmbTable.SelectedIndex];
 
-            string table;
-            Dictionary<string, ColumnRecord.Column> dictionary;
+            lstColumns.ItemsSource = entries;
 
             if (cmbTable.SelectedIndex == 0)
-            {
-                table = "Organisation";
-                dictionary = ColumnRecord.organisation;
                 lowerLimit = Glo.Tab.ORGANISATION_STATIC_COUNT;
-                order = organisationOrder;
-                orderComparison = ColumnRecord.organisationOrder;
-            }
             else if (cmbTable.SelectedIndex == 1)
-            {
-                table = "Asset";
-                dictionary = ColumnRecord.asset;
                 lowerLimit = Glo.Tab.ASSET_STATIC_COUNT;
-                order = assetOrder;
-                orderComparison = ColumnRecord.assetOrder;
-            }
             else if (cmbTable.SelectedIndex == 2)
-            {
-                table = "Contact";
-                dictionary = ColumnRecord.contact;
                 lowerLimit = Glo.Tab.CONTACT_STATIC_COUNT;
-                order = contactOrder;
-                orderComparison = ColumnRecord.contactOrder;
-            }
-            else
-            {
-                table = "Conference";
-                dictionary = ColumnRecord.conference;
+            else // if 4
                 lowerLimit = Glo.Tab.CONFERENCE_STATIC_COUNT;
-                order = conferenceOrder;
-                orderComparison = ColumnRecord.conferenceOrder;
-            }
-
-            List<object> columnNames = new();
-            foreach (KeyValuePair<string, ColumnRecord.Column> kvp in dictionary)
-            {
-                ListViewItem item = new();
-                item.Content = ColumnRecord.GetPrintName(kvp);
-                if (!Glo.Fun.ColumnRemovalAllowed(table, kvp.Key))
-                    item.Foreground = Brushes.Gray;
-                columnNames.Add(item);
-            }
-
-            if (order.Count != columnNames.Count)
-            {
-                MessageBox.Show("The column record appears to be corrupted, as the column and order lists are of" +
-                                " different lengths. Logging out, please log in again.");
-                App.SessionInvalidated();
-                Close();
-                return;
-            }
-
-            // Add the column names in the correct order.
-            foreach (int i in order)
-                lstColumns.Items.Add(columnNames[i]);
 
             upperLimit = lstColumns.Items.Count - 1;
         }
@@ -125,55 +136,42 @@ namespace BridgeOpsClient
 
         private void MoveItem(bool down)
         {
-            updatingSelection = true;
+            List<Entry> selectedItems = new();
+            foreach (Entry entry in lstColumns.SelectedItems)
+                selectedItems.Add(entry);
 
-            List<int> indices = OrderListIndices();
-
-            if (indices.Count == 0)
+            if (selectedItems.Count == 0)
                 return;
 
-            int selectedIndexStart = indices[0];
-            int selectedLength = indices.Count;
+            List<int> selectedIndices = SelectedIndices();
+            int start = selectedIndices[0];
+            int length = selectedIndices.Count;
 
-            if ((!down && selectedIndexStart <= lowerLimit) ||
-                (down && selectedIndexStart + (selectedLength - 1) >= upperLimit))
+            if (down && start + length > upperLimit)
+                return;
+            else if (!down && start == lowerLimit)
                 return;
 
-            List<object> items = new();
-            // We need to add them in order, as SelectedItems' order is not guaranteed.
-            foreach (object item in lstColumns.Items)
-                if (lstColumns.SelectedItems.Contains(item))
-                    items.Add(item);
+            // Displace the item either above or below the set. The user's selection is restricted to contiguous items.
+            Entry e = entries[down ? start + length : start - 1];
+            entries.RemoveAt(down ? start + length : start - 1);
+            entries.Insert(down ? start : start + length - 1, e);
 
-            lstColumns.SelectedItems.Clear();
+            // Update each entry's ordered index.
+            for (int i = 0; i < entries.Count; ++i)
+                (entries[i]).orderIndex = i;
 
-            int selectionLength = items.Count;
+            QuickRefreshList();
 
-            List<int> orderRange = new();
-
-            for (int i = 0; i < selectionLength; ++i)
-            {
-                lstColumns.Items.RemoveAt(selectedIndexStart);
-                orderRange.Add(order[selectedIndexStart]);
-                order.RemoveAt(selectedIndexStart);
-            }
-            selectedIndexStart += down ? 1 : -1;
-            for (int i = 0; i < selectedLength; ++i)
-            {
-                lstColumns.Items.Insert(selectedIndexStart + i, items[i]);
-                order.Insert(selectedIndexStart + i, orderRange[i]);
-            }
-
-            updatingSelection = false;
-
-            foreach (object s in items)
-                lstColumns.SelectedItems.Add(s);
+            // Reselect
+            for (int i = 0; i < selectedIndices.Count; ++i)
+                lstColumns.SelectedItems.Add(lstColumns.Items[selectedIndices[i] + (down ? 1 : -1)]);
 
             // Mark the table in bold if changes have been made.
-
             bool changed = false;
-            for (int i = 0; i < order.Count; ++i)
-                if (order[i] != orderComparison[i])
+            for (int i = 0; i < entriesOriginal.Count && i < entries.Count; ++i)
+                if (entries[i].orderIndex != entriesOriginal[i].orderIndex ||
+                    entries[i].name != entriesOriginal[i].name)
                 {
                     ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Bold;
                     cmbTable.FontWeight = FontWeights.Bold;
@@ -203,7 +201,7 @@ namespace BridgeOpsClient
         {
             if (!updatingSelection)
             {
-                List<int> indices = OrderListIndices();
+                List<int> indices = SelectedIndices();
 
                 if (lstColumns.SelectedItems.Count > 1)
                 {
@@ -234,9 +232,20 @@ namespace BridgeOpsClient
                 foreach (object o in lstColumns.SelectedItems)
                     lastSelection.Add(o);
             }
+
+            // Enable/disable the header remove button.
+            bool allheaders = true;
+            if (lstColumns.SelectedItems.Count > 0)
+                foreach (Entry entry in lstColumns.SelectedItems)
+                    if (entry.kind != Entry.Kind.header)
+                    {
+                        allheaders = false;
+                        break;
+                    }
+            btnRemoveHeader.IsEnabled = allheaders;
         }
 
-        private List<int> OrderListIndices()
+        private List<int> SelectedIndices()
         {
             List<int> indices = new();
             foreach (object o in lstColumns.SelectedItems)
@@ -265,16 +274,16 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
+                        //stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
 
-                        SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
-                                                                            ColumnRecord.columnRecordID,
-                                                                            organisationOrder,
-                                                                            assetOrder,
-                                                                            contactOrder,
-                                                                            conferenceOrder);
+                        //SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
+                        //                                                    ColumnRecord.columnRecordID,
+                        //                                                    organisationOrder,
+                        //                                                    assetOrder,
+                        //                                                    contactOrder,
+                        //                                                    conferenceOrder);
 
-                        App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
+                        //App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
@@ -310,6 +319,59 @@ namespace BridgeOpsClient
                     if (stream != null) stream.Close();
                 }
             }
+        }
+
+        private void btnAddHeader_Click(object sender, RoutedEventArgs e)
+        {
+            Entry newColumn = new(entries.Count, entries.Count, "New Column", Entry.Kind.header);
+            entries.Add(newColumn);
+            QuickRefreshList();
+            lstColumns.SelectedItem = newColumn;
+            lstColumns.ScrollIntoView(newColumn);
+        }
+
+        private void lstColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (lstColumns.SelectedItems.Count != 1)
+                return;
+            if (((Entry)lstColumns.SelectedItem).kind != Entry.Kind.header)
+                return;
+
+            Entry entry = (Entry)lstColumns.SelectedItem;
+
+            ReorderColumnsRenameHeader renameHeader = new(entry.name);
+            if (renameHeader.ShowDialog() == false)
+                return;
+            entries[entry.orderIndex].name = renameHeader.name;
+            QuickRefreshList();
+            lstColumns.SelectedItem = entry;
+        }
+
+        private void ReapplyIndices()
+        {
+            for (int i = 0; i < entries.Count; ++i)
+            {
+                entries[i].orderIndex = i;
+            }
+        }
+
+        private void QuickRefreshList()
+        {
+            lstColumns.ItemsSource = null;
+            lstColumns.ItemsSource = entries;
+        }
+
+        private void btnRemoveHeader_Click(object sender, RoutedEventArgs e)
+        {
+            if (lstColumns.SelectedItems.Count == 0)
+                return;
+
+            List<Entry> selected = lstColumns.SelectedItems.Cast<Entry>().ToList();
+            foreach (Entry entry in selected)
+                entries.Remove(entry);
+
+            ReapplyIndices();
+            QuickRefreshList();
         }
     }
 }

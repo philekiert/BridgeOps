@@ -24,7 +24,6 @@ namespace BridgeOpsClient
     {
         bool edit = false;
         int id;
-        int idInt;
         string? originalRef = "";
         string? originalParent = "";
         string? originalDialNo = "";
