@@ -33,6 +33,9 @@ namespace BridgeOpsClient
         List<int> contactOrder = new();
         List<int> conferenceOrder = new();
 
+        List<int> order = new();
+        List<int> orderComparison = new();
+
         int upperLimit = 0;
         int lowerLimit = 0;
 
@@ -56,7 +59,6 @@ namespace BridgeOpsClient
             lstColumns.Items.Clear();
 
             string table;
-            List<int> order;
             Dictionary<string, ColumnRecord.Column> dictionary;
 
             if (cmbTable.SelectedIndex == 0)
@@ -65,6 +67,7 @@ namespace BridgeOpsClient
                 dictionary = ColumnRecord.organisation;
                 lowerLimit = Glo.Tab.ORGANISATION_STATIC_COUNT;
                 order = organisationOrder;
+                orderComparison = ColumnRecord.organisationOrder;
             }
             else if (cmbTable.SelectedIndex == 1)
             {
@@ -72,6 +75,7 @@ namespace BridgeOpsClient
                 dictionary = ColumnRecord.asset;
                 lowerLimit = Glo.Tab.ASSET_STATIC_COUNT;
                 order = assetOrder;
+                orderComparison = ColumnRecord.assetOrder;
             }
             else if (cmbTable.SelectedIndex == 2)
             {
@@ -79,6 +83,7 @@ namespace BridgeOpsClient
                 dictionary = ColumnRecord.contact;
                 lowerLimit = Glo.Tab.CONTACT_STATIC_COUNT;
                 order = contactOrder;
+                orderComparison = ColumnRecord.contactOrder;
             }
             else
             {
@@ -86,6 +91,7 @@ namespace BridgeOpsClient
                 dictionary = ColumnRecord.conference;
                 lowerLimit = Glo.Tab.CONFERENCE_STATIC_COUNT;
                 order = conferenceOrder;
+                orderComparison = ColumnRecord.conferenceOrder;
             }
 
             List<object> columnNames = new();
@@ -148,39 +154,14 @@ namespace BridgeOpsClient
             for (int i = 0; i < selectionLength; ++i)
             {
                 lstColumns.Items.RemoveAt(selectedIndexStart);
-                if (cmbTable.Text == "Organisation")
-                {
-                    orderRange.Add(organisationOrder[selectedIndexStart]);
-                    organisationOrder.RemoveAt(selectedIndexStart);
-                }
-                else if (cmbTable.Text == "Asset")
-                {
-                    orderRange.Add(assetOrder[selectedIndexStart]);
-                    assetOrder.RemoveAt(selectedIndexStart);
-                }
-                else if (cmbTable.Text == "Contact")
-                {
-                    orderRange.Add(contactOrder[selectedIndexStart]);
-                    contactOrder.RemoveAt(selectedIndexStart);
-                }
-                else if (cmbTable.Text == "Conference")
-                {
-                    orderRange.Add(conferenceOrder[selectedIndexStart]);
-                    conferenceOrder.RemoveAt(selectedIndexStart);
-                }
+                orderRange.Add(order[selectedIndexStart]);
+                order.RemoveAt(selectedIndexStart);
             }
             selectedIndexStart += down ? 1 : -1;
             for (int i = 0; i < selectedLength; ++i)
             {
                 lstColumns.Items.Insert(selectedIndexStart + i, items[i]);
-                if (cmbTable.Text == "Organisation")
-                    organisationOrder.Insert(selectedIndexStart + i, orderRange[i]);
-                else if (cmbTable.Text == "Asset")
-                    assetOrder.Insert(selectedIndexStart + i, orderRange[i]);
-                else if (cmbTable.Text == "Contact")
-                    contactOrder.Insert(selectedIndexStart + i, orderRange[i]);
-                else if (cmbTable.Text == "Conference")
-                    conferenceOrder.Insert(selectedIndexStart + i, orderRange[i]);
+                order.Insert(selectedIndexStart + i, orderRange[i]);
             }
 
             updatingSelection = false;
@@ -188,30 +169,7 @@ namespace BridgeOpsClient
             foreach (object s in items)
                 lstColumns.SelectedItems.Add(s);
 
-            List<int> order, orderComparison;
-
             // Mark the table in bold if changes have been made.
-
-            if (cmbTable.Text == "Organisation")
-            {
-                order = organisationOrder;
-                orderComparison = ColumnRecord.organisationOrder;
-            }
-            else if (cmbTable.Text == "Asset")
-            {
-                order = assetOrder;
-                orderComparison = ColumnRecord.assetOrder;
-            }
-            else if (cmbTable.Text == "Contact")
-            {
-                order = contactOrder;
-                orderComparison = ColumnRecord.contactOrder;
-            }
-            else // if Conference
-            {
-                order = conferenceOrder;
-                orderComparison = ColumnRecord.conferenceOrder;
-            }
 
             bool changed = false;
             for (int i = 0; i < order.Count; ++i)
