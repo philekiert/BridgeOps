@@ -86,6 +86,7 @@ namespace BridgeOpsClient
 
         private void InitialiseFields()
         {
+            ditAsset.headers = ColumnRecord.assetHeaders;
             ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.

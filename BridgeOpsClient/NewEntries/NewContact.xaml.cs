@@ -63,6 +63,7 @@ namespace BridgeOpsClient
 
         private void InitialiseFields()
         {
+            ditContact.headers = ColumnRecord.contactHeaders;
             ditContact.Initialise(ColumnRecord.orderedContact, "Contact");
 
             // Implement max length. Max lengths in the DataInputTable are set automatically.

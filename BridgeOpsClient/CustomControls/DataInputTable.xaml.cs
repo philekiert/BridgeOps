@@ -22,6 +22,9 @@ namespace BridgeOpsClient.CustomControls
             InitializeComponent();
         }
 
+        public List<SendReceiveClasses.ColumnOrdering.Header> headers = new();
+
+        int relevantChildCount = 0;
 
         public struct ColValue
         {
@@ -42,10 +45,19 @@ namespace BridgeOpsClient.CustomControls
         public void Initialise(Dictionary<string, ColumnRecord.Column> columns, string table)
         {
             int i = 0;
+            int iTotal = 0;
+
+            HashSet<int> headerRows = new();
+            foreach (var header in headers)
+                headerRows.Add(header.position);
+            int headerBump = 0; // Used to space for headers where needed.
 
             foreach (KeyValuePair<string, ColumnRecord.Column> col in columns)
             {
                 bool skip = false;
+
+                if (headerRows.Contains(iTotal))
+                    ++headerBump;
 
                 /* This is very very botch, it should be done more elegantly elsewhere but things are a bit tight
                    at the moment. It's here because the affected column names have dedicated fields. */
@@ -75,13 +87,13 @@ namespace BridgeOpsClient.CustomControls
 
                 if (!skip)
                 {
-                    grdMain.RowDefinitions.Add(new RowDefinition());
+                    grdMain.RowDefinitions.Add(new());
 
                     // Add the column name.
                     Label lblName = new Label();
                     lblName.Content = ColumnRecord.GetPrintName(col);
                     lblName.SetValue(Grid.ColumnProperty, 0);
-                    lblName.SetValue(Grid.RowProperty, i);
+                    lblName.SetValue(Grid.RowProperty, i + headerBump);
                     grdMain.Children.Add(lblName);
 
                     ColValue colBinding = new(col.Key, col.Value.type, col.Value.restriction);
@@ -91,7 +103,7 @@ namespace BridgeOpsClient.CustomControls
                     {
                         DatePicker dtpInput = new();
                         dtpInput.SetValue(Grid.ColumnProperty, 1);
-                        dtpInput.SetValue(Grid.RowProperty, i);
+                        dtpInput.SetValue(Grid.RowProperty, i + headerBump);
 #pragma warning disable CS8622
                         dtpInput.SelectedDateChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
@@ -101,7 +113,7 @@ namespace BridgeOpsClient.CustomControls
                     {
                         ComboBox cmbInput = new();
                         cmbInput.SetValue(Grid.ColumnProperty, 1);
-                        cmbInput.SetValue(Grid.RowProperty, i);
+                        cmbInput.SetValue(Grid.RowProperty, i + headerBump);
                         cmbInput.ItemsSource = new List<string>() { "", "Yes", "No" };
                         cmbInput.SelectedIndex = 0;
 #pragma warning disable CS8622
@@ -116,7 +128,7 @@ namespace BridgeOpsClient.CustomControls
                             // If simple text value.
                             TextBox txtInput = new();
                             txtInput.SetValue(Grid.ColumnProperty, 1);
-                            txtInput.SetValue(Grid.RowProperty, i);
+                            txtInput.SetValue(Grid.RowProperty, i + headerBump);
                             if (ColumnRecord.IsTypeString(col.Value))
                                 txtInput.MaxLength = Glo.Fun.LongToInt(col.Value.restriction);
 #pragma warning disable CS8622
@@ -130,7 +142,7 @@ namespace BridgeOpsClient.CustomControls
                             // If a constraint is in place.
                             ComboBox cmbInput = new();
                             cmbInput.SetValue(Grid.ColumnProperty, 1);
-                            cmbInput.SetValue(Grid.RowProperty, i);
+                            cmbInput.SetValue(Grid.RowProperty, i + headerBump);
                             List<string> options = col.Value.allowed.ToList();
                             options.Insert(0, ""); // Wedge a blank option at the beginning.
                             cmbInput.ItemsSource = options;
@@ -146,6 +158,42 @@ namespace BridgeOpsClient.CustomControls
 
                     ++i;
                 }
+
+                ++iTotal;
+            }
+
+            relevantChildCount = i;
+
+            // Headers need adding last, because ScoopValues() relies on the grid's child order.
+            int it = 0;
+            foreach (var header in headers)
+            {
+                // iTotal - i because that's the number of skipped data rows, and + it because each header nudges the
+                int row = (header.position - (iTotal - i)) + it;
+
+                Label label = new()
+                {
+                    Content = header.name,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                    HorizontalContentAlignment = HorizontalAlignment.Left,
+                    FontWeight = FontWeights.Bold
+                };
+
+                if (row == 0)
+                    label.Margin = new Thickness(0, 0, 0, 2);
+                else
+                    label.Margin = new Thickness(0, 10, 0, 2);
+
+                if (header.name == "")
+                    label.Height = 15;
+
+                // others below down 1.
+                Grid.SetRow(label, row);
+                Grid.SetColumnSpan(label, 2);
+                grdMain.Children.Add(label);
+
+                grdMain.RowDefinitions.Add(new());
+                ++it;
             }
         }
 
@@ -171,6 +219,9 @@ namespace BridgeOpsClient.CustomControls
                         ((DatePicker)child).SelectedDate = d == null ? null : (DateTime)d;
                 }
                 ++i;
+
+                if (i >= relevantChildCount)
+                    break;
             }
         }
 
@@ -190,6 +241,9 @@ namespace BridgeOpsClient.CustomControls
                         ((DatePicker)child).IsEnabled = enabled;
                 }
                 ++i;
+
+                if (i >= relevantChildCount)
+                    break;
             }
         }
         
@@ -219,7 +273,6 @@ namespace BridgeOpsClient.CustomControls
                 ValueChangedHandler();
         }
         public Func<bool>? ValueChangedHandler;
-
 
         public List<string> disallowed = new();
         // Update all columns, return false if any values are invalid. Error messages can be found in disallowed List.
@@ -283,6 +336,9 @@ namespace BridgeOpsClient.CustomControls
                     colValues[curIndex] = cv;
                 }
                 ++i;
+
+                if (i >= relevantChildCount)
+                    break;
             }
 
             if (disallowed.Count > 0)

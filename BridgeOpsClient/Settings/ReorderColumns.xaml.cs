@@ -196,36 +196,7 @@ namespace BridgeOpsClient
             for (int i = 0; i < selectedIndices.Count; ++i)
                 lstColumns.SelectedItems.Add(lstColumns.Items[selectedIndices[i] + (down ? 1 : -1)]);
 
-            // Mark the table in bold if changes have been made.
-            bool changed = entries.Count != entriesOriginal.Count;
-            if (!changed)
-                for (int i = 0; i < entriesOriginal.Count && i < entries.Count; ++i)
-                    if (entries[i].displayIndex != entriesOriginal[i].displayIndex ||
-                        entries[i].name != entriesOriginal[i].name)
-                    {
-                        changed = true;
-                        break;
-                    }
-
-            if (!changed)
-            {
-                ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Normal;
-                cmbTable.FontWeight = FontWeights.Normal;
-            }
-            else
-            {
-                ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Bold;
-                cmbTable.FontWeight = FontWeights.Bold;
-            }
-
-            // To see if anything changed, we can just check to see if any tables are bold.
-            for (int n = 0; n < 4; ++n)
-                if (((ComboBoxItem)cmbTable.Items[n]).FontWeight == FontWeights.Bold)
-                {
-                    btnApply.IsEnabled = true;
-                    return;
-                }
-            btnApply.IsEnabled = false;
+            RespondToPossibleChanges();
         }
 
         bool updatingSelection = false;
@@ -419,6 +390,8 @@ namespace BridgeOpsClient
             QuickRefreshList();
             lstColumns.SelectedItem = newColumn;
             lstColumns.ScrollIntoView(newColumn);
+
+            RespondToPossibleChanges();
         }
 
         private void btnRemoveHeader_Click(object sender, RoutedEventArgs e)
@@ -435,6 +408,8 @@ namespace BridgeOpsClient
 
             ReapplyIndices();
             QuickRefreshList();
+
+            RespondToPossibleChanges();
         }
 
         private void lstColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -464,6 +439,40 @@ namespace BridgeOpsClient
         {
             lstColumns.ItemsSource = null;
             lstColumns.ItemsSource = entries;
+        }
+
+        private void RespondToPossibleChanges()
+        {
+            // Mark the table in bold if changes have been made.
+            bool changed = entries.Count != entriesOriginal.Count;
+            if (!changed)
+                for (int i = 0; i < entriesOriginal.Count && i < entries.Count; ++i)
+                    if (entries[i].displayIndex != entriesOriginal[i].displayIndex ||
+                        entries[i].name != entriesOriginal[i].name)
+                    {
+                        changed = true;
+                        break;
+                    }
+
+            if (!changed)
+            {
+                ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Normal;
+                cmbTable.FontWeight = FontWeights.Normal;
+            }
+            else
+            {
+                ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Bold;
+                cmbTable.FontWeight = FontWeights.Bold;
+            }
+
+            // To see if anything changed, we can just check to see if any tables are bold.
+            for (int n = 0; n < 4; ++n)
+                if (((ComboBoxItem)cmbTable.Items[n]).FontWeight == FontWeights.Bold)
+                {
+                    btnApply.IsEnabled = true;
+                    return;
+                }
+            btnApply.IsEnabled = false;
         }
     }
 }

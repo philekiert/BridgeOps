@@ -97,6 +97,7 @@ namespace BridgeOpsClient
 
         private void InitialiseFields()
         {
+            ditOrganisation.headers = ColumnRecord.organisationHeaders;
             ditOrganisation.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
