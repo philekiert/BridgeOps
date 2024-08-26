@@ -161,7 +161,10 @@ namespace BridgeOpsClient
                 ((TextBox)value).MaxLength = (int)column.restriction;
             }
             else if (ColumnRecord.IsTypeInt(column))
+            {
                 value = (numTemplate.LoadContent() as CustomControls.NumberEntry)!;
+                ((CustomControls.NumberEntry)value).SetMinMaxToType(column.type);
+            }
             else if (column.type == "DATETIME")
                 value = (dtmTemplate.LoadContent() as CustomControls.DateTimePicker)!;
             else if (column.type == "DATE")
@@ -232,9 +235,9 @@ namespace BridgeOpsClient
                 }
                 else if (row.value is CustomControls.NumberEntry num)
                 {
-                    if (num.Text == "")
+                    if (num.txtNumber.Text == "" || num.txtNumber.Text == "-")
                         return Abort($"You must select a value for {row.selector.Text}.");
-                    value = num.Text;
+                    value = num.GetNumber().ToString();
                     needsQuotes = false;
                 }
                 else if (row.value is CustomControls.DateTimePicker dtm)

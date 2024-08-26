@@ -162,7 +162,7 @@ namespace BridgeOpsClient.CustomControls
                 ++iTotal;
             }
 
-            relevantChildCount = i;
+            relevantChildCount = i * 2;
 
             // Headers need adding last, because ScoopValues() relies on the grid's child order.
             int it = 0;
