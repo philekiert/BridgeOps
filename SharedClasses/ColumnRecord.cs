@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SendReceiveClasses;
 
 
 public static class ColumnRecord
@@ -83,6 +84,11 @@ public static class ColumnRecord
     public static Dictionary<string, Column> orderedAsset = new();
     public static Dictionary<string, Column> orderedContact = new();
     public static Dictionary<string, Column> orderedConference = new();
+
+    public static List<ColumnOrdering.Header> organisationHeaders = new();
+    public static List<ColumnOrdering.Header> assetHeaders = new();
+    public static List<ColumnOrdering.Header> contactHeaders = new();
+    public static List<ColumnOrdering.Header> conferenceHeaders = new();
 
     public static List<string[]> GetFriendlyNames()
     {
@@ -265,6 +271,11 @@ public static class ColumnRecord
         orderedContact = new();
         orderedConference = new();
 
+        organisationHeaders = new();
+        assetHeaders = new();
+        contactHeaders = new();
+        conferenceHeaders = new();
+
         try
         {
             string[] lines = columns.Split('\n');
@@ -319,7 +330,7 @@ public static class ColumnRecord
                 // else max remains 0 for dates.
 
                 Column col = new Column(type, max, allowedArr, "");
-   
+
 
                 // Add column to the relevant Dictionary, using the column name as the key.
                 if (table == "Organisation")
@@ -392,6 +403,13 @@ public static class ColumnRecord
 
             for (int o = 0; n < lines.Length && o < 4; ++n, ++o)
             {
+                if (lines[n] == "<")
+                {
+                    // Proceed on to the table section headers.
+                    ++n;
+                    break;
+                }
+
                 string[] indices = lines[n].Split(',');
                 List<int> order;
                 if (o == 0)
@@ -409,6 +427,37 @@ public static class ColumnRecord
                     if (int.TryParse(s, out i))
                         order.Add(i);
                 }
+            }
+
+            // We might have exited out of organisations without encountering < and incrementing.
+            if (lines[n] == "<")
+                ++n;
+
+            // This input is heavily vetted by the agent when creating the column record, so no need to check much.
+            for (int o = 0; n < lines.Length && o < 4; ++n, ++o)
+            {
+                List<ColumnOrdering.Header> headerList;
+                if (o == 0)
+                    headerList = organisationHeaders;
+                else if (o == 1)
+                    headerList = assetHeaders;
+                else if (o == 2)
+                    headerList = contactHeaders;
+                else
+                    headerList = conferenceHeaders;
+
+                string[] vals = lines[n].Split(';');
+
+                for (int i = 0; i < vals.Length - 1; i += 2)
+                {
+                    ColumnOrdering.Header header = new();
+                    header.name = vals[i];
+                    if (int.TryParse(vals[i + 1], out header.position))
+                        headerList.Add(header);
+                }
+
+                // Make sure they're stored in order.
+                headerList = headerList.OrderBy(h => h.position).ToList();
             }
 
             // Check the order integrity.

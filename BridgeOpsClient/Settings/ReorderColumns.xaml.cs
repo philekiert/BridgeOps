@@ -37,7 +37,7 @@ namespace BridgeOpsClient
             public enum Kind { column, header, integral }
             public Kind kind;
             public bool Greyed { get { return kind == Kind.integral; } }
-            public bool Bold { get { return kind == Kind.header; } }
+            public bool Header { get { return kind == Kind.header; } }
             public Entry(int index, int displayIndex, string name, Kind kind)
             {
                 this.index = index;
@@ -68,27 +68,32 @@ namespace BridgeOpsClient
 
             Dictionary<string, ColumnRecord.Column> dictionary;
             List<int> order;
+            List<SendReceiveClasses.ColumnOrdering.Header> headers;
             for (int n = 0; n < 4; ++n)
             {
                 if (n == 0)
                 {
                     dictionary = ColumnRecord.organisation;
                     order = ColumnRecord.organisationOrder;
+                    headers = ColumnRecord.organisationHeaders;
                 }
                 else if (n == 1)
                 {
                     dictionary = ColumnRecord.asset;
                     order = ColumnRecord.assetOrder;
+                    headers = ColumnRecord.assetHeaders;
                 }
                 else if (n == 2)
                 {
                     dictionary = ColumnRecord.contact;
                     order = ColumnRecord.contactOrder;
+                    headers = ColumnRecord.contactHeaders;
                 }
                 else // if 3
                 {
                     dictionary = ColumnRecord.conference;
                     order = ColumnRecord.conferenceOrder;
+                    headers = ColumnRecord.conferenceHeaders;
                 }
 
                 string[] table = new string[] { "Organisation", "Asset", "Contact", "Conference" };
@@ -98,13 +103,37 @@ namespace BridgeOpsClient
                     string printName = ColumnRecord.GetPrintName(kvp);
                     Entry.Kind type = Glo.Fun.ColumnRemovalAllowed(table[n], kvp.Key) ? Entry.Kind.column :
                                                                                         Entry.Kind.integral;
-                    entryLists[n].Add(new Entry(i, order[i], printName, type));
-                    entryListOriginals[n].Add(new Entry(i, order[i], printName, type));
+                    entryLists[n].Add(new Entry(i, 0, printName, type));
+                    entryListOriginals[n].Add(new Entry(i, 0, printName, type));
                     ++i;
+                }
+
+                for (i = 0; i < order.Count; ++i)
+                {
+                    entryLists[n][order[i]].displayIndex = i;
+                    entryListOriginals[n][order[i]].displayIndex = i;
                 }
 
                 entryLists[n] = entryLists[n].OrderBy(e => e.displayIndex).ToList();
                 entryListOriginals[n] = entryListOriginals[n].OrderBy(e => e.displayIndex).ToList();
+
+                // Headers are already ordered during column record initialisaiton.
+                int index = 0;
+                foreach (SendReceiveClasses.ColumnOrdering.Header h in headers)
+                {
+                    entryLists[n].Insert(h.position + index,
+                                         new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                    entryListOriginals[n].Insert(h.position + index,
+                                                 new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                    ++index;
+                }
+            }
+
+            // Reapply indices as they will be messed up after adding the headers.
+            for (int i = 0; i < entries.Count; ++i)
+            {
+                entries[i].displayIndex = i;
+                entriesOriginal[i].displayIndex = i;
             }
         }
 
@@ -168,21 +197,25 @@ namespace BridgeOpsClient
                 lstColumns.SelectedItems.Add(lstColumns.Items[selectedIndices[i] + (down ? 1 : -1)]);
 
             // Mark the table in bold if changes have been made.
-            bool changed = false;
-            for (int i = 0; i < entriesOriginal.Count && i < entries.Count; ++i)
-                if (entries[i].displayIndex != entriesOriginal[i].displayIndex ||
-                    entries[i].name != entriesOriginal[i].name)
-                {
-                    ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Bold;
-                    cmbTable.FontWeight = FontWeights.Bold;
-                    changed = true;
-                    break;
-                }
+            bool changed = entries.Count != entriesOriginal.Count;
+            if (!changed)
+                for (int i = 0; i < entriesOriginal.Count && i < entries.Count; ++i)
+                    if (entries[i].displayIndex != entriesOriginal[i].displayIndex ||
+                        entries[i].name != entriesOriginal[i].name)
+                    {
+                        changed = true;
+                        break;
+                    }
 
             if (!changed)
             {
                 ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Normal;
                 cmbTable.FontWeight = FontWeights.Normal;
+            }
+            else
+            {
+                ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).FontWeight = FontWeights.Bold;
+                cmbTable.FontWeight = FontWeights.Bold;
             }
 
             // To see if anything changed, we can just check to see if any tables are bold.
@@ -314,7 +347,7 @@ namespace BridgeOpsClient
                         ++headersFound;
                     }
                     else
-                        order.Add(entry.index); // orderIndex has been calculated ignoring headers.
+                        order.Add(entry.index);
                     ++i;
                 }
             }
@@ -334,6 +367,10 @@ namespace BridgeOpsClient
                                                                             assetOrder,
                                                                             contactOrder,
                                                                             conferenceOrder);
+                        newOrdering.organisationHeaders = organisationHeaders;
+                        newOrdering.assetHeaders = assetHeaders;
+                        newOrdering.contactHeaders = contactHeaders;
+                        newOrdering.conferenceHeaders = conferenceHeaders;
 
                         App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
                         int response = stream.ReadByte();
@@ -377,10 +414,27 @@ namespace BridgeOpsClient
         {
             Entry newColumn = new(entries.Count, entries.Count, "New Column", Entry.Kind.header);
             entries.Add(newColumn);
+            ++upperLimit;
             ReapplyIndices();
             QuickRefreshList();
             lstColumns.SelectedItem = newColumn;
             lstColumns.ScrollIntoView(newColumn);
+        }
+
+        private void btnRemoveHeader_Click(object sender, RoutedEventArgs e)
+        {
+            if (lstColumns.SelectedItems.Count == 0)
+                return;
+
+            List<Entry> selected = lstColumns.SelectedItems.Cast<Entry>().ToList();
+            foreach (Entry entry in selected)
+            {
+                entries.Remove(entry);
+                --upperLimit;
+            }
+
+            ReapplyIndices();
+            QuickRefreshList();
         }
 
         private void lstColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -410,19 +464,6 @@ namespace BridgeOpsClient
         {
             lstColumns.ItemsSource = null;
             lstColumns.ItemsSource = entries;
-        }
-
-        private void btnRemoveHeader_Click(object sender, RoutedEventArgs e)
-        {
-            if (lstColumns.SelectedItems.Count == 0)
-                return;
-
-            List<Entry> selected = lstColumns.SelectedItems.Cast<Entry>().ToList();
-            foreach (Entry entry in selected)
-                entries.Remove(entry);
-
-            ReapplyIndices();
-            QuickRefreshList();
         }
     }
 }

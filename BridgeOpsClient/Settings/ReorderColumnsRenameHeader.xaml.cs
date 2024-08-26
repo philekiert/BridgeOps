@@ -29,11 +29,17 @@ namespace BridgeOpsClient
 
         private void Confirm()
         {
-            if (txtName.Text == "")
+            if (!CheckNameLegality())
                 return;
 
             name = txtName.Text;
             DialogResult = true;
+        }
+
+        private bool CheckNameLegality()
+        {
+            btnConfirm.IsEnabled = !txtName.Text.Contains(';');
+            return true;
         }
 
         private void txtName_KeyDown(object sender, KeyEventArgs e)
@@ -49,7 +55,7 @@ namespace BridgeOpsClient
 
         private void txtName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            btnConfirm.IsEnabled = txtName.Text.Length > 0;
+            CheckNameLegality();
         }
     }
 }

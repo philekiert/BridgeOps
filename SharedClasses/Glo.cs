@@ -34,6 +34,7 @@ public static class Glo
     public const string CONFIG_SQL_SERVER_NAME = "sql-server-name.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
+    public const string CONFIG_HEADERS = "section-headers.txt";
     public const string FOLDER_QUERY_BUILDER_PRESETS = "Query Builder Presets";
 
     // Client/Agent Function Specifiers
@@ -262,6 +263,9 @@ public static class Glo
         {
             return val > int.MaxValue ? int.MaxValue : (int)val;
         }
+
+        public static bool IsValidInt(string s, int min, int max)
+        { int i; return int.TryParse(s, out i) && i >= min && i <= max; }
 
         public static void ExistsOrCreateFolder() { ExistsOrCreateFolder(ApplicationFolder()); }
         public static void ExistsOrCreateFolder(string folder)

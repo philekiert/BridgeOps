@@ -449,7 +449,39 @@ internal class BridgeOpsAgent
             AddColumnOrder("Contact", orderCounts[2]);
             AddColumnOrder("Conference", orderCounts[3]);
 
-            columnRecord = fileText.Remove(fileText.Length - 1);
+            fileText += "<\n";
+
+            // Add a line for headers from each table.
+            Dictionary<string, List<string>> headerTables = new()
+                {
+                    { "Organisation", new() },
+                    { "Asset",  new() },
+                    { "Contact",  new() },
+                    { "Conference", new() }
+                };
+            string headerFilePath = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_HEADERS);
+            if (File.Exists(headerFilePath))
+            {
+                foreach (string s in File.ReadAllLines(headerFilePath))
+                {
+                    string[] ss = s.Split(';');
+                    if (!headerTables.ContainsKey(ss[0]))
+                        continue;
+                    if (ss[1].Length < 0 || ss[1].Length > 128)
+                        continue;
+                    if (!Glo.Fun.IsValidInt(ss[2], 0, int.MaxValue))
+                        continue;
+
+                    headerTables[ss[0]].Add(ss[1] + ";" + ss[2]);
+                }
+            }
+
+            fileText += string.Join(';', headerTables["Organisation"]) + "\n";
+            fileText += string.Join(';', headerTables["Asset"]) + "\n";
+            fileText += string.Join(';', headerTables["Contact"]) + "\n";
+            fileText += string.Join(';', headerTables["Conference"]);
+
+            columnRecord = fileText;
 
             // Automatically generates a file for debugging if one isn't present.
             Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder());
@@ -1444,7 +1476,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-    
+
     private static void ClientSelect(NetworkStream stream, SqlConnection sqlConnect)
     {
         // This function does not support historical searches.
@@ -2125,6 +2157,10 @@ internal class BridgeOpsAgent
                 req.conferenceOrder.Count != ColumnRecord.conference.Count)
                 throw new Exception("Could not apply new column order. Either the column record " +
                                     "is no longer intact, or the column counts were incorrect.");
+
+            // Get the headers out the way first.
+            Glo.Fun.ExistsOrCreateFolder(Glo.PathConfigFiles);
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_HEADERS), req.HeaderConfigText());
 
             // Make sure the column numbers look right.
             void CheckStartingOrderValues(List<int> order, int cutoff)

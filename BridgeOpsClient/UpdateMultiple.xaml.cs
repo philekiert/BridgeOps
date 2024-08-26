@@ -95,7 +95,6 @@ namespace BridgeOpsClient
             }
         }
 
-
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
             int row = grdFields.RowDefinitions.Count;

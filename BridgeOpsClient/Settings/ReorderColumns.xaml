@@ -40,8 +40,9 @@
                         <DataTrigger Binding="{Binding Greyed}" Value="True">
                             <Setter Property="Foreground" Value="Gray"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Bold}" Value="True">
+                        <DataTrigger Binding="{Binding Header}" Value="True">
                             <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Background" Value="LightGray"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

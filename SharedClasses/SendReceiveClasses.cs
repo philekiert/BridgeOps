@@ -512,7 +512,7 @@ namespace SendReceiveClasses
         }
     }
 
-    struct ColumnOrdering
+    public struct ColumnOrdering
     {
         public string sessionID;
         public int columnRecordID;
@@ -520,12 +520,15 @@ namespace SendReceiveClasses
         public List<int> assetOrder = new();
         public List<int> contactOrder = new();
         public List<int> conferenceOrder = new();
+        public List<Header> organisationHeaders = new();
+        public List<Header> assetHeaders = new();
+        public List<Header> contactHeaders = new();
+        public List<Header> conferenceHeaders = new();
 
         public struct Header
         {
             public int position;
             public string name;
-
             public Header(int position, string name) { this.position = position; this.name = name; }
         }
 
@@ -563,6 +566,41 @@ namespace SendReceiveClasses
                                                         Command("Asset", assetOrder),
                                                         Command("Contact", contactOrder),
                                                         Command("Conference", conferenceOrder) });
+        }
+
+        public string HeaderConfigText()
+        {
+            StringBuilder str = new();
+            for (int i = 0; i < 4; ++i)
+            {
+                string table;
+                List<Header> headers;
+                if (i == 0)
+                {
+                    table = "Organisation";
+                    headers = organisationHeaders;
+                }
+                else if (i == 1)
+                {
+                    table = "Asset";
+                    headers = assetHeaders;
+                }
+                else if (i == 2)
+                {
+                    table = "Contact";
+                    headers = contactHeaders;
+                }
+                else
+                {
+                    table = "Conference";
+                    headers = conferenceHeaders;
+                }
+
+                foreach (Header h in headers)
+                    str.Append(table + ";" + h.name + ";" + h.position.ToString() + "\n");
+            }
+
+            return str.ToString();
         }
     }
 
@@ -1729,7 +1767,7 @@ namespace SendReceiveClasses
                 // Update affected organisations.
                 commands.Add($"WITH orgs AS ( SELECT " +
                              $"{Glo.Tab.ORGANISATION_ID}, {Glo.Tab.PARENT_REF} FROM Organisation " +
-                             $"WHERE {Glo.Tab.PARENT_REF} IN ( "+
+                             $"WHERE {Glo.Tab.PARENT_REF} IN ( " +
                                  $"SELECT {Glo.Tab.ORGANISATION_REF} " +
                                  $"FROM Organisation " +
                                  $"WHERE {Glo.Tab.ORGANISATION_ID} IN ({idList}))) " +
@@ -1746,7 +1784,7 @@ namespace SendReceiveClasses
                                     $"NULL, 1 " +
                               "FROM orgs; ");
                 commands.Add($"UPDATE Organisation SET {Glo.Tab.PARENT_REF} = NULL " +
-                             $"WHERE {Glo.Tab.PARENT_REF} IN ( "+
+                             $"WHERE {Glo.Tab.PARENT_REF} IN ( " +
                                  $"SELECT {Glo.Tab.ORGANISATION_REF} " +
                                  $"FROM Organisation " +
                                  $"WHERE {Glo.Tab.ORGANISATION_ID} IN ({idList}));"
