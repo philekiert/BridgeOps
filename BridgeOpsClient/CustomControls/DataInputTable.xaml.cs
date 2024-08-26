@@ -246,7 +246,7 @@ namespace BridgeOpsClient.CustomControls
                     break;
             }
         }
-        
+
         // Store the starting values in edit mode. This helps reduce the size of the data being sent over the network.
         // It is checked in the code-behind for the window containing the DataInputTable.
         public List<string?> startingValues = new();
