@@ -65,6 +65,8 @@ namespace BridgeOpsClient
                     cmbType.Items.RemoveAt(0);
                     cmbType.Items.RemoveAt(3);
                     cmbType.Items.RemoveAt(3);
+                    cmbType.Items.RemoveAt(3);
+                    cmbType.Items.RemoveAt(3);
                     cmbType.Text = columnDetails.type;
                     cmbType.SelectedIndex = cmbType.SelectedIndex;
                     updatingTypeOptions = false;
@@ -72,6 +74,8 @@ namespace BridgeOpsClient
                 else if (columnDetails.type.StartsWith("VARCHAR"))
                 {
                     updatingTypeOptions = true;
+                    cmbType.Items.RemoveAt(2);
+                    cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
@@ -125,7 +129,7 @@ namespace BridgeOpsClient
                 case "BIGINT":
                     txtLimit.Text = "9,223,372,036,854,775,807";
                     break;
-                default: // DATE or BOOLEAN
+                default: // DATE, TIME, DATETIME or BOOLEAN
                     txtLimit.Text = "";
                     break;
             }

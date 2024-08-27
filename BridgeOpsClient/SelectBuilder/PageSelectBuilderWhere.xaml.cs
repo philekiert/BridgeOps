@@ -119,8 +119,12 @@ namespace BridgeOpsClient
 
             string operatorText = (string)cmbOperator.Items[cmbOperator.SelectedIndex];
 
-            txtValue.Visibility = (ColumnRecord.IsTypeString(type) || ColumnRecord.IsTypeInt(type)) &&
-                                  !operatorText.Contains("NULL") ?
+            if (ColumnRecord.IsTypeInt(type))
+                numValue.SetMinMaxToType(type);
+
+            txtValue.Visibility = ColumnRecord.IsTypeString(type) && !operatorText.Contains("NULL") ?
+                                  Visibility.Visible : Visibility.Collapsed;
+            numValue.Visibility = ColumnRecord.IsTypeInt(type) && !operatorText.Contains("NULL") ?
                                   Visibility.Visible : Visibility.Collapsed;
             dtmValue.Visibility = type == "DATETIME" && !operatorText.Contains("NULL") ?
                                   Visibility.Visible : Visibility.Collapsed;

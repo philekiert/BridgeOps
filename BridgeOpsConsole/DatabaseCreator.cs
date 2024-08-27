@@ -734,6 +734,8 @@ public class DatabaseCreator
                             // SQL Server doesn't like BOOLEAN, but this is corrected to BIT in CreateDatabase().
                             bool isOtherType = type == "FLOAT" ||
                                                type == "DATE" ||
+                                               type == "DATETIME" ||
+                                               type == "TIME" ||
                                                type == "BOOLEAN";
                             if (isOtherType && foundAllowList)
                                 invalidated = true;

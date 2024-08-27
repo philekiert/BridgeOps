@@ -40,14 +40,14 @@
                               Click="menuDatabaseNewAsset_Click"/>
                     <MenuItem Header="Contact" x:Name="menuDatabaseNewContact"
                               Click="menuDatabaseNewContact_Click"/>
-                    <!-- Uncomment when adding conferencing support.
-                         Make sure to uncomment references to these objects in the code-behind.
+                     <!--Uncomment when adding conferencing support.
+                         Make sure to uncomment references to these objects in the code-behind.-->
                     <Separator/>
                     <MenuItem Header="Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click"/>
                     <MenuItem Header="Conference Type" x:Name="menuDatabaseNewConferenceType"
                               Click="menuDatabaseNewConferenceType_Click"/>
-                    -->
+                    
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Select Query Builder" Click="menuSelect_Click"/>

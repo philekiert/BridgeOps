@@ -490,12 +490,29 @@ namespace BridgeOpsClient
                 {
                     if (where.txtValue.Visibility == Visibility.Visible)
                         whereValues.Add(where.txtValue.Text);
+                    else if (where.numValue.Visibility == Visibility.Visible)
+                        whereValues.Add(where.numValue.GetNumber().ToString());
                     else if (where.dtmValue.Visibility == Visibility.Visible)
-                        whereValues.Add(SqlAssist.DateTimeToSQL(where.dtmValue.GetDateTime(), false));
+                    {
+                        DateTime? dt = where.dtmValue.GetDateTime();
+                        if (dt == null)
+                            return Abort("Must select a value for all WHERE value fields.");
+                        whereValues.Add(SqlAssist.DateTimeToSQL((DateTime)dt, false));
+                    }
                     else if (where.datValue.Visibility == Visibility.Visible)
-                        whereValues.Add(SqlAssist.DateTimeToSQL(where.dtmValue.GetDateTime(), true));
+                    {
+                        DateTime? dt = where.datValue.SelectedDate;
+                        if (dt == null)
+                            return Abort("Must select a value for all WHERE value fields.");
+                        whereValues.Add(SqlAssist.DateTimeToSQL((DateTime)dt, true));
+                    }
                     else if (where.timValue.Visibility == Visibility.Visible)
-                        whereValues.Add(SqlAssist.TimeSpanToSQL(where.timValue.GetTime()));
+                    {
+                        TimeSpan? ts = where.timValue.GetTime();
+                        if (ts == null)
+                            return Abort("Must select a value for all WHERE value fields.");
+                        whereValues.Add(SqlAssist.TimeSpanToSQL((TimeSpan)ts));
+                    }
                     else if (where.chkValue.Visibility == Visibility.Visible)
                         whereValues.Add(where.chkValue.IsChecked == true ? "1" : "0");
                     else

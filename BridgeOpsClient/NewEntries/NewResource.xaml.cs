@@ -36,8 +36,14 @@ namespace BridgeOpsClient
             nr.sessionID = App.sd.sessionID;
             nr.columnRecordID = ColumnRecord.columnRecordID;
 
-            DateTime from = timeAvailableFrom.GetDateTime();
-            DateTime to = timeAvailableTo.GetDateTime();
+            DateTime? from = timeAvailableFrom.GetDateTime();
+            DateTime? to = timeAvailableTo.GetDateTime();
+
+            if (from == null || to == null)
+            {
+                MessageBox.Show("Must select start and end dates and times.");
+                return;
+            }
 
             if (to < from)
             {
@@ -60,8 +66,8 @@ namespace BridgeOpsClient
             }
 
             nr.name = txtResourceName.Text.Length > 0 ? txtResourceName.Text : null;
-            nr.availableFrom = from;
-            nr.availableTo = to;
+            nr.availableFrom = (DateTime)from;
+            nr.availableTo = (DateTime)to;
             nr.capacity = capacity;
 
             if (App.SendInsert(Glo.CLIENT_NEW_RESOURCE, nr))
@@ -71,7 +77,7 @@ namespace BridgeOpsClient
             }
             else
                 MessageBox.Show("Could not create resource.");
-}
+        }
 
         private void Window_Closed(object sender, EventArgs e)
         {

@@ -235,14 +235,18 @@ namespace BridgeOpsClient
                 }
                 else if (row.value is CustomControls.NumberEntry num)
                 {
-                    if (num.txtNumber.Text == "" || num.txtNumber.Text == "-")
+                    int? number = num.GetNumber();
+                    if (number == null)
                         return Abort($"You must select a value for {row.selector.Text}.");
-                    value = num.GetNumber().ToString();
+                    value = ((int)number).ToString();
                     needsQuotes = false;
                 }
                 else if (row.value is CustomControls.DateTimePicker dtm)
                 {
-                    value = SendReceiveClasses.SqlAssist.DateTimeToSQL(dtm.GetDateTime(), false);
+                    DateTime? dt = dtm.GetDateTime();
+                    if (dt == null)
+                        return Abort($"You must select a value for {row.selector.Text}.");
+                    value = SendReceiveClasses.SqlAssist.DateTimeToSQL((DateTime)dt, false);
                     needsQuotes = true;
                 }
                 else if (row.value is DatePicker dat)
@@ -254,7 +258,10 @@ namespace BridgeOpsClient
                 }
                 else if (row.value is CustomControls.TimePicker tim)
                 {
-                    value = SendReceiveClasses.SqlAssist.TimeSpanToSQL(tim.GetTime());
+                    TimeSpan? ts = tim.GetTime();
+                    if (ts == null)
+                        return Abort($"You must select a value for {row.selector.Text}.");
+                    value = SendReceiveClasses.SqlAssist.TimeSpanToSQL((TimeSpan)ts);
                     needsQuotes = true;
                 }
                 else if (row.value is CheckBox chk)

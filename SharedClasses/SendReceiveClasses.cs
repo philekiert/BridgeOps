@@ -2242,7 +2242,7 @@ namespace SendReceiveClasses
         }
         public static string TimeSpanToSQL(TimeSpan timeSpan)
         {
-            return timeSpan.ToString(@"dd\.hh\:mm");
+            return timeSpan.ToString(@"hh\:mm");
         }
 
         public static string RebuildOrganisationRefIndex

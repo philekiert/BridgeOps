@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Select Query Builder" Width="1000" Height="600" UseLayoutRounding="True"
-        MinWidth="1080">
+        Title="Select Query Builder" Width="1050" Height="600" UseLayoutRounding="True"
+        MinWidth="1130">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,6 +21,7 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
@@ -57,9 +58,11 @@
                 Height="24" Margin="5 10 5 10" Click="btnRenamePreset_Click" IsEnabled="False"/>
         <Button x:Name="btnSaveChanges" Grid.Column="13" Width="88" Content="Save Changes"
                 Height="24" Margin="5 10 10 10" Click="btnSaveChanges_Click" IsEnabled="False"/>
+        <Button x:Name="btnClearDown" Grid.Column="14" Content="Reset" Click="btnClearDown_Click"
+                Padding="0 0 0 0" Margin="0 10 10 10" Width="40" Height="24"/>
 
         <!-- Start of lower section -->
-        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="14"
+        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="15"
                     SelectionChanged="tabControl_SelectionChanged">
         </TabControl>
     </Grid>

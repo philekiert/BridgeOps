@@ -18,17 +18,25 @@ namespace BridgeOpsClient.CustomControls
     public partial class DateTimePicker : UserControl
     {
         public DateTimePicker()
-        {   
+        {
             InitializeComponent();
         }
 
-        public DateTime GetDateTime()
+        public void ToggleEnabled(bool enabled)
         {
-            TimeSpan time = timePicker.GetTime();
+            datePicker.IsEnabled = enabled;
+            timePicker.ToggleEnabled(enabled);
+        }
+
+        public DateTime? GetDateTime()
+        {
+            TimeSpan? time = timePicker.GetTime();
+            if (time == null)
+                return null;
             if (datePicker.SelectedDate == null)
-                return new DateTime().Add(time);
-            else
-                return ((DateTime)datePicker.SelectedDate).Add(time);
+                return null;
+
+            return ((DateTime)datePicker.SelectedDate).Add((TimeSpan)time);
         }
 
         public void SetDateTime(DateTime dt)

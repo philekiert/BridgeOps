@@ -194,15 +194,6 @@ namespace BridgeOpsClient
             return nameObject.txtName.Text;
         }
 
-        private void btnAddPreset_Click(object sender, RoutedEventArgs e)
-        {
-            string name = GetNewPresetName();
-            if (name == "")
-                return;
-
-            SavePreset(name);
-        }
-
         private void ApplyLoadedPreset(string jsonString)
         {
             blockTabInfoUpdate = true;
@@ -252,10 +243,13 @@ namespace BridgeOpsClient
                         where.cmbColumn.Text = GetFriendlyName(whereObj["Column"].GetValue<string>(), true);
                         where.cmbOperator.Text = whereObj["Operator"].GetValue<string>();
                         where.txtValue.Text = whereObj["ValueText"].GetValue<string>();
-                        where.dtmValue.SetDateTime(whereObj["ValueDateTime"].GetValue<DateTime>());
+                        where.numValue.Text = whereObj["ValueNumber"].GetValue<string>();
+                        if (whereObj["ValueDateTime"] != null)
+                            where.dtmValue.SetDateTime(whereObj["ValueDateTime"].GetValue<DateTime>());
                         if (whereObj["ValueDate"] != null)
                             where.datValue.SelectedDate = whereObj["ValueDate"].GetValue<DateTime>();
-                        where.timValue.SetTime(whereObj["ValueTime"].GetValue<long>());
+                        if (whereObj["ValueTime"] != null)
+                            where.timValue.SetTime(whereObj["ValueTime"].GetValue<long>());
                         where.chkValue.IsChecked = whereObj["ValueBool"].GetValue<bool>();
                     }
                     int orderByCount = tab["OrderByCount"].GetValue<int>();
@@ -281,6 +275,10 @@ namespace BridgeOpsClient
 
         private void SavePreset(string name)
         {
+            if (cmbPresets.Text != "<New>" &&
+                MessageBox.Show("Overwrite current preset?", "Save Changes",
+                                MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                return;
 
             JsonObject json = new();
             json["Name"] = name;
@@ -327,9 +325,11 @@ namespace BridgeOpsClient
                     jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
                     jsonWhere["Operator"] = where.cmbOperator.Text;
                     jsonWhere["ValueText"] = where.txtValue.Text;
+                    jsonWhere["ValueNumber"] = where.numValue.Text;
                     jsonWhere["ValueDateTime"] = where.dtmValue.GetDateTime();
                     jsonWhere["ValueDate"] = where.datValue.SelectedDate;
-                    jsonWhere["ValueTime"] = where.timValue.GetTime().Ticks;
+                    TimeSpan? ts = where.timValue.GetTime();
+                    jsonWhere["ValueTime"] = ts == null ? null : ((TimeSpan)ts).Ticks;
                     jsonWhere["ValueBool"] = where.chkValue.IsChecked == true;
                     jsonTab["Where" + i.ToString()] = jsonWhere;
                 }
@@ -352,6 +352,7 @@ namespace BridgeOpsClient
                 PresetLoad(true);
                 cmbPresets.SelectedItem = name;
                 skipPresetLoad = false;
+                MessageBox.Show("Changes saved successfully.");
             }
         }
 
@@ -425,7 +426,7 @@ namespace BridgeOpsClient
         private void cmbPresets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Clear down.
-            if (cmbPresets.SelectedIndex == 0)
+            if (cmbPresets.SelectedIndex == 0 && !skipPresetLoad)
             {
                 btnRemovePreset.IsEnabled = false;
                 btnRenamePreset.IsEnabled = false;
@@ -449,6 +450,15 @@ namespace BridgeOpsClient
                     PresetLoad(false);
             }
             lastSelectedIndex = cmbPresets.SelectedIndex;
+        }
+
+        private void btnAddPreset_Click(object sender, RoutedEventArgs e)
+        {
+            string name = GetNewPresetName();
+            if (name == "")
+                return;
+
+            SavePreset(name);
         }
 
         private void btnRemovePreset_Click(object sender, RoutedEventArgs e)
@@ -479,7 +489,6 @@ namespace BridgeOpsClient
                             PresetLoad(true);
                             cmbPresets.SelectedIndex = 0;
                             skipPresetLoad = false;
-                            ClearDown();
                             return;
                         }
                         if (response == Glo.CLIENT_SESSION_INVALID)
@@ -571,6 +580,11 @@ namespace BridgeOpsClient
         private void btnSaveChanges_Click(object sender, RoutedEventArgs e)
         {
             SavePreset(cmbPresets.Text);
+        }
+
+        private void btnClearDown_Click(object sender, RoutedEventArgs e)
+        {
+            ClearDown();
         }
     }
 }

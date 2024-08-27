@@ -44,6 +44,10 @@
                             <Setter Property="FontWeight" Value="Bold"/>
                             <Setter Property="Background" Value="LightGray"/>
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding Footer}" Value="True">
+                            <Setter Property="Height" Value="10"/>
+                            <Setter Property="Background" Value="Gray"/>
+                        </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </ListView.ItemContainerStyle>

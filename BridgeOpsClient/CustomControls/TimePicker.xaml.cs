@@ -30,13 +30,20 @@ namespace BridgeOpsClient.CustomControls
             InitializeComponent();
         }
 
-        public TimeSpan GetTime()
+        public TimeSpan? GetTime()
         {
-            // The text box itself can only ever hold a number, so no need to handle potential errors.
             int hour, minute;
-            int.TryParse(txtHour.Text, out hour);
-            int.TryParse(txtMinute.Text, out minute);
+            if (!int.TryParse(txtHour.Text, out hour))
+                return null;
+            if (!int.TryParse(txtMinute.Text, out minute))
+                return null;
             return new TimeSpan(hour, minute, 0);
+        }
+
+        public void ToggleEnabled(bool enabled)
+        {
+            txtHour.IsReadOnly = !enabled;
+            txtMinute.IsReadOnly = !enabled;
         }
 
         public void SetTime(long ticks) { SetTime(new TimeSpan(ticks)); }
@@ -67,7 +74,8 @@ namespace BridgeOpsClient.CustomControls
 
         private void txt_LostFocus(object sender, RoutedEventArgs e)
         {
-            while (((TextBox)sender).Text.Length < 2)
+            // This used to forcefully set a value if the TextBox was empty, but we want to be able to set null values.
+            while (((TextBox)sender).Text.Length < 2 && ((TextBox)sender).Text.Length != 0)
                 ((TextBox)sender).Text = '0' + ((TextBox)sender).Text;
         }
     }

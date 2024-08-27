@@ -161,7 +161,7 @@ namespace BridgeOpsClient
             {
                 if (txtAssetRef.Text == "")
                 {
-                    MessageBox.Show("You must input a value for Asset ID");
+                    MessageBox.Show($"You must input a value for {lblAssetID.Content}.");
                     return;
                 }
 

@@ -217,7 +217,7 @@ namespace BridgeOpsClient
             {
                 if (txtOrgRef.Text == "")
                 {
-                    MessageBox.Show("You must input a value for Organisation ID");
+                    MessageBox.Show($"You must input a value for {lblOrgID.Content}.");
                     return;
                 }
 

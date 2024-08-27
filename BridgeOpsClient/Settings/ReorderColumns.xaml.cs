@@ -37,7 +37,8 @@ namespace BridgeOpsClient
             public enum Kind { column, header, integral }
             public Kind kind;
             public bool Greyed { get { return kind == Kind.integral; } }
-            public bool Header { get { return kind == Kind.header; } }
+            public bool Header { get { return kind == Kind.header && name != ""; } }
+            public bool Footer { get { return kind == Kind.header && name == ""; } }
             public Entry(int index, int displayIndex, string name, Kind kind)
             {
                 this.index = index;

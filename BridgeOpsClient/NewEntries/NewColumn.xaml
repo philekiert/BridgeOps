@@ -47,6 +47,8 @@
             <ComboBoxItem Content="SMALLINT"/>
             <ComboBoxItem Content="INT"/>
             <ComboBoxItem Content="DATE"/>
+            <ComboBoxItem Content="DATETIME"/>
+            <ComboBoxItem Content="TIME"/>
             <ComboBoxItem Content="BOOLEAN"/>
         </ComboBox>
         <Label Grid.Row="4" Grid.Column="0" Content="Max"/>

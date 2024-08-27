@@ -25,6 +25,11 @@ namespace BridgeOpsClient.CustomControls
             InitializeComponent();
         }
 
+        public void ToggleEnabled(bool enabled)
+        {
+            txtNumber.IsReadOnly = !enabled;
+        }
+
         public string Text { get { return txtNumber.Text; } set { txtNumber.Text = value; } }
 
         public void SetMinMaxToType(string type)
@@ -44,9 +49,16 @@ namespace BridgeOpsClient.CustomControls
                 min = Int32.MinValue;
                 max = Int32.MaxValue;
             }
+
+            int i;
+            if (int.TryParse(txtNumber.Text, out i))
+                if (i > max)
+                    txtNumber.Text = max.ToString();
+                else if (i < min)
+                    txtNumber.Text = min.ToString();
         }
 
-        public int GetNumber()
+        public int? GetNumber()
         {
             // If the user has somehow entered a value above or below the max, don't fix it here as an error will be
             // thrown when the insert takes place.
@@ -55,7 +67,7 @@ namespace BridgeOpsClient.CustomControls
             if (int.TryParse(txtNumber.Text, out i))
                 return i;
             else
-                return min > 0 ? min : 0;
+                return null;
         }
 
         private void btnIncrement_Click(object sender, RoutedEventArgs e)
@@ -99,12 +111,12 @@ namespace BridgeOpsClient.CustomControls
 
             // Disallow and cancel if the change would make the text alphanumeric.
 
-            int value;
+            long value;
             int selectionStart = txtNumber.SelectionStart;
 
             if (txtNumber.Text == "" || txtNumber.Text == "-")
                 lastVal = txtNumber.Text;
-            else if (!int.TryParse(txtNumber.Text, out value))
+            else if (!long.TryParse(txtNumber.Text, out value))
             {
                 txtNumber.Text = lastVal;
                 if (selectionStart <= txtNumber.Text.Length)
@@ -126,7 +138,7 @@ namespace BridgeOpsClient.CustomControls
                     txtNumber.SelectionStart = txtNumber.Text.Length;
             }
 
-            bool isNumber = int.TryParse(txtNumber.Text, out value);
+            bool isNumber = long.TryParse(txtNumber.Text, out value);
             btnDecrement.IsEnabled = !isNumber || value > min;
             btnIncrement.IsEnabled = !isNumber || value < max;
 

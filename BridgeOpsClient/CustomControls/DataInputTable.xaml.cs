@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -101,13 +102,37 @@ namespace BridgeOpsClient.CustomControls
                     // Add the input field.
                     if (col.Value.type == "DATE")
                     {
-                        DatePicker dtpInput = new();
+                        DatePicker datInput = new();
+                        datInput.Height = 24;
+                        datInput.SetValue(Grid.ColumnProperty, 1);
+                        datInput.SetValue(Grid.RowProperty, i + headerBump);
+#pragma warning disable CS8622
+                        datInput.SelectedDateChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
+                        grdMain.Children.Add(datInput);
+                    }
+                    else if (col.Value.type == "DATETIME")
+                    {
+                        DateTimePicker dtpInput = new();
                         dtpInput.SetValue(Grid.ColumnProperty, 1);
                         dtpInput.SetValue(Grid.RowProperty, i + headerBump);
 #pragma warning disable CS8622
-                        dtpInput.SelectedDateChanged += GenericValueChangedHandler;
+                        dtpInput.datePicker.SelectedDateChanged += GenericValueChangedHandler;
+                        dtpInput.timePicker.txtHour.TextChanged += GenericValueChangedHandler;
+                        dtpInput.timePicker.txtMinute.TextChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
                         grdMain.Children.Add(dtpInput);
+                    }
+                    else if (col.Value.type == "TIME")
+                    {
+                        TimePicker timInput = new();
+                        timInput.SetValue(Grid.ColumnProperty, 1);
+                        timInput.SetValue(Grid.RowProperty, i + headerBump);
+#pragma warning disable CS8622
+                        timInput.txtHour.TextChanged += GenericValueChangedHandler;
+                        timInput.txtMinute.TextChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
+                        grdMain.Children.Add(timInput);
                     }
                     else if (col.Value.type == "BIT" || col.Value.type == "BOOLEAN")
                     {
@@ -121,6 +146,17 @@ namespace BridgeOpsClient.CustomControls
 #pragma warning restore CS8622
                         grdMain.Children.Add(cmbInput);
                     }
+                    else if (ColumnRecord.IsTypeInt(col.Value.type))
+                    {
+                        NumberEntry numberEntry = new();
+                        numberEntry.SetMinMaxToType(col.Value.type);
+                        numberEntry.SetValue(Grid.ColumnProperty, 1);
+                        numberEntry.SetValue(Grid.RowProperty, i + headerBump);
+#pragma warning disable CS8622
+                        numberEntry.txtNumber.TextChanged += GenericValueChangedHandler;
+#pragma warning restore CS8622
+                        grdMain.Children.Add(numberEntry);
+                    }
                     else
                     {
                         if (col.Value.allowed.Length == 0)
@@ -129,12 +165,10 @@ namespace BridgeOpsClient.CustomControls
                             TextBox txtInput = new();
                             txtInput.SetValue(Grid.ColumnProperty, 1);
                             txtInput.SetValue(Grid.RowProperty, i + headerBump);
-                            if (ColumnRecord.IsTypeString(col.Value))
-                                txtInput.MaxLength = Glo.Fun.LongToInt(col.Value.restriction);
+                            txtInput.MaxLength = Glo.Fun.LongToInt(col.Value.restriction);
 #pragma warning disable CS8622
                             txtInput.TextChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
-                            // else must be an INT type and will be checked against restriction in ScoopValues().
                             grdMain.Children.Add(txtInput);
                         }
                         else
@@ -217,6 +251,18 @@ namespace BridgeOpsClient.CustomControls
                     }
                     else if (t == typeof(DatePicker))
                         ((DatePicker)child).SelectedDate = d == null ? null : (DateTime)d;
+                    else if (t == typeof(DateTimePicker))
+                    {
+                        if (d != null)
+                            ((DateTimePicker)child).SetDateTime((DateTime)d);
+                    }
+                    else if (t == typeof(TimePicker))
+                    {
+                        if (d != null)
+                            ((TimePicker)child).SetTime((TimeSpan)d);
+                    }
+                    else if (t == typeof(NumberEntry))
+                        ((NumberEntry)child).txtNumber.Text = d == null ? "" : ((int)d).ToString();
                 }
                 ++i;
 
@@ -239,6 +285,12 @@ namespace BridgeOpsClient.CustomControls
                         ((ComboBox)child).IsEnabled = enabled;
                     else if (t == typeof(DatePicker))
                         ((DatePicker)child).IsEnabled = enabled;
+                    else if (t == typeof(DateTimePicker))
+                        ((DateTimePicker)child).ToggleEnabled(enabled);
+                    else if (t == typeof(TimePicker))
+                        ((TimePicker)child).ToggleEnabled(enabled);
+                    else if (t == typeof(NumberEntry))
+                        ((NumberEntry)child).ToggleEnabled(enabled);
                 }
                 ++i;
 
@@ -293,17 +345,8 @@ namespace BridgeOpsClient.CustomControls
                         string input = ((TextBox)child).Text;
                         if (input == "")
                             cv.value = null;
-                        else if (ColumnRecord.IsTypeString(cv.type))
+                        else
                             cv.value = input;
-                        else // Some sort of INT and needs checking against restriction.
-                        {
-                            long value;
-                            if (!long.TryParse(input, out value) || value < 0 || value > cv.restriction)
-                                disallowed.Add(cv.name.Replace('_', ' ') + " must be a whole number lower than " +
-                                               cv.restriction.ToString() + ".");
-                            else
-                                cv.value = input;
-                        }
                     }
                     else if (t == typeof(ComboBox))
                     {
@@ -331,7 +374,28 @@ namespace BridgeOpsClient.CustomControls
                         if (dt == null)
                             cv.value = null;
                         else
-                            cv.value = dt.Value.ToString("yyyy-MM-dd");
+                            cv.value = SendReceiveClasses.SqlAssist.DateTimeToSQL((DateTime)dt, true);
+                    }
+                    else if (t == typeof(DateTimePicker))
+                    {
+                        DateTime? dt = ((DateTimePicker)child).GetDateTime();
+                        if (dt == null)
+                            cv.value = null;
+                        else
+                            cv.value = SendReceiveClasses.SqlAssist.DateTimeToSQL((DateTime)dt, false);
+                    }
+                    else if (t == typeof(TimePicker))
+                    {
+                        TimeSpan? ts = ((TimePicker)child).GetTime();
+                        if (ts == null)
+                            cv.value = null;
+                        else
+                            cv.value = SendReceiveClasses.SqlAssist.TimeSpanToSQL((TimeSpan)ts);
+                    }
+                    else if (t == typeof(NumberEntry))
+                    {
+                        int? iVal = ((NumberEntry)child).GetNumber();
+                        cv.value = iVal == null ? null : ((NumberEntry)child).GetNumber().ToString();
                     }
                     colValues[curIndex] = cv;
                 }
