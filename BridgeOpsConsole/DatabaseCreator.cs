@@ -439,20 +439,20 @@ public class DatabaseCreator
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
             //          ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE );";
-            connections += ", CONSTRAINT pk_ConfID_DialNo PRIMARY KEY (Conference_ID, Organisation_Reference)" +
+            connections += ", CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference)" +
                            ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
-                           ", CONSTRAINT fk_ConnectionDialNo FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE );";
+                           ", CONSTRAINT fk_ConnectionOrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE );";
             conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
                                 ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
                                   ", CONSTRAINT fk_OrgChange_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
             //                    No real point making a foreign key for Login_ID - we don't want to cascade delete or set to null if the login is deleted.
-            assetChange += ", CONSTRAINT pk_AssetID_Change_ID PRIMARY KEY (Asset_ID, Change_ID)" +
+            assetChange += ", CONSTRAINT pk_AssetID_ChangeID PRIMARY KEY (Asset_ID, Change_ID)" +
                            ", CONSTRAINT fk_AssetChange_AssetID FOREIGN KEY (Asset_ID) REFERENCES Asset (Asset_ID) ON DELETE CASCADE );";
 
             // Junction Tables Strings
-            junctionOrgContacts += ", CONSTRAINT pk_jncContacts_OrgID_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID)" +
-                                   ", CONSTRAINT fk_jncContacts_OrgID FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE" +
+            junctionOrgContacts += ", CONSTRAINT pk_jncContacts_OrgRef_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID)" +
+                                   ", CONSTRAINT fk_jncContacts_OrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE" +
                                    ", CONSTRAINT fk_jncContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE );";
             //junctionOrgEngineers += ", CONSTRAINT pk_jncEngs_OrgID_ContactID PRIMARY KEY (Organisation_ID, Contact_ID)" +
             //                        ", CONSTRAINT fk_jncEngs_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE" +
@@ -505,10 +505,6 @@ public class DatabaseCreator
             //SendCommandSQL(junctionOrgChangeEngineers);
             //Writer.Message("Creating Conference Resource junction table...");
             //SendCommandSQL(junctionConfResource);
-
-            Writer.Message("\nCreating index on organisation and asset reference columns...");
-            SendCommandSQL($"CREATE UNIQUE INDEX index_orgRef ON Organisation ({Glo.Tab.ORGANISATION_REF});");
-            SendCommandSQL($"CREATE UNIQUE INDEX index_assetRef ON Asset ({Glo.Tab.ASSET_REF});");
 
             Writer.Message("\nApplying column additions...");
             foreach (ColumnAddition addition in columnAdditions)

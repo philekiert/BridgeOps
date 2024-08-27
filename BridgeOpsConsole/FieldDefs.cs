@@ -139,8 +139,8 @@ public class FieldDefs
         // Conference
         defs.Add("Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, true));
         defs.Add("Conference Resource ID", new Definition(10, Glo.Tab.RESOURCE_ID, typeResourceID, false, false, false));
-        defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.ORGANISATION_RESOURCE_ROW, typeResourceID, false, false, false));
-        defs.Add("Conference Conference Type ID", new Definition(10, Glo.Tab.CONFERENCE_TYPE, typeConfTypeID, false, false, false));
+        defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.CONFERENCE_RESOURCE_ROW, typeResourceID, false, false, false));
+        defs.Add("Conference Conference Type ID", new Definition(10, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, false, false));
         defs.Add("Conference Title", new Definition(10, Glo.Tab.CONFERENCE_TITLE, "VARCHAR(50)", true, false, false));
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));

@@ -153,10 +153,9 @@ public static class Glo
         public const string ASSET_REF = "Asset_Reference";
 
         public const string CONFERENCE_TYPE_ID = "Type_ID";
-        public const string ORGANISATION_RESOURCE_ROW = "Resource_Row";
+        public const string CONFERENCE_RESOURCE_ROW = "Resource_Row";
         public const string CONFERENCE_TYPE_NAME = "Type_Name";
         public const string CONFERENCE_ID = "Conference_ID";
-        public const string CONFERENCE_TYPE = "Type_ID";
         public const string CONFERENCE_TITLE = "Title";
         public const string CONFERENCE_START = "Start_Time";
         public const string CONFERENCE_END = "End_Time";
@@ -227,6 +226,9 @@ public static class Glo
 
         public static bool ColumnRemovalAllowed(string table, string column)
         {
+            // This isn't super exhaustive and isn't exactly ideal, but I've added to it over time as needs become
+            // apparent.
+
             return column != "Notes" &&
                 !((table == "Organisation" &&
                     (column == Glo.Tab.ORGANISATION_ID ||
@@ -242,14 +244,25 @@ public static class Glo
                   (table == "Conference" &&
                     (column == Glo.Tab.CONFERENCE_ID ||
                      column == Glo.Tab.RESOURCE_ID ||
-                     column == Glo.Tab.ORGANISATION_RESOURCE_ROW ||
-                     column == Glo.Tab.CONFERENCE_TYPE ||
+                     column == Glo.Tab.CONFERENCE_RESOURCE_ROW ||
+                     column == Glo.Tab.CONFERENCE_TYPE_ID ||
                      column == Glo.Tab.CONFERENCE_TITLE ||
                      column == Glo.Tab.CONFERENCE_START ||
                      column == Glo.Tab.CONFERENCE_END ||
                      column == Glo.Tab.CONFERENCE_BUFFER ||
                      column == Glo.Tab.ORGANISATION_REF ||
-                     column == Glo.Tab.RECURRENCE_ID)));
+                     column == Glo.Tab.RECURRENCE_ID)) ||
+                   (table == "Login" &&
+                    (column == Glo.Tab.LOGIN_ID ||
+                     column == Glo.Tab.LOGIN_USERNAME ||
+                     column == Glo.Tab.LOGIN_PASSWORD ||
+                     column == Glo.Tab.LOGIN_VIEW_SETTINGS ||
+                     column == Glo.Tab.LOGIN_CREATE_PERMISSIONS ||
+                     column == Glo.Tab.LOGIN_EDIT_PERMISSIONS ||
+                     column == Glo.Tab.LOGIN_DELETE_PERMISSIONS ||
+                     column == Glo.Tab.LOGIN_ADMIN ||
+                     column == Glo.Tab.LOGIN_ENABLED))
+                     );
         }
 
         public static IPAddress? GetIPAddressFromString(string ip)

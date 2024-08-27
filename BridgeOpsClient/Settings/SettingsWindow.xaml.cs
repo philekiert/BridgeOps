@@ -207,11 +207,13 @@ namespace BridgeOpsClient
             {
                 List<List<object?>> rows = new();
 
-                void AddTable(string name, OrderedDictionary tableRecord)
+                void AddTable(string name, OrderedDictionary tableRecord, string[] omit)
                 {
                     foreach (DictionaryEntry de in tableRecord)
                     {
                         string colName = (string)de.Key;
+                        if (omit.Contains(colName))
+                            continue;
                         ColumnRecord.Column col = (ColumnRecord.Column)de.Value!;
                         List<object?> row = new() { name,
                                                     colName,
@@ -226,10 +228,24 @@ namespace BridgeOpsClient
                     }
                 }
 
-                AddTable("Organisation", ColumnRecord.orderedOrganisation);
-                AddTable("Asset", ColumnRecord.orderedAsset);
-                AddTable("Contact", ColumnRecord.orderedContact);
-                AddTable("Conference", ColumnRecord.orderedConference);
+                AddTable("Organisation", ColumnRecord.orderedOrganisation, new string[0]);
+                AddTable("Asset", ColumnRecord.orderedAsset, new string[0]);
+                AddTable("Contact", ColumnRecord.orderedContact, new string[0]);
+                AddTable("Conference", ColumnRecord.orderedConference, new[] { Glo.Tab.CONFERENCE_BUFFER,
+                                                                               Glo.Tab.CONFERENCE_END,
+                                                                               Glo.Tab.CONFERENCE_START,
+                                                                               Glo.Tab.CONFERENCE_TYPE_ID,
+                                                                               Glo.Tab.CONFERENCE_RESOURCE_ROW,
+                                                                               Glo.Tab.CONFERENCE_TYPE_ID,
+                                                                               Glo.Tab.RESOURCE_ID,
+                                                                               Glo.Tab.RECURRENCE_ID });
+                AddTable("Login", ColumnRecord.login, new[] { Glo.Tab.LOGIN_ADMIN,
+                                                              Glo.Tab.LOGIN_CREATE_PERMISSIONS,
+                                                              Glo.Tab.LOGIN_DELETE_PERMISSIONS,
+                                                              Glo.Tab.LOGIN_EDIT_PERMISSIONS,
+                                                              Glo.Tab.LOGIN_ENABLED,
+                                                              Glo.Tab.LOGIN_PASSWORD,
+                                                              Glo.Tab.LOGIN_VIEW_SETTINGS });
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 

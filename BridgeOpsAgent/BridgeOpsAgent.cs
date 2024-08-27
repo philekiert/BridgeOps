@@ -543,14 +543,6 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void RebuildIndices(SqlConnection sqlConnect)
-    {
-        // Rebuild table indices, now's as good a time as any (and better than most).
-        SqlCommand com = new SqlCommand(SqlAssist.RebuildOrganisationRefIndex + " " + SqlAssist.RebuildAssetRefIndex,
-                                        sqlConnect);
-        com.ExecuteNonQuery();
-    }
-
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string sqlServerName = Glo.SQL_SERVER_NAME_DEFAULT;
     private static string ConnectionString
@@ -592,12 +584,9 @@ internal class BridgeOpsAgent
             try
             {
                 sqlConnect.Open();
-                // REDUNTANT: Send a pointless but minimal query just to make sure we have a working connection.
-                //SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 Username FROM Login;", sqlConnect);
+                // Send a pointless but minimal query just to make sure we have a working connection.
+                SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 Username FROM Login;", sqlConnect);
 
-                // Rebuild table indices, now's as good a time as any (and better than most). Also doubles up as a
-                // quick SQL connection test.
-                RebuildIndices(sqlConnect);
                 // If we got this far in the try/catch, we're in business.
                 successfulSqlConnection = true;
 

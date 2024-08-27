@@ -466,14 +466,137 @@ namespace SendReceiveClasses
                         droppedConstraint = true;
                     }
 
+                    // For OrganisationReference, we have to remove all the foreign keys, update those types as well,
+                    // then re-add them. Some primary keys too.
+                    bool reAddKeys = false;
+                    if (table == "Organisation")
+                    {
+                        if (column == Glo.Tab.ORGANISATION_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE OrganisationChange DROP CONSTRAINT fk_OrgChange_OrgID;");
+                            commands.Add("ALTER TABLE Organisation DROP CONSTRAINT pk_OrgID;");
+                            commands.Add("ALTER TABLE OrganisationChange DROP CONSTRAINT pk_OrgID_ChangeID");
+                        }
+                        if (column == Glo.Tab.ORGANISATION_REF)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Organisation DROP CONSTRAINT fk_ParentOrgRef;");
+                            commands.Add("ALTER TABLE Asset DROP CONSTRAINT fk_AssetOrganisation;");
+                            commands.Add("ALTER TABLE Conference DROP CONSTRAINT fk_ConfOrg;");
+                            commands.Add("ALTER TABLE Connection DROP CONSTRAINT fk_ConnectionOrgRef;");
+                            commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT fk_jncContacts_OrgRef;");
+                            commands.Add("ALTER TABLE Connection DROP CONSTRAINT pk_ConfID_OrgRef");
+                            commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT pk_jncContacts_OrgRef_ContactID;");
+                            commands.Add("ALTER TABLE Organisation DROP CONSTRAINT u_OrgRef;");
+
+                            commands.Add($"ALTER TABLE Organisation ALTER COLUMN {column} {columnType};");
+                            commands.Add($"ALTER TABLE Organisation ALTER COLUMN {Glo.Tab.PARENT_REF} {columnType};");
+                            commands.Add($"ALTER TABLE Asset ALTER COLUMN {column} {columnType};");
+                            commands.Add($"ALTER TABLE Conference ALTER COLUMN {column} {columnType};");
+                            commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType} NOT NULL;");
+                            commands.Add($"ALTER TABLE OrganisationContacts ALTER COLUMN {column} {columnType} NOT NULL;");
+                        }
+                    }
+                    else if (table == "Asset")
+                    {
+                        if (column == Glo.Tab.ASSET_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE AssetChange DROP CONSTRAINT fk_AssetChange_AssetID;");
+                            commands.Add("ALTER TABLE Asset DROP CONSTRAINT pk_AssetID;");
+                            commands.Add("ALTER TABLE AssetChange DROP CONSTRAINT pk_AssetID_ChangeID");
+                        }
+                        if (column == Glo.Tab.ASSET_REF)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Asset DROP CONSTRAINT u_AssetRef;");
+                        }
+                    }
+                    else if (table == "Contact" && column == Glo.Tab.CONTACT_ID)
+                    {
+                        reAddKeys = true;
+                        commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT fk_jncContacts_ContactID;");
+                        commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT pk_jncContacts_OrgRef_ContactID;");
+                        commands.Add("ALTER TABLE Contact DROP CONSTRAINT pk_ContactID;");
+                    }
+                    else if (table == "Login")
+                    {
+                        if (column == Glo.Tab.LOGIN_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Login DROP CONSTRAINT pk_LoginID;");
+
+                        }
+                        else if (column == Glo.Tab.LOGIN_USERNAME)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Login DROP CONSTRAINT u_Username;");
+                        }
+                    }
+
                     commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType};");
 
-                    // Change register column types if needed.
+                    // Change register column types if needed (overriden below if NOT NULL needs adding).
                     if (table == "Organisation" || table == "Asset")
-                    {
                         commands.Add($"ALTER TABLE {table}Change ALTER COLUMN {column} {columnType};");
-                        commands.Add($"ALTER TABLE {table}Change " +
-                                     $"ALTER COLUMN {column}{Glo.Tab.CHANGE_SUFFIX} {columnType};");
+
+                    if (reAddKeys)
+                    {
+                        if (table == "Organisation")
+                        {
+                            if (column == Glo.Tab.ORGANISATION_ID)
+                            {
+                                // In this very rare case, for simplicity's sake, alter again to make NOT NULL so we can re-add the primary key constraints.
+                                commands.Add($"ALTER TABLE Organisation ALTER COLUMN {column} {columnType} NOT NULL;");
+                                commands.Add($"ALTER TABLE OrganisationChange ALTER COLUMN {column} {columnType} NOT NULL;");
+                                commands.Add("ALTER TABLE Organisation ADD CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID);");
+                                commands.Add("ALTER TABLE OrganisationChange ADD CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)");
+                                commands.Add("ALTER TABLE OrganisationChange ADD CONSTRAINT fk_OrgChange_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE;");
+                            }
+                            if (column == Glo.Tab.ORGANISATION_REF)
+                            {
+                                commands.Add("ALTER TABLE Organisation ADD CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference);");
+                                commands.Add("ALTER TABLE Organisation ADD CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference);");
+                                commands.Add("ALTER TABLE Asset ADD CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE;");
+                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE;");
+                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT fk_ConnectionOrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE;");
+                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference);");
+                                commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT fk_jncContacts_OrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE;");
+                                commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT pk_jncContacts_OrgRef_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID);");
+                            }
+                        }
+                        else if (table == "Asset")
+                        {
+                            if (column == Glo.Tab.ASSET_ID)
+                            {
+                                // In this very rare case, for simplicity's sake, just alter again to make NOT NULL so we can re-add the primary key constraints.
+                                commands.Add($"ALTER TABLE Asset ALTER COLUMN {column} {columnType} NOT NULL;");
+                                commands.Add($"ALTER TABLE AssetChange ALTER COLUMN {column} {columnType} NOT NULL;");
+                                commands.Add("ALTER TABLE Asset ADD CONSTRAINT pk_AssetID PRIMARY KEY (Asset_ID);");
+                                commands.Add("ALTER TABLE AssetChange ADD CONSTRAINT pk_AssetID_ChangeID PRIMARY KEY (Asset_ID, Change_ID)");
+                                commands.Add("ALTER TABLE AssetChange ADD CONSTRAINT fk_AssetChange_AssetID FOREIGN KEY (Asset_ID) REFERENCES Asset (Asset_ID) ON DELETE CASCADE;");
+                            }
+                            if (column == Glo.Tab.ASSET_REF)
+                            {
+                                commands.Add("ALTER TABLE Asset ADD CONSTRAINT u_AssetRef UNIQUE (Asset_Reference);");
+                            }
+                        }
+                        else if (table == "Contact" && column == Glo.Tab.CONTACT_ID)
+                        {
+                            commands.Add($"ALTER TABLE Contact ALTER COLUMN {column} {columnType} NOT NULL;");
+                            commands.Add($"ALTER TABLE OrganisationContacts ALTER COLUMN {column} {columnType} NOT NULL;");
+                            commands.Add("ALTER TABLE Contact ADD CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID);");
+                            commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT fk_jncContacts_ContactID FOREIGN KEY (Contact_ID) REFERENCES Contact (Contact_ID) ON DELETE CASCADE;");
+                            commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT pk_jncContacts_OrgRef_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID);");
+                        }
+                        else if (table == "Login")
+                        {
+                            if (column == Glo.Tab.LOGIN_ID)
+                                commands.Add("ALTER TABLE Login ADD CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID);");
+                            else if (column == Glo.Tab.LOGIN_USERNAME)
+                                commands.Add("ALTER TABLE Login ADD CONSTRAINT u_Username UNIQUE (Username);");
+                        }
                     }
                 }
                 if (allowed.Count > 0)
@@ -496,10 +619,16 @@ namespace SendReceiveClasses
                                  $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
                                  $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}';" +
                                  "END " +
+                                 $"ELSE IF EXISTS(SELECT 1 FROM FriendlyNames " +
+                                 $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
+                                 $"AND REPLACE({Glo.Tab.FRIENDLY_NAME}, ' ', '_') = REPLACE('{friendly}', ' ', '_')) " +
+                                  "BEGIN " +
+                                 $"THROW 50000, 'That friendly name already exists.', 1; " +
+                                 $"END " +
                                  $"ELSE " +
                                  $"BEGIN " +
                                  $"INSERT INTO FriendlyNames VALUES ('{table}', '{column}', '{friendly}'); " +
-                                 "END;");
+                                  "END;");
                 }
 
                 if (commands.Count == 1)
@@ -1165,7 +1294,7 @@ namespace SendReceiveClasses
         public string SqlInsert()
         {
             return SqlAssist.InsertInto("Conference",
-                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.CONFERENCE_TYPE,
+                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.CONFERENCE_TYPE_ID,
                                                                             Glo.Tab.CONFERENCE_TITLE,
                                                                             Glo.Tab.CONFERENCE_START,
                                                                             Glo.Tab.CONFERENCE_END,
@@ -2244,10 +2373,5 @@ namespace SendReceiveClasses
         {
             return timeSpan.ToString(@"hh\:mm");
         }
-
-        public static string RebuildOrganisationRefIndex
-        { get { return "ALTER INDEX index_orgRef ON Organisation REBUILD"; } }
-        public static string RebuildAssetRefIndex
-        { get { return "ALTER INDEX index_assetRef ON Asset REBUILD"; } }
     }
 }

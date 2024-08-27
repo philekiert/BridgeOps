@@ -81,6 +81,22 @@ namespace BridgeOpsClient
                     cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
                     cmbType.Items.RemoveAt(2);
+
+                    if ((table == "Organisation" && column == Glo.Tab.ORGANISATION_REF) ||
+                        (table == "Asset" && column == Glo.Tab.ASSET_REF) ||
+                        (table == "Login" && column == Glo.Tab.LOGIN_USERNAME))
+                    {
+                        cmbType.Items.RemoveAt(1);
+                        cmbType.IsEnabled = false;
+                    }
+                    if ((table == "Organisation" && column == Glo.Tab.PARENT_REF) ||
+                        (table == "Conference" && column == Glo.Tab.PARENT_REF))
+                    {
+                        cmbType.IsEnabled = false;
+                        txtLimit.IsEnabled = false;
+                        txtAllowed.IsEnabled = false;
+                    }
+
                     updatingTypeOptions = false;
                     if (columnDetails.restriction == Int32.MaxValue)
                         cmbType.SelectedIndex = 1;
@@ -175,7 +191,7 @@ namespace BridgeOpsClient
                 SendToServer(mod);
             }
         }
-
+        
         private void VARCHAR(ref SendReceiveClasses.TableModification mod)
         {
             if (mod.columnType != "VARCHAR")
