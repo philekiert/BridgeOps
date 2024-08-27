@@ -1,6 +1,8 @@
 ﻿using BridgeOpsClient.DialogWindows;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +21,7 @@ namespace BridgeOpsClient
     {
         int identity;
         string table;
-        Dictionary<string, ColumnRecord.Column> columns;
+        OrderedDictionary columns;
         List<string> ids;
         string idColumn;
         bool idsNeedQuotes;
@@ -50,7 +52,7 @@ namespace BridgeOpsClient
         }
         List<FieldRow> rows = new();
 
-        public UpdateMultiple(int identity, string table, Dictionary<string, ColumnRecord.Column> columns,
+        public UpdateMultiple(int identity, string table, OrderedDictionary columns,
                               string idColumn, List<string> ids, bool idsNeedQuotes)
         {
             InitializeComponent();
@@ -78,10 +80,13 @@ namespace BridgeOpsClient
         private void UpdateColumnList()
         {
             columnNames = new();
-            foreach (var kvp in columns)
-                if (kvp.Key != idColumn && !(table == "Organisation" && kvp.Key == Glo.Tab.ORGANISATION_REF) &&
-                                           !(table == "Asset" && kvp.Key == Glo.Tab.ASSET_REF))
-                    columnNames.Add(ColumnRecord.GetPrintName(kvp));
+            foreach (DictionaryEntry de in columns)
+            {
+                string colName = (string)de.Key;
+                if (colName != idColumn && !(table == "Organisation" && colName == Glo.Tab.ORGANISATION_REF) &&
+                                           !(table == "Asset" && colName == Glo.Tab.ASSET_REF))
+                    columnNames.Add(ColumnRecord.GetPrintName(de));
+            }
         }
 
         private void UpdateGridRows()
@@ -136,7 +141,7 @@ namespace BridgeOpsClient
                 return;
 
             string key = ColumnRecord.ReversePrintName((string)cmb.Items[cmb.SelectedIndex], columns);
-            ColumnRecord.Column column = columns[key];
+            ColumnRecord.Column column = (ColumnRecord.Column)columns[key]!;
 
             int index = Grid.GetRow(cmb);
 

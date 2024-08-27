@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,8 +64,8 @@ namespace BridgeOpsClient
             {
                 var dictionary = ColumnRecord.GetDictionary(selectedTable, true);
                 if (dictionary != null)
-                    foreach (var kvp in dictionary)
-                        columns.Add(ColumnRecord.GetPrintName(kvp));
+                    foreach (DictionaryEntry de in dictionary)
+                        columns.Add(ColumnRecord.GetPrintName(de));
             }
             cmbColumn1.ItemsSource = columns;
 

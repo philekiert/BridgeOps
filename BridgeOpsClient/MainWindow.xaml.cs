@@ -132,14 +132,18 @@ namespace BridgeOpsClient
         {
             NewResource newResource = new();
 
-            if (ColumnRecord.resource["Resource_ID"].friendlyName != "")
-                newResource.lblResourceName.Content = ColumnRecord.resource["Resource_ID"].friendlyName;
-            if (ColumnRecord.resource["Available_From"].friendlyName != "")
-                newResource.lblAvailableFrom.Content = ColumnRecord.resource["Available_From"].friendlyName;
-            if (ColumnRecord.resource["Available_To"].friendlyName != "")
-                newResource.lblAvailableTo.Content = ColumnRecord.resource["Available_To"].friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_ID).friendlyName != "")
+                newResource.lblResourceName.Content = ColumnRecord.GetColumn(ColumnRecord.resource,
+                                                                             Glo.Tab.RESOURCE_ID).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_FROM).friendlyName != "")
+                newResource.lblAvailableFrom.Content = ColumnRecord.GetColumn(ColumnRecord.resource,
+                                                                              Glo.Tab.RESOURCE_FROM).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_TO).friendlyName != "")
+                newResource.lblAvailableTo.Content = ColumnRecord.GetColumn(ColumnRecord.resource,
+                                                                            Glo.Tab.RESOURCE_TO).friendlyName;
 
-            newResource.txtResourceName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.resource["Resource_ID"].restriction);
+            newResource.txtResourceName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.resource,
+                                                                      Glo.Tab.RESOURCE_ID).restriction);
 
             newResource.Show();
         }
@@ -148,10 +152,12 @@ namespace BridgeOpsClient
         {
             NewConferenceType newResource = new();
 
-            if (ColumnRecord.conferenceType["Type_Name"].friendlyName != "")
-                newResource.lblTypeName.Content = ColumnRecord.conferenceType["Type_Name"].friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.conferenceType, Glo.Tab.CONFERENCE_TYPE_NAME).friendlyName != "")
+                newResource.lblTypeName.Content = ColumnRecord.GetColumn(ColumnRecord.conferenceType,
+                                                                         Glo.Tab.CONFERENCE_TYPE_NAME).friendlyName;
 
-            newResource.txtTypeName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.conferenceType["Type_Name"].restriction);
+            newResource.txtTypeName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.conferenceType,
+                                                                  Glo.Tab.CONFERENCE_TYPE_NAME).restriction);
 
             newResource.Show();
         }

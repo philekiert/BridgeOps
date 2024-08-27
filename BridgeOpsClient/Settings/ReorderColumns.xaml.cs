@@ -1,6 +1,8 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -67,7 +69,7 @@ namespace BridgeOpsClient
                 entryListOriginals[i] = new();
             }
 
-            Dictionary<string, ColumnRecord.Column> dictionary;
+            OrderedDictionary dictionary;
             List<int> order;
             List<SendReceiveClasses.ColumnOrdering.Header> headers;
             for (int n = 0; n < 4; ++n)
@@ -99,11 +101,11 @@ namespace BridgeOpsClient
 
                 string[] table = new string[] { "Organisation", "Asset", "Contact", "Conference" };
                 int i = 0;
-                foreach (KeyValuePair<string, ColumnRecord.Column> kvp in dictionary)
+                foreach (DictionaryEntry de in dictionary)
                 {
-                    string printName = ColumnRecord.GetPrintName(kvp);
-                    Entry.Kind type = Glo.Fun.ColumnRemovalAllowed(table[n], kvp.Key) ? Entry.Kind.column :
-                                                                                        Entry.Kind.integral;
+                    string printName = ColumnRecord.GetPrintName(de);
+                    Entry.Kind type = Glo.Fun.ColumnRemovalAllowed(table[n], (string)de.Key) ? Entry.Kind.column :
+                                                                                               Entry.Kind.integral;
                     entryLists[n].Add(new Entry(i, 0, printName, type));
                     entryListOriginals[n].Add(new Entry(i, 0, printName, type));
                     ++i;
@@ -122,10 +124,19 @@ namespace BridgeOpsClient
                 int index = 0;
                 foreach (SendReceiveClasses.ColumnOrdering.Header h in headers)
                 {
-                    entryLists[n].Insert(h.position + index,
-                                         new Entry(h.position, h.position, h.name, Entry.Kind.header));
-                    entryListOriginals[n].Insert(h.position + index,
-                                                 new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                    int insertIndex = h.position + index;
+                    if (insertIndex < entryLists[n].Count)
+                    {
+                        entryLists[n].Insert(h.position + index,
+                                             new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                        entryListOriginals[n].Insert(h.position + index,
+                                                     new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                    }
+                    else // Pop them on the end if their position is too great. This can happen after column removals.
+                    {
+                        entryLists[n].Add(new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                        entryListOriginals[n].Add(new Entry(h.position, h.position, h.name, Entry.Kind.header));
+                    }
                     ++index;
                 }
             }

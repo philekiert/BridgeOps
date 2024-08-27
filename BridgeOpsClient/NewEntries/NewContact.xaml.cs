@@ -67,11 +67,12 @@ namespace BridgeOpsClient
             ditContact.Initialise(ColumnRecord.orderedContact, "Contact");
 
             // Implement max length. Max lengths in the DataInputTable are set automatically.
-            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset["Notes"].restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.contact,
+                                                                          Glo.Tab.NOTES).restriction);
 
             // Implemement friendly name.
-            if (ColumnRecord.contact["Notes"].friendlyName != "")
-                lblNotes.Content = ColumnRecord.contact["Notes"].friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.contact, Glo.Tab.NOTES).friendlyName != "")
+                lblNotes.Content = ColumnRecord.GetColumn(ColumnRecord.contact, Glo.Tab.NOTES).friendlyName;
         }
 
 #pragma warning disable CS8602
@@ -112,7 +113,8 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 nc.additionalNeedsQuotes = new List<bool>();
                 foreach (string c in nc.additionalCols)
-                    nc.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
+                    nc.additionalNeedsQuotes.Add(
+                        SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.contact, c).type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id))
                 {
@@ -121,6 +123,8 @@ namespace BridgeOpsClient
                     // table in the application but the Organisation that added it, if there was one.
                     if (isDialog)
                         DialogResult = true;
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches(2);
                     Close();
                 }
             }
@@ -168,7 +172,8 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 contact.additionalNeedsQuotes = new();
                 foreach (string c in cols)
-                    contact.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.contact[c].type));
+                    contact.additionalNeedsQuotes.Add(
+                        SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.contact, c).type));
 
                 contact.additionalCols = cols;
                 contact.additionalVals = vals;

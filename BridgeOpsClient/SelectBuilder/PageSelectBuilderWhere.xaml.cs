@@ -99,7 +99,7 @@ namespace BridgeOpsClient
                 return;
             }
 
-            type = dictionary[column].type;
+            type = ((ColumnRecord.Column)dictionary[column]!).type;
 
             if (ColumnRecord.IsTypeString(type))
                 cmbOperator.ItemsSource = new List<string>() { "=", "LIKE", "IS NULL", "IS NOT NULL" };

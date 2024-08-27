@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -205,18 +207,20 @@ namespace BridgeOpsClient
             {
                 List<List<object?>> rows = new();
 
-                void AddTable(string name, Dictionary<string, ColumnRecord.Column> tableRecord)
+                void AddTable(string name, OrderedDictionary tableRecord)
                 {
-                    foreach (KeyValuePair<string, ColumnRecord.Column> col in tableRecord)
+                    foreach (DictionaryEntry de in tableRecord)
                     {
+                        string colName = (string)de.Key;
+                        ColumnRecord.Column col = (ColumnRecord.Column)de.Value!;
                         List<object?> row = new() { name,
-                                                    col.Key,
-                                                    col.Value.friendlyName,
+                                                    colName,
+                                                    col.friendlyName,
                                                     // Boolean is more widely understood by the user than BIT.
-                                                    col.Value.type == "BIT" ? "BOOLEAN" : col.Value.type,
-                                                    col.Value.restriction == 0 ? "" : col.Value.restriction.ToString(),
-                                                    string.Join("; ", col.Value.allowed) };
-                        if (col.Value.type == "VARCHAR" && col.Value.restriction == Int32.MaxValue)
+                                                    col.type == "BIT" ? "BOOLEAN" : col.type,
+                                                    col.restriction == 0 ? "" : col.restriction.ToString(),
+                                                    string.Join("; ", col.allowed) };
+                        if (col.type == "VARCHAR" && col.restriction == Int32.MaxValue)
                             row[3] = "VARCHAR(MAX)";
                         rows.Add(row);
                     }
@@ -244,7 +248,7 @@ namespace BridgeOpsClient
         {
             string table = dtgColumns.GetCurrentlySelectedCell(0);
             string column = dtgColumns.GetCurrentlySelectedCell(1);
-            ColumnRecord.Column? col = ColumnRecord.GetColumn(table, column);
+            ColumnRecord.Column? col = ColumnRecord.GetColumnNullable(table, column);
             if (col == null)
             {
                 MessageBox.Show("Something went wrong.");

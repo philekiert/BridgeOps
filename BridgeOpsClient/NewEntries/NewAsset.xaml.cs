@@ -2,6 +2,7 @@
 using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -90,16 +91,18 @@ namespace BridgeOpsClient
             ditAsset.Initialise(ColumnRecord.orderedAsset, "Asset");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtAssetRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset[Glo.Tab.ASSET_REF].restriction);
-            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.asset[Glo.Tab.NOTES].restriction);
+            txtAssetRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.asset,
+                                                                             Glo.Tab.ASSET_REF).restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.asset,
+                                                                          Glo.Tab.NOTES).restriction);
 
             // Implement friendly names.
-            if (ColumnRecord.asset[Glo.Tab.ASSET_REF].friendlyName != "")
-                lblAssetID.Content = ColumnRecord.asset[Glo.Tab.ASSET_REF].friendlyName;
-            if (ColumnRecord.asset[Glo.Tab.ORGANISATION_REF].friendlyName != "")
-                lblOrgID.Content = ColumnRecord.asset[Glo.Tab.ORGANISATION_REF].friendlyName;
-            if (ColumnRecord.asset[Glo.Tab.NOTES].friendlyName != "")
-                lblNotes.Content = ColumnRecord.asset[Glo.Tab.NOTES].friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.asset, Glo.Tab.ASSET_REF).friendlyName != "")
+                lblAssetID.Content = ColumnRecord.GetColumn(ColumnRecord.asset, Glo.Tab.ASSET_REF).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.asset, Glo.Tab.ORGANISATION_REF).friendlyName != "")
+                lblOrgID.Content = ColumnRecord.GetColumn(ColumnRecord.asset, Glo.Tab.ORGANISATION_REF).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.asset, Glo.Tab.NOTES).friendlyName != "")
+                lblNotes.Content = ColumnRecord.GetColumn(ColumnRecord.asset, Glo.Tab.NOTES).friendlyName;
         }
 
         public void PopulateExistingData(List<object?> data)
@@ -148,7 +151,7 @@ namespace BridgeOpsClient
                     if (row[2] == null)
                         row[2] = "[deleted]";
                 dtgChangeLog.maxLengthOverrides = new Dictionary<string, int> { { "Reason", -1 } };
-                dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                dtgChangeLog.Update(new List<OrderedDictionary>()
                                    { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows,
                                    Glo.Tab.CHANGE_ID);
             }
@@ -180,7 +183,8 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 newAsset.additionalNeedsQuotes = new();
                 foreach (string c in newAsset.additionalCols)
-                    newAsset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
+                    newAsset.additionalNeedsQuotes.Add(
+                        SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.asset, c).type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset))
                 {
@@ -233,7 +237,7 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 asset.additionalNeedsQuotes = new();
                 foreach (string c in cols)
-                    asset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.asset[c].type));
+                    asset.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.asset, c).type));
 
                 asset.additionalCols = cols;
                 asset.additionalVals = vals;

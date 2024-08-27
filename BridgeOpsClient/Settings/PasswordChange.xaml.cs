@@ -42,7 +42,8 @@ namespace BridgeOpsClient
         private void InitialiseFields()
         {
             // Implement max length. Max lengths in the DataInputTa/ble are set automatically.
-            pwdCurrent.MaxLength = Glo.Fun.LongToInt(ColumnRecord.login["Password"].restriction);
+            pwdCurrent.MaxLength = Glo.Fun.LongToInt(
+                ((ColumnRecord.Column)ColumnRecord.login["Password"]!).restriction);
             pwdNew.MaxLength = pwdCurrent.MaxLength;
             pwdConfirm.MaxLength = pwdCurrent.MaxLength;
         }

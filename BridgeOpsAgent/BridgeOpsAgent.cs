@@ -19,6 +19,8 @@ using System.Threading.Channels;
 using System.Reflection.PortableExecutable;
 using System.Xml.Schema;
 using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using System.Collections.Specialized;
+using System.Collections;
 
 internal class BridgeOpsAgent
 {
@@ -1524,7 +1526,7 @@ internal class BridgeOpsAgent
             req.Prepare();
 
             // Get the list of columns to search, reject if the table was invalid.
-            Dictionary<string, ColumnRecord.Column> columns;
+            OrderedDictionary columns;
             if (req.table == "Organisation")
                 columns = ColumnRecord.organisation;
             else if (req.table == "Asset")
@@ -1550,9 +1552,9 @@ internal class BridgeOpsAgent
             List<string> conditions = new();
             if (req.value != "") // In that case, just select everything.
             {
-                foreach (KeyValuePair<string, ColumnRecord.Column> kvp in columns)
-                    if (ColumnRecord.IsTypeString(kvp.Value))
-                        conditions.Add(kvp.Key + " LIKE \'%" + req.value + "%'");
+                foreach (DictionaryEntry de in columns)
+                    if (ColumnRecord.IsTypeString((ColumnRecord.Column)de.Value!))
+                        conditions.Add(de.Key + " LIKE \'%" + req.value + "%'");
 
                 command += " WHERE " + string.Join(" OR ", conditions);
             }

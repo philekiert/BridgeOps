@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,7 +44,7 @@ namespace BridgeOpsClient.CustomControls
         }
         public List<ColValue> colValues = new();
 
-        public void Initialise(Dictionary<string, ColumnRecord.Column> columns, string table)
+        public void Initialise(OrderedDictionary columns, string table)
         {
             int i = 0;
             int iTotal = 0;
@@ -53,7 +54,9 @@ namespace BridgeOpsClient.CustomControls
                 headerRows.Add(header.position);
             int headerBump = 0; // Used to space for headers where needed.
 
-            foreach (KeyValuePair<string, ColumnRecord.Column> col in columns)
+            var entryList = ColumnRecord.GenerateKvpList(columns);
+
+            foreach (KeyValuePair<string, ColumnRecord.Column> col in entryList)
             {
                 bool skip = false;
 

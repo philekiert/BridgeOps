@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using ClosedXML.Excel;
 using static BridgeOpsClient.CustomControls.SqlDataGrid;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Collections.Specialized;
 
 
 namespace BridgeOpsClient.CustomControls
@@ -90,15 +91,15 @@ namespace BridgeOpsClient.CustomControls
         // friendly name. I can't see this being an issue, but note it for future reference.
         public void Update(List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
-            Update(new List<Dictionary<string, ColumnRecord.Column>>(), columnNames, rows, omitColumns);
+            Update(new List<OrderedDictionary>(), columnNames, rows, omitColumns);
         }
-        public void Update(Dictionary<string, ColumnRecord.Column> tableColDefs,
+        public void Update(OrderedDictionary tableColDefs,
                            List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
-            Update(new List<Dictionary<string, ColumnRecord.Column>>() { tableColDefs },
+            Update(new List<OrderedDictionary>() { tableColDefs },
                    columnNames, rows, omitColumns);
         }
-        public void Update(List<Dictionary<string, ColumnRecord.Column>> tableColDefs,
+        public void Update(List<OrderedDictionary> tableColDefs,
                            List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
             // Add any columns to omit to a dictionary for fast lookup.
@@ -130,11 +131,11 @@ namespace BridgeOpsClient.CustomControls
                 else
                 {
                     ColumnRecord.Column col = new ColumnRecord.Column();
-                    foreach (Dictionary<string, ColumnRecord.Column> defs in tableColDefs)
+                    foreach (OrderedDictionary defs in tableColDefs)
                     {
-                        if (defs.ContainsKey(s))
+                        if (defs.Contains(s))
                         {
-                            col = defs[s];
+                            col = (ColumnRecord.Column)defs[s]!;
                             break;
                         }
                     }

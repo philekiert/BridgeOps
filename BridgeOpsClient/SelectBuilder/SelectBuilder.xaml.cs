@@ -570,7 +570,7 @@ namespace BridgeOpsClient
                 var dictionary = ColumnRecord.GetDictionary(table, false);
                 if (dictionary == null)
                     return "";
-                name = ColumnRecord.GetPrintName(column, dictionary[column]);
+                name = ColumnRecord.GetPrintName(column, (ColumnRecord.Column)dictionary[column]!);
 
                 return retainTableName ? table + "." + name : name;
             }

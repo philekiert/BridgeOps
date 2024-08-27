@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -18,10 +19,10 @@ namespace BridgeOpsClient
     public partial class LinkRecord : Window
     {
         string table;
-        Dictionary<string, ColumnRecord.Column> columns;
+        OrderedDictionary columns;
         public string? id = null;
 
-        public LinkRecord(string table, Dictionary<string, ColumnRecord.Column> columns)
+        public LinkRecord(string table, OrderedDictionary columns)
         {
             InitializeComponent();
 

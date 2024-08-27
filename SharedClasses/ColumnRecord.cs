@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +38,14 @@ public static class ColumnRecord
         else
             return col.Key.Replace('_', ' ');
     }
+    public static string GetPrintName(DictionaryEntry de)
+    {
+        Column col = (Column)de.Value!;
+        if (col.friendlyName != "")
+            return col.friendlyName.Replace('_', ' ');
+        else
+            return ((string)de.Key).Replace('_', ' ');
+    }
     public static string GetPrintName(string key, Column col)
     {
         if (col.friendlyName != null && col.friendlyName != "")
@@ -43,36 +53,36 @@ public static class ColumnRecord
         else
             return key.Replace('_', ' ');
     }
-    public static string ReversePrintName(string name, Dictionary<string, Column> dictionary)
+    public static string ReversePrintName(string name, OrderedDictionary dictionary)
     {
         name = name.Replace(' ', '_');
-        if (dictionary.ContainsKey(name))
+        if (dictionary.Contains(name))
             return name;
-        foreach (var kvp in dictionary)
-            if (kvp.Value.friendlyName.Replace(' ', '_') == name)
-                return kvp.Key;
+        foreach (DictionaryEntry de in dictionary)
+            if (((Column)de.Value!).friendlyName.Replace(' ', '_') == name)
+                return (string)de.Key;
         return "";
     }
 
-    public static Dictionary<string, Column> organisation = new();
+    public static OrderedDictionary organisation = new();
     public static Dictionary<string, string> organisationFriendlyNameReversal = new();
-    public static Dictionary<string, Column> organisationChange = new();
+    public static OrderedDictionary organisationChange = new();
     public static Dictionary<string, string> organisationChangeFriendlyNameReversal = new();
-    public static Dictionary<string, Column> asset = new();
+    public static OrderedDictionary asset = new();
     public static Dictionary<string, string> assetFriendlyNameReversal = new();
-    public static Dictionary<string, Column> assetChange = new();
+    public static OrderedDictionary assetChange = new();
     public static Dictionary<string, string> assetChangeFriendlyNameReversal = new();
-    public static Dictionary<string, Column> contact = new();
+    public static OrderedDictionary contact = new();
     public static Dictionary<string, string> contactFriendlyNameReversal = new();
-    public static Dictionary<string, Column> conferenceType = new();
+    public static OrderedDictionary conferenceType = new();
     public static Dictionary<string, string> conferenceTypeFriendlyNameReversal = new();
-    public static Dictionary<string, Column> conference = new();
+    public static OrderedDictionary conference = new();
     public static Dictionary<string, string> conferenceFriendlyNameReversal = new();
-    public static Dictionary<string, Column> conferenceRecurrence = new();
+    public static OrderedDictionary conferenceRecurrence = new();
     public static Dictionary<string, string> conferenceRecurrenceFriendlyNameReversal = new();
-    public static Dictionary<string, Column> resource = new();
+    public static OrderedDictionary resource = new();
     public static Dictionary<string, string> resourceFriendlyNameReversal = new();
-    public static Dictionary<string, Column> login = new();
+    public static OrderedDictionary login = new();
     public static Dictionary<string, string> loginFriendlyNameReversal = new();
 
     public static List<int> organisationOrder = new();
@@ -80,57 +90,40 @@ public static class ColumnRecord
     public static List<int> contactOrder = new();
     public static List<int> conferenceOrder = new();
 
-    public static Dictionary<string, Column> orderedOrganisation = new();
-    public static Dictionary<string, Column> orderedAsset = new();
-    public static Dictionary<string, Column> orderedContact = new();
-    public static Dictionary<string, Column> orderedConference = new();
+    public static OrderedDictionary orderedOrganisation = new();
+    public static OrderedDictionary orderedAsset = new();
+    public static OrderedDictionary orderedContact = new();
+    public static OrderedDictionary orderedConference = new();
+
+
 
     public static List<ColumnOrdering.Header> organisationHeaders = new();
     public static List<ColumnOrdering.Header> assetHeaders = new();
     public static List<ColumnOrdering.Header> contactHeaders = new();
     public static List<ColumnOrdering.Header> conferenceHeaders = new();
 
-    public static List<string[]> GetFriendlyNames()
-    {
-        List<string[]> friendlyNames = new();
-
-        void GetNames(string table, Dictionary<string, Column> dict)
-        {
-            foreach (KeyValuePair<string, Column> col in dict)
-                if (col.Value.friendlyName != "")
-                    friendlyNames.Add(new string[] { table, col.Key, col.Value.friendlyName });
-        }
-
-        GetNames("Organisation", organisation);
-        GetNames("Asset", asset);
-        GetNames("Contact", contact);
-        GetNames("Conference", conference);
-
-        return friendlyNames;
-    }
-
-    public static bool OrderTable(Dictionary<string, Column> dictionary,
+    public static bool OrderTable(OrderedDictionary dictionary,
                                   List<int> order,
-                                  Dictionary<string, Column> orderedDictionary)
+                                  OrderedDictionary orderedDictionary)
     {
         try
         {
-            KeyValuePair<string, Column>[] orderedArray = new KeyValuePair<string, Column>[order.Count];
+            DictionaryEntry[] orderedArray = new DictionaryEntry[order.Count];
 
             int i = 0;
-            foreach (KeyValuePair<string, Column> kvp in dictionary)
+            foreach (DictionaryEntry de in dictionary)
             {
                 for (int n = 0; n < orderedArray.Length; ++n)
                     if (order[n] == i)
                     {
-                        orderedArray[n] = kvp;
+                        orderedArray[n] = de;
                         break;
                     }
                 ++i;
             }
 
-            foreach (KeyValuePair<string, Column> kvp in orderedArray)
-                orderedDictionary.Add(kvp.Key, kvp.Value);
+            foreach (DictionaryEntry de in orderedArray)
+                orderedDictionary.Add(de.Key, de.Value);
 
             return true;
         }
@@ -140,32 +133,48 @@ public static class ColumnRecord
         }
     }
 
-    public static Column? GetColumn(string table, string column)
+    // Risky, but if the column record is ever out of sync we want the program to crash out anyway.
+    public static Column GetColumn(OrderedDictionary table, string column)
+    {
+        return (Column)GetColumnNullable(table, column)!;
+    }
+    public static Column? GetColumnNullable(OrderedDictionary table, string column)
+    {
+        try
+        {
+            return (Column?)table[column];
+        }
+        catch
+        {
+            return null;
+        }
+    }
+    public static Column? GetColumnNullable(string table, string column)
     {
         try
         {
             switch (table)
             {
                 case "Organisation":
-                    return organisation[column];
+                    return (Column?)organisation[column];
                 case "OrganisationChange":
-                    return organisationChange[column];
+                    return (Column?)organisationChange[column];
                 case "Asset":
-                    return asset[column];
+                    return (Column?)asset[column];
                 case "AssetChange":
-                    return assetChange[column];
+                    return (Column?)assetChange[column];
                 case "Contact":
-                    return contact[column];
+                    return (Column?)contact[column];
                 case "ConferenceType":
-                    return conferenceType[column];
+                    return (Column?)conferenceType[column];
                 case "Conference":
-                    return conference[column];
+                    return (Column?)conference[column];
                 case "ConferenceRecurrence":
-                    return conferenceRecurrence[column];
+                    return (Column?)conferenceRecurrence[column];
                 case "Resource":
-                    return resource[column];
+                    return (Column?)resource[column];
                 case "Login":
-                    return login[column];
+                    return (Column?)login[column];
                 default:
                     return null;
             }
@@ -181,15 +190,15 @@ public static class ColumnRecord
         if (dictionary == null)
             return -1;
         int i = 0;
-        foreach (var kvp in dictionary)
+        foreach (DictionaryEntry de in dictionary)
         {
-            if (kvp.Key == column)
+            if ((string)de.Key == column)
                 return i;
             ++i;
         }
         return -1;
     }
-    public static Dictionary<string, Column>? GetDictionary(string table, bool ordered)
+    public static OrderedDictionary? GetDictionary(string table, bool ordered)
     {
         if (table == "Organisation")
             return ordered ? orderedOrganisation : organisation;
@@ -204,7 +213,7 @@ public static class ColumnRecord
         else if (table == "AssetChange")
             return assetChange; // No ordered version.
         else if (table == "OrganisationContacts") // Not present in the column record.
-            return new Dictionary<string, Column>()
+            return new OrderedDictionary
             {
                 { Glo.Tab.ORGANISATION_REF, organisation[Glo.Tab.ORGANISATION_REF] },
                 { Glo.Tab.CONTACT_ID, contact[Glo.Tab.CONTACT_ID] }
@@ -224,6 +233,13 @@ public static class ColumnRecord
             return conferenceOrder;
         else
             return null;
+    }
+    public static List<KeyValuePair<string, Column>> GenerateKvpList(OrderedDictionary od)
+    {
+        List<KeyValuePair<string, Column>> kvpList = new();
+        foreach (DictionaryEntry de in od)
+            kvpList.Add(new KeyValuePair<string, Column>((string)de.Key, (Column)de.Value!));
+        return kvpList;
     }
 
     public static bool IsTypeString(string type)
@@ -369,11 +385,11 @@ public static class ColumnRecord
                 // underscores, so make that uniform here.
                 friendlySplit[1] = friendlySplit[1].Replace(' ', '_');
 
-                void AddFriendlyName(Dictionary<string, Column> dict)
+                void AddFriendlyName(OrderedDictionary dict)
                 {
-                    if (dict.ContainsKey(friendlySplit[1]))
+                    if (dict.Contains(friendlySplit[1]))
                     {
-                        Column col = dict[friendlySplit[1]];
+                        Column col = (Column)dict[friendlySplit[1]]!;
                         col.friendlyName = friendlySplit[2];
                         dict[friendlySplit[1]] = col;
                     }
@@ -488,26 +504,26 @@ public static class ColumnRecord
 
 
             // Populate the friendly name reversal dictionaries.
-            foreach (KeyValuePair<string, Column> kvp in organisation)
-                organisationFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in organisationChange)
-                organisationChangeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in asset)
-                assetFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in assetChange)
-                assetChangeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in contact)
-                contactFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in conferenceType)
-                conferenceTypeFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in conference)
-                conferenceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in conferenceRecurrence)
-                conferenceRecurrenceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in resource)
-                resourceFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
-            foreach (KeyValuePair<string, Column> kvp in login)
-                loginFriendlyNameReversal.Add(GetPrintName(kvp), kvp.Key);
+            foreach (DictionaryEntry de in organisation)
+                organisationFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in organisationChange)
+                organisationChangeFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in asset)
+                assetFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in assetChange)
+                assetChangeFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in contact)
+                contactFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in conferenceType)
+                conferenceTypeFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in conference)
+                conferenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in conferenceRecurrence)
+                conferenceRecurrenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in resource)
+                resourceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in login)
+                loginFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
 
             // Phew!
             return true;

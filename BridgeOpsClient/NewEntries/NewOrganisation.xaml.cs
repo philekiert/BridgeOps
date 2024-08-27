@@ -2,6 +2,7 @@
 using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -101,19 +102,26 @@ namespace BridgeOpsClient
             ditOrganisation.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
 
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
-            txtOrgRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF].restriction);
-            txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation[Glo.Tab.DIAL_NO].restriction);
-            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisation[Glo.Tab.NOTES].restriction);
+            txtOrgRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                                           Glo.Tab.ORGANISATION_REF).restriction);
+            txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                                           Glo.Tab.DIAL_NO).restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                                          Glo.Tab.NOTES).restriction);
 
             // Implement friendly names.
-            if (ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF].friendlyName != "")
-                lblOrgID.Content = ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF].friendlyName;
-            if (ColumnRecord.organisation[Glo.Tab.PARENT_REF].friendlyName != "")
-                lblOrgParentID.Content = ColumnRecord.organisation[Glo.Tab.PARENT_REF].friendlyName;
-            if (ColumnRecord.organisation[Glo.Tab.DIAL_NO].friendlyName != "")
-                lblDialNo.Content = ColumnRecord.organisation[Glo.Tab.DIAL_NO].friendlyName;
-            if (ColumnRecord.organisation[Glo.Tab.NOTES].friendlyName != "")
-                lblNotes.Content = ColumnRecord.organisation[Glo.Tab.NOTES].friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.ORGANISATION_REF).friendlyName != "")
+                lblOrgID.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                          Glo.Tab.ORGANISATION_REF).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.PARENT_REF).friendlyName != "")
+                lblOrgParentID.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                          Glo.Tab.PARENT_REF).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.DIAL_NO).friendlyName != "")
+                lblDialNo.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                          Glo.Tab.DIAL_NO).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.NOTES).friendlyName != "")
+                lblNotes.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                          Glo.Tab.NOTES).friendlyName;
 
             dtgAssets.canHideColumns = true;
             dtgAssets.identity = 3;
@@ -204,7 +212,7 @@ namespace BridgeOpsClient
                     if (row[2] == null)
                         row[2] = "[Deleted]";
                 dtgChangeLog.maxLengthOverrides = new Dictionary<string, int> { { "Reason", -1 } };
-                dtgChangeLog.Update(new List<Dictionary<string, ColumnRecord.Column>>()
+                dtgChangeLog.Update(new List<OrderedDictionary>()
                                     { ColumnRecord.organisationChange, ColumnRecord.login }, columnNames, rows,
                                     Glo.Tab.CHANGE_ID);
             }
@@ -237,7 +245,8 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 newOrg.additionalNeedsQuotes = new();
                 foreach (string c in newOrg.additionalCols)
-                    newOrg.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
+                    newOrg.additionalNeedsQuotes.Add(
+                        SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.organisation, c).type));
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, newOrg))
                 {
@@ -289,7 +298,8 @@ namespace BridgeOpsClient
                 // Obtain types and determine whether or not quotes will be needed.
                 org.additionalNeedsQuotes = new();
                 foreach (string c in cols)
-                    org.additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(ColumnRecord.organisation[c].type));
+                    org.additionalNeedsQuotes.Add(
+                        SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.organisation, c).type));
 
                 org.additionalCols = cols;
                 org.additionalVals = vals;

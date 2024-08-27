@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -348,8 +349,8 @@ namespace BridgeOpsClient
             {
                 var dictionary = ColumnRecord.GetDictionary(s, true);
                 if (dictionary != null)
-                    foreach (var kvp in dictionary)
-                        columnList.Add(s + "." + ColumnRecord.GetPrintName(kvp));
+                    foreach (DictionaryEntry de in dictionary)
+                        columnList.Add(s + "." + ColumnRecord.GetPrintName(de));
             }
 
             for (int i = 0; i < joins.Count; ++i)
@@ -437,11 +438,11 @@ namespace BridgeOpsClient
                 {
                     string colTable = colText.Remove(colText.IndexOf('.'));
                     var dictionary = ColumnRecord.GetDictionary(colTable, true);
-                    foreach (var kvp in dictionary!)
+                    foreach (DictionaryEntry de in dictionary!)
                     {
-                        selectColumns.Add(colTable + "." + kvp.Key);
+                        selectColumns.Add(colTable + "." + (string)de.Key);
                         columnAliases.Add("");
-                        chosenColumnNames.Add(ColumnRecord.GetPrintName(kvp));
+                        chosenColumnNames.Add(ColumnRecord.GetPrintName(de));
                     }
                 }
                 else

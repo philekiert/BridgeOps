@@ -1,7 +1,9 @@
 ﻿using SendReceiveClasses;
 using System;
 using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
@@ -58,7 +60,7 @@ namespace BridgeOpsClient
 
         public void PopulateColumnComboBox()
         {
-            Dictionary<string, ColumnRecord.Column> table;
+            OrderedDictionary table;
             if (cmbTable.SelectedIndex == 0)
                 table = ColumnRecord.orderedOrganisation;
             else if (cmbTable.SelectedIndex == 1)
@@ -71,14 +73,14 @@ namespace BridgeOpsClient
 
             btnClear.IsEnabled = false;
 
-            foreach (KeyValuePair<string, ColumnRecord.Column> kvp in table)
+            foreach (DictionaryEntry de in table)
             {
                 // Anything that's TEXT type. Could add date and int search in the future, but it's just not urgent
                 // as you can just sort by date or int in the results.
-                if (ColumnRecord.IsTypeString(kvp.Value))
+                if (ColumnRecord.IsTypeString((ColumnRecord.Column)de.Value!))
                 {
                     ComboBoxItem item = new ComboBoxItem();
-                    item.Content = ColumnRecord.GetPrintName(kvp);
+                    item.Content = ColumnRecord.GetPrintName(de);
                     cmbColumn.Items.Add(item);
                     fieldValues.Add("");
                 }
@@ -111,7 +113,7 @@ namespace BridgeOpsClient
         List<string> lastSearchValues = new();
         List<Conditional> lastSearchConditionals = new();
         string lastWideValue = "";
-        Dictionary<string, ColumnRecord.Column> lastColumnDefinitions = new();
+        OrderedDictionary lastColumnDefinitions = new();
         public void RepeatSearch(int identity)
         {
             if (identity != dtgResults.identity)
@@ -151,7 +153,7 @@ namespace BridgeOpsClient
         {
             bool historical = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
-            Dictionary<string, ColumnRecord.Column> tableColDefs;
+            OrderedDictionary tableColDefs;
             Dictionary<string, string> nameReversals;
             if (cmbTable.Text == "Organisation")
             {
@@ -216,7 +218,7 @@ namespace BridgeOpsClient
         {
             bool historical = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
-            Dictionary<string, ColumnRecord.Column> tableColDefs;
+            OrderedDictionary tableColDefs;
             Dictionary<string, string> nameReversals;
             if (identity == 0) // Organisation
             {

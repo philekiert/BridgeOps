@@ -882,8 +882,8 @@ namespace BridgeOpsClient
             if (dictionary != null)
             {
                 select.Clear();
-                foreach (var col in dictionary)
-                    select.Add(col.Key);
+                foreach (DictionaryEntry de in dictionary)
+                    select.Add((string)de.Key);
             }
 
             lock (streamLock)
@@ -994,8 +994,8 @@ namespace BridgeOpsClient
             var dictionary = ColumnRecord.GetDictionary(table, true);
             List<string> select = new();
             if (dictionary != null)
-                foreach (var col in dictionary)
-                    select.Add(col.Key);
+                foreach (DictionaryEntry de in dictionary)
+                    select.Add((string)de.Key);
 
             lock (streamLock)
             {

@@ -58,10 +58,12 @@ namespace BridgeOpsClient
 
             int capacity;
             int.TryParse(txtCapacity.Text, out capacity);
-            if (capacity > ColumnRecord.resource["Capacity"].restriction || capacity < 1)
+            if (capacity > ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_CAPACITY).restriction ||
+                capacity < 1)
             {
                 MessageBox.Show("Capacity must be above 0 and less than " +
-                                ColumnRecord.resource["Capacity"].restriction.ToString() + ".");
+                                ColumnRecord.GetColumn(ColumnRecord.resource,
+                                                       Glo.Tab.RESOURCE_CAPACITY).restriction.ToString() + ".");
                 return;
             }
 

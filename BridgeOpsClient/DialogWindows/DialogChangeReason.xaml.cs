@@ -20,11 +20,15 @@ namespace BridgeOpsClient.DialogWindows
             InitializeComponent();
 
             if (table == "Organisation")
-                txtReason.MaxLength = Glo.Fun.LongToInt(ColumnRecord.organisationChange[Glo.Tab.CHANGE_REASON]
-                                                                                       .restriction);
+            {
+                txtReason.MaxLength = Glo.Fun.LongToInt(((ColumnRecord.Column)ColumnRecord
+                    .organisationChange[Glo.Tab.CHANGE_REASON]!).restriction);
+            }
             else if (table == "Asset")
-                txtReason.MaxLength = Glo.Fun.LongToInt(ColumnRecord.assetChange[Glo.Tab.CHANGE_REASON]
-                                                                                       .restriction);
+            {
+                txtReason.MaxLength = Glo.Fun.LongToInt(((ColumnRecord.Column)ColumnRecord
+                    .assetChange[Glo.Tab.CHANGE_REASON]!).restriction);
+            }
             else
             {
                 MessageBox.Show("Relevant table not known.");
