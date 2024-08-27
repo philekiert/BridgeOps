@@ -50,6 +50,8 @@
                   SelectionChanged="cmbOperator_SelectionChanged"/>
         <TextBox Grid.Row="0" Grid.Column="7" Width="200" x:Name="txtValue" Margin="0 5 10 5"
                  Visibility="Collapsed" VerticalContentAlignment="Center" Height="24"/>
+        <customcontrols:NumberEntry Grid.Row="0" Grid.Column="7" Margin="0 5 10 5" Width="190" x:Name="numValue"
+                                    Visibility="Collapsed"/>
         <customcontrols:DateTimePicker Grid.Row="0" Grid.Column="7" Margin="0 0 0 0" Width="190" x:Name="dtmValue"
                                        Visibility="Collapsed"/>
         <DatePicker Grid.Row="0" Grid.Column="7" Width="200" Height="20" Padding="0 0 0 0" Margin="0 0 10 0"

@@ -126,6 +126,10 @@ namespace BridgeOpsClient.CustomControls
                     txtNumber.SelectionStart = txtNumber.Text.Length;
             }
 
+            bool isNumber = int.TryParse(txtNumber.Text, out value);
+            btnDecrement.IsEnabled = !isNumber || value > min;
+            btnIncrement.IsEnabled = !isNumber || value < max;
+
             updating = false;
         }
 
