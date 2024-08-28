@@ -119,6 +119,12 @@ internal class BridgeOpsAgent
                 LogError($"Column record change notification could not be sent to {ipString} " +
                          $"after {notificationSendRetries} retries.");
         }
+        public void SendLoggedOutNotification()
+        {
+            if (SendNotification(Glo.SERVER_FORCE_LOGOUT))
+                LogError($"Logged out notification could not be sent to {ipString} " +
+                         $"after {notificationSendRetries} retries.");
+        }
 
         public void SendNudge()
         {
@@ -158,7 +164,7 @@ internal class BridgeOpsAgent
                 }
         }
 
-        public bool SendNotification(byte notificationByte)
+        private bool SendNotification(byte notificationByte)
         {
             bool sent = false;
 
@@ -520,6 +526,20 @@ internal class BridgeOpsAgent
         }
     }
 
+    private static void SendSingleNotification(string clientID, byte fncByte)
+    {
+        Thread? notificationThread = null;
+        lock (clientSessions)
+        {
+            if (clientSessions.ContainsKey(clientID))
+            {
+                if (fncByte == Glo.SERVER_FORCE_LOGOUT)
+                    notificationThread = new Thread(clientSessions[clientID].SendLoggedOutNotification);
+            }
+        }
+        if (notificationThread != null)
+            notificationThread.Start();
+    }
     private static void SendChangeNotifications(string? initiatorClientID, byte fncByte)
     {
         lock (clientSessions)
@@ -853,17 +873,17 @@ internal class BridgeOpsAgent
             foreach (KeyValuePair<string, ClientSession> client in clientSessions)
                 if (client.Value.username == username)
                     sessionId = client.Key;
-            if (sessionId.Length > 0)
+            if (sessionId.Length > 0 && clientSessions.ContainsKey(sessionId))
             {
+                SendSingleNotification(sessionId, Glo.SERVER_FORCE_LOGOUT);
                 clientSessions.Remove(sessionId);
                 server.WriteByte(0);
                 server.Flush();
+                return;
             }
-            else
-            {
-                server.WriteByte(1);
-                server.Flush();
-            }
+
+            server.WriteByte(1);
+            server.Flush();
         }
     }
 
@@ -888,6 +908,7 @@ internal class BridgeOpsAgent
     //   C L I E N T   R E Q U E S T   F U N C T I O N S
 
     // Multiple threads may be pulling the column record at once, so this action can't be tracked as a bool. Instead,
+
     // increment and decrement the count, and the agent will only attempt to update the record if the value is 0.
     static int pullingColumnRecord = 0;
     private static void ClientPullColumnRecord(NetworkStream stream)
@@ -1199,6 +1220,7 @@ internal class BridgeOpsAgent
                             return;
                         }
 
+                        SendSingleNotification(sessionToLogOut, Glo.SERVER_FORCE_LOGOUT);
                         clientSessions.Remove(sessionToLogOut);
                         sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
                         return;

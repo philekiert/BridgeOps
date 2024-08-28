@@ -88,16 +88,16 @@ public static class Glo
 
     // Operational
     public const int CLIENT_SESSION_INVALID = 0;
-    public const int CLIENT_INSUFFICIENT_PERMISSIONS = 1;
-    public const int CLIENT_REQUEST_FAILED = 2;
-    public const int CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW = 3;
-    public const int CLIENT_REQUEST_FAILED_RECORD_DELETED = 4;
-    public const int CLIENT_REQUEST_FAILED_FOREIGN_KEY = 5;
-    public const int CLIENT_REQUEST_SUCCESS = 6;
-    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 7;
-    public const int CLIENT_CONFIRM = 8;
-    public const int CLIENT_CONFIRM_MORE_TO_FOLLOW = 9;
-    public const int CLIENT_CANCEL = 10;
+    public const int CLIENT_INSUFFICIENT_PERMISSIONS = 2;
+    public const int CLIENT_REQUEST_FAILED = 3;
+    public const int CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW = 4;
+    public const int CLIENT_REQUEST_FAILED_RECORD_DELETED = 5;
+    public const int CLIENT_REQUEST_FAILED_FOREIGN_KEY = 6;
+    public const int CLIENT_REQUEST_SUCCESS = 7;
+    public const int CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW = 8;
+    public const int CLIENT_CONFIRM = 9;
+    public const int CLIENT_CONFIRM_MORE_TO_FOLLOW = 10;
+    public const int CLIENT_CANCEL = 11;
     public const string CLIENT_LOGIN_ACCEPT = "Welcome";
     public const string CLIENT_LOGIN_REJECT_USER_INVALID = "Must have been the wind";
     public const string CLIENT_LOGIN_REJECT_USER_DISABLED = "I used to be an adventurer like you";

@@ -31,7 +31,10 @@ namespace BridgeOpsClient
             dtpEnd.SetDateTime(start.AddHours(1));
 
             // Populate available types
-            typeList = App.SelectColumnPrimary("ConferenceType", Glo.Tab.CONFERENCE_TYPE_NAME);
+            bool successful;
+            typeList = App.SelectColumnPrimary("ConferenceType", Glo.Tab.CONFERENCE_TYPE_NAME, out successful);
+            if (!successful)
+                Close();
             if (typeList == null || typeList.Length == 0)
             {
                 MessageBox.Show("Could not pull conference type list from server.");

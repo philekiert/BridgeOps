@@ -152,7 +152,12 @@ namespace BridgeOpsClient
                 (table == "Organisation" && key == Glo.Tab.PARENT_REF))
             {
                 // Allowed will always be empty if we get here as the user cannot add an allowed list to core columns.
-                allowed = App.GetOrganisationList().ToList();
+                bool couldGetAllowList;
+                allowed = App.GetOrganisationList(out couldGetAllowList).ToList();
+                if (couldGetAllowList)
+                {
+                    Close();
+                }
             }
             if (allowed.Count > 0)
             {

@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Threading;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SendReceiveClasses;
@@ -38,6 +39,20 @@ namespace BridgeOpsClient
         }
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
         public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action";
+
+        // The listener thread can't interact with WPF components, so have this timer handle anything that comes
+        // in that requires that functionality, such as force logouts.
+        static bool forceLogoutQueued = false;
+        DispatcherTimer tmrStatusCheck;
+        private void StatusCheck(object? sender, EventArgs e)
+        {
+            if (forceLogoutQueued)
+            {
+                if (IsLoggedIn)
+                    SessionInvalidated();
+                forceLogoutQueued = false;
+            }
+        }
 
         public App()
         {
@@ -80,6 +95,13 @@ namespace BridgeOpsClient
             foreach (Window win in Application.Current.Windows)
                 if (win is BridgeOpsClient.MainWindow mainWin)
                     mainWindow = mainWin;
+
+            tmrStatusCheck = new()
+            {
+                Interval = new TimeSpan(TimeSpan.TicksPerSecond)
+            };
+            tmrStatusCheck.Tick += StatusCheck;
+            tmrStatusCheck.Start();
         }
 
         public static Thread? listenerThread;
@@ -144,6 +166,10 @@ namespace BridgeOpsClient
                     else if (fncByte == Glo.SERVER_CLIENT_NUDGE)
                     {
                         stream.WriteByte(Glo.SERVER_CLIENT_NUDGE);
+                    }
+                    else if (fncByte == Glo.SERVER_FORCE_LOGOUT)
+                    {
+                        forceLogoutQueued = true;
                     }
                 }
                 catch
@@ -298,26 +324,37 @@ namespace BridgeOpsClient
             }
         }
 
-        public static string[] GetOrganisationList()
+        public static string[] GetOrganisationList(out bool successful)
         {
-            string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_REF);
+            string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_REF,
+                                                              out successful);
+            if (!successful)
+                return new string[0];
+
             if (organisationArray == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
-                return new string[] { "" };
+                successful = false;
+                return new string[0];
             }
+            successful = true;
             return organisationArray;
         }
 
-        public static void SessionInvalidated()
+        public static bool SessionInvalidated()
         {
             sd.sessionID = ""; // Tells the app that it's no longer logged in.
             if (mainWindow != null)
             {
                 mainWindow.ToggleLogInOut(false);
                 if (mainWindow.IsLoaded)
-                    MessageBox.Show("Session is no longer valid. Please copy any unsaved work, then log back in.");
+                    // Specify the owner as the main window, otherwise the user might miss it if called from a timer.
+                    MessageBox.Show(mainWindow,
+                                    "Session is no longer valid. Please copy any unsaved work, then log back in.");
             }
+
+            // Some methods want to invalidate and then go no further, returning false.
+            return false;
         }
 
         public static bool EditOrganisation(string id)
@@ -329,8 +366,11 @@ namespace BridgeOpsClient
                 return false;
             }
 
-            List<string> organisationList = GetOrganisationList().ToList();
+            bool couldGetOrgList = false;
+            List<string> organisationList = GetOrganisationList(out couldGetOrgList).ToList();
             organisationList.Insert(0, "");
+            if (!couldGetOrgList)
+                return false;
 
             List<string?> columnNames;
             List<List<object?>> rows;
@@ -371,8 +411,11 @@ namespace BridgeOpsClient
                 return false;
             }
 
-            List<string> organisationList = GetOrganisationList().ToList();
+            bool couldGetOrgList;
+            List<string> organisationList = GetOrganisationList(out couldGetOrgList).ToList();
             organisationList.Insert(0, "");
+            if (!couldGetOrgList)
+                return false;
 
             List<string?> columnNames;
             List<List<object?>> rows;
@@ -650,7 +693,7 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                         {
-                            SessionInvalidated();
+                            return SessionInvalidated();
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
@@ -675,6 +718,7 @@ namespace BridgeOpsClient
                 }
                 finally
                 {
+                    returnID = "";
                     if (stream != null) stream.Close();
                 }
             }
@@ -696,7 +740,7 @@ namespace BridgeOpsClient
                             return true;
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                         {
-                            SessionInvalidated();
+                            return SessionInvalidated();
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
@@ -738,7 +782,7 @@ namespace BridgeOpsClient
                             return true;
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                         {
-                            SessionInvalidated();
+                            return SessionInvalidated();
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
@@ -789,7 +833,7 @@ namespace BridgeOpsClient
                             return true;
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                         {
-                            SessionInvalidated();
+                            return SessionInvalidated();
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
@@ -820,7 +864,7 @@ namespace BridgeOpsClient
         }
 
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
-        public static string[]? SelectColumnPrimary(string table, string column)
+        public static string[]? SelectColumnPrimary(string table, string column, out bool successful)
         {
             lock (streamLock)
             {
@@ -835,16 +879,22 @@ namespace BridgeOpsClient
                         sr.WriteAndFlush(stream, sr.Serialise(pcs));
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            successful = true;
                             return sr.ReadString(stream).Split(';');
+                        }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                             SessionInvalidated();
+                        successful = false;
                         return null;
                     }
+                    successful = false;
                     return null;
                 }
                 catch
                 {
                     MessageBox.Show("Could not run or return query.");
+                    successful = false;
                     return null;
                 }
                 finally
@@ -909,7 +959,11 @@ namespace BridgeOpsClient
                                 return true;
                             }
                             else if (response == Glo.CLIENT_SESSION_INVALID)
-                                SessionInvalidated();
+                            {
+                                columnNames = new();
+                                rows = new();
+                                return SessionInvalidated();
+                            }
                             throw new Exception();
                         }
                         throw new Exception();
@@ -954,8 +1008,7 @@ namespace BridgeOpsClient
                             rows = new();
                             if (response == Glo.CLIENT_SESSION_INVALID)
                             {
-                                SessionInvalidated();
-                                return false;
+                                return SessionInvalidated();
                             }
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
@@ -1020,7 +1073,11 @@ namespace BridgeOpsClient
                                 return true;
                             }
                             else if (response == Glo.CLIENT_SESSION_INVALID)
-                                SessionInvalidated();
+                            {
+                                columnNames = new();
+                                rows = new();
+                                return SessionInvalidated();
+                            }
                             throw new Exception();
                         }
                         throw new Exception();
@@ -1059,7 +1116,7 @@ namespace BridgeOpsClient
                             return true;
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                         {
-                            SessionInvalidated();
+                            return SessionInvalidated();
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
@@ -1108,7 +1165,11 @@ namespace BridgeOpsClient
                             return true;
                         }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
-                            SessionInvalidated();
+                        {
+                            columnNames = new();
+                            rows = new();
+                            return SessionInvalidated();
+                        }
                         throw new Exception();
                     }
                     throw new Exception();
@@ -1159,7 +1220,11 @@ namespace BridgeOpsClient
                             return true;
                         }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
-                            SessionInvalidated();
+                        {
+                            columnNames = new();
+                            rows = new();
+                            return SessionInvalidated();
+                        }
                         throw new Exception();
                     }
                     throw new Exception();
@@ -1234,7 +1299,10 @@ namespace BridgeOpsClient
                             }
                         }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
-                            SessionInvalidated();
+                        {
+                            data = new();
+                            return SessionInvalidated();
+                        }
                         throw new Exception();
                     }
                     throw new Exception();
@@ -1322,7 +1390,7 @@ namespace BridgeOpsClient
                         if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             throw new Exception(sr.ReadString(stream));
                         if (response == Glo.CLIENT_SESSION_INVALID)
-                            SessionInvalidated();
+                            return SessionInvalidated();
                         throw new Exception();
                     }
                 }

@@ -95,7 +95,10 @@ namespace BridgeOpsClient
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
         {
-            string[]? organisationList = App.SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_REF);
+            bool successful;
+            string[]? organisationList = App.GetOrganisationList(out successful);
+            if (!successful)
+                return;
             if (organisationList == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
@@ -109,7 +112,10 @@ namespace BridgeOpsClient
 
         private void menuDatabaseNewAsset_Click(object sender, RoutedEventArgs e)
         {
-            string[]? organisationList = App.SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_REF);
+            bool successful;
+            string[]? organisationList = App.GetOrganisationList(out successful);
+            if (!successful)
+                return;
             if (organisationList == null)
             {
                 MessageBox.Show("Could not pull organisation list from server.");
@@ -206,7 +212,8 @@ namespace BridgeOpsClient
         private void menuSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow settingsWindow = new();
-            settingsWindow.ShowDialog();
+            if (settingsWindow.IsLoaded) // Might not load if the session was invalidated.
+                settingsWindow.ShowDialog();
         }
 
         private void menuExit_Click(object sender, RoutedEventArgs e)
