@@ -6,53 +6,163 @@
              StartupUri="MainWindow.xaml"
              Exit="ApplicationExit">
     <Application.Resources>
+        <ResourceDictionary>
+            <!--   T H E M E   -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Light.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- ComboBox -->
-        <Style TargetType="ComboBox">
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
-            <!-- This enables virtualization on all ComboBoxes so they aren't too slow to load. -->
-            <Setter Property="ItemsPanel">
-                <Setter.Value>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+            <!--   C O N T R O L   T E M P L A T E S   -->
 
-        <!-- DataInputTable -->
-        <Style TargetType="custom:DataInputTable">
-            <Setter Property="Padding" Value="0 0 0 0" />
-            <Setter Property="Margin" Value="10 10 10 10" />
-        </Style>
+            <!-- TextBox -->
+            <ControlTemplate x:Key="TextBoxTemplate" TargetType="TextBox">
+                <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                    <ScrollViewer x:Name="PART_ContentHost" />
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource SelectionBrush2}" />
+                    </Trigger>
+                    <Trigger Property="IsFocused" Value="True">
+                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource SelectionBrush1}" />
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+            <!-- PasswordBox -->
+            <ControlTemplate x:Key="PasswordBoxTemplate" TargetType="PasswordBox">
+                <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+                    <ScrollViewer x:Name="PART_ContentHost" />
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource SelectionBrush2}" />
+                    </Trigger>
+                    <Trigger Property="IsFocused" Value="True">
+                        <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource SelectionBrush1}" />
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+            <!-- Button -->
+            <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
+                <Border x:Name="border" 
+                        BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}" 
+                        Background="{TemplateBinding Background}" 
+                        Padding="{TemplateBinding Padding}" 
+                        Height="{TemplateBinding Height}">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="{StaticResource SelectionBrush1}"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter TargetName="border" Property="Background" Value="{StaticResource SelectionBrush2}"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
 
-        <!-- Menu Bar -->
-        <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
-            <Setter Property="VerticalAlignment" Value="Bottom" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="Padding" Value="0 0 0 2" />
-            <Setter Property="Margin" Value="0 0 0 2" />
-            <Setter Property="Width" Value="24" />
-        </Style>
-        <Style TargetType="MenuItem">
-            <Setter Property="Height" Value="20" />
-            <Setter Property="Margin" Value="0 2 0 0" />
-        </Style>
-        
-        <!-- Icons -->
-        <DataTemplate x:Key="tickIcon">
-            <TextBlock FontFamily="Segoe MDL2 Assets"
+
+
+            <!--   S T Y L E S   -->
+
+            <!-- TextBox / PasswordBox -->
+            <Style TargetType="TextBox">
+                <Setter Property="Background" Value="{StaticResource BackgroundBrush2}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextBrush1}"/>
+                <Setter Property="Padding" Value="3 3 3 3"/>
+                <Setter Property="BorderThickness" Value="0 0 0 2"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush1}"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+                <Setter Property="Template" Value="{StaticResource TextBoxTemplate}"/>
+            </Style>
+            <Style TargetType="PasswordBox">
+                <Setter Property="Background" Value="{StaticResource BackgroundBrush2}"/>
+                <Setter Property="Foreground" Value="{StaticResource TextBrush1}"/>
+                <Setter Property="Padding" Value="3 3 3 3"/>
+                <Setter Property="BorderThickness" Value="0 0 0 2"/>
+                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush1}"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+                <Setter Property="Template" Value="{StaticResource PasswordBoxTemplate}"/>
+            </Style>
+
+            <!-- Button -->
+            <Style TargetType="Button">
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+                <Setter Property="Padding" Value="7 1 7 1"/>
+                <Setter Property="Background" Value="{StaticResource BackgroundBrush3}"/>
+                <Setter Property="Template" Value="{StaticResource ButtonTemplate}"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Foreground" Value="{StaticResource TextBrush2}"/>
+                        <Setter Property="Background" Value="{StaticResource BackgroundBrush2}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="SubmitButtonStyle" TargetType="Button">
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Background" Value="{StaticResource ButtonBrush1}"/>
+                <Setter Property="Foreground" Value="{StaticResource BackgroundBrush1}"/>
+            </Style>
+
+            <!-- ComboBox -->
+            <Style TargetType="ComboBox">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="BorderThickness" Value="0 0 0 0"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+                <!-- This enables virtualization on all ComboBoxes so they aren't too slow to load. -->
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+                <Setter Property="ItemsPanel">
+                    <Setter.Value>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style TargetType="ComboBoxItem">
+                <Setter Property="BorderThickness" Value="0 0 0 0"/>
+            </Style>
+
+
+            <!-- DataInputTable -->
+            <Style TargetType="custom:DataInputTable">
+                <Setter Property="Padding" Value="0 0 0 0" />
+                <Setter Property="Margin" Value="10 10 10 10" />
+            </Style>
+
+            <!-- Menu Bar -->
+            <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
+                <Setter Property="VerticalAlignment" Value="Bottom" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Padding" Value="0 0 0 2" />
+                <Setter Property="Margin" Value="0 0 0 2" />
+                <Setter Property="Width" Value="24" />
+            </Style>
+            <Style TargetType="MenuItem">
+                <Setter Property="Height" Value="20" />
+                <Setter Property="Margin" Value="0 2 0 0" />
+            </Style>
+
+            <!-- Icons -->
+            <DataTemplate x:Key="tickIcon">
+                <TextBlock FontFamily="Segoe MDL2 Assets"
                        FontSize="16"
                        FontWeight="Bold"
                        Text="&#xE73E;"/>
-        </DataTemplate>
+            </DataTemplate>
 
-        <!-- Old, may not want to use this eventually -->
-        <Style TargetType="ToolBarTray">
-            <Setter Property="IsLocked" Value="True" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-
+            <!-- Old, may not want to use this eventually -->
+            <Style TargetType="ToolBarTray">
+                <Setter Property="IsLocked" Value="True" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
