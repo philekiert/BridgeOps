@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.Data;
 using System.DirectoryServices.ActiveDirectory;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -19,6 +20,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Threading;
 using DocumentFormat.OpenXml.Office2010.Excel;
@@ -28,6 +30,23 @@ using static BridgeOpsClient.CustomControls.SqlDataGrid;
 
 namespace BridgeOpsClient
 {
+    public class DataGridHeadersVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is DataGridHeadersVisibility visibility)
+            {
+                return visibility == DataGridHeadersVisibility.None ? Visibility.Collapsed : Visibility.Visible;
+            }
+            return Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public partial class App : Application
     {
         public static bool IsLoggedIn { get { return sd.sessionID != ""; } }
