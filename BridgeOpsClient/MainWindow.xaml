@@ -33,24 +33,24 @@
                           x:Name="menuExit" Click="menuExit_Click"/>
             </MenuItem>
             <MenuItem Header="_Database">
-                <MenuItem Header="New">
-                    <MenuItem Header="Organisation" x:Name="menuDatabaseNewOrganisation"
+                <MenuItem Header="_New">
+                    <MenuItem Header="_Organisation" x:Name="menuDatabaseNewOrganisation"
                               Click="menuDatabaseNewOrganisation_Click"/>
-                    <MenuItem Header="Asset" x:Name="menuDatabaseNewAsset"
+                    <MenuItem Header="_Asset" x:Name="menuDatabaseNewAsset"
                               Click="menuDatabaseNewAsset_Click"/>
-                    <MenuItem Header="Contact" x:Name="menuDatabaseNewContact"
+                    <MenuItem Header="_Contact" x:Name="menuDatabaseNewContact"
                               Click="menuDatabaseNewContact_Click"/>
                      <!--Uncomment when adding conferencing support.
                          Make sure to uncomment references to these objects in the code-behind.-->
                     <Separator/>
-                    <MenuItem Header="Resource" x:Name="menuDatabaseNewResource"
+                    <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click"/>
-                    <MenuItem Header="Conference Type" x:Name="menuDatabaseNewConferenceType"
+                    <MenuItem Header="Co_nference Type" x:Name="menuDatabaseNewConferenceType"
                               Click="menuDatabaseNewConferenceType_Click"/>
                     
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="Select Query Builder" Click="menuSelect_Click"/>
+                <MenuItem Header="_Select Query Builder" Click="menuSelect_Click"/>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">

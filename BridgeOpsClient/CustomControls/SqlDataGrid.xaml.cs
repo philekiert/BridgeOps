@@ -446,21 +446,13 @@ namespace BridgeOpsClient.CustomControls
             if (first == -1 || last == -1)
                 return;
 
-            List<DataGridRow> visibleRows = new List<DataGridRow>();
-
-            // Get the first and last visible index
-            int firstVisibleIndex = dtg.Items.IndexOf(dtg.ItemContainerGenerator.ItemFromContainer(dtg.ItemContainerGenerator.ContainerFromIndex(first)));
-            int lastVisibleIndex = dtg.Items.IndexOf(dtg.ItemContainerGenerator.ItemFromContainer(dtg.ItemContainerGenerator.ContainerFromIndex(last)));
-
-            List<Row> selectedRows = new();
+            List<Row> visibleRows = new();
             // Iterate through the visible range and collect the rows
-            for (int i = firstVisibleIndex; i <= lastVisibleIndex; i++)
-            {
-                selectedRows.Add((Row)dtg.Items[i]);
-            }
+            for (int i = first; i <= last; i++)
+                visibleRows.Add((Row)dtg.Items[i]);
 
             // Iterate through the selected items
-            foreach (var item in selectedRows)
+            foreach (var item in visibleRows)
             {
                 if (dtg.SelectedItems.Contains(item))
                 {

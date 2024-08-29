@@ -53,7 +53,7 @@
                 <Style.Triggers>
                     <Trigger Property="IsSelected" Value="True">
                         <Setter Property="Background" Value="#2569C3"/>
-                        <Setter Property="BorderBrush" Value="#185AB0"/>
+                        <Setter Property="BorderBrush" Value="#195DB6"/>
                     </Trigger>
                     <MultiTrigger>
                         <MultiTrigger.Conditions >
@@ -61,7 +61,7 @@
                             <Condition Property="IsKeyboardFocusWithin" Value="False"/>
                         </MultiTrigger.Conditions>
                         <Setter Property="Background" Value="#2569C3"/>
-                        <Setter Property="BorderBrush" Value="#185AB0"/>
+                        <Setter Property="BorderBrush" Value="#195DB6"/>
                         <Setter Property="Foreground" Value="White"/>
                     </MultiTrigger>
                 </Style.Triggers>
