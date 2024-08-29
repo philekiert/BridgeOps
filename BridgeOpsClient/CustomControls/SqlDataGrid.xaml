@@ -10,11 +10,11 @@
     </UserControl.Resources>
 
     <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="True"
-              VerticalGridLinesBrush="#f0f0f0" HorizontalGridLinesBrush="#eee"
               AutoGenerateColumns="False" HeadersVisibility="Column"
               SelectionMode="Single" Margin="10 10 10 10"
               SelectionUnit="FullRow"
-              EnableRowVirtualization="True" EnableColumnVirtualization="False"
+              GridLinesVisibility="None"
+              EnableRowVirtualization="True" EnableColumnVirtualization="True"
               SelectionChanged="dtg_SelectionChanged" Loaded="dtg_Loaded"
               RequestBringIntoView="dtg_RequestBringIntoView" MouseDoubleClick="dtg_MouseDoubleClick"
               MouseLeftButtonDown="dtg_MouseLeftButtonDown"
@@ -36,16 +36,35 @@
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="BorderThickness" Value="0 0 1 1"/>
+                <Setter Property="BorderBrush" Value="#eee"/>
                 <!-- Annoying that this botch solution is necessary, but this centres each row vertically -->
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type DataGridCell}">
-                            <Grid Background="{TemplateBinding Background}">
-                                <ContentPresenter VerticalAlignment="Center"/>
-                            </Grid>
+                            <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter VerticalAlignment="Center" Margin="3 2 3 2"/>
+                            </Border>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="#2569C3"/>
+                        <Setter Property="BorderBrush" Value="#185AB0"/>
+                    </Trigger>
+                    <MultiTrigger>
+                        <MultiTrigger.Conditions >
+                            <Condition Property="IsSelected" Value="True"/>
+                            <Condition Property="IsKeyboardFocusWithin" Value="False"/>
+                        </MultiTrigger.Conditions>
+                        <Setter Property="Background" Value="#2569C3"/>
+                        <Setter Property="BorderBrush" Value="#185AB0"/>
+                        <Setter Property="Foreground" Value="White"/>
+                    </MultiTrigger>
+                </Style.Triggers>
             </Style>
             <Style TargetType="DataGridRow">
                 <Setter Property="VerticalContentAlignment" Value="Center"/>

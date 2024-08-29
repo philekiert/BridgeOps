@@ -15,24 +15,24 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0">
-            <MenuItem Header="File">
-                <MenuItem Header="Log In" IsEnabled="False"
+        <Menu Grid.Row="0" x:Name="menuBar">
+            <MenuItem Header="_File">
+                <MenuItem Header="Log _In" IsEnabled="False"
                           x:Name="menuUserLogIn" Click="menuUserLogIn_Click"/>
-                <MenuItem Header="Log Out" IsEnabled="True"
+                <MenuItem Header="Log _Out" IsEnabled="True"
                           x:Name="menuUserLogOut" Click="menuUserLogOut_Click"/>
-                <MenuItem Header="Change Password" IsEnabled="True"
+                <MenuItem Header="Change _Password" IsEnabled="True"
                           x:Name="menuChangePassword" Click="menuChangePassword_Click"/>
-                <MenuItem Header="Reset View Settings" IsEnabled="True"
+                <MenuItem Header="_Reset View Settings" IsEnabled="True"
                           x:Name="menuResetViewSettings" Click="menuResetViewSettings_Click"/>
                 <Separator/>
-                <MenuItem Header="Settings" IsEnabled="True"
+                <MenuItem Header="_Settings" IsEnabled="True"
                           x:Name="menuSettings" Click="menuSettings_Click"/>
                 <Separator/>
-                <MenuItem Header="Exit" IsEnabled="True"
+                <MenuItem Header="_Exit" IsEnabled="True"
                           x:Name="menuExit" Click="menuExit_Click"/>
             </MenuItem>
-            <MenuItem Header="Database">
+            <MenuItem Header="_Database">
                 <MenuItem Header="New">
                     <MenuItem Header="Organisation" x:Name="menuDatabaseNewOrganisation"
                               Click="menuDatabaseNewOrganisation_Click"/>

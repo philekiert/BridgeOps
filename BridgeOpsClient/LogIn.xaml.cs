@@ -42,6 +42,8 @@ namespace BridgeOpsClient
         {
             if (e.Key == Key.Enter)
                 btnLogIn_Click(sender, new RoutedEventArgs());
+            if (e.Key == Key.Escape)
+                Close();
 
             ToggleNetworkSettings(sender, e);
         }

@@ -53,6 +53,7 @@ namespace BridgeOpsClient
             }
 
             InitializeComponent();
+            grdConfData.Focus();
 
             frameConf.Content = new PageConferenceView();
             pageDatabase = new PageDatabase(this);
@@ -212,7 +213,7 @@ namespace BridgeOpsClient
         private void menuSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow settingsWindow = new();
-            if (settingsWindow.IsLoaded) // Might not load if the session was invalidated.
+            if (App.IsLoggedIn) // Might not load if the session was invalidated.
                 settingsWindow.ShowDialog();
         }
 

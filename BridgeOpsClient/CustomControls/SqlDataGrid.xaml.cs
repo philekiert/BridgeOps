@@ -407,11 +407,66 @@ namespace BridgeOpsClient.CustomControls
         double previousHorizontalScroll = -1;
         private void scrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+            // This prevents horizontal scrolling to view the selected cell in entirity.
+
             if (previousHorizontalScroll != -1 && scrollViewer != null)
             {
                 scrollViewer.ScrollToHorizontalOffset(previousHorizontalScroll);
                 previousHorizontalScroll = -1;
                 e.Handled = true;
+            }
+
+            // This code basically adds rows that were scrolled out of view back into SelectedItems in order to force
+            // them to redraw. I've tried a million solutions, this is the only one that worked, but it's quite slow
+            // at high selected counts.
+
+            int first = -1;
+            int last = -1;
+
+            for (int i = 0; i < dtg.Items.Count; i++)
+            {
+                var container = dtg.ItemContainerGenerator.ContainerFromIndex(i) as DataGridRow;
+                if (container != null)
+                {
+                    first = i;
+                    break;
+                }
+            }
+
+            for (int i = dtg.Items.Count - 1; i >= 0; i--)
+            {
+                var container = dtg.ItemContainerGenerator.ContainerFromIndex(i) as DataGridRow;
+                if (container != null)
+                {
+                    last = i;
+                    break;
+                }
+            }
+
+            if (first == -1 || last == -1)
+                return;
+
+            List<DataGridRow> visibleRows = new List<DataGridRow>();
+
+            // Get the first and last visible index
+            int firstVisibleIndex = dtg.Items.IndexOf(dtg.ItemContainerGenerator.ItemFromContainer(dtg.ItemContainerGenerator.ContainerFromIndex(first)));
+            int lastVisibleIndex = dtg.Items.IndexOf(dtg.ItemContainerGenerator.ItemFromContainer(dtg.ItemContainerGenerator.ContainerFromIndex(last)));
+
+            List<Row> selectedRows = new();
+            // Iterate through the visible range and collect the rows
+            for (int i = firstVisibleIndex; i <= lastVisibleIndex; i++)
+            {
+                selectedRows.Add((Row)dtg.Items[i]);
+            }
+
+            // Iterate through the selected items
+            foreach (var item in selectedRows)
+            {
+                if (dtg.SelectedItems.Contains(item))
+                {
+                    dtg.SelectedItems.Remove(item);
+                    dtg.SelectedItems.Add(item);
+                }
             }
         }
 
@@ -582,6 +637,24 @@ namespace BridgeOpsClient.CustomControls
 
             // Write file to disk.
             FileExport.SaveFile(xl, fileName);
+        }
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (dtg == null) return;
+
+            // Iterate through the selected items
+            foreach (var selectedItem in dtg.SelectedItems)
+            {
+                // Get the DataGridRow for the selected item
+                var row = dtg.ItemContainerGenerator.ContainerFromItem(selectedItem) as DataGridRow;
+
+                if (row != null)
+                {
+                    // Force the row to update its visual state
+                    row.InvalidateVisual();
+                }
+            }
         }
     }
 }
