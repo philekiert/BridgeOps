@@ -9,13 +9,9 @@
     <Color x:Key="BackgroundColor1">#FFFFFF</Color>
     <Color x:Key="BackgroundColor2">#EFEFEF</Color>
     <Color x:Key="BackgroundColor3">#DBDBDB</Color>
-    <Color x:Key="ButtonColor1">#C0C5D0</Color>
-    <Color x:Key="ButtonColor1Disabled">#E0E2E8</Color>
-    <Color x:Key="ButtonColor1Hover">#C0DDEE</Color>
-    <Color x:Key="ButtonColor1Click">#B0CDFE</Color>
+    <Color x:Key="ButtonColor1">#3159A0</Color>
     <Color x:Key="ButtonColor2">#FFFFFF</Color>
     <Color x:Key="BorderColor1">#BBB</Color>
-    <Color x:Key="BorderColor2">#AAA</Color>
     <SolidColorBrush x:Key="TextBrush1" Color="{StaticResource TextColor1}"/>
     <SolidColorBrush x:Key="TextBrush2" Color="{StaticResource TextColor2}"/>
     <SolidColorBrush x:Key="SelectionBrush1" Color="{StaticResource SelectionColor1}"/>
@@ -24,10 +20,6 @@
     <SolidColorBrush x:Key="BackgroundBrush2" Color="{StaticResource BackgroundColor2}"/>
     <SolidColorBrush x:Key="BackgroundBrush3" Color="{StaticResource BackgroundColor3}"/>
     <SolidColorBrush x:Key="ButtonBrush1" Color="{StaticResource ButtonColor1}"/>
-    <SolidColorBrush x:Key="ButtonBrush1Disabled" Color="{StaticResource ButtonColor1Disabled}"/>
-    <SolidColorBrush x:Key="ButtonBrush1Hover" Color="{StaticResource ButtonColor1Hover}"/>
-    <SolidColorBrush x:Key="ButtonBrush1Click" Color="{StaticResource ButtonColor1Click}"/>
     <SolidColorBrush x:Key="ButtonBrush2" Color="{StaticResource ButtonColor2}"/>
     <SolidColorBrush x:Key="BorderBrush1" Color="{StaticResource BorderColor1}"/>
-    <SolidColorBrush x:Key="BorderBrush2" Color="{StaticResource BorderColor2}"/>
 </ResourceDictionary>

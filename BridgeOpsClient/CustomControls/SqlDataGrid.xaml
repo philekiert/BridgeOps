@@ -11,7 +11,6 @@
 
     <DataGrid x:Name="dtg" CanUserSortColumns="True" CanUserReorderColumns="True"
               VerticalGridLinesBrush="#f0f0f0" HorizontalGridLinesBrush="#eee"
-              GridLinesVisibility="None"
               AutoGenerateColumns="False" HeadersVisibility="Column"
               SelectionMode="Single" Margin="10 10 10 10"
               SelectionUnit="FullRow"
@@ -21,10 +20,23 @@
               MouseLeftButtonDown="dtg_MouseLeftButtonDown"
               ColumnReordered="dtg_ColumnReordered"
               KeyDown="dtg_KeyDown" IsTabStop="False">
+        <DataGrid.RowStyle>
+            <Style TargetType="DataGridRow">
+                <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            </Style>
+        </DataGrid.RowStyle>
+        <DataGrid.ColumnHeaderStyle>
+            <Style TargetType="DataGridColumnHeader">
+                <Setter Property="ContextMenu" Value="{StaticResource contextColumns}"/>
+            </Style>
+        </DataGrid.ColumnHeaderStyle>
         <DataGrid.Resources>
             <Style TargetType="DataGridCell">
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
                 <!-- Annoying that this botch solution is necessary, but this centres each row vertically -->
-                <!-- Later note to self: if you thought that was bad... oh boy. -->
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type DataGridCell}">
@@ -39,71 +51,7 @@
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                 <Setter Property="Height" Value="20"/>
             </Style>
-            <Style x:Key="InvisibleThumbStyle" TargetType="Thumb">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="Thumb">
-                            <Border Background="Transparent"/>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
         </DataGrid.Resources>
-        <DataGrid.RowStyle>
-            <Style TargetType="DataGridRow">
-                <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>
-                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            </Style>
-        </DataGrid.RowStyle>
-        <DataGrid.ColumnHeaderStyle>
-            <Style TargetType="DataGridColumnHeader">
-                <Setter Property="ContextMenu" Value="{StaticResource contextColumns}"/>
-                <Setter Property="Background" Value="{StaticResource BackgroundBrush3}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush2}"/>
-                <Setter Property="BorderThickness" Value="0 0 1 0"/>
-                <Setter Property="Padding" Value="5 6 5 2"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="DataGridColumnHeader">
-                            <Grid>
-                                <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                                    <Grid>
-                                        <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Width="8"
-                                               Background="Transparent" Cursor="SizeWE"
-                                               Style="{StaticResource InvisibleThumbStyle}" Margin="-4 0 0 0"/>
-                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-                                              Content="{TemplateBinding Content}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                              Margin="{TemplateBinding Padding}"/>
-                                    </Grid>
-                                </Border>
-                                <Path x:Name="SortArrow"
-                                      Data="M -4 0 L 0 4 L 4 0 Z"
-                                      Fill="Gray"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Top"
-                                      Visibility="Collapsed"
-                                      Margin="0 7 0 0"/>
-                            </Grid>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-                <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{StaticResource ButtonBrush1Hover}"/>
-                    </Trigger>
-                    <Trigger Property="IsPressed" Value="True">
-                        <Setter Property="Background" Value="{StaticResource ButtonBrush1Click}"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-        </DataGrid.ColumnHeaderStyle>
         <DataGrid.ContextMenu>
             <ContextMenu x:Name="mnuData">
                 <MenuItem x:Name="mnuSelectAll" Header="Select All" IsEnabled="False"
@@ -117,31 +65,5 @@
                           Click="mnuExportSpreadsheet_Click"/>
             </ContextMenu>
         </DataGrid.ContextMenu>
-        <DataGrid.CellStyle>
-            <Style TargetType="DataGridCell">
-                <Setter Property="Padding" Value="4 1 4 2"/>
-                <Setter Property="BorderThickness" Value="0 0 1 1"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BackgroundBrush2}"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type DataGridCell}">
-                            <Border Padding="{TemplateBinding Padding}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    Background="{TemplateBinding Background}"
-                                    SnapsToDevicePixels="True">
-                                <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-                <Style.Triggers>
-                    <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="BorderBrush" Value="{StaticResource SelectionBrush2}"/>
-                        <Setter Property="Background" Value="{StaticResource SelectionBrush2}"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-        </DataGrid.CellStyle>
     </DataGrid>
 </UserControl>
