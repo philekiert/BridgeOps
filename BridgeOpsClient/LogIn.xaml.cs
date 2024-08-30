@@ -137,15 +137,5 @@ namespace BridgeOpsClient
         {
             App.WindowClosed();
         }
-
-        private void txtUsername_GotFocus(object sender, RoutedEventArgs e)
-        {
-            txtUsername.SelectAll();
-        }
-
-        private void pwdPassword_GotFocus(object sender, RoutedEventArgs e)
-        {
-            pwdPassword.SelectAll();
-        }
     }
 }
