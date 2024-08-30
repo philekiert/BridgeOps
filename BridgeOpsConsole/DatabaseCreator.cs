@@ -373,18 +373,18 @@ public class DatabaseCreator
                     AddColumn(ref asset, def);
                 if (fieldDefs.Category(def) == "Resource")
                     AddColumn(ref resource, def);
-                if (fieldDefs.Category(def) == "Conference Type")
-                    AddColumn(ref conferenceType, def);
+                //if (fieldDefs.Category(def) == "Conference Type")
+                //    AddColumn(ref conferenceType, def);
                 if (fieldDefs.Category(def) == "Conference")
                     AddColumn(ref conference, def);
                 if (fieldDefs.Category(def) == "Conference Recurrence")
                     AddColumn(ref conferenceRecurrence, def);
                 if (fieldDefs.Category(def) == "Connection")
                     AddColumn(ref connections, def);
-                if (fieldDefs.Category(def) == "Dial No")
-                    AddColumn(ref dialNo, def);
-                if (fieldDefs.Category(def) == "Conferences by Day")
-                    AddColumn(ref conferencesByDay, def);
+                //if (fieldDefs.Category(def) == "Dial No")
+                //    AddColumn(ref dialNo, def);
+                //if (fieldDefs.Category(def) == "Conferences by Day")
+                //    AddColumn(ref conferencesByDay, def);
                 if (fieldDefs.Category(def) == "Organisation Change")
                     AddColumn(ref organisationChange, def);
                 if (fieldDefs.Category(def) == "Asset Change")
@@ -397,8 +397,8 @@ public class DatabaseCreator
                 //    AddColumn(ref junctionOrgChangeContacts, def);
                 //if (fieldDefs.Category(def) == "Organisation Change Engineers")
                 //    AddColumn(ref junctionOrgChangeEngineers, def);
-                if (fieldDefs.Category(def) == "Conference Resource")
-                    AddColumn(ref junctionConfResource, def);
+                //if (fieldDefs.Category(def) == "Conference Resource")
+                //    AddColumn(ref junctionConfResource, def);
             }
 
             void AddColumn(ref string column, KeyValuePair<string, FieldDefs.Definition> def)
@@ -418,19 +418,21 @@ public class DatabaseCreator
 
             // Entity Table Strings
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
-                            ", CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference)" + 
-                            ", CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference) );";
+                            ", CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference)" +
+                            ", CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference)" +
+                            ", CONSTRAINT u_OrgDialNo UNIQUE (Dial_No) );";
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
             login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
                      ", CONSTRAINT u_Username UNIQUE (Username) );";
             asset += ", CONSTRAINT pk_AssetID PRIMARY KEY (Asset_ID)" +
                      ", CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE" +
                      ", CONSTRAINT u_AssetRef UNIQUE (Asset_Reference) );";
-            resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID) );";
-            conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";
+            resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID) " +
+                        ", CONSTRAINT u_ResourceName UNIQUE (Resource_Name) );";
+            //conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
                           ", CONSTRAINT fk_ConfResource FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID)" +
-                          ", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
+                          //", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
                           ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE);";
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
             conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
@@ -442,8 +444,8 @@ public class DatabaseCreator
             connections += ", CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference)" +
                            ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
                            ", CONSTRAINT fk_ConnectionOrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE );";
-            conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
-                                ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
+            //conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
+            //                    ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
                                   ", CONSTRAINT fk_OrgChange_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
             //                    No real point making a foreign key for Login_ID - we don't want to cascade delete or set to null if the login is deleted.
@@ -479,8 +481,8 @@ public class DatabaseCreator
             SendCommandSQL(asset);
             Writer.Message("Creating Resource table...");
             SendCommandSQL(resource);
-            Writer.Message("Creating Conference Type table...");
-            SendCommandSQL(conferenceType);
+            //Writer.Message("Creating Conference Type table...");
+            //SendCommandSQL(conferenceType);
             Writer.Message("Creating Conference table...");
             SendCommandSQL(conference);
             Writer.Message("Creating Recurrence table...");
@@ -491,8 +493,8 @@ public class DatabaseCreator
             SendCommandSQL(connections);
             Writer.Message("Creating Organisation Change table...");
             SendCommandSQL(organisationChange);
-            Writer.Message("Creating Conferences by Day table...");
-            SendCommandSQL(conferencesByDay);
+            //Writer.Message("Creating Conferences by Day table...");
+            //SendCommandSQL(conferencesByDay);
             Writer.Message("Creating Asset Change table...");
             SendCommandSQL(assetChange);
             Writer.Message("Creating Organisation Contacts junction table...");

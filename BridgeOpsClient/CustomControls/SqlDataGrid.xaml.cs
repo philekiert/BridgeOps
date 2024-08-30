@@ -420,6 +420,8 @@ namespace BridgeOpsClient.CustomControls
             // them to redraw. I've tried a million solutions, this is the only one that worked, but it's quite slow
             // at high selected counts.
 
+            // Optimise this when you get a sec.
+
             int first = -1;
             int last = -1;
 
@@ -453,13 +455,11 @@ namespace BridgeOpsClient.CustomControls
 
             // Iterate through the selected items
             foreach (var item in visibleRows)
-            {
                 if (dtg.SelectedItems.Contains(item))
                 {
                     dtg.SelectedItems.Remove(item);
                     dtg.SelectedItems.Add(item);
                 }
-            }
         }
 
         private void dtg_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)

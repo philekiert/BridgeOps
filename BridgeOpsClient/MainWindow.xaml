@@ -6,16 +6,16 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
-        Title="Bridge Management Software" Height="700" Width="800"
+        Title="Bridge Manager" Height="700" Width="800"
         Closed="Window_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="0"/> <!-- Set to 24 when adding conferencing support -->
+            <RowDefinition Height="24"/> <!-- Set to 24 when adding conferencing support -->
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" x:Name="menuBar">
+        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False">
             <MenuItem Header="_File">
                 <MenuItem Header="Log _In" IsEnabled="False"
                           x:Name="menuUserLogIn" Click="menuUserLogIn_Click"/>
@@ -74,9 +74,9 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click"/>
-            <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click"/>
-            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click"
+            <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click" IsTabStop="False"/>
+            <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click" IsTabStop="False"/>
+            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"
                     Margin="2 2 10 2"/>
         </Grid>
         <Grid x:Name="grdConfData" Grid.Row="2">
@@ -84,10 +84,10 @@
                 <ColumnDefinition Width="1*" MinWidth="200"/>
                 <ColumnDefinition Width="1*" MinWidth="818"/>
             </Grid.ColumnDefinitions>
-            <Frame Grid.Column="0" x:Name="frameConf" SizeChanged="frameConf_SizeChanged"></Frame>
+            <Frame Grid.Column="0" x:Name="frameConf" SizeChanged="frameConf_SizeChanged" IsTabStop="False"/>
             <GridSplitter Grid.Column="0" x:Name="spltConfData" Width="5"
-                          HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
-            <Frame Grid.Column="1" x:Name="frameData"></Frame>
+                          HorizontalAlignment="Right" VerticalAlignment="Stretch" IsTabStop="False"/>
+            <Frame Grid.Column="1" x:Name="frameData" IsTabStop="False"/>
         </Grid>
     </Grid>
 </Window>

@@ -38,6 +38,7 @@
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                 <Setter Property="BorderThickness" Value="0 0 1 1"/>
                 <Setter Property="BorderBrush" Value="#eee"/>
+                <Setter Property="IsTabStop" Value="False"/>
                 <!-- Annoying that this botch solution is necessary, but this centres each row vertically -->
                 <Setter Property="Template">
                     <Setter.Value>

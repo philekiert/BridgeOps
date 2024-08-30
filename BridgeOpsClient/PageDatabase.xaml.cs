@@ -81,6 +81,8 @@ namespace BridgeOpsClient
                 EnforceMinimumSize();
                 SwitchButtonsOnOrOff();
             }
+
+            ResetTabIndices();
         }
 
         public void RemovePane(Frame element)
@@ -124,6 +126,8 @@ namespace BridgeOpsClient
                 EnforceMinimumSize();
                 SwitchButtonsOnOrOff();
             }
+
+            ResetTabIndices();
         }
 
         private void SwitchButtonsOnOrOff()
@@ -195,6 +199,24 @@ namespace BridgeOpsClient
                                                       App.sd.editPermissions[Glo.PERMISSION_RECORDS]);
                 view.dtgResults.ToggleContextMenuItem("Delete Selected",
                                                       App.sd.deletePermissions[Glo.PERMISSION_RECORDS]);
+            }
+        }
+
+        private void ResetTabIndices()
+        {
+            // This doesn't work quite right, come back to it.
+
+            int tabStop = 2;
+            foreach (PageDatabaseView view in views.OrderBy(view => Grid.GetRow(view)).ToList())
+            {
+                view.cmbTable.TabIndex = ++tabStop;
+                view.cmbColumn.TabIndex = ++tabStop;
+                view.btnClear.TabIndex = ++tabStop;
+                view.txtSearch.TabIndex = ++tabStop;
+                view.btnSearch.TabIndex = ++tabStop;
+                view.btnWideSearch.TabIndex = ++tabStop;
+                view.btnRemovePane.TabIndex = ++tabStop;
+                view.btnAddPane.TabIndex = ++tabStop;
             }
         }
     }

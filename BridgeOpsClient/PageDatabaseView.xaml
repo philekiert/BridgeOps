@@ -55,7 +55,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1"
+            <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1" IsTabStop="False"
                                 Width="{Binding ActualWidth, ElementName=pageGrid}"
                                 Height="{Binding ActualHeight, ElementName=resultsArea}"/>
         </Grid>
