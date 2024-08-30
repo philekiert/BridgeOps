@@ -90,7 +90,6 @@ namespace BridgeOpsClient
             menuDatabaseNewOrganisation.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewAsset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewContact.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
-            menuDatabaseNewConferenceType.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCE_TYPES];
             menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
         }
 
@@ -151,20 +150,6 @@ namespace BridgeOpsClient
 
             newResource.txtResourceName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.resource,
                                                                       Glo.Tab.RESOURCE_ID).restriction);
-
-            newResource.Show();
-        }
-
-        private void menuDatabaseNewConferenceType_Click(object sender, RoutedEventArgs e)
-        {
-            NewConferenceType newResource = new();
-
-            if (ColumnRecord.GetColumn(ColumnRecord.conferenceType, Glo.Tab.CONFERENCE_TYPE_NAME).friendlyName != "")
-                newResource.lblTypeName.Content = ColumnRecord.GetColumn(ColumnRecord.conferenceType,
-                                                                         Glo.Tab.CONFERENCE_TYPE_NAME).friendlyName;
-
-            newResource.txtTypeName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.conferenceType,
-                                                                  Glo.Tab.CONFERENCE_TYPE_NAME).restriction);
 
             newResource.Show();
         }

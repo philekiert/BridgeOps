@@ -45,9 +45,7 @@
                     <Separator/>
                     <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click"/>
-                    <MenuItem Header="Co_nference Type" x:Name="menuDatabaseNewConferenceType"
-                              Click="menuDatabaseNewConferenceType_Click"/>
-                    
+
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="_Select Query Builder" Click="menuSelect_Click"/>

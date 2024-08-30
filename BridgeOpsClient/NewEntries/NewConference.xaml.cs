@@ -30,19 +30,6 @@ namespace BridgeOpsClient
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
 
-            // Populate available types
-            bool successful;
-            typeList = App.SelectColumnPrimary("ConferenceType", Glo.Tab.CONFERENCE_TYPE_NAME, out successful);
-            if (!successful)
-                Close();
-            if (typeList == null || typeList.Length == 0)
-            {
-                MessageBox.Show("Could not pull conference type list from server.");
-                Close();
-            }
-            cmbType.ItemsSource = typeList;
-            cmbType.SelectedIndex = 0;
-
             // Populate available resources and select whichever one the user clicked on in the schedule view.
             cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
             if (resource == null)
