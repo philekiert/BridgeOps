@@ -497,6 +497,11 @@ namespace SendReceiveClasses
                             commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType} NOT NULL;");
                             commands.Add($"ALTER TABLE OrganisationContacts ALTER COLUMN {column} {columnType} NOT NULL;");
                         }
+                        if (column == Glo.Tab.DIAL_NO)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Organisation DROP CONSTRAINT u_OrgDialNo;");
+                        }    
                     }
                     else if (table == "Asset")
                     {
@@ -554,7 +559,7 @@ namespace SendReceiveClasses
                                 commands.Add("ALTER TABLE OrganisationChange ADD CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)");
                                 commands.Add("ALTER TABLE OrganisationChange ADD CONSTRAINT fk_OrgChange_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE;");
                             }
-                            if (column == Glo.Tab.ORGANISATION_REF)
+                            else if (column == Glo.Tab.ORGANISATION_REF)
                             {
                                 commands.Add("ALTER TABLE Organisation ADD CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference);");
                                 commands.Add("ALTER TABLE Organisation ADD CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference);");
@@ -564,6 +569,10 @@ namespace SendReceiveClasses
                                 commands.Add("ALTER TABLE Connection ADD CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference);");
                                 commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT fk_jncContacts_OrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE;");
                                 commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT pk_jncContacts_OrgRef_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID);");
+                            }
+                            else if (column == Glo.Tab.DIAL_NO)
+                            {
+                                commands.Add("ALTER TABLE Organisation ADD CONSTRAINT u_OrgDialNo UNIQUE (Dial_No);");
                             }
                         }
                         else if (table == "Asset")
@@ -577,7 +586,7 @@ namespace SendReceiveClasses
                                 commands.Add("ALTER TABLE AssetChange ADD CONSTRAINT pk_AssetID_ChangeID PRIMARY KEY (Asset_ID, Change_ID)");
                                 commands.Add("ALTER TABLE AssetChange ADD CONSTRAINT fk_AssetChange_AssetID FOREIGN KEY (Asset_ID) REFERENCES Asset (Asset_ID) ON DELETE CASCADE;");
                             }
-                            if (column == Glo.Tab.ASSET_REF)
+                            else if (column == Glo.Tab.ASSET_REF)
                             {
                                 commands.Add("ALTER TABLE Asset ADD CONSTRAINT u_AssetRef UNIQUE (Asset_Reference);");
                             }
@@ -1321,10 +1330,13 @@ namespace SendReceiveClasses
         public string? name;
         public DateTime availableFrom;
         public DateTime availableTo;
-        public int capacity;
+        public int connectionCapacity;
+        public int conferenceCapacity;
+        public int rowsAdditional;
 
         public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
-                        DateTime availableFrom, DateTime availableTo, int capacity)
+                        DateTime availableFrom, DateTime availableTo,
+                        int connectionCapacity, int conferenceCapacity, int rowsAdditional)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -1332,7 +1344,9 @@ namespace SendReceiveClasses
             this.name = name;
             this.availableFrom = availableFrom;
             this.availableTo = availableTo;
-            this.capacity = capacity;
+            this.connectionCapacity = connectionCapacity;
+            this.conferenceCapacity = conferenceCapacity;
+            this.rowsAdditional = rowsAdditional;
         }
 
         private void Prepare()
@@ -1349,11 +1363,15 @@ namespace SendReceiveClasses
                              SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
                                                  Glo.Tab.RESOURCE_FROM,
                                                  Glo.Tab.RESOURCE_TO,
-                                                 Glo.Tab.RESOURCE_CAPACITY),
+                                                 Glo.Tab.RESOURCE_CAPACITY_CONNECTION,
+                                                 Glo.Tab.RESOURCE_CAPACITY_CONFERENCE,
+                                                 Glo.Tab.RESOURCE_ROWS_ADDITIONAL),
                              SqlAssist.ValConcat(name,
                                                  SqlAssist.AddQuotes(SqlAssist.DateTimeToSQL(availableFrom, false)),
                                                  SqlAssist.AddQuotes(SqlAssist.DateTimeToSQL(availableTo, false)),
-                                                 capacity.ToString()));
+                                                 connectionCapacity.ToString(),
+                                                 conferenceCapacity.ToString(),
+                                                 rowsAdditional.ToString()));
         }
     }
 

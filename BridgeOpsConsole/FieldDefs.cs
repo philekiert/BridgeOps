@@ -27,10 +27,8 @@ UNSIGNED usage:
   - UNSIGNED is not supported in SQL Server, but should be left in the type definitions to be removed later on in
     DatabaseCreator.CreateTables(). This is to allow for potentially using that feature when supporting other RDBMS's
     (relational database management systems) that do support it in the future, such as MySQL.
-
-
-
-
+  - NB 30/08/2024 - That's pretty much redundant now as I've committed to SQL Server fully. I'll leave the note just
+    because the UNSIGNED keyword is still littering the code here and there.
 
 */
 
@@ -134,24 +132,26 @@ public class FieldDefs
         defs.Add("Resource Name", new Definition(8, Glo.Tab.RESOURCE_NAME, "VARCHAR(20)", true, false, false));
         defs.Add("Resource Available From", new Definition(8, Glo.Tab.RESOURCE_FROM, "DATETIME", false, false, false));
         defs.Add("Resource Available To", new Definition(8, Glo.Tab.RESOURCE_TO, "DATETIME", false, false, false));
-        defs.Add("Resource Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY, typeResourceCapacity, false, false, false));
+        defs.Add("Resource Connection Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY_CONNECTION, typeResourceCapacity, false, false, false));
+        defs.Add("Resource Conference Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY_CONFERENCE, typeResourceCapacity, false, false, false));
+        defs.Add("Resource Rows Additional", new Definition(8, Glo.Tab.RESOURCE_ROWS_ADDITIONAL, typeResourceCapacity, false, false, false));
 
         // Conference
         defs.Add("Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, true));
         defs.Add("Conference Resource ID", new Definition(10, Glo.Tab.RESOURCE_ID, typeResourceID, false, false, false));
         defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.CONFERENCE_RESOURCE_ROW, typeResourceID, false, false, false));
-        defs.Add("Conference Conference Type ID", new Definition(10, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, false, false));
+        //defs.Add("Conference Conference Type ID", new Definition(10, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, false, false));
         defs.Add("Conference Title", new Definition(10, Glo.Tab.CONFERENCE_TITLE, "VARCHAR(50)", true, false, false));
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
-        defs.Add("Conference Buffer", new Definition(10, Glo.Tab.CONFERENCE_BUFFER, "TIME", false, false, false));
+        defs.Add("Conference Buffer", new Definition(10, Glo.Tab.CONFERENCE_BUFFER, "BIGINT", false, false, false));
         defs.Add("Conference Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, false, false));
         defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
         defs.Add("Conference Notes", new Definition(10, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Conference Type
-        defs.Add("Conference Type ID", new Definition(15, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, true, true));
-        defs.Add("Conference Type Name", new Definition(15, Glo.Tab.CONFERENCE_TYPE_NAME, "VARCHAR(50)", true, false, false));
+        //defs.Add("Conference Type ID", new Definition(15, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, true, true));
+        //defs.Add("Conference Type Name", new Definition(15, Glo.Tab.CONFERENCE_TYPE_NAME, "VARCHAR(50)", true, false, false));
 
         // Conference Recurrence
         defs.Add("Conference Recurrence Recurrence ID", new Definition(21, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, true, true));
@@ -171,8 +171,8 @@ public class FieldDefs
         defs.Add("Connection Disconnection Time", new Definition(10, "Disconnection_Time", "DATETIME", false, false, false));
 
         // Conferences by Day
-        defs.Add("Conferences by Day Date", new Definition(18, "Date", "DATE", false, true, false));
-        defs.Add("Conferences by Day Conference ID", new Definition(18, "Conference_ID", typeConfID, false, true, false));
+        //defs.Add("Conferences by Day Date", new Definition(18, "Date", "DATE", false, true, false));
+        //defs.Add("Conferences by Day Conference ID", new Definition(18, "Conference_ID", typeConfID, false, true, false));
 
         // Organisation Change Snapshot
         defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));

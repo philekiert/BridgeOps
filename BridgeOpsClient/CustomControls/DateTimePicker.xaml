@@ -9,10 +9,10 @@
     <Grid Height="30">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120" />
-            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <DatePicker VerticalAlignment="Center" x:Name="datePicker" Grid.Column="0" Margin="0 0 8 0" />
-        <local:TimePicker VerticalAlignment="Center" x:Name="timePicker" Height="30" Grid.Column="1"
-                          Margin="0 0 8 0" />
+        <DatePicker VerticalAlignment="Center" x:Name="datePicker" Grid.Column="0" Margin="0 0 8 0"/>
+        <local:TimePicker x:Name="timePicker" Height="30" Grid.Column="1"
+                          Margin="0 3 8 0" />
     </Grid>
 </UserControl>

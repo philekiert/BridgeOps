@@ -547,9 +547,12 @@ namespace BridgeOpsClient
                     int names = columnNames.IndexOf(Glo.Tab.RESOURCE_NAME);
                     int startTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_FROM);
                     int endTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_TO);
-                    int capacities = columnNames.IndexOf(Glo.Tab.RESOURCE_CAPACITY);
-
-                    if (ids == -1 || names == -1 || startTimes == -1 || endTimes == -1 || capacities == -1)
+                    int connectionCapacities = columnNames.IndexOf(Glo.Tab.RESOURCE_CAPACITY_CONNECTION);
+                    int conferenceCapacities = columnNames.IndexOf(Glo.Tab.RESOURCE_CAPACITY_CONFERENCE);
+                    int rowAdditional = columnNames.IndexOf(Glo.Tab.RESOURCE_ROWS_ADDITIONAL);
+                    
+                    if (ids == -1 || names == -1 || startTimes == -1 || endTimes == -1 ||
+                        conferenceCapacities == -1 || rowAdditional == -1 || connectionCapacities == -1)
                         return false;
 
                     foreach (List<object?> row in rows)
@@ -558,7 +561,9 @@ namespace BridgeOpsClient
                             row[names] != null &&
                             row[startTimes] != null &&
                             row[endTimes] != null &&
-                            row[capacities] != null)
+                            row[connectionCapacities] != null &&
+                            row[conferenceCapacities] != null &&
+                            row[rowAdditional] != null)
                         {
 #pragma warning disable CS8602
 #pragma warning disable CS8604
@@ -567,7 +572,9 @@ namespace BridgeOpsClient
                                                                                                  row[names].ToString(),
                                                                                                  (DateTime)row[startTimes],
                                                                                                  (DateTime)row[endTimes],
-                                                                                                 (int)row[capacities]));
+                                                                                                 (int)row[connectionCapacities],
+                                                                                                 (int)row[conferenceCapacities],
+                                                                                                 (int)row[rowAdditional]));
 #pragma warning restore CS8602
 #pragma warning restore CS8604
 #pragma warning restore CS8605

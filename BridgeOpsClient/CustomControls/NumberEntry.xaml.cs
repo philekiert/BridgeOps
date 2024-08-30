@@ -17,6 +17,7 @@ namespace BridgeOpsClient.CustomControls
 {
     public partial class NumberEntry : UserControl
     {
+        // Inclusive.
         int min = int.MinValue;
         int max = int.MaxValue;
 
@@ -56,6 +57,14 @@ namespace BridgeOpsClient.CustomControls
                     txtNumber.Text = max.ToString();
                 else if (i < min)
                     txtNumber.Text = min.ToString();
+        }
+        
+        public void SetMinMax(int min, int max)
+        {
+            if (min > max)
+                max = min;
+            this.min = min;
+            this.max = max;
         }
 
         public int? GetNumber()

@@ -33,25 +33,33 @@ namespace BridgeOpsClient
             public string name;
             public DateTime start;
             public DateTime end;
-            public int capacity;
+            public int connectionCapacity;
+            public int conferenceCapacity;
+            public int rowsAdditional;
+            public int rowsTotal;
+
             // Unused in the list of resources, but use to pass the selected row to the New Conference.
             private int selectedRow = 0;
             private int selectedRowTotal = 0;
             public int SelectedRow { get { return selectedRow; } }
             public int SelectedRowTotal { get { return selectedRowTotal; } }
 
-            public ResourceInfo(int id, string name, DateTime start, DateTime end, int capacity)
+            public ResourceInfo(int id, string name, DateTime start, DateTime end,
+                                int connectionCapacity, int conferenceCapacity, int rowsAdditional)
             {
                 this.id = id;
                 this.name = name;
                 this.start = start;
                 this.end = end;
-                this.capacity = capacity;
+                this.connectionCapacity = connectionCapacity;
+                this.conferenceCapacity = conferenceCapacity;
+                this.rowsAdditional = rowsAdditional;
+                rowsTotal = conferenceCapacity + rowsAdditional;
                 selectedRow = 0;
             }
             public void SetSelectedRow(int selected, int selectedTotal)
             {
-                selectedRow = Math.Clamp(selected, 0, capacity);
+                selectedRow = Math.Clamp(selected, 0, conferenceCapacity + rowsAdditional);
                 selectedRowTotal = Math.Clamp(selectedTotal, 0, totalCapacity);
             }
         }
@@ -73,9 +81,9 @@ namespace BridgeOpsClient
                     foreach (ResourceInfo ri in resources)
                     {
                         resourcesOrder.Add(resourcesOrder.Count);
-                        for (int i = 1; i <= ri.capacity; ++i)
+                        for (int i = 1; i <= ri.rowsTotal; ++i)
                             resourceRowNames.Add(ri.name + " " + i);
-                        totalCapacity += ri.capacity;
+                        totalCapacity += ri.rowsTotal;
                     }
                 }
             }
@@ -91,13 +99,13 @@ namespace BridgeOpsClient
             {
                 for (int i = 0; i < resourcesOrder.Count; ++i)
                 {
-                    if (row < resourceStart + resources[resourcesOrder[i]].capacity)
+                    if (row < resourceStart + resources[resourcesOrder[i]].rowsTotal)
                     {
                         resources[resourcesOrder[i]].SetSelectedRow(row - resourceStart, row);
                         return resources[resourcesOrder[i]];
                     }
                     else
-                        resourceStart += resources[resourcesOrder[i]].capacity;
+                        resourceStart += resources[resourcesOrder[i]].rowsTotal;
                 }
             }
             return null;

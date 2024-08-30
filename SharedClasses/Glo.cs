@@ -165,7 +165,9 @@ public static class Glo
         public const string RESOURCE_NAME = "Resource_Name";
         public const string RESOURCE_FROM = "Available_From";
         public const string RESOURCE_TO = "Available_To";
-        public const string RESOURCE_CAPACITY = "Capacity";
+        public const string RESOURCE_CAPACITY_CONNECTION = "Connection_Capacity";
+        public const string RESOURCE_CAPACITY_CONFERENCE = "Conference_Capacity";
+        public const string RESOURCE_ROWS_ADDITIONAL = "Rows_Additional";
 
         public const string RECURRENCE_ID = "Recurrence_ID";
 

@@ -1,24 +1,15 @@
 ﻿using SendReceiveClasses;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
     public partial class NewResource : Window
     {
+        int connMax = Int32.MaxValue;
+        int confMax = Int16.MaxValue;
+        int rowsMax = Int16.MaxValue;
+
         public NewResource()
         {
             InitializeComponent();
@@ -27,6 +18,10 @@ namespace BridgeOpsClient
             timeAvailableTo.SetDateTime(new DateTime(2024, 7, 31));
 
             txtResourceName.Focus();
+
+            numCapacityConnection.SetMinMax(1, connMax);
+            numCapacityConference.SetMinMax(1, confMax);
+            numRowsAdditional.SetMinMax(0, rowsMax);
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -56,21 +51,36 @@ namespace BridgeOpsClient
                 return;
             }
 
-            int capacity;
-            int.TryParse(txtCapacity.Text, out capacity);
-            if (capacity > ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_CAPACITY).restriction ||
-                capacity < 1)
+            int? connCap = numCapacityConnection.GetNumber();
+            int? confCap = numCapacityConference.GetNumber();
+            int? rowsAdd = numRowsAdditional.GetNumber();
+            if (connCap == null || confCap == null || rowsAdd == null)
             {
-                MessageBox.Show("Capacity must be above 0 and less than " +
-                                ColumnRecord.GetColumn(ColumnRecord.resource,
-                                                       Glo.Tab.RESOURCE_CAPACITY).restriction.ToString() + ".");
+                MessageBox.Show("Must input capacity values.");
+                return;
+            }
+            if (connCap > connMax || connCap < 1)
+            {
+                MessageBox.Show("Connection capacity must be between 1 and " + connMax + ".");
+                return;
+            }
+            if (confCap > confMax || confCap < 1)
+            {
+                MessageBox.Show("Conference capacity must be between 1 and " + confMax + ".");
+                return;
+            }
+            if (rowsAdd > rowsMax || rowsAdd < 0)
+            {
+                MessageBox.Show("Additional placement rows must be between 0 and " + rowsMax + ".");
                 return;
             }
 
             nr.name = txtResourceName.Text.Length > 0 ? txtResourceName.Text : null;
             nr.availableFrom = (DateTime)from;
             nr.availableTo = (DateTime)to;
-            nr.capacity = capacity;
+            nr.connectionCapacity = (int)connCap;
+            nr.conferenceCapacity = (int)confCap;
+            nr.rowsAdditional = (int)rowsAdd;
 
             if (App.SendInsert(Glo.CLIENT_NEW_RESOURCE, nr))
             {

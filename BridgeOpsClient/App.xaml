@@ -11,6 +11,7 @@
         <Style TargetType="ComboBox">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
             <!-- This enables virtualization on all ComboBoxes so they aren't too slow to load. -->
             <Setter Property="ItemsPanel">
                 <Setter.Value>
@@ -19,6 +20,11 @@
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        
+        <!-- Button -->
+        <Style TargetType="Button">
+            <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
         </Style>
 
         <!-- DataInputTable -->
@@ -38,6 +44,7 @@
         <Style TargetType="MenuItem">
             <Setter Property="Height" Value="20" />
             <Setter Property="Margin" Value="0 2 0 0" />
+            <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
         </Style>
         
         <!-- Icons -->
