@@ -169,6 +169,7 @@ public class FieldDefs
         defs.Add("Connection Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
         defs.Add("Connection Connection Time", new Definition(10, "Connection_Time", "DATETIME", false, false, false));
         defs.Add("Connection Disconnection Time", new Definition(10, "Disconnection_Time", "DATETIME", false, false, false));
+        defs.Add("Connection Is Test", new Definition(10, "Is_Test", "BOOLEAN", false, false, false));
 
         // Conferences by Day
         //defs.Add("Conferences by Day Date", new Definition(18, "Date", "DATE", false, true, false));

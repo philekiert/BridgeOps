@@ -101,7 +101,7 @@ namespace BridgeOpsClient
                 return;
             if (organisationList == null)
             {
-                MessageBox.Show("Could not pull organisation list from server.");
+                App.DisplayError("Could not pull organisation list from server.");
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace BridgeOpsClient
                 return;
             if (organisationList == null)
             {
-                MessageBox.Show("Could not pull organisation list from server.");
+                App.DisplayError("Could not pull organisation list from server.");
                 return;
             }
 
@@ -157,7 +157,7 @@ namespace BridgeOpsClient
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)
         {
             if (App.IsLoggedIn)
-                MessageBox.Show("Already logged in as " + App.sd.username + ".");
+                App.DisplayError("Already logged in as " + App.sd.username + ".");
             else
             {
                 LogIn logIn = new LogIn(this);
@@ -170,7 +170,7 @@ namespace BridgeOpsClient
             if (App.IsLoggedIn)
                 App.LogOut();
             else
-                MessageBox.Show("Not logged in.");
+                App.DisplayError("Not logged in.");
         }
 
         private void menuChangePassword_Click(object sender, RoutedEventArgs e)
@@ -181,13 +181,11 @@ namespace BridgeOpsClient
 
         private void menuResetViewSettings_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxButton messageBoxButton = MessageBoxButton.YesNo;
-            MessageBoxResult result = MessageBox.Show("Are you sure? This will:\n\n• Reset all data table view " +
-                                                      "settings, such as hidden columns, column orders and columns " +
-                                                      "widths.\n• Reset pane layout.\n\nYou will need to log back in.",
-                                                      "Reset View Settings",
-                                                      messageBoxButton);
-            if (result == MessageBoxResult.Yes)
+            if (App.DisplayQuestion("Are you sure? This will:\n\n• Reset all data table view " +
+                                    "settings, such as hidden columns, column orders and columns " +
+                                    "widths.\n• Reset pane layout.\n\nYou will need to log back in.",
+                                    "Reset View Settings",
+                                    App.QuestionOptions.YesNo))
             {
                 // Reset settings before LogOut(), and they will be stored on the database as part of that method.
                 App.us = new UserSettings();

@@ -188,7 +188,7 @@ namespace BridgeOpsClient
                     return "";
                 if (!cmbPresets.Items.Contains(nameObject.txtName.Text))
                     break;
-                MessageBox.Show("This name is already in use.");
+                App.DisplayError("This name is already in use.");
             }
 
             return nameObject.txtName.Text;
@@ -266,7 +266,7 @@ namespace BridgeOpsClient
             }
             catch
             {
-                MessageBox.Show("JSON file could not be read. It could be corrupted.");
+                App.DisplayError("JSON file could not be read. It could be corrupted.");
             }
 
             tabControl.SelectedIndex = 0;
@@ -276,8 +276,8 @@ namespace BridgeOpsClient
         private void SavePreset(string name)
         {
             if (cmbPresets.Text != "<New>" &&
-                MessageBox.Show("Overwrite current preset?", "Save Changes",
-                                MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                App.DisplayQuestion("Overwrite current preset?", "Save Changes",
+                                    App.QuestionOptions.YesNo))
                 return;
 
             JsonObject json = new();
@@ -352,7 +352,7 @@ namespace BridgeOpsClient
                 PresetLoad(true);
                 cmbPresets.SelectedItem = name;
                 skipPresetLoad = false;
-                MessageBox.Show("Changes saved successfully.");
+                App.DisplayError("Changes saved successfully.");
             }
         }
 
@@ -408,7 +408,7 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                App.DisplayError("Could not retrieve preset list.", e.Message);
+                App.DisplayError(App.ErrorConcat("Could not retrieve preset list.", e.Message));
             }
         }
 
@@ -505,7 +505,7 @@ namespace BridgeOpsClient
             }
             catch (Exception ex)
             {
-                App.DisplayError("Could not remove the selected preset.", ex.Message);
+                App.DisplayError(App.ErrorConcat("Could not remove the selected preset.", ex.Message));
             }
         }
 
@@ -555,7 +555,7 @@ namespace BridgeOpsClient
             }
             catch (Exception ex)
             {
-                App.DisplayError("Could not rename the selected preset.", ex.Message);
+                App.DisplayError(App.ErrorConcat("Could not rename the selected preset.", ex.Message));
             }
         }
 

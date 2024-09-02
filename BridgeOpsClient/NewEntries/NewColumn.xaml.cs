@@ -210,17 +210,17 @@ namespace BridgeOpsClient
         {
             if (cmbTable.Text == "")
             {
-                MessageBox.Show("Must select a table.");
+                App.DisplayError("Must select a table.");
                 return false;
             }
             if (txtColumnName.IsEnabled == true && txtColumnName.Text.Length == 0)
             {
-                MessageBox.Show("Must input a column name.");
+                App.DisplayError("Must input a column name.");
                 return false;
             }
             if (cmbType.IsEnabled == true && cmbType.SelectedIndex == -1)
             {
-                MessageBox.Show("Must select a column type.");
+                App.DisplayError("Must select a column type.");
                 return false;
             }
             if (txtLimit.IsEnabled == true)
@@ -230,18 +230,18 @@ namespace BridgeOpsClient
                 {
                     if (limit < 1)
                     {
-                        MessageBox.Show("Max value must be greater than 0.");
+                        App.DisplayError("Max value must be greater than 0.");
                         return false;
                     }
                     if (limit > 65535)
                     {
-                        MessageBox.Show("Max value must be less than 65536.");
+                        App.DisplayError("Max value must be less than 65536.");
                         return false;
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Invalid max value.");
+                    App.DisplayError("Invalid max value.");
                     return false;
                 }
             }
@@ -302,20 +302,20 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_CONFIRM)
                         {
-                            if (MessageBox.Show("This column contains data, either current or historical. " +
-                                                "Changing the type of a column can lead to data loss if the new " +
-                                                "type is unable to represent the currently held data. It is highly " +
-                                                "recommended that you back up the database before making this " +
-                                                "change, as if the change is successful, any data loss will be " +
-                                                "irreversible." +
-                                                "\n\nAre you sure you wish to proceed?",
-                                                "Change Type", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                            if (App.DisplayQuestion("This column contains data, either current or historical. " +
+                                                    "Changing the type of a column can lead to data loss if the new " +
+                                                    "type is unable to represent the currently held data. It is highly " +
+                                                    "recommended that you back up the database before making this " +
+                                                    "change, as if the change is successful, any data loss will be " +
+                                                    "irreversible." +
+                                                    "\n\nAre you sure you wish to proceed?",
+                                                    "Change Type", App.QuestionOptions.OKCancel))
                             {
                                 stream.WriteByte(Glo.CLIENT_CONFIRM);
                                 response = stream.ReadByte();
                                 if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                                 {
-                                    MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
+                                    App.DisplayError("The column could not be removed. See SQL error:\n\n" +
                                                     App.sr.ReadString(stream));
                                     return;
                                 }
@@ -340,12 +340,12 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             // Shouldn't ever arrive here.
-                            MessageBox.Show("Only admins can make table alterations.");
+                            App.DisplayError("Only admins can make table alterations.");
                             return;
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            MessageBox.Show("The table alteration could not be made. See SQL error:\n\n" +
+                            App.DisplayError("The table alteration could not be made. See SQL error:\n\n" +
                                             App.sr.ReadString(stream));
                             return;
                         }
@@ -353,11 +353,11 @@ namespace BridgeOpsClient
                             throw new Exception();
                     }
                     else
-                        MessageBox.Show("Could not create network stream.");
+                        App.DisplayError("Could not create network stream.");
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run table alteration.");
+                    App.DisplayError("Could not run table alteration.");
                     return;
                 }
                 finally

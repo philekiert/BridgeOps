@@ -164,7 +164,7 @@ namespace BridgeOpsClient
             {
                 if (txtAssetRef.Text == "")
                 {
-                    MessageBox.Show($"You must input a value for {lblAssetID.Content}.");
+                    App.DisplayError($"You must input a value for {lblAssetID.Content}.");
                     return;
                 }
 
@@ -199,7 +199,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditAsset.disallowed.Count > 0)
                     message = ditAsset.disallowed[0];
-                MessageBox.Show(message);
+                App.DisplayError(message);
             }
         }
 
@@ -209,7 +209,7 @@ namespace BridgeOpsClient
             {
                 if (txtAssetRef.Text == "")
                 {
-                    MessageBox.Show("You must input a value for Asset ID");
+                    App.DisplayError("You must input a value for Asset ID");
                     return;
                 }
 
@@ -278,7 +278,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditAsset.disallowed.Count > 0)
                     message = ditAsset.disallowed[0];
-                MessageBox.Show(message);
+                App.DisplayError(message);
             }
         }
 
@@ -374,7 +374,7 @@ namespace BridgeOpsClient
                     GetHistory();
             }
             else
-                MessageBox.Show("Please select a change record.");
+                App.DisplayError("Please select a change record.");
         }
 
         private void Window_Closed(object sender, EventArgs e)

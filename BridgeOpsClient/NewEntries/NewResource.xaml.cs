@@ -36,18 +36,18 @@ namespace BridgeOpsClient
 
             if (from == null || to == null)
             {
-                MessageBox.Show("Must select start and end dates and times.");
+                App.DisplayError("Must select start and end dates and times.");
                 return;
             }
 
             if (to < from)
             {
-                MessageBox.Show("Availability end before it begins.");
+                App.DisplayError("Availability end before it begins.");
                 return;
             }
             else if (to == from)
             {
-                MessageBox.Show("Start and end dates and times cannot be the same.");
+                App.DisplayError("Start and end dates and times cannot be the same.");
                 return;
             }
 
@@ -56,22 +56,22 @@ namespace BridgeOpsClient
             int? rowsAdd = numRowsAdditional.GetNumber();
             if (connCap == null || confCap == null || rowsAdd == null)
             {
-                MessageBox.Show("Must input capacity values.");
+                App.DisplayError("Must input capacity values.");
                 return;
             }
             if (connCap > connMax || connCap < 1)
             {
-                MessageBox.Show("Connection capacity must be between 1 and " + connMax + ".");
+                App.DisplayError("Connection capacity must be between 1 and " + connMax + ".");
                 return;
             }
             if (confCap > confMax || confCap < 1)
             {
-                MessageBox.Show("Conference capacity must be between 1 and " + confMax + ".");
+                App.DisplayError("Conference capacity must be between 1 and " + confMax + ".");
                 return;
             }
             if (rowsAdd > rowsMax || rowsAdd < 0)
             {
-                MessageBox.Show("Additional placement rows must be between 0 and " + rowsMax + ".");
+                App.DisplayError("Additional placement rows must be between 0 and " + rowsMax + ".");
                 return;
             }
 
@@ -88,7 +88,7 @@ namespace BridgeOpsClient
                 App.PullResourceInformation();
             }
             else
-                MessageBox.Show("Could not create resource.");
+                App.DisplayError("Could not create resource.");
         }
 
         private void Window_Closed(object sender, EventArgs e)

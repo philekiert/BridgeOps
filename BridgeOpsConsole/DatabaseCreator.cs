@@ -346,12 +346,12 @@ public class DatabaseCreator
             string login = "";
             string asset = "";
             string resource = "";
-            string conferenceType = "";
+            //string conferenceType = "";
             string conference = "";
             string conferenceRecurrence = "";
             string connections = "";
-            string dialNo = "";
-            string conferencesByDay = "";
+            //string dialNo = "";
+            //string conferencesByDay = "";
             string organisationChange = "";
             string assetChange = "";
             string junctionOrgContacts = "";

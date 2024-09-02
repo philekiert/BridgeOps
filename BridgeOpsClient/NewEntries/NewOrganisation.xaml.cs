@@ -225,7 +225,7 @@ namespace BridgeOpsClient
             {
                 if (txtOrgRef.Text == "")
                 {
-                    MessageBox.Show($"You must input a value for {lblOrgID.Content}.");
+                    App.DisplayError($"You must input a value for {lblOrgID.Content}.");
                     return;
                 }
 
@@ -260,7 +260,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditOrganisation.disallowed.Count > 0)
                     message = ditOrganisation.disallowed[0];
-                MessageBox.Show(message);
+                App.DisplayError(message);
             }
         }
 
@@ -270,7 +270,7 @@ namespace BridgeOpsClient
             {
                 if (txtOrgRef.Text == "")
                 {
-                    MessageBox.Show("You must input a value for Organisation ID");
+                    App.DisplayError("You must input a value for Organisation ID");
                     return;
                 }
 
@@ -344,7 +344,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditOrganisation.disallowed.Count > 0)
                     message = ditOrganisation.disallowed[0];
-                MessageBox.Show(message);
+                App.DisplayError(message);
             }
         }
 
@@ -427,7 +427,7 @@ namespace BridgeOpsClient
             int assetID;
             if (!int.TryParse(dtgAssets.GetCurrentlySelectedID(), out assetID))
             {
-                MessageBox.Show("Could not discern asset ID from record.");
+                App.DisplayError("Could not discern asset ID from record.");
                 return;
             }
             Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
@@ -440,7 +440,7 @@ namespace BridgeOpsClient
                     MainWindow.pageDatabase.RepeatSearches(1);
             }
             else
-                MessageBox.Show("Could not update specified asset.");
+                App.DisplayError("Could not update specified asset.");
         }
 
         private void btnAssetsRefresh_Click(object sender, RoutedEventArgs e)
@@ -470,7 +470,7 @@ namespace BridgeOpsClient
                 }
                 else
                 {
-                    MessageBox.Show("Contact could not be linked to organisation.");
+                    App.DisplayError("Contact could not be linked to organisation.");
                 }
             }
             // else the NewContact form was closed without being completed.
@@ -501,13 +501,13 @@ namespace BridgeOpsClient
             int contactIdInt;
             if (contactID == null || !int.TryParse(contactID, out contactIdInt))
             {
-                MessageBox.Show("Could not discern contact ID from record.");
+                App.DisplayError("Could not discern contact ID from record.");
                 return;
             }
             if (App.LinkContact(originalRef, contactIdInt, true))
                 PopulateContacts();
             else
-                MessageBox.Show("Could not update specified asset.");
+                App.DisplayError("Could not update specified asset.");
         }
 
         private void btnContactsRefresh_Click(object sender, RoutedEventArgs e)
@@ -590,7 +590,7 @@ namespace BridgeOpsClient
                     GetHistory();
             }
             else
-                MessageBox.Show("Please select a change record.");
+                App.DisplayError("Please select a change record.");
         }
 
         private void Window_Closed(object sender, EventArgs e)

@@ -159,14 +159,14 @@ namespace BridgeOpsClient
                                     PopulateUserList();
                             }
                             else
-                                MessageBox.Show("Incorrect number of fields received.");
+                                App.DisplayError("Incorrect number of fields received.");
                         }
                         else
-                            MessageBox.Show("Could no longer retrieve record.");
+                            App.DisplayError("Could no longer retrieve record.");
                     }
                 }
                 else
-                    MessageBox.Show("User ID invalid.");
+                    App.DisplayError("User ID invalid.");
             }
         }
 
@@ -190,14 +190,14 @@ namespace BridgeOpsClient
             {
                 if (loginID == App.sd.loginID)
                 {
-                    MessageBox.Show("You cannot log yourself out from here.");
+                    App.DisplayError("You cannot log yourself out from here.");
                     return;
                 }
                 App.LogOut(loginID);
                 PopulateUserList();
             }
             else
-                MessageBox.Show("You must first select a user to log out.");
+                App.DisplayError("You must first select a user to log out.");
         }
 
 
@@ -269,7 +269,7 @@ namespace BridgeOpsClient
             ColumnRecord.Column? col = ColumnRecord.GetColumnNullable(table, column);
             if (col == null)
             {
-                MessageBox.Show("Something went wrong.");
+                App.DisplayError("Something went wrong.");
                 return;
             }
 
@@ -297,13 +297,13 @@ namespace BridgeOpsClient
             string column = dtgColumns.GetCurrentlySelectedCell(1);
             if (table == "" || column == "")
             {
-                MessageBox.Show("You must first select a column to remove.");
+                App.DisplayError("You must first select a column to remove.");
                 return;
             }
 
             if (!Glo.Fun.ColumnRemovalAllowed(table, column))
             {
-                MessageBox.Show("This column is integral to the running of the application, and cannot be removed.");
+                App.DisplayError("This column is integral to the running of the application, and cannot be removed.");
                 return;
             }
 
@@ -327,11 +327,11 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_CONFIRM)
                         {
-                            if (MessageBox.Show("This column contains data, either current or historical. " +
-                                                "There will be no way to retrieve this data, so it is advisable to back " +
-                                                "up the database before making changes that could result in data loss." +
-                                                "\n\nAre you sure you wish to proceed?",
-                                                "Remove Column", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                            if (App.DisplayQuestion("This column contains data, either current or historical. " +
+                                                    "There will be no way to retrieve this data, so it is advisable to back " +
+                                                    "up the database before making changes that could result in data loss." +
+                                                    "\n\nAre you sure you wish to proceed?",
+                                                    "Remove Column", App.QuestionOptions.OKCancel))
                             {
                                 stream.WriteByte(Glo.CLIENT_CONFIRM);
                                 if (stream.ReadByte() != Glo.CLIENT_REQUEST_SUCCESS)
@@ -350,12 +350,12 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             // Shouldn't ever arrive here.
-                            MessageBox.Show("Only admins can make table modifications.");
+                            App.DisplayError("Only admins can make table modifications.");
                             return;
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            MessageBox.Show("The column could not be removed. See SQL error:\n\n" +
+                            App.DisplayError("The column could not be removed. See SQL error:\n\n" +
                                             App.sr.ReadString(stream));
                             return;
                         }
@@ -363,11 +363,11 @@ namespace BridgeOpsClient
                             throw new Exception();
                     }
                     else
-                        MessageBox.Show("Could not create network stream.");
+                        App.DisplayError("Could not create network stream.");
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run table update.");
+                    App.DisplayError("Could not run table update.");
                     return;
                 }
                 finally

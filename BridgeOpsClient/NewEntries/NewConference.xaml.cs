@@ -20,8 +20,6 @@ namespace BridgeOpsClient
 {
     public partial class NewConference : Window
     {
-        string[]? typeList = null;
-
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
         {
             InitializeComponent();
@@ -33,7 +31,7 @@ namespace BridgeOpsClient
             // Populate available resources and select whichever one the user clicked on in the schedule view.
             cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
             if (resource == null)
-                MessageBox.Show("Could not determine resource from selected row, please set manually.");
+                App.DisplayError("Could not determine resource from selected row, please set manually.");
             else
                 cmbResource.SelectedIndex = resource.SelectedRowTotal;
 

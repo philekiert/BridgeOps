@@ -88,7 +88,7 @@ namespace BridgeOpsClient
 
                     if (!App.PullResourceInformation())
                     {
-                        MessageBox.Show("Log in was successful, but could not pull resource information. Logging out. " +
+                        App.DisplayError("Log in was successful, but could not pull resource information. Logging out. " +
                                         "Please contact the software administrator.");
                         App.LogOut();
                     }
@@ -97,7 +97,7 @@ namespace BridgeOpsClient
                 }
                 else
                 {
-                    MessageBox.Show("Log in was successful, but could not pull column record. Logging out. Please " +
+                    App.DisplayError("Log in was successful, but could not pull column record. Logging out. Please " +
                                     "contact the software administrator.");
                     App.LogOut();
                 }
@@ -111,18 +111,18 @@ namespace BridgeOpsClient
             else
             {
                 if (result == Glo.CLIENT_LOGIN_REJECT_USER_INVALID)
-                    MessageBox.Show("Username or password invalid.");
+                    App.DisplayError("Username or password invalid.");
                 else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DUPLICATE)
-                    MessageBox.Show("User already logged in. If you believe this to be incorrect, please contact " +
+                    App.DisplayError("User already logged in. If you believe this to be incorrect, please contact " +
                                     "the software administrator immediately.");
                 else if (result == Glo.CLIENT_LOGIN_REJECT_IP_DUPLICATE)
-                    MessageBox.Show("IP address already associated with active session. Please try again in a " +
+                    App.DisplayError("IP address already associated with active session. Please try again in a " +
                                     "minute. If the problem does not resolve itself, contact the software " +
                                     "administrator.");
                 else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DISABLED)
-                    MessageBox.Show("Account disabled, please speak to your administrator.");   
+                    App.DisplayError("Account disabled, please speak to your administrator.");   
                 else
-                    MessageBox.Show("Could not connect to Agent.");
+                    App.DisplayError("Could not connect to Agent.");
 
                 ToggleNetworkSettings(sender, e);
             }

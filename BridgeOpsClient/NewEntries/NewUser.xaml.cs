@@ -173,12 +173,12 @@ namespace BridgeOpsClient
 
             if (txtUsername.Text == "")
             {
-                MessageBox.Show("You must input a value for Username ID");
+                App.DisplayError("You must input a value for Username ID");
                 return;
             }
             else if (txtPassword.Password != txtPasswordConfirm.Password)
             {
-                MessageBox.Show("Passwords do not match.");
+                App.DisplayError("Passwords do not match.");
                 return;
             }
 
@@ -189,19 +189,19 @@ namespace BridgeOpsClient
                 Close();
             }
             else
-                MessageBox.Show("Could not create new user.");
+                App.DisplayError("Could not create new user.");
         }
 
         private void btnEdit_Click(object sender, RoutedEventArgs e)
         {
             if (txtUsername.Text == "")
             {
-                MessageBox.Show("You must input a value for Username ID");
+                App.DisplayError("You must input a value for Username ID");
                 return;
             }
             else if (txtPassword.Password != txtPasswordConfirm.Password)
             {
-                MessageBox.Show("Passwords do not match.");
+                App.DisplayError("Passwords do not match.");
                 return;
             }
 
@@ -211,7 +211,7 @@ namespace BridgeOpsClient
                 Close();
             }
             else
-                MessageBox.Show("Could not update user.");
+                App.DisplayError("Could not update user.");
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -225,7 +225,7 @@ namespace BridgeOpsClient
                 Close();
             }
             else
-                MessageBox.Show("Could not delete contact.");
+                App.DisplayError("Could not delete contact.");
         }
 
         // Check for changes whenever the user interacts with a control.

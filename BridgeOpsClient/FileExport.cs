@@ -25,7 +25,7 @@ namespace BridgeOpsClient
             }
             if (!saveDialog.FileName.EndsWith(".xlsx") && !saveDialog.FileName.EndsWith(".xlsm"))
             {
-                MessageBox.Show("Invalid file path");
+                App.DisplayError("Invalid file path");
                 fileName = "";
                 return false;
             }
@@ -43,7 +43,7 @@ namespace BridgeOpsClient
             }
             catch (Exception err)
             {
-                MessageBox.Show("Could not save file, see error: " + err.Message);
+                App.DisplayError("Could not save file, see error: " + err.Message);
                 return false;
             }
         }

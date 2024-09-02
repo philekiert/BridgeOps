@@ -210,7 +210,7 @@ namespace BridgeOpsClient
 
             bool Abort(string message)
             {
-                MessageBox.Show(message);
+                App.DisplayError(message);
                 return false;
             }
 

@@ -133,7 +133,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditContact.disallowed.Count > 0)
                     message = ditContact.disallowed[0];
-                MessageBox.Show(message);
+                App.DisplayError(message);
             }
         }
 
@@ -143,7 +143,7 @@ namespace BridgeOpsClient
             if (!int.TryParse(id, out idInt))
             {
                 // This should never trigger as the ID cannot be adjusted, but just to be diligent...
-                MessageBox.Show("Contact ID is invalid, cannot edit record.");
+                App.DisplayError("Contact ID is invalid, cannot edit record.");
                 return;
             }
             if (ditContact.ScoopValues())
@@ -198,7 +198,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditContact.disallowed.Count > 0)
                     message = ditContact.disallowed[0];
-                MessageBox.Show(message);
+                App.DisplayError(message);
             }
         }
 

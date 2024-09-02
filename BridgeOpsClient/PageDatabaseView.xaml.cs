@@ -175,7 +175,7 @@ namespace BridgeOpsClient
 
             if (!nameReversals.ContainsKey(cmbColumn.Text)) // Should only trigger on no selection.
             {
-                MessageBox.Show("Please select a column to search.");
+                App.DisplayError("Please select a column to search.");
                 return;
             }
 
@@ -304,7 +304,7 @@ namespace BridgeOpsClient
         {
             if (dtgResults.dtg.SelectedItems.Count < 1)
             {
-                MessageBox.Show("You must select at least one item to update.");
+                App.DisplayError("You must select at least one item to update.");
                 return;
             }
 

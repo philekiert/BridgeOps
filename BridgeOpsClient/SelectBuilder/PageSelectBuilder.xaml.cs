@@ -398,7 +398,7 @@ namespace BridgeOpsClient
 
             bool Abort(string message)
             {
-                MessageBox.Show(message);
+                App.DisplayError(message);
                 return false;
             }
 
@@ -572,7 +572,7 @@ namespace BridgeOpsClient
                     }
                     catch (Exception e)
                     {
-                        MessageBox.Show("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
+                        App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
                         return false;
                     }
                 return true;

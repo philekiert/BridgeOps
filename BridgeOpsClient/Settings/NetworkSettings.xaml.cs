@@ -33,22 +33,22 @@ namespace BridgeOpsClient
             int inbound;
             if (!System.Net.IPAddress.TryParse(txtIPAddress.Text, out _))
             {
-                MessageBox.Show("IP address invalid.");
+                App.DisplayError("IP address invalid.");
                 return;
             }
             if (!int.TryParse(txtPortOutbound.Text, out outbound) || outbound < 1025 || outbound > 65535)
             {
-                MessageBox.Show("Outbound port invalid.");
+                App.DisplayError("Outbound port invalid.");
                 return;
             }
             if (!int.TryParse(txtPortInbound.Text, out inbound) || inbound < 1025 || inbound > 65535)
             {
-                MessageBox.Show("Inbound port invalid.");
+                App.DisplayError("Inbound port invalid.");
                 return;
             }
             if (inbound == outbound)
             {
-                MessageBox.Show("Inbound and outbound ports cannot be the same.");
+                App.DisplayError("Inbound and outbound ports cannot be the same.");
                 return;
             }
 

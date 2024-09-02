@@ -20,11 +20,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Interop;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SendReceiveClasses;
-using static BridgeOpsClient.CustomControls.SqlDataGrid;
 
 namespace BridgeOpsClient
 {
@@ -32,11 +33,45 @@ namespace BridgeOpsClient
     {
         public static bool IsLoggedIn { get { return sd.sessionID != ""; } }
 
-        public static void DisplayError(string error) { DisplayError(error, ""); }
-        public static void DisplayError(string error, string additional)
+        public static string ErrorConcat(string error, string additional)
         {
-            MessageBox.Show(additional == "" ? error : $"{error} See error:\n\n{additional}");
+            return additional == "" ? error : $"{error} See error:\n\n{additional}";
         }
+        public static void DisplayError(string error) { DisplayError(error); }
+        public static void DisplayError(string error, string title)
+        {
+            MessageBox.Show(error, title);
+        }
+        public static void DisplayError(Window owner, string error) { DisplayError(owner, error, ""); }
+        public static void DisplayError(Window owner, string error, string title)
+        {
+            MessageBox.Show(owner, error, title);
+        }
+        public enum QuestionOptions
+        { YesNo, OKCancel }
+        public static bool DisplayQuestion(string error, string title, QuestionOptions questionOptions)
+        {
+            MessageBoxButton buttons = MessageBoxButton.YesNo;
+            if (questionOptions == QuestionOptions.YesNo)
+            {
+                buttons = MessageBoxButton.YesNo;
+                return MessageBox.Show(error, title, buttons) == MessageBoxResult.Yes;
+            }
+            if (questionOptions == QuestionOptions.OKCancel)
+            {
+                buttons = MessageBoxButton.YesNo;
+                return MessageBox.Show(error, title, buttons) == MessageBoxResult.OK;
+            }
+            return false;
+        }
+        public static bool DeleteConfirm(bool multiple)
+        {
+            return DisplayQuestion("Are you sure? It will be impossible to recover " +
+                                  $"{(multiple ? "these items." : "this item")}",
+                                   "Confirm Deletion",
+                                   QuestionOptions.OKCancel);
+        }
+
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
         public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action";
 
@@ -60,7 +95,7 @@ namespace BridgeOpsClient
             string? currentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
             currentDir = Path.GetDirectoryName(currentDir);
             if (currentDir == null)
-                MessageBox.Show("Could not get working directory for application.");
+                DisplayError("Could not get working directory for application.");
             else
                 Environment.CurrentDirectory = currentDir;
 
@@ -78,14 +113,14 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not initiate TCP listener. Please check network adapter is enabled and " +
+                    DisplayError("Could not initiate TCP listener. Please check network adapter is enabled and " +
                                     "reload the application.");
                     Environment.Exit(1);
                 }
             }
             catch
             {
-                MessageBox.Show("Something went wrong when applying the network settings. " +
+                DisplayError("Something went wrong when applying the network settings. " +
                                 "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).");
                 sd.SetServerIP("127.0.0.1");
                 sd.portInbound = 52343;
@@ -151,11 +186,11 @@ namespace BridgeOpsClient
                     if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
                     {
                         if (!PullColumnRecord())
-                            MessageBox.Show("The column record is out of date, but a new one could not be pulled. " +
+                            DisplayError("The column record is out of date, but a new one could not be pulled. " +
                                             "Logging out.");
                         else
                         {
-                            MessageBox.Show("Column record has been updated. It would be advisable to restart the " +
+                            DisplayError("Column record has been updated. It would be advisable to restart the " +
                                             "application.");
                         }
                     }
@@ -294,11 +329,11 @@ namespace BridgeOpsClient
                             {
                                 string response = sr.ReadString(stream);
                                 if (response == Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND)
-                                    MessageBox.Show("Could not find this user's session.");
+                                    DisplayError("Could not find this user's session.");
                                 else if (response == Glo.CLIENT_LOGOUT_ACCEPT)
-                                    MessageBox.Show("User logged out successfully");
+                                    DisplayError("User logged out successfully");
                                 else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString())
-                                    MessageBox.Show("You do not have the required permissions for this action");
+                                    DisplayError("You do not have the required permissions for this action");
                                 else
                                     throw new Exception();
                             }
@@ -319,7 +354,7 @@ namespace BridgeOpsClient
             }
             catch
             {
-                MessageBox.Show("Something went wrong.");
+                DisplayError("Something went wrong.");
                 return false;
             }
         }
@@ -333,7 +368,7 @@ namespace BridgeOpsClient
 
             if (organisationArray == null)
             {
-                MessageBox.Show("Could not pull organisation list from server.");
+                DisplayError("Could not pull organisation list from server.");
                 successful = false;
                 return new string[0];
             }
@@ -349,8 +384,8 @@ namespace BridgeOpsClient
                 mainWindow.ToggleLogInOut(false);
                 if (mainWindow.IsLoaded)
                     // Specify the owner as the main window, otherwise the user might miss it if called from a timer.
-                    MessageBox.Show(mainWindow,
-                                    "Session is no longer valid. Please copy any unsaved work, then log back in.");
+                    DisplayError((Window)mainWindow,
+                                 "Session is no longer valid. Please copy any unsaved work, then log back in.");
             }
 
             // Some methods want to invalidate and then go no further, returning false.
@@ -362,7 +397,7 @@ namespace BridgeOpsClient
             int idInt;
             if (!int.TryParse(id, out idInt))
             {
-                MessageBox.Show("Could not discern record ID.");
+                DisplayError("Could not discern record ID.");
                 return false;
             }
 
@@ -393,11 +428,11 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        MessageBox.Show("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.");
                     }
                 }
                 else
-                    MessageBox.Show("Could no longer retrieve record.");
+                    DisplayError("Could no longer retrieve record.");
             }
             return true;
         }
@@ -407,7 +442,7 @@ namespace BridgeOpsClient
             int idInt;
             if (!int.TryParse(id, out idInt))
             {
-                MessageBox.Show("Could not discern record ID.");
+                DisplayError("Could not discern record ID.");
                 return false;
             }
 
@@ -438,11 +473,11 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        MessageBox.Show("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.");
                     }
                 }
                 else
-                    MessageBox.Show("Could no longer retrieve record.");
+                    DisplayError("Could no longer retrieve record.");
             }
             return true;
         }
@@ -469,11 +504,11 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        MessageBox.Show("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.");
                     }
                 }
                 else
-                    MessageBox.Show("Could no longer retrieve record.");
+                    DisplayError("Could no longer retrieve record.");
             }
             return true;
         }
@@ -504,7 +539,7 @@ namespace BridgeOpsClient
                             }
                             else
                             {
-                                MessageBox.Show("Could not pull column record.");
+                                DisplayError("Could not pull column record.");
                                 return false;
                             }
                         }
@@ -704,11 +739,11 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            MessageBox.Show(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY)
                         {
-                            MessageBox.Show("The foreign key could no longer be found.");
+                            DisplayError("The foreign key could no longer be found.");
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
@@ -751,11 +786,11 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            MessageBox.Show(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
                         {
-                            MessageBox.Show("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.");
                             string reason = sr.ReadString(stream);
                         }
                     }
@@ -763,7 +798,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run table update.");
+                    DisplayError("Could not run table update.");
                     return false;
                 }
                 finally
@@ -793,15 +828,15 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            MessageBox.Show(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
                         {
-                            MessageBox.Show("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.");
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError("Could not update record. See Error:", sr.ReadString(stream));
+                            DisplayError(ErrorConcat("Could not update record. See Error:", sr.ReadString(stream)));
                         }
                         else throw new Exception();
                     }
@@ -809,7 +844,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not update record.");
+                    DisplayError("Could not update record.");
                     return false;
                 }
                 finally
@@ -844,15 +879,15 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            MessageBox.Show(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
                         {
-                            MessageBox.Show("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.");
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError("Could not delete record. See Error:", sr.ReadString(stream));
+                            DisplayError(ErrorConcat("Could not delete record. See Error:", sr.ReadString(stream)));
                         }
                         else throw new Exception();
                     }
@@ -860,7 +895,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not delete record.");
+                    DisplayError("Could not delete record.");
                     return false;
                 }
                 finally
@@ -900,7 +935,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run or return query.");
+                    DisplayError("Could not run or return query.");
                     successful = false;
                     return null;
                 }
@@ -977,7 +1012,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        MessageBox.Show("Could not run or return query.");
+                        DisplayError("Could not run or return query.");
                         columnNames = new();
                         rows = new();
                         return false;
@@ -1019,7 +1054,7 @@ namespace BridgeOpsClient
                             }
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
-                                MessageBox.Show("The SQL query could not be run. See error:\n\n" +
+                                DisplayError("The SQL query could not be run. See error:\n\n" +
                                                 sr.ReadString(stream));
                                 columnNames = new();
                                 rows = new();
@@ -1032,7 +1067,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        MessageBox.Show("Could not run or return query.");
+                        DisplayError("Could not run or return query.");
                         columnNames = new();
                         rows = new();
                         return false;
@@ -1091,7 +1126,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        MessageBox.Show("Could not run or return query.");
+                        DisplayError("Could not run or return query.");
                         columnNames = new();
                         rows = new();
                         return false;
@@ -1127,18 +1162,18 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            MessageBox.Show(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
                         {
-                            MessageBox.Show("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.");
                         }
                     }
                     return false;
                 }
                 catch
                 {
-                    MessageBox.Show("Could not link or unlink contact to organisation.");
+                    DisplayError("Could not link or unlink contact to organisation.");
                     return false;
                 }
                 finally
@@ -1183,7 +1218,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run or return query.");
+                    DisplayError("Could not run or return query.");
                     columnNames = new();
                     rows = new();
                     return false;
@@ -1201,7 +1236,7 @@ namespace BridgeOpsClient
             int idInt;
             if (!int.TryParse(id, out idInt))
             {
-                MessageBox.Show("Could not run or return history list. ID doesn't appear to be an integer.");
+                DisplayError("Could not run or return history list. ID doesn't appear to be an integer.");
                 columnNames = new();
                 rows = new();
                 return false;
@@ -1238,7 +1273,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run or return history list.");
+                    DisplayError("Could not run or return history list.");
                     columnNames = new();
                     rows = new();
                     return false;
@@ -1316,7 +1351,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    MessageBox.Show("Could not run or return historical record.");
+                    DisplayError("Could not run or return historical record.");
                     data = new();
                     return false;
                 }
@@ -1404,7 +1439,7 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                DisplayError("Unable to send Json Object to agent.", e.Message);
+                DisplayError(ErrorConcat("Unable to send Json Object to agent.", e.Message));
                 return false;
             }
         }
@@ -1419,14 +1454,6 @@ namespace BridgeOpsClient
                 LogOut();
                 Environment.Exit(0);
             }
-        }
-
-        public static bool DeleteConfirm(bool multiple)
-        {
-            return MessageBox.Show("Are you sure? It will be impossible to recover " +
-                                  $"{(multiple ? "these items." : "this item")}",
-                                   "Confirm Deletion",
-                                   MessageBoxButton.OKCancel) == MessageBoxResult.OK;
         }
     }
 

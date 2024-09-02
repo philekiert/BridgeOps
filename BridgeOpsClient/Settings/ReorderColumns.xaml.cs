@@ -372,18 +372,18 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             // Shouldn't ever arrive here.
-                            MessageBox.Show("Only admins can reorder columns.");
+                            App.DisplayError("Only admins can reorder columns.");
                             return;
                         }
                         else
                             throw new Exception();
                     }
                     else
-                        MessageBox.Show("Could not create network stream.");
+                        App.DisplayError("Could not create network stream.");
                 }
                 catch
                 {
-                    MessageBox.Show("Could not apply new column order.");
+                    App.DisplayError("Could not apply new column order.");
                     return;
                 }
                 finally

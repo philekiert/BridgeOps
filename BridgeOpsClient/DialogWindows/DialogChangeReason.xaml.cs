@@ -31,7 +31,7 @@ namespace BridgeOpsClient.DialogWindows
             }
             else
             {
-                MessageBox.Show("Relevant table not known.");
+                App.DisplayError("Relevant table not known.");
                 DialogResult = false;
                 Close();
             }
@@ -71,7 +71,7 @@ namespace BridgeOpsClient.DialogWindows
                 else
                 {
                     DialogResult = false;
-                    MessageBox.Show("The correction could not be made. It could be that the connection to the agent " +
+                    App.DisplayError("The correction could not be made. It could be that the connection to the agent " +
                                     "has been lost. If this error persists, please contact your software " +
                                     "administrator.");
                 }
