@@ -57,7 +57,14 @@ namespace BridgeOpsClient.CustomControls
         { EnforceValueRestriction((TextBox)sender, maxHours); }
 
         private void txtHours_TextChanged(object sender, TextChangedEventArgs e)
-        { EnforceValueRestriction((TextBox)sender, maxHours); }
+        {
+            EnforceValueRestriction((TextBox)sender, maxHours);
+            if (txtHour.SelectionStart == 2 && txtHour.IsFocused)
+            {
+                txtMinute.Focus();
+                txtMinute.Select(0, 0);
+            }
+        }
 
         private void EnforceValueRestriction(TextBox textBox, int max)
         {
@@ -77,6 +84,43 @@ namespace BridgeOpsClient.CustomControls
             // This used to forcefully set a value if the TextBox was empty, but we want to be able to set null values.
             while (((TextBox)sender).Text.Length < 2 && ((TextBox)sender).Text.Length != 0)
                 ((TextBox)sender).Text = '0' + ((TextBox)sender).Text;
+        }
+
+        private void txtHour_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Right)
+            {
+                if (txtHour.SelectionStart == txtHour.Text.Length)
+                {
+                    txtMinute.Focus();
+                    txtMinute.Select(0, 0);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void txtMinute_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Left)
+            {
+                if (txtMinute.SelectionStart == 0 && txtMinute.SelectionLength == 0)
+                {
+                    txtHour.Focus();
+                    txtHour.Select(txtHour.Text.Length, 0);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Back)
+            {
+                if (txtMinute.SelectionStart == 0 && txtMinute.SelectionLength == 0)
+                {
+                    if (txtHour.Text.Length != 0)
+                        txtHour.Text = txtHour.Text.Substring(0, txtHour.Text.Length - 1);
+                    txtHour.Focus();
+                    txtHour.Select(txtHour.Text.Length, 0);
+                    e.Handled = true;
+                }
+            }
         }
     }
 }
