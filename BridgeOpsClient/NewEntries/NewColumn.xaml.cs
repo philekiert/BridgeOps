@@ -105,6 +105,12 @@ namespace BridgeOpsClient
                     cmbType.IsEnabled = false;
             }
 
+            if (table == "Login")
+            {
+                cmbTable.IsEditable = true;
+                cmbTable.Text = "Login";
+            }
+
             StoreOriginalValues();
             btnAdd.IsEnabled = false;
         }

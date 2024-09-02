@@ -1,30 +1,14 @@
 ﻿using System;
-using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Configuration;
-using System.Data;
-using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Interop;
 using System.Windows.Threading;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
 using SendReceiveClasses;
 
 namespace BridgeOpsClient
@@ -37,7 +21,7 @@ namespace BridgeOpsClient
         {
             return additional == "" ? error : $"{error} See error:\n\n{additional}";
         }
-        public static void DisplayError(string error) { DisplayError(error); }
+        public static void DisplayError(string error) { DisplayError(error, ""); }
         public static void DisplayError(string error, string title)
         {
             MessageBox.Show(error, title);
@@ -59,7 +43,7 @@ namespace BridgeOpsClient
             }
             if (questionOptions == QuestionOptions.OKCancel)
             {
-                buttons = MessageBoxButton.YesNo;
+                buttons = MessageBoxButton.OKCancel;
                 return MessageBox.Show(error, title, buttons) == MessageBoxResult.OK;
             }
             return false;

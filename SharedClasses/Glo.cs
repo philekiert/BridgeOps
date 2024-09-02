@@ -160,6 +160,14 @@ public static class Glo
         public const string CONFERENCE_START = "Start_Time";
         public const string CONFERENCE_END = "End_Time";
         public const string CONFERENCE_BUFFER = "Buffer";
+        public const string CONFERENCE_CREATION_LOGIN = "Creation_Login_ID";
+        public const string CONFERENCE_CREATION_TIME = "Creation_Time";
+        public const string CONFERENCE_EDIT_LOGIN = "Edit_Login_ID";
+        public const string CONFERENCE_EDIT_TIME = "Edit_Time";
+
+        public const string CONNECTION_TIME_FROM = "Connection_Time";
+        public const string CONNECTION_TIME_TO = "Disconnection_Time";
+        public const string CONNECTION_IS_TEST = "Is_Test";
 
         public const string RESOURCE_ID = "Resource_ID";
         public const string RESOURCE_NAME = "Resource_Name";

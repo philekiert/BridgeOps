@@ -148,6 +148,10 @@ public class FieldDefs
         defs.Add("Conference Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, false, false));
         defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
         defs.Add("Conference Notes", new Definition(10, "Notes", "VARCHAR(MAX)", false, false, false));
+        defs.Add("Conference Creation Login ID", new Definition(10, Glo.Tab.CONFERENCE_CREATION_LOGIN, typeLoginID, false, false, false));
+        defs.Add("Conference Creation Time", new Definition(10, Glo.Tab.CONFERENCE_CREATION_TIME, "DATETIME", false, false, false));
+        defs.Add("Conference Edit Login ID", new Definition(10, Glo.Tab.CONFERENCE_EDIT_LOGIN, typeLoginID, false, false, false));
+        defs.Add("Conference Edit Time", new Definition(10, Glo.Tab.CONFERENCE_EDIT_TIME, "DATETIME", false, false, false));
 
         // Conference Type
         //defs.Add("Conference Type ID", new Definition(15, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, true, true));
@@ -167,9 +171,9 @@ public class FieldDefs
         // Site Connections
         defs.Add("Connection Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, false));
         defs.Add("Connection Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
-        defs.Add("Connection Connection Time", new Definition(10, "Connection_Time", "DATETIME", false, false, false));
-        defs.Add("Connection Disconnection Time", new Definition(10, "Disconnection_Time", "DATETIME", false, false, false));
-        defs.Add("Connection Is Test", new Definition(10, "Is_Test", "BOOLEAN", false, false, false));
+        defs.Add("Connection Connection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_FROM, "DATETIME", false, false, false));
+        defs.Add("Connection Disconnection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_TO, "DATETIME", false, false, false));
+        defs.Add("Connection Is Test", new Definition(10, Glo.Tab.CONNECTION_IS_TEST, "BOOLEAN", false, false, false));
 
         // Conferences by Day
         //defs.Add("Conferences by Day Date", new Definition(18, "Date", "DATE", false, true, false));

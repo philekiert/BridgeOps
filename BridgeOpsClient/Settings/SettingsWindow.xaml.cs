@@ -240,7 +240,11 @@ namespace BridgeOpsClient
                                                                                Glo.Tab.CONFERENCE_RESOURCE_ROW,
                                                                                Glo.Tab.CONFERENCE_TYPE_ID,
                                                                                Glo.Tab.RESOURCE_ID,
-                                                                               Glo.Tab.RECURRENCE_ID });
+                                                                               Glo.Tab.CONFERENCE_CREATION_LOGIN,
+                                                                               Glo.Tab.CONFERENCE_CREATION_TIME,
+                                                                               Glo.Tab.CONFERENCE_EDIT_LOGIN,
+                                                                               Glo.Tab.CONFERENCE_EDIT_TIME,
+                                                                               Glo.Tab.RECURRENCE_ID  });
                 AddTable("Login", ColumnRecord.login, new[] { Glo.Tab.LOGIN_ADMIN,
                                                               Glo.Tab.LOGIN_CREATE_PERMISSIONS,
                                                               Glo.Tab.LOGIN_DELETE_PERMISSIONS,

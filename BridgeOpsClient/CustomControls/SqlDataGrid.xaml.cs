@@ -422,6 +422,9 @@ namespace BridgeOpsClient.CustomControls
 
             // Optimise this when you get a sec.
 
+            if (dtg.SelectionMode == DataGridSelectionMode.Single)
+                return; // The below is not needed in this case.
+
             int first = -1;
             int last = -1;
 

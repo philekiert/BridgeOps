@@ -433,7 +433,10 @@ public class DatabaseCreator
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
                           ", CONSTRAINT fk_ConfResource FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID)" +
                           //", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
-                          ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE);";
+                          ", CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE" +
+            //               We have to manually implement the Edit_Login_ID cascades below due to SQL Server's cautious nature regarding cascade cycles.
+                          ", CONSTRAINT fk_ConfEditLogin FOREIGN KEY (Edit_Login_ID) REFERENCES Login (Login_ID) ON DELETE NO ACTION ON UPDATE NO ACTION" +
+                          ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE); ";
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
             conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
                                     ", CONSTRAINT fk_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
@@ -447,9 +450,11 @@ public class DatabaseCreator
             //conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
             //                    ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
+                                  ", CONSTRAINT fk_OrgChange_LoginID FOREIGN KEY (Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE " +
                                   ", CONSTRAINT fk_OrgChange_OrgID FOREIGN KEY (Organisation_ID) REFERENCES Organisation (Organisation_ID) ON DELETE CASCADE );";
             //                    No real point making a foreign key for Login_ID - we don't want to cascade delete or set to null if the login is deleted.
             assetChange += ", CONSTRAINT pk_AssetID_ChangeID PRIMARY KEY (Asset_ID, Change_ID)" +
+                           ", CONSTRAINT fk_AssetChange_LoginID FOREIGN KEY (Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE " +
                            ", CONSTRAINT fk_AssetChange_AssetID FOREIGN KEY (Asset_ID) REFERENCES Asset (Asset_ID) ON DELETE CASCADE );";
 
             // Junction Tables Strings
@@ -508,6 +513,14 @@ public class DatabaseCreator
             //Writer.Message("Creating Conference Resource junction table...");
             //SendCommandSQL(junctionConfResource);
 
+            // We can't have two foreign keys that cascade on the same table relating to the same column. Create a trigger to implement the second one manually.
+            Writer.Message("\nApplying trigger to Conference table for for editor deletions...");
+            SendCommandSQL("CREATE TRIGGER trg_deleteConfEditLogin ON Login " +
+                           "AFTER DELETE AS UPDATE Conference SET Edit_Login_ID = NULL WHERE Creation_Login_ID IN (SELECT Login_ID FROM DELETED);");
+            Writer.Message("Applying trigger to Conference table for for editor updates...");
+            SendCommandSQL("CREATE TRIGGER trg_updateConfEditLogin ON Login " +
+                           "AFTER UPDATE AS UPDATE Conference SET Edit_Login_ID = i.Login_ID FROM Conference c JOIN INSERTED i ON c.Edit_Login_ID = i.Login_ID;");
+
             Writer.Message("\nApplying column additions...");
             foreach (ColumnAddition addition in columnAdditions)
             {
@@ -554,7 +567,7 @@ public class DatabaseCreator
                         Writer.Affirmative($"{names[1]} -> {names[2]}");
             }
 
-            Writer.Message("\nCreating Column Order Tables");
+            Writer.Message("\nCreating Column Order tables...");
             string OrderString(string table)
             {
                 string commandCreate = $"CREATE TABLE {table}Order (";

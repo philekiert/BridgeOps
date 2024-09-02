@@ -501,7 +501,7 @@ namespace SendReceiveClasses
                         {
                             reAddKeys = true;
                             commands.Add("ALTER TABLE Organisation DROP CONSTRAINT u_OrgDialNo;");
-                        }    
+                        }
                     }
                     else if (table == "Asset")
                     {
@@ -530,8 +530,16 @@ namespace SendReceiveClasses
                         if (column == Glo.Tab.LOGIN_ID)
                         {
                             reAddKeys = true;
+                            commands.Add("ALTER TABLE Conference DROP CONSTRAINT fk_ConfCreationLogin;");
+                            commands.Add("ALTER TABLE Conference DROP CONSTRAINT fk_ConfEditLogin;");
+                            commands.Add("ALTER TABLE OrganisationChange DROP CONSTRAINT fk_OrgChange_LoginID;");
+                            commands.Add("ALTER TABLE AssetChange DROP CONSTRAINT fk_AssetChange_LoginID;");
                             commands.Add("ALTER TABLE Login DROP CONSTRAINT pk_LoginID;");
 
+                            commands.Add($"ALTER TABLE Conference ALTER COLUMN {Glo.Tab.CONFERENCE_CREATION_LOGIN} {columnType};");
+                            commands.Add($"ALTER TABLE Conference ALTER COLUMN {Glo.Tab.CONFERENCE_EDIT_LOGIN} {columnType};");
+                            commands.Add($"ALTER TABLE OrganisationChange ALTER COLUMN {column} {columnType};");
+                            commands.Add($"ALTER TABLE AssetChange ALTER COLUMN {column} {columnType};");
                         }
                         else if (column == Glo.Tab.LOGIN_USERNAME)
                         {
@@ -602,9 +610,18 @@ namespace SendReceiveClasses
                         else if (table == "Login")
                         {
                             if (column == Glo.Tab.LOGIN_ID)
+                            {
                                 commands.Add("ALTER TABLE Login ADD CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID);");
+                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE;");
+                                // fk_ConfEditLogin cascades are handled in triggers trg_deleteConfEditLogin and trg_updateConfEditLogin to avoid cascade cycle warnings.
+                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfEditLogin FOREIGN KEY (Edit_Login_ID) REFERENCES Login (Login_ID) ON DELETE NO ACTION ON UPDATE NO ACTION;");
+                                commands.Add("ALTER TABLE OrganisationChange ADD CONSTRAINT fk_OrgChange_LoginID FOREIGN KEY (Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE;");
+                                commands.Add("ALTER TABLE AssetChange ADD CONSTRAINT fk_AssetChange_LoginID FOREIGN KEY (Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE;");
+                            }
                             else if (column == Glo.Tab.LOGIN_USERNAME)
+                            {
                                 commands.Add("ALTER TABLE Login ADD CONSTRAINT u_Username UNIQUE (Username);");
+                            }
                         }
                     }
                 }
