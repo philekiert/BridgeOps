@@ -54,7 +54,9 @@ namespace BridgeOpsClient.CustomControls
         }
 
         private void txtMinutes_TextChanged(object sender, TextChangedEventArgs e)
-        { EnforceValueRestriction((TextBox)sender, maxHours); }
+        {
+            EnforceValueRestriction((TextBox)sender, maxMinutes);
+        }
 
         private void txtHours_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -121,6 +123,18 @@ namespace BridgeOpsClient.CustomControls
                     e.Handled = true;
                 }
             }
+        }
+
+        private void txtHour_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!int.TryParse(e.Text, out _))
+                e.Handled = true;
+        }
+
+        private void txtMinute_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!int.TryParse(e.Text, out _))
+                e.Handled = true;
         }
     }
 }

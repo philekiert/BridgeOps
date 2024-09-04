@@ -17,9 +17,9 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <RepeatButton Grid.Row="0" x:Name="btnIncrement" Content="▲" Padding="0 -1 0 0" Click="btnIncrement_Click"
-                BorderThickness="1 1 1 0" FontSize="8"/>
+                BorderThickness="1 1 1 0" FontSize="8" IsTabStop="False"/>
         <RepeatButton Grid.Row="1" x:Name="btnDecrement" Content="▼" Padding="0 -1 0 0" Click="btnDecrement_Click"
-                BorderThickness="1 1 1 1" FontSize="8"/>
+                BorderThickness="1 1 1 1" FontSize="8" IsTabStop="False"/>
         <TextBox x:Name ="txtNumber" TextChanged="txtNumber_TextChanged" Grid.RowSpan="2" Grid.Column="1"
                  PreviewTextInput="txtNumber_PreviewTextInput" Margin="0 0 0 0" BorderThickness="0 1 1 1" Height="24"/>
     </Grid>

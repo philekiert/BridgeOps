@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" HorizontalAlignment="Left" VerticalAlignment="Center">
-    <Grid Width="60">
+    <Grid Width="Auto">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
@@ -16,10 +16,12 @@
         </Grid.RowDefinitions>
         <TextBox x:Name="txtHour" Grid.Column="0" MaxLength="2" Width="20" HorizontalContentAlignment="Center"
                  TextChanged="txtHours_TextChanged" VerticalAlignment="Center"
-                 LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0" PreviewKeyDown="txtHour_PreviewKeyDown"/>
-        <Label Content=":" Grid.Column="1" Margin="2 0 2 0" Padding="2 3 2 0"/>
+                 LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0" PreviewKeyDown="txtHour_PreviewKeyDown"
+                 PreviewTextInput="txtHour_PreviewTextInput"/>
+        <Label Content=":" Grid.Column="1" Margin="2 0 1 0" Padding="1 3 1 0"/>
         <TextBox x:Name="txtMinute" Grid.Column="2" MaxLength="2" Width="20" HorizontalContentAlignment="Center"
                  TextChanged="txtMinutes_TextChanged" VerticalAlignment="Center"
-                 LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0"  PreviewKeyDown="txtMinute_PreviewKeyDown"/>
+                 LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0"  PreviewKeyDown="txtMinute_PreviewKeyDown"
+                 PreviewTextInput="txtMinute_PreviewTextInput"/>
     </Grid>
 </UserControl>

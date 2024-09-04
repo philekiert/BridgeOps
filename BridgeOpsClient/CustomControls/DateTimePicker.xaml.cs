@@ -30,13 +30,36 @@ namespace BridgeOpsClient.CustomControls
 
         public DateTime? GetDateTime()
         {
+            return GetDateTime(0);
+        }
+        public DateTime? GetDate()
+        {
+            return GetDateTime(1);
+        }
+        public DateTime? GetTime()
+        {
+            return GetDateTime(2);
+        }
+        private DateTime? GetDateTime(int which)
+        {
+            // which: 0 DateTime
+            //        1 Date
+            //        2 Time
+
             TimeSpan? time = timePicker.GetTime();
             if (time == null)
                 return null;
             if (datePicker.SelectedDate == null)
                 return null;
 
-            return ((DateTime)datePicker.SelectedDate).Add((TimeSpan)time);
+            if (which == 0)
+                return (dateVisible ? (DateTime)datePicker.SelectedDate : new DateTime()).Add((TimeSpan)time);
+            else if (which == 1 && dateVisible)
+                return (DateTime)datePicker.SelectedDate;
+            else if (which == 2)
+                return new DateTime().Add((TimeSpan)time);
+
+            return null;
         }
 
         public void SetDateTime(DateTime dt)
@@ -44,6 +67,13 @@ namespace BridgeOpsClient.CustomControls
             datePicker.SelectedDate = dt.Date;
             timePicker.txtHour.Text = dt.Hour < 10 ? "0" + dt.Hour.ToString() : dt.Hour.ToString();
             timePicker.txtMinute.Text = dt.Minute < 10 ? "0" + dt.Minute.ToString() : dt.Minute.ToString();
+        }
+
+        bool dateVisible = true;
+        public void ToggleDatePicker(bool show)
+        {
+            grd.ColumnDefinitions[0].Width = show ? new GridLength(110) : new GridLength(0);
+            dateVisible = show;
         }
     }
 }

@@ -766,10 +766,12 @@ namespace SendReceiveClasses
         public int organisationID;
         public string? organisationRef;
         public string? parentOrgRef;
+        public string? name;
         public string? dialNo;
         public string? notes;
         public bool organisationRefChanged;
         public bool parentOrgRefChanged;
+        public bool nameChanged;
         public bool dialNoChanged;
         public bool notesChanged;
         public List<string> additionalCols;
@@ -778,7 +780,7 @@ namespace SendReceiveClasses
         public string changeReason;
 
         public Organisation(string sessionID, int columnRecordID,
-                            int organisationID, string? organisationRef, string? parentOrgRef,
+                            int organisationID, string? organisationRef, string? parentOrgRef, string? name,
                             string? dialNo, string? notes, List<string> additionalCols,
                                                            List<string?> additionalVals,
                                                            List<bool> additionalNeedsQuotes)
@@ -788,6 +790,7 @@ namespace SendReceiveClasses
             this.organisationID = organisationID;
             this.organisationRef = organisationRef;
             this.parentOrgRef = parentOrgRef;
+            this.name = name;
             this.dialNo = dialNo;
             this.notes = notes;
             this.additionalCols = additionalCols;
@@ -795,6 +798,7 @@ namespace SendReceiveClasses
             this.additionalNeedsQuotes = additionalNeedsQuotes;
             organisationRefChanged = false;
             parentOrgRefChanged = false;
+            nameChanged = false;
             dialNoChanged = false;
             notesChanged = false;
             changeReason = "";
@@ -806,6 +810,8 @@ namespace SendReceiveClasses
                 organisationRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(organisationRef));
             if (parentOrgRef != null)
                 parentOrgRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(parentOrgRef));
+            if (name != null)
+                name = SqlAssist.AddQuotes(SqlAssist.SecureValue(name));
             if (dialNo != null)
                 dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(dialNo));
             if (notes != null)
@@ -828,10 +834,12 @@ namespace SendReceiveClasses
             string com = SqlAssist.InsertInto("Organisation",
                                               SqlAssist.ColConcat(additionalCols, Glo.Tab.ORGANISATION_REF,
                                                                                   Glo.Tab.PARENT_REF,
+                                                                                  Glo.Tab.ORGANISATION_NAME,
                                                                                   Glo.Tab.DIAL_NO,
                                                                                   Glo.Tab.NOTES),
                                               SqlAssist.ValConcat(additionalVals, organisationRef,
                                                                                   parentOrgRef,
+                                                                                  name,
                                                                                   dialNo,
                                                                                   notes));
             // Create a first change instance.
@@ -853,6 +861,8 @@ namespace SendReceiveClasses
                                                             Glo.Tab.ORGANISATION_REF + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.PARENT_REF,
                                                             Glo.Tab.PARENT_REF + Glo.Tab.CHANGE_SUFFIX,
+                                                            Glo.Tab.ORGANISATION_NAME,
+                                                            Glo.Tab.ORGANISATION_NAME + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.DIAL_NO,
                                                             Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.NOTES,
@@ -864,6 +874,7 @@ namespace SendReceiveClasses
                                                             "'Created new organisation.'",
                                                             organisationRef, "1",
                                                             parentOrgRef, "1",
+                                                            name, "1",
                                                             dialNo, "1",
                                                             notes, "1")); ;
             return SqlAssist.Transaction(com);
@@ -894,6 +905,8 @@ namespace SendReceiveClasses
                 setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_REF, organisationRef));
             if (parentOrgRefChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.PARENT_REF, parentOrgRef));
+            if (nameChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_NAME, name));
             if (dialNoChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo));
             if (notesChanged)
@@ -923,6 +936,13 @@ namespace SendReceiveClasses
                 additionalCols.Add(Glo.Tab.PARENT_REF);
                 additionalCols.Add(Glo.Tab.PARENT_REF + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add(parentOrgRef);
+                additionalVals.Add("1");
+            }
+            if (nameChanged)
+            {
+                additionalCols.Add(Glo.Tab.ORGANISATION_NAME);
+                additionalCols.Add(Glo.Tab.ORGANISATION_NAME + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(name);
                 additionalVals.Add("1");
             }
             if (dialNoChanged)

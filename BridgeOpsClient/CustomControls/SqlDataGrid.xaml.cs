@@ -360,8 +360,6 @@ namespace BridgeOpsClient.CustomControls
         {
             // When the DataGrid's selection changes, raise the custom event.
             RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
-
-            //dtg.SelectedIndex = dtg.SelectedIndex; // Not idea why. Commenting out to see if anything breaks.
         }
 
         #endregion

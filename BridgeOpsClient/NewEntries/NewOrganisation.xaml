@@ -35,6 +35,7 @@
                         <RowDefinition />
                         <RowDefinition />
                         <RowDefinition />
+                        <RowDefinition />
                     </Grid.RowDefinitions>
                     <Label Content="Organisation Reference" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"/>
                     <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgRef"
@@ -42,8 +43,11 @@
                     <Label Content="Parent Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2"
                               SelectionChanged="ValueChanged"/>
-                    <Label Content="Dial No" Grid.Row="2" Grid.Column="0" x:Name="lblDialNo"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtDialNo"
+                    <Label Content="Organisation Name" Grid.Row="2" Grid.Column="0" x:Name="lblName"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtName"
+                             TextChanged="ValueChanged"/>
+                    <Label Content="Dial No" Grid.Row="3" Grid.Column="0" x:Name="lblDialNo"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" x:Name="txtDialNo"
                              TextChanged="ValueChanged"/>
                 </Grid>
                 <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="405" Margin="10,10,0,10"/>

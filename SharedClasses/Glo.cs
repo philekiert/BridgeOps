@@ -140,6 +140,7 @@ public static class Glo
         public const string ORGANISATION_ID = "Organisation_ID";
         public const string ORGANISATION_REF = "Organisation_Reference";
         public const string PARENT_REF = "Parent_Reference";
+        public const string ORGANISATION_NAME = "Organisation_Name";
         public const string DIAL_NO = "Dial_No";
 
         public const string CHANGE_ID = "Change_ID";
@@ -193,7 +194,7 @@ public static class Glo
         public const string FRIENDLY_COLUMN = "ColumnName";
         public const string FRIENDLY_NAME = "FriendlyName";
 
-        public const int ORGANISATION_STATIC_COUNT = 5;
+        public const int ORGANISATION_STATIC_COUNT = 6;
         public const int ASSET_STATIC_COUNT = 4;
         public const int CONTACT_STATIC_COUNT = 2;
         public const int CONFERENCE_STATIC_COUNT = 11;
@@ -244,6 +245,7 @@ public static class Glo
                     (column == Glo.Tab.ORGANISATION_ID ||
                      column == Glo.Tab.ORGANISATION_REF ||
                      column == Glo.Tab.PARENT_REF ||
+                     column == Glo.Tab.ORGANISATION_NAME ||
                      column == Glo.Tab.DIAL_NO)) ||
                   (table == "Asset" &&
                     (column == Glo.Tab.ASSET_ID ||
@@ -261,7 +263,11 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_END ||
                      column == Glo.Tab.CONFERENCE_BUFFER ||
                      column == Glo.Tab.ORGANISATION_REF ||
-                     column == Glo.Tab.RECURRENCE_ID)) ||
+                     column == Glo.Tab.RECURRENCE_ID ||
+                     column == Glo.Tab.CONFERENCE_CREATION_LOGIN ||
+                     column == Glo.Tab.CONFERENCE_CREATION_TIME ||
+                     column == Glo.Tab.CONFERENCE_EDIT_LOGIN ||
+                     column == Glo.Tab.CONFERENCE_EDIT_TIME)) ||
                    (table == "Login" &&
                     (column == Glo.Tab.LOGIN_ID ||
                      column == Glo.Tab.LOGIN_USERNAME ||

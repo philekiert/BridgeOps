@@ -103,6 +103,7 @@ public class FieldDefs
         defs.Add("Organisation ID", new Definition(12, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, true));
         defs.Add("Organisation Reference", new Definition(12, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
         defs.Add("Organisation Organisation Reference", new Definition(12, Glo.Tab.PARENT_REF, typeOrgRef, false, false, false));
+        defs.Add("Organisation Name", new Definition(12, Glo.Tab.ORGANISATION_NAME, "VARCHAR(200)", true, false, false));
         defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, true, false, false));
         defs.Add("Organisation Notes", new Definition(12, "Notes", "VARCHAR(MAX)", false, false, false));
 
@@ -147,11 +148,11 @@ public class FieldDefs
         defs.Add("Conference Buffer", new Definition(10, Glo.Tab.CONFERENCE_BUFFER, "BIGINT", false, false, false));
         defs.Add("Conference Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, false, false));
         defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
-        defs.Add("Conference Notes", new Definition(10, "Notes", "VARCHAR(MAX)", false, false, false));
         defs.Add("Conference Creation Login ID", new Definition(10, Glo.Tab.CONFERENCE_CREATION_LOGIN, typeLoginID, false, false, false));
         defs.Add("Conference Creation Time", new Definition(10, Glo.Tab.CONFERENCE_CREATION_TIME, "DATETIME", false, false, false));
         defs.Add("Conference Edit Login ID", new Definition(10, Glo.Tab.CONFERENCE_EDIT_LOGIN, typeLoginID, false, false, false));
         defs.Add("Conference Edit Time", new Definition(10, Glo.Tab.CONFERENCE_EDIT_TIME, "DATETIME", false, false, false));
+        defs.Add("Conference Notes", new Definition(10, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Conference Type
         //defs.Add("Conference Type ID", new Definition(15, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, true, true));

@@ -28,6 +28,7 @@ namespace BridgeOpsClient
         string? originalRef = "";
         string? originalParent = "";
         string? originalDialNo = "";
+        string? originalName = "";
         string? originalNotes = "";
 
         public void ApplyPermissions()
@@ -104,6 +105,8 @@ namespace BridgeOpsClient
             // Implement max lengths. Max lengths in the DataInputTable are set automatically.
             txtOrgRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                                            Glo.Tab.ORGANISATION_REF).restriction);
+            txtName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                                         Glo.Tab.ORGANISATION_NAME).restriction);
             txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                                            Glo.Tab.DIAL_NO).restriction);
             txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
@@ -116,6 +119,9 @@ namespace BridgeOpsClient
             if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.PARENT_REF).friendlyName != "")
                 lblOrgParentID.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                           Glo.Tab.PARENT_REF).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.ORGANISATION_NAME).friendlyName != "")
+                lblName.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                         Glo.Tab.ORGANISATION_NAME).friendlyName;
             if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.DIAL_NO).friendlyName != "")
                 lblDialNo.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                           Glo.Tab.DIAL_NO).friendlyName;
@@ -168,11 +174,15 @@ namespace BridgeOpsClient
             else
                 cmbOrgParentID.Text = null;
             if (data[3] != null)
-                txtDialNo.Text = data[3].ToString();
+                txtName.Text = data[3].ToString();
+            else
+                txtName.Text = null;
+            if (data[4] != null)
+                txtDialNo.Text = data[4].ToString();
             else
                 txtDialNo.Text = null;
-            if (data[4] != null)
-                txtNotes.Text = data[4].ToString();
+            if (data[5] != null)
+                txtNotes.Text = data[5].ToString();
             else
                 txtNotes.Text = null;
 
@@ -180,6 +190,7 @@ namespace BridgeOpsClient
             // in the data input table.
             originalRef = txtOrgRef.Text;
             originalParent = cmbOrgParentID.Text;
+            originalName = txtName.Text;
             originalDialNo = txtDialNo.Text;
             originalNotes = txtNotes.Text;
 
@@ -237,6 +248,7 @@ namespace BridgeOpsClient
 
                 newOrg.organisationRef = txtOrgRef.Text;
                 newOrg.parentOrgRef = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
+                newOrg.name = txtName.Text.Length == 0 ? null : txtName.Text;
                 newOrg.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
                 newOrg.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
@@ -314,6 +326,11 @@ namespace BridgeOpsClient
                 {
                     org.parentOrgRef = cmbOrgParentID.Text;
                     org.parentOrgRefChanged = true;
+                }
+                if (txtName.Text != originalName)
+                {
+                    org.name = txtName.Text;
+                    org.nameChanged = true;
                 }
                 if (txtDialNo.Text != originalDialNo)
                 {
@@ -572,10 +589,12 @@ namespace BridgeOpsClient
             btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
                                 originalParent != currentParent ||
                                 originalDialNo != txtDialNo.Text ||
+                                originalName != txtName.Text ||
                                 originalNotes != txtNotes.Text ||
                                 ditOrganisation.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
+
 
         private void btnCorrectReason_Click(object sender, RoutedEventArgs e)
         {

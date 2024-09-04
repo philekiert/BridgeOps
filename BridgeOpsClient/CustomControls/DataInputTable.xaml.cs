@@ -71,15 +71,8 @@ namespace BridgeOpsClient.CustomControls
                         col.Key == Glo.Tab.NOTES)
                         skip = true;
                 }
-                else if (table == "Organisation")
-                {
-                    if (col.Key == Glo.Tab.ORGANISATION_ID ||
-                        col.Key == Glo.Tab.ORGANISATION_REF ||
-                        col.Key == Glo.Tab.PARENT_REF ||
-                        col.Key == Glo.Tab.DIAL_NO ||
-                        col.Key == Glo.Tab.NOTES)
+                else if (!Glo.Fun.ColumnRemovalAllowed("Organisation", col.Key))
                         skip = true;
-                }
                 else if (table == "Asset")
                 {
                     if (col.Key == Glo.Tab.ASSET_ID ||
@@ -88,6 +81,8 @@ namespace BridgeOpsClient.CustomControls
                         col.Key == Glo.Tab.NOTES)
                         skip = true;
                 }
+                else if (!Glo.Fun.ColumnRemovalAllowed("Conference", col.Key))
+                    skip = true;
 
                 if (!skip)
                 {
@@ -117,6 +112,7 @@ namespace BridgeOpsClient.CustomControls
                     else if (col.Value.type == "DATETIME")
                     {
                         DateTimePicker dtpInput = new();
+                        dtpInput.Margin = new Thickness(0, 0, 0, 0);
                         dtpInput.SetValue(Grid.ColumnProperty, 1);
                         dtpInput.SetValue(Grid.RowProperty, i + headerBump);
 #pragma warning disable CS8622

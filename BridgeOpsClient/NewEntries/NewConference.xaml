@@ -6,49 +6,123 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="New Conference" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        Closed="Window_Closed">
+        Title="New Conference" ResizeMode="CanResize"
+        UseLayoutRounding="True" MinHeight="500" MinWidth="850" Width="850"
+        Closed="Window_Closed" ContentRendered="Window_ContentRendered">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="*" MinWidth="500"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="320"/>
         </Grid.ColumnDefinitions>
-        <Grid>
+
+
+        <!--   C O N N E C T I O N S   &   N O T E S   -->
+
+        <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-                <Grid.Resources>
-                    <Style TargetType="TextBox">
-                        <Setter Property="Margin" Value="10 5 10 5" />
-                    </Style>
-                    <Style TargetType="custom:DateTimePicker">
-                        <Setter Property="Margin" Value="10 0 2 0" />
-                    </Style>
-                </Grid.Resources>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
+
+            <!-- Connections -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <Grid Grid.Row="0" x:Name="grdConnections">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="34"/>
+                        <ColumnDefinition Width="32" MaxWidth="32"/>
+                        <ColumnDefinition Width="175" MaxWidth="175"/>
+                        <ColumnDefinition Width="175" MaxWidth="175"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Button x:Name="btnAddConnection" Grid.Row="0" Content="+" Height="24" Width="24"
+                            Margin="10 10 0 5" HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Padding="0 -2 0 0" Click="btnAddConnection_Click"/>
+                    <Label Grid.Column="2" Margin="0 8 0 0" Content="Test"/>
+                    <Label Grid.Column="3" Margin="0 8 0 0" Content="Connected"/>
+                    <Label Grid.Column="4" Margin="0 8 0 0" Content="Disconnected"/>
+                    <Label Grid.Column="5" Margin="0 8 0 0" Content="Site"/>
+                </Grid>
+            </ScrollViewer>
+
+            <!-- Notes -->
+            <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition Height="28"/>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Label Content="Buffer" Grid.Row="0" Grid.Column="0" x:Name="lblBuffer"/>
-                <custom:TimePicker Grid.Row="0" Grid.Column="1" x:Name="tmpBuffer"
-                                   HorizontalAlignment="Right" Margin="0 0 10 0"/>
-                <Label Content="Start" Grid.Row="1" Grid.Column="0" x:Name="lblStart"/>
-                <custom:DateTimePicker Grid.Row="1" Grid.Column="1" x:Name="dtpStart"/>
-                <Label Content="End" Grid.Row="2" Grid.Column="0" x:Name="lblEnd"/>
-                <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="dtpEnd"/>
-                <Label Content="Resource" Grid.Row="3" Grid.Column="0" x:Name="lblResource"/>
-                <ComboBox Grid.Row="3" Grid.Column="1" x:Name="cmbResource" Margin="10 2 10 2"/>
+                <Label Grid.Row="0" Content="Notes" Margin="6 10 10 0"/>
+                <TextBox Grid.Row="1" Margin="10 0 10 10" AcceptsReturn="True" Height="120"
+                         HorizontalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
             </Grid>
-            <Button x:Name="btnAdd" Grid.Row="1" Content="Add"
-                    Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"/>
+        </Grid>
+
+        <Border Grid.Column="1" Background="LightGray" Width="1" Margin="0 10 10 10"/>
+
+
+        <!--   D E T A I L S ,   A D D I T I O N A L   F I E L D S   &   B U T T O N S   -->
+
+        <Grid Grid.Column="2">
+
+            <!-- Details -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
+                <Style TargetType="TextBox">
+                    <Setter Property="Margin" Value="10 5 10 5"/>
+                </Style>
+                <Style TargetType="custom:DateTimePicker">
+                    <Setter Property="Margin" Value="10 0 2 0"/>
+                </Style>
+            </Grid.Resources>
+            <Label Content="Title" Grid.Row="0" Grid.Column="0" x:Name="lblTitle" Margin="0 10 10 1"/>
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtTitle" Margin="10 10 10 2" Height="24"
+                     VerticalContentAlignment="Center"/>
+            <Label Content="Start" Grid.Row="1" Grid.Column="0" x:Name="lblStart"/>
+            <custom:DateTimePicker Grid.Row="1" Grid.Column="1" x:Name="dtpStart"/>
+            <Label Content="End" Grid.Row="2" Grid.Column="0" x:Name="lblEnd"/>
+            <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="dtpEnd"/>
+            <Label Content="Resource" Grid.Row="3" Grid.Column="0" x:Name="lblResource"/>
+            <ComboBox Grid.Row="3" Grid.Column="1" x:Name="cmbResource" Margin="10 2 10 2"/>
+
+            <Border Grid.Row="4" Background="LightGray" Height="1" Grid.ColumnSpan="2" Margin="0 10 10 5"/>
+
+            <!-- Additional Fields -->
+            <custom:DataInputTable Grid.Row="5" Grid.ColumnSpan="2" x:Name="ditConference" Margin="0 10 0 10"/>
+
+            <Border Grid.Row="6" Background="LightGray" Height="1" Grid.ColumnSpan="2" Margin="0 10 10 5"/>
+
+            <!-- Buttons -->
+            <Grid Grid.Row="7" Grid.ColumnSpan="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="btnSave" Grid.Column="0" Content="Save"
+                        Margin="10 10 5 15" Height="24" Width="46"/>
+                <Button x:Name="btnCancel" Grid.Column="1" Content="Cancel"
+                        Margin="5 10 5 15" Height="24" Width="52"/>
+                <Button x:Name="btnDelete" Grid.Column="2" Content="Delete"
+                        Margin="5 10 5 15" Height="24" Width="50"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
