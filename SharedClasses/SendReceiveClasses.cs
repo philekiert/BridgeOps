@@ -483,7 +483,6 @@ namespace SendReceiveClasses
                             reAddKeys = true;
                             commands.Add("ALTER TABLE Organisation DROP CONSTRAINT fk_ParentOrgRef;");
                             commands.Add("ALTER TABLE Asset DROP CONSTRAINT fk_AssetOrganisation;");
-                            commands.Add("ALTER TABLE Conference DROP CONSTRAINT fk_ConfOrg;");
                             commands.Add("ALTER TABLE Connection DROP CONSTRAINT fk_ConnectionOrgRef;");
                             commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT fk_jncContacts_OrgRef;");
                             commands.Add("ALTER TABLE Connection DROP CONSTRAINT pk_ConfID_OrgRef");
@@ -493,7 +492,6 @@ namespace SendReceiveClasses
                             commands.Add($"ALTER TABLE Organisation ALTER COLUMN {column} {columnType};");
                             commands.Add($"ALTER TABLE Organisation ALTER COLUMN {Glo.Tab.PARENT_REF} {columnType};");
                             commands.Add($"ALTER TABLE Asset ALTER COLUMN {column} {columnType};");
-                            commands.Add($"ALTER TABLE Conference ALTER COLUMN {column} {columnType};");
                             commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType} NOT NULL;");
                             commands.Add($"ALTER TABLE OrganisationContacts ALTER COLUMN {column} {columnType} NOT NULL;");
                         }
@@ -572,7 +570,6 @@ namespace SendReceiveClasses
                                 commands.Add("ALTER TABLE Organisation ADD CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference);");
                                 commands.Add("ALTER TABLE Organisation ADD CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference);");
                                 commands.Add("ALTER TABLE Asset ADD CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE;");
-                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE;");
                                 commands.Add("ALTER TABLE Connection ADD CONSTRAINT fk_ConnectionOrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE;");
                                 commands.Add("ALTER TABLE Connection ADD CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference);");
                                 commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT fk_jncContacts_OrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE;");
@@ -1254,50 +1251,6 @@ namespace SendReceiveClasses
         }
     }
 
-    struct ConferenceType
-    {
-        public string sessionID;
-        public int columnRecordID;
-        public int typeID;
-        public string? name;
-        public bool nameChanged;
-
-        public ConferenceType(string sessionID, int columnRecordID, int typeID, string? name)
-        {
-            this.sessionID = sessionID;
-            this.columnRecordID = columnRecordID;
-            this.typeID = typeID;
-            this.name = name;
-            nameChanged = false;
-        }
-
-        private void Prepare()
-        {
-            if (name != null)
-                name = SqlAssist.AddQuotes(SqlAssist.SecureValue(name));
-        }
-
-        public string SqlInsert()
-        {
-            Prepare();
-            return "INSERT INTO ConferenceType (" + Glo.Tab.CONFERENCE_TYPE_NAME + ") VALUES (" + name + ");";
-        }
-
-        public string SqlUpdate()
-        {
-            Prepare();
-            List<string> setters = new();
-            if (nameChanged && name != null)
-            {
-                return SqlAssist.Update("ConferenceType",
-                                        Glo.Tab.CONFERENCE_TYPE_NAME + " = " + name,
-                                        Glo.Tab.CONFERENCE_TYPE_ID, typeID);
-            }
-            else
-                return "";
-        }
-    }
-
     struct Conference
     {
         public string sessionID;
@@ -1344,7 +1297,7 @@ namespace SendReceiveClasses
                                                                             Glo.Tab.CONFERENCE_TITLE,
                                                                             Glo.Tab.CONFERENCE_START,
                                                                             Glo.Tab.CONFERENCE_END,
-                                                                            Glo.Tab.CONFERENCE_BUFFER,
+                                                                            Glo.Tab.CONFERENCE_CANCELLED,
                                                                             Glo.Tab.ORGANISATION_REF,
                                                                             Glo.Tab.RECURRENCE_ID,
                                                                             "Notes"),
@@ -1365,22 +1318,17 @@ namespace SendReceiveClasses
         public int columnRecordID;
         public int resourceID;
         public string? name;
-        public DateTime availableFrom;
-        public DateTime availableTo;
         public int connectionCapacity;
         public int conferenceCapacity;
         public int rowsAdditional;
 
         public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
-                        DateTime availableFrom, DateTime availableTo,
                         int connectionCapacity, int conferenceCapacity, int rowsAdditional)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
             this.resourceID = resourceID;
             this.name = name;
-            this.availableFrom = availableFrom;
-            this.availableTo = availableTo;
             this.connectionCapacity = connectionCapacity;
             this.conferenceCapacity = conferenceCapacity;
             this.rowsAdditional = rowsAdditional;
@@ -1398,14 +1346,10 @@ namespace SendReceiveClasses
             Prepare();
             return SqlAssist.InsertInto("Resource",
                              SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
-                                                 Glo.Tab.RESOURCE_FROM,
-                                                 Glo.Tab.RESOURCE_TO,
                                                  Glo.Tab.RESOURCE_CAPACITY_CONNECTION,
                                                  Glo.Tab.RESOURCE_CAPACITY_CONFERENCE,
                                                  Glo.Tab.RESOURCE_ROWS_ADDITIONAL),
                              SqlAssist.ValConcat(name,
-                                                 SqlAssist.AddQuotes(SqlAssist.DateTimeToSQL(availableFrom, false)),
-                                                 SqlAssist.AddQuotes(SqlAssist.DateTimeToSQL(availableTo, false)),
                                                  connectionCapacity.ToString(),
                                                  conferenceCapacity.ToString(),
                                                  rowsAdditional.ToString()));

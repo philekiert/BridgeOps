@@ -12,8 +12,6 @@
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.Resources>
@@ -33,30 +31,22 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
             </Grid.RowDefinitions>
             <Label Content="Resource Name" Grid.Row="0" Grid.Column="0" x:Name="lblResourceName"
                    VerticalAlignment="Center" Margin="0 9 0 0"/>
             <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtResourceName" Height="24" Margin="10 10 10 0"
                      VerticalContentAlignment="Center"/>
-            <Label Content="Available From" Grid.Row="1" Grid.Column="0" x:Name="lblAvailableFrom"
+            <Label Content="Connection Capacity" Grid.Row="1" Grid.Column="0"
                    VerticalAlignment="Center"/>
-            <custom:DateTimePicker Grid.Row="1" Grid.Column="1" x:Name="timeAvailableFrom"/>
-            <Label Content="Available To" Grid.Row="2" Grid.Column="0" x:Name="lblAvailableTo"
+            <custom:NumberEntry Grid.Row="1" Grid.Column="1" x:Name="numCapacityConnection" Margin="10 0 10 0"/>
+            <Label Content="Conference Capacity" Grid.Row="2" Grid.Column="0"
                    VerticalAlignment="Center"/>
-            <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="timeAvailableTo"/>
-            <Label Content="Connection Capacity" Grid.Row="3" Grid.Column="0"
+            <custom:NumberEntry Grid.Row="2" Grid.Column="1" x:Name="numCapacityConference" Margin="10 0 10 0"/>
+            <Label Content="Additional Placement Rows" Grid.Row="3" Grid.Column="0"
                    VerticalAlignment="Center"/>
-            <custom:NumberEntry Grid.Row="3" Grid.Column="1" x:Name="numCapacityConnection" Margin="10 0 10 0"/>
-            <Label Content="Conference Capacity" Grid.Row="4" Grid.Column="0"
-                   VerticalAlignment="Center"/>
-            <custom:NumberEntry Grid.Row="4" Grid.Column="1" x:Name="numCapacityConference" Margin="10 0 10 0"/>
-            <Label Content="Additional Placement Rows" Grid.Row="5" Grid.Column="0"
-                   VerticalAlignment="Center"/>
-            <custom:NumberEntry Grid.Row="5" Grid.Column="1" x:Name="numRowsAdditional" Margin="10 0 10 0"/>
+            <custom:NumberEntry Grid.Row="3" Grid.Column="1" x:Name="numRowsAdditional" Margin="10 0 10 0"/>
         </Grid>
-        <Button x:Name="btnAdd" Grid.Row="4" Content="Add" Margin="10,15,0,15" HorizontalAlignment="Left" Width="70"
+        <Button x:Name="btnAdd" Grid.Row="1" Content="Add" Margin="10,15,0,15" HorizontalAlignment="Left" Width="70"
                 Click="btnAdd_Click" />
     </Grid>
 </Window>

@@ -233,7 +233,7 @@ namespace BridgeOpsClient
                 AddTable("Organisation", ColumnRecord.orderedOrganisation, new string[0]);
                 AddTable("Asset", ColumnRecord.orderedAsset, new string[0]);
                 AddTable("Contact", ColumnRecord.orderedContact, new string[0]);
-                AddTable("Conference", ColumnRecord.orderedConference, new[] { Glo.Tab.CONFERENCE_BUFFER,
+                AddTable("Conference", ColumnRecord.orderedConference, new[] { Glo.Tab.CONFERENCE_CANCELLED,
                                                                                Glo.Tab.CONFERENCE_END,
                                                                                Glo.Tab.CONFERENCE_START,
                                                                                Glo.Tab.CONFERENCE_TYPE_ID,

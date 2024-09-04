@@ -155,12 +155,11 @@ public static class Glo
 
         public const string CONFERENCE_TYPE_ID = "Type_ID";
         public const string CONFERENCE_RESOURCE_ROW = "Resource_Row";
-        public const string CONFERENCE_TYPE_NAME = "Type_Name";
         public const string CONFERENCE_ID = "Conference_ID";
         public const string CONFERENCE_TITLE = "Title";
         public const string CONFERENCE_START = "Start_Time";
         public const string CONFERENCE_END = "End_Time";
-        public const string CONFERENCE_BUFFER = "Buffer";
+        public const string CONFERENCE_CANCELLED = "Cancelled";
         public const string CONFERENCE_CREATION_LOGIN = "Creation_Login_ID";
         public const string CONFERENCE_CREATION_TIME = "Creation_Time";
         public const string CONFERENCE_EDIT_LOGIN = "Edit_Login_ID";
@@ -168,12 +167,11 @@ public static class Glo
 
         public const string CONNECTION_TIME_FROM = "Connection_Time";
         public const string CONNECTION_TIME_TO = "Disconnection_Time";
+        public const string CONNECTION_ROW = "Row";
         public const string CONNECTION_IS_TEST = "Is_Test";
 
         public const string RESOURCE_ID = "Resource_ID";
         public const string RESOURCE_NAME = "Resource_Name";
-        public const string RESOURCE_FROM = "Available_From";
-        public const string RESOURCE_TO = "Available_To";
         public const string RESOURCE_CAPACITY_CONNECTION = "Connection_Capacity";
         public const string RESOURCE_CAPACITY_CONFERENCE = "Conference_Capacity";
         public const string RESOURCE_ROWS_ADDITIONAL = "Rows_Additional";
@@ -261,7 +259,7 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_TITLE ||
                      column == Glo.Tab.CONFERENCE_START ||
                      column == Glo.Tab.CONFERENCE_END ||
-                     column == Glo.Tab.CONFERENCE_BUFFER ||
+                     column == Glo.Tab.CONFERENCE_CANCELLED ||
                      column == Glo.Tab.ORGANISATION_REF ||
                      column == Glo.Tab.RECURRENCE_ID ||
                      column == Glo.Tab.CONFERENCE_CREATION_LOGIN ||

@@ -435,8 +435,7 @@ public class DatabaseCreator
                           //", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
                           ", CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE" +
             //               We have to manually implement the Edit_Login_ID cascades below due to SQL Server's cautious nature regarding cascade cycles.
-                          ", CONSTRAINT fk_ConfEditLogin FOREIGN KEY (Edit_Login_ID) REFERENCES Login (Login_ID) ON DELETE NO ACTION ON UPDATE NO ACTION" +
-                          ", CONSTRAINT fk_ConfOrg FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE); ";
+                          ", CONSTRAINT fk_ConfEditLogin FOREIGN KEY (Edit_Login_ID) REFERENCES Login (Login_ID) ON DELETE NO ACTION ON UPDATE NO ACTION); ";
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
             conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
                                     ", CONSTRAINT fk_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";

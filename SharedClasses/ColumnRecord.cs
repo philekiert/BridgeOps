@@ -80,6 +80,8 @@ public static class ColumnRecord
     public static Dictionary<string, string> conferenceFriendlyNameReversal = new();
     public static OrderedDictionary conferenceRecurrence = new();
     public static Dictionary<string, string> conferenceRecurrenceFriendlyNameReversal = new();
+    public static OrderedDictionary connection = new();
+    public static Dictionary<string, string> connectionFriendlyNameReversal = new();
     public static OrderedDictionary resource = new();
     public static Dictionary<string, string> resourceFriendlyNameReversal = new();
     public static OrderedDictionary login = new();
@@ -272,6 +274,8 @@ public static class ColumnRecord
         conferenceFriendlyNameReversal = new();
         conferenceRecurrence = new();
         conferenceRecurrenceFriendlyNameReversal = new();
+        connection = new();
+        connectionFriendlyNameReversal = new();
         resource = new();
         resourceFriendlyNameReversal = new();
         login = new();
@@ -363,6 +367,8 @@ public static class ColumnRecord
                     conferenceType.Add(column, col);
                 else if (table == "Conference")
                     conference.Add(column, col);
+                else if (table == "Connection")
+                    connection.Add(column, col);
                 else if (table == "Recurrence")
                     conferenceRecurrence.Add(column, col);
                 else if (table == "Resource")
@@ -409,6 +415,8 @@ public static class ColumnRecord
                     AddFriendlyName(conferenceType);
                 if (friendlySplit[0] == "Conference")
                     AddFriendlyName(conference);
+                if (friendlySplit[0] == "Connection")
+                    AddFriendlyName(connection);
                 if (friendlySplit[0] == "Recurrence")
                     AddFriendlyName(conferenceRecurrence);
                 if (friendlySplit[0] == "Resource")
@@ -518,6 +526,8 @@ public static class ColumnRecord
                 conferenceTypeFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in conference)
                 conferenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in connection)
+                connectionFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in conferenceRecurrence)
                 conferenceRecurrenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in resource)

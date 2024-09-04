@@ -66,7 +66,7 @@ namespace BridgeOpsClient
             public CustomControls.DateTimePicker dtpDisconnected;
             public Button btnOrgSummary;
             public int connectionId; // null if booking is new
-            public int index;
+            public int row;
 
             public void ToggleSearch(bool search)
             {
@@ -108,7 +108,7 @@ namespace BridgeOpsClient
                 btnUp.IsEnabled = row > 1;
                 btnDown.IsEnabled = row < connectionCount;
 
-                row = index;
+                this.row = row - 1;
             }
 
             public void Remove(Grid grid)
@@ -127,6 +127,10 @@ namespace BridgeOpsClient
 
         private void btnAddConnection_Click(object sender, RoutedEventArgs e)
         {
+            if (connections.Count >= ColumnRecord.GetColumn(ColumnRecord.connection,
+                                                            Glo.Tab.CONNECTION_ROW).restriction - 1)
+                return;
+
             Connection connection = new();
 
             connection.btnRemove = new Button()

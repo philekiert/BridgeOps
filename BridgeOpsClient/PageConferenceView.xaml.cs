@@ -31,8 +31,6 @@ namespace BridgeOpsClient
         {
             public int id;
             public string name;
-            public DateTime start;
-            public DateTime end;
             public int connectionCapacity;
             public int conferenceCapacity;
             public int rowsAdditional;
@@ -44,13 +42,11 @@ namespace BridgeOpsClient
             public int SelectedRow { get { return selectedRow; } }
             public int SelectedRowTotal { get { return selectedRowTotal; } }
 
-            public ResourceInfo(int id, string name, DateTime start, DateTime end,
+            public ResourceInfo(int id, string name,
                                 int connectionCapacity, int conferenceCapacity, int rowsAdditional)
             {
                 this.id = id;
                 this.name = name;
-                this.start = start;
-                this.end = end;
                 this.connectionCapacity = connectionCapacity;
                 this.conferenceCapacity = conferenceCapacity;
                 this.rowsAdditional = rowsAdditional;

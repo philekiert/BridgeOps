@@ -1285,14 +1285,6 @@ internal class BridgeOpsAgent
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
                 }
-                else if (target == Glo.CLIENT_NEW_CONFERENCE_TYPE)
-                {
-                    ConferenceType newRow = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCE_TYPES,
-                        create, out permission))
-                        com.CommandText = newRow.SqlInsert();
-                }
                 else if (target == Glo.CLIENT_NEW_CONFERENCE)
                 {
                     Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
@@ -1634,14 +1626,6 @@ internal class BridgeOpsAgent
                     Contact update = sr.Deserialise<Contact>(sr.ReadString(stream));
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
-                        out permission))
-                        com.CommandText = update.SqlUpdate();
-                }
-                else if (target == Glo.CLIENT_UPDATE_CONFERENCE_TYPE)
-                {
-                    ConferenceType update = sr.Deserialise<ConferenceType>(sr.ReadString(stream));
-                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_CONFERENCE_TYPES, edit,
                         out permission))
                         com.CommandText = update.SqlUpdate();
                 }

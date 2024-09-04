@@ -14,9 +14,6 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
-            timeAvailableFrom.SetDateTime(new DateTime(2024, 7, 1));
-            timeAvailableTo.SetDateTime(new DateTime(2024, 7, 31));
-
             txtResourceName.Focus();
 
             numCapacityConnection.SetMinMax(1, connMax);
@@ -30,26 +27,6 @@ namespace BridgeOpsClient
 
             nr.sessionID = App.sd.sessionID;
             nr.columnRecordID = ColumnRecord.columnRecordID;
-
-            DateTime? from = timeAvailableFrom.GetDateTime();
-            DateTime? to = timeAvailableTo.GetDateTime();
-
-            if (from == null || to == null)
-            {
-                App.DisplayError("Must select start and end dates and times.");
-                return;
-            }
-
-            if (to < from)
-            {
-                App.DisplayError("Availability end before it begins.");
-                return;
-            }
-            else if (to == from)
-            {
-                App.DisplayError("Start and end dates and times cannot be the same.");
-                return;
-            }
 
             int? connCap = numCapacityConnection.GetNumber();
             int? confCap = numCapacityConference.GetNumber();
@@ -76,8 +53,6 @@ namespace BridgeOpsClient
             }
 
             nr.name = txtResourceName.Text.Length > 0 ? txtResourceName.Text : null;
-            nr.availableFrom = (DateTime)from;
-            nr.availableTo = (DateTime)to;
             nr.connectionCapacity = (int)connCap;
             nr.conferenceCapacity = (int)confCap;
             nr.rowsAdditional = (int)rowsAdd;

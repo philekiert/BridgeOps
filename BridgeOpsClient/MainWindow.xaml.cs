@@ -141,12 +141,6 @@ namespace BridgeOpsClient
             if (ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_ID).friendlyName != "")
                 newResource.lblResourceName.Content = ColumnRecord.GetColumn(ColumnRecord.resource,
                                                                              Glo.Tab.RESOURCE_ID).friendlyName;
-            if (ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_FROM).friendlyName != "")
-                newResource.lblAvailableFrom.Content = ColumnRecord.GetColumn(ColumnRecord.resource,
-                                                                              Glo.Tab.RESOURCE_FROM).friendlyName;
-            if (ColumnRecord.GetColumn(ColumnRecord.resource, Glo.Tab.RESOURCE_TO).friendlyName != "")
-                newResource.lblAvailableTo.Content = ColumnRecord.GetColumn(ColumnRecord.resource,
-                                                                            Glo.Tab.RESOURCE_TO).friendlyName;
 
             newResource.txtResourceName.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.resource,
                                                                       Glo.Tab.RESOURCE_ID).restriction);

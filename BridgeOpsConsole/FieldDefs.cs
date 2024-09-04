@@ -131,8 +131,8 @@ public class FieldDefs
         // Resource
         defs.Add("Resource ID", new Definition(8, Glo.Tab.RESOURCE_ID, typeResourceID, false, true, true));
         defs.Add("Resource Name", new Definition(8, Glo.Tab.RESOURCE_NAME, "VARCHAR(20)", true, false, false));
-        defs.Add("Resource Available From", new Definition(8, Glo.Tab.RESOURCE_FROM, "DATETIME", false, false, false));
-        defs.Add("Resource Available To", new Definition(8, Glo.Tab.RESOURCE_TO, "DATETIME", false, false, false));
+        //defs.Add("Resource Available From", new Definition(8, Glo.Tab.RESOURCE_FROM, "DATETIME", false, false, false));
+        //defs.Add("Resource Available To", new Definition(8, Glo.Tab.RESOURCE_TO, "DATETIME", false, false, false));
         defs.Add("Resource Connection Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY_CONNECTION, typeResourceCapacity, false, false, false));
         defs.Add("Resource Conference Capacity", new Definition(8, Glo.Tab.RESOURCE_CAPACITY_CONFERENCE, typeResourceCapacity, false, false, false));
         defs.Add("Resource Rows Additional", new Definition(8, Glo.Tab.RESOURCE_ROWS_ADDITIONAL, typeResourceCapacity, false, false, false));
@@ -141,12 +141,10 @@ public class FieldDefs
         defs.Add("Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, true));
         defs.Add("Conference Resource ID", new Definition(10, Glo.Tab.RESOURCE_ID, typeResourceID, false, false, false));
         defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.CONFERENCE_RESOURCE_ROW, typeResourceID, false, false, false));
-        //defs.Add("Conference Conference Type ID", new Definition(10, Glo.Tab.CONFERENCE_TYPE_ID, typeConfTypeID, false, false, false));
         defs.Add("Conference Title", new Definition(10, Glo.Tab.CONFERENCE_TITLE, "VARCHAR(50)", true, false, false));
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
-        defs.Add("Conference Buffer", new Definition(10, Glo.Tab.CONFERENCE_BUFFER, "BIGINT", false, false, false));
-        defs.Add("Conference Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, false, false));
+        defs.Add("Conference Cancelled", new Definition(10, Glo.Tab.CONFERENCE_CANCELLED, "BIT", false, false, false));
         defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
         defs.Add("Conference Creation Login ID", new Definition(10, Glo.Tab.CONFERENCE_CREATION_LOGIN, typeLoginID, false, false, false));
         defs.Add("Conference Creation Time", new Definition(10, Glo.Tab.CONFERENCE_CREATION_TIME, "DATETIME", false, false, false));
@@ -174,6 +172,7 @@ public class FieldDefs
         defs.Add("Connection Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
         defs.Add("Connection Connection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_FROM, "DATETIME", false, false, false));
         defs.Add("Connection Disconnection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_TO, "DATETIME", false, false, false));
+        defs.Add("Connection Row", new Definition(10, Glo.Tab.CONNECTION_ROW, "TINYINT", false, false, false));
         defs.Add("Connection Is Test", new Definition(10, Glo.Tab.CONNECTION_IS_TEST, "BOOLEAN", false, false, false));
 
         // Conferences by Day

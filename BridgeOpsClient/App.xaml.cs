@@ -518,8 +518,10 @@ namespace BridgeOpsClient
                             sr.WriteAndFlush(stream, sd.sessionID);
                             if (stream.ReadByte() == Glo.CLIENT_REQUEST_SUCCESS)
                             {
-                                ColumnRecord.Initialise(sr.ReadString(stream));
-                                return true;
+                                if (ColumnRecord.Initialise(sr.ReadString(stream)))
+                                    return true;
+                                else
+                                    return false;
                             }
                             else
                             {
@@ -564,13 +566,11 @@ namespace BridgeOpsClient
 
                     int ids = columnNames.IndexOf(Glo.Tab.RESOURCE_ID);
                     int names = columnNames.IndexOf(Glo.Tab.RESOURCE_NAME);
-                    int startTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_FROM);
-                    int endTimes = columnNames.IndexOf(Glo.Tab.RESOURCE_TO);
                     int connectionCapacities = columnNames.IndexOf(Glo.Tab.RESOURCE_CAPACITY_CONNECTION);
                     int conferenceCapacities = columnNames.IndexOf(Glo.Tab.RESOURCE_CAPACITY_CONFERENCE);
                     int rowAdditional = columnNames.IndexOf(Glo.Tab.RESOURCE_ROWS_ADDITIONAL);
-                    
-                    if (ids == -1 || names == -1 || startTimes == -1 || endTimes == -1 ||
+
+                    if (ids == -1 || names == -1 ||
                         conferenceCapacities == -1 || rowAdditional == -1 || connectionCapacities == -1)
                         return false;
 
@@ -578,8 +578,6 @@ namespace BridgeOpsClient
                     {
                         if (row[ids] != null &&
                             row[names] != null &&
-                            row[startTimes] != null &&
-                            row[endTimes] != null &&
                             row[connectionCapacities] != null &&
                             row[conferenceCapacities] != null &&
                             row[rowAdditional] != null)
@@ -589,8 +587,6 @@ namespace BridgeOpsClient
 #pragma warning disable CS8605
                             PageConferenceView.resources.Add(new PageConferenceView.ResourceInfo((int)row[ids],
                                                                                                  row[names].ToString(),
-                                                                                                 (DateTime)row[startTimes],
-                                                                                                 (DateTime)row[endTimes],
                                                                                                  (int)row[connectionCapacities],
                                                                                                  (int)row[conferenceCapacities],
                                                                                                  (int)row[rowAdditional]));
