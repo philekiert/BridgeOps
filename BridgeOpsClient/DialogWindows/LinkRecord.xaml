@@ -6,9 +6,15 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="LinkRecord" Height="450" Width="450" MaxHeight="450" MaxWidth="450"
-        WindowStartupLocation="CenterOwner">
+        Title="LinkRecord" Height="450" Width="450" MaxHeight="800" MaxWidth="450"
+        WindowStartupLocation="CenterOwner"
+        ContentRendered="Window_ContentRendered">
     <Grid>
-        <custom:SqlDataGrid x:Name="dtg"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBox x:Name="txtSearch" Height="24" Margin="10 10 10 10" TextChanged="txtSearch_TextChanged"/>
+        <custom:SqlDataGrid Grid.Row="1" x:Name="dtg"/>
     </Grid>
 </Window>

@@ -81,16 +81,15 @@ public class FieldDefs
 
     // Primary Key Types (defaults used only for override txt file generation)
     public string typeOrgID = "INT UNSIGNED";
-    public string typeOrgRef = "VARCHAR(30)";
+    public string typeOrgRef = "VARCHAR(40)";
     public string typeContactID = "SMALLINT UNSIGNED";
     public string typeLoginID = "SMALLINT UNSIGNED";
     public string typeAssetID = "INT UNSIGNED";
-    public string typeAssetRef = "VARCHAR(10)";
+    public string typeAssetRef = "VARCHAR(20)";
     public string typeResourceID = "SMALLINT UNSIGNED";
     public string typeResourceCapacity = "INT UNSIGNED";
     public string typeConfID = "INT UNSIGNED";
     public string typeRecurrenceID = "INT UNSIGNED";
-    public string typeConfTypeID = "SMALLINT UNSIGNED";
     public string typeDialNo = "VARCHAR(7)";
     public string typeOrgChangeID = "INT UNSIGNED";
     public string typeAssetChangeID = "INT UNSIGNED";
@@ -289,7 +288,6 @@ public class FieldDefs
                "\nContact ID:                           Type = " + typeContactID +
                "\nLogin ID:                             Type = " + typeLoginID +
                "\nResource ID:                          Type = " + typeResourceID +
-               "\nConference Type ID:                   Type = " + typeConfTypeID +
                "\nConference ID:                        Type = " + typeConfID +
                "\nConference Recurrence Recurrence ID:  Type = " + typeRecurrenceID +
                "\nOrganisation Change ID:               Type = " + typeOrgChangeID +

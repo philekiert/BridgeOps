@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -38,9 +39,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.SelectAll(table, out columnNames, out rows, false))
-            {
                 dtg.Update(columns, columnNames, rows);
-            }
             dtg.CustomDoubleClick += dtg_DoubleClick;
         }
 
@@ -48,6 +47,38 @@ namespace BridgeOpsClient
         {
             id = dtg.GetCurrentlySelectedCell(0);
             Close();
+        }
+
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            MaxHeight = double.PositiveInfinity;
+        }
+
+        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string text = txtSearch.Text.ToLower();
+
+            // This is Copilot's code. I've modified it and seems to make sense, but I have little knowledge
+            // of this approach, so hopefully it's the most efficient way.
+            ICollectionView collectionView = CollectionViewSource.GetDefaultView(dtg.dtg.ItemsSource);
+
+            if (collectionView != null)
+            {
+                collectionView.Filter = item =>
+                {
+                    var row = (CustomControls.SqlDataGrid.Row)item;
+                    if (row.items == null)
+                        return false;
+
+                    foreach (object? cell in row.items)
+                        if (cell!.ToString()!.ToLower().Contains(text))
+                            return true;
+                    return false;
+                };
+
+                // Refresh the view to apply the filter
+                collectionView.Refresh();
+            }
         }
     }
 }
