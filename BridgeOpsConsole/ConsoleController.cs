@@ -206,7 +206,7 @@ public class ConsoleController
 
     public int ProcessCommand(string command)
     {
-        if (commandDefs.ContainsKey(command))
+        if (commandDefs.ContainsKey(command.ToLower()))
         {
             if ((commandDefs[command].menu == currentMenu || commandDefs[command].menu == MENU_GLOBAL) &&
                 commandDefs[command].valType == ValType.None)
@@ -220,7 +220,7 @@ public class ConsoleController
             int valueInt = 0;
             if (valueStart >= 2 && valueStart < command.Length)
             {
-                commandString = command.Remove(valueStart - 1);
+                commandString = command.Remove(valueStart - 1).ToLower(); // Make only the command case-insensitive.
                 valueString = command.Substring(valueStart, command.Length - valueStart);
             }
             if (commandDefs.ContainsKey(commandString))
@@ -245,7 +245,7 @@ public class ConsoleController
             else // Check for menu selection.
             {
                 for (int n = 0; n < MENU_LAST_INDEX; ++n)
-                    if (command == MenuName(n).ToLower())
+                    if (command.ToLower() == MenuName(n).ToLower())
                     {
                         currentMenu = n;
                         return 0;
@@ -413,7 +413,8 @@ public class ConsoleController
                                 names[0] == "Asset" || names[0] == "Conference")
                             {
                                 dbCreate.friendlyNames.Add(names);
-                                Writer.Affirmative("'" + names[1] + "' will display as '" + names[2] + "'");
+                                Writer.Affirmative("'" + names[0] + '.' + names[1] + "' will display as '" + names[2] + "'");
+                                Writer.Affirmative($"'{names[0]}.{names[1]}' will display as '{names[2]}'");
                             }
                             else
                                 Writer.Negative("Line " + l + " stated an invalid table name.");
@@ -974,7 +975,7 @@ public class ConsoleController
         // Colour must be reset to white outside of this function.
         if (success) Console.ForegroundColor = ConsoleColor.DarkGreen;
         else Console.ForegroundColor = ConsoleColor.Red;
-        Console.Write("•");
+        Console.Write("/");
         Console.ForegroundColor = ConsoleColor.White;
     }
 
