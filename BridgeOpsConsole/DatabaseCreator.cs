@@ -225,7 +225,7 @@ public class DatabaseCreator
                        "This will permanently delete all data - there is no way to undo this.");
         if (Writer.YesNo())
         {
-            int n = 4;
+            int n = 0; // Set to 4 to skip destruct sequence for debugging.
             while (n < 5)
             {
                 ++n;

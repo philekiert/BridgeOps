@@ -362,7 +362,6 @@ namespace BridgeOpsClient
                                         connection.ApplySite(txtDialNo.Text, txtOrgRef.Text, txtName.Text, id);
                                         break;
                                     }
-
                         Close();
                     }
                 }

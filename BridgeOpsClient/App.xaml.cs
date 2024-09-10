@@ -1141,17 +1141,13 @@ namespace BridgeOpsClient
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             return true;
                         else if (response == Glo.CLIENT_SESSION_INVALID)
-                        {
                             return SessionInvalidated();
-                        }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                        {
                             DisplayError(PERMISSION_DENIED);
-                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            DisplayError(sr.ReadString(stream));
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
-                        {
                             DisplayError("The record could no longer be found.");
-                        }
                     }
                     return false;
                 }
