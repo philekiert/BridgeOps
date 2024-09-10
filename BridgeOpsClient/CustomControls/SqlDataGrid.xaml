@@ -46,7 +46,7 @@
                             <Border Background="{TemplateBinding Background}" 
                             BorderBrush="{TemplateBinding BorderBrush}" 
                             BorderThickness="{TemplateBinding BorderThickness}">
-                                <ContentPresenter VerticalAlignment="Center" Margin="3 3 3 3"/>
+                                <ContentPresenter VerticalAlignment="Center" Margin="3 2 3 2"/>
                             </Border>
                         </ControlTemplate>
                     </Setter.Value>
