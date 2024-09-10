@@ -489,14 +489,14 @@ public class ConsoleController
                                           "Mars Colony",
                                           "Titan Shipyards",
                                           "Europa Deep Exploration Centre" };
-        StringBuilder o = new("TEXT,TEXT,TEXT,TEXT\nOrganisation_Reference,Parent_Reference,Dial_No,Notes\n");
+        StringBuilder o = new("TEXT,TEXT,TEXT,TEXT,TEXT\nOrganisation_Reference,Parent_Reference,Organisation_Name,Dial_No,Notes\n");
         StringBuilder a = new("TEXT,TEXT,TEXT\nAsset_Reference,Organisation_Reference,Notes\n");
 
         o.AppendLine("Sol Space Agency");
-        o.AppendLine($"{parents[0]},Sol Space Agency");
-        o.AppendLine($"{parents[1]},Sol Space Agency");
-        o.AppendLine($"{parents[2]},Sol Space Agency");
-        o.AppendLine($"{parents[3]},Sol Space Agency");
+        o.AppendLine($"{parents[0]},Sol Space Agency,{parents[0]}");
+        o.AppendLine($"{parents[1]},Sol Space Agency,{parents[1]}");
+        o.AppendLine($"{parents[2]},Sol Space Agency,{parents[2]}");
+        o.AppendLine($"{parents[3]},Sol Space Agency,{parents[3]}");
 
         string[] orgNotes = new string[] { "Installed with no issues.",
                                            "Installed on second attempt with no issues.",
@@ -508,7 +508,8 @@ public class ConsoleController
         Random r = new();
         for (int i = 0; i < commandValInt; ++i)
         {
-            o.AppendLine($"SSA{i},{parents[r.Next(0, 4)]},{i},{orgNotes[r.Next(0, 4)]}");
+            string parent = parents[r.Next(0, 4)];
+            o.AppendLine($"SSA{i},{parent},{parent} SSA{i},{i},{orgNotes[r.Next(0, 4)]}");
 
             int assets = r.Next(0, 10);
             for (int j = 0; j < assets; ++j)

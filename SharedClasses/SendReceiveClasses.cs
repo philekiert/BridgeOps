@@ -483,9 +483,7 @@ namespace SendReceiveClasses
                             reAddKeys = true;
                             commands.Add("ALTER TABLE Organisation DROP CONSTRAINT fk_ParentOrgRef;");
                             commands.Add("ALTER TABLE Asset DROP CONSTRAINT fk_AssetOrganisation;");
-                            commands.Add("ALTER TABLE Connection DROP CONSTRAINT fk_ConnectionOrgRef;");
                             commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT fk_jncContacts_OrgRef;");
-                            commands.Add("ALTER TABLE Connection DROP CONSTRAINT pk_ConfID_OrgRef");
                             commands.Add("ALTER TABLE OrganisationContacts DROP CONSTRAINT pk_jncContacts_OrgRef_ContactID;");
                             commands.Add("ALTER TABLE Organisation DROP CONSTRAINT u_OrgRef;");
 
@@ -498,7 +496,8 @@ namespace SendReceiveClasses
                         if (column == Glo.Tab.DIAL_NO)
                         {
                             reAddKeys = true;
-                            commands.Add("ALTER TABLE Organisation DROP CONSTRAINT u_OrgDialNo;");
+                            commands.Add("DROP INDEX u_OrgDialNo ON Organisation;");
+                            commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType};");
                         }
                     }
                     else if (table == "Asset")
@@ -570,14 +569,12 @@ namespace SendReceiveClasses
                                 commands.Add("ALTER TABLE Organisation ADD CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference);");
                                 commands.Add("ALTER TABLE Organisation ADD CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference);");
                                 commands.Add("ALTER TABLE Asset ADD CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE;");
-                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT fk_ConnectionOrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE;");
-                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference);");
                                 commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT fk_jncContacts_OrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE ON UPDATE CASCADE;");
                                 commands.Add("ALTER TABLE OrganisationContacts ADD CONSTRAINT pk_jncContacts_OrgRef_ContactID PRIMARY KEY (Organisation_Reference, Contact_ID);");
                             }
                             else if (column == Glo.Tab.DIAL_NO)
                             {
-                                commands.Add("ALTER TABLE Organisation ADD CONSTRAINT u_OrgDialNo UNIQUE (Dial_No);");
+                                commands.Add("CREATE UNIQUE INDEX u_OrgDialNo ON Organisation (Dial_No) WHERE Dial_No IS NOT NULL;");
                             }
                         }
                         else if (table == "Asset")
@@ -1464,12 +1461,13 @@ namespace SendReceiveClasses
         public List<string> likeColumns;
         public List<string> likeValues;
         public List<Conditional> conditionals;
+        public bool and; // false: or
         public bool includeHistory;
 
         public QuickSelectRequest(string sessionID, int columnRecordID, string table,
                              List<string> select,
                              List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
-                             bool includeHistory)
+                             bool and, bool includeHistory)
         {
             /* There is no check here to make sure that columns and values are the equal lengths. Be careful
                to respect this restriction. Agent will throw an exception if they are unequal. */
@@ -1481,6 +1479,7 @@ namespace SendReceiveClasses
             this.likeValues = likeValues;
             this.conditionals = conditionals;
             this.includeHistory = includeHistory;
+            this.and = and;
         }
 
         public void Prepare()

@@ -165,6 +165,8 @@ public static class Glo
         public const string CONFERENCE_EDIT_LOGIN = "Edit_Login_ID";
         public const string CONFERENCE_EDIT_TIME = "Edit_Time";
 
+        public const string CONNECTION_ID = "Connection_ID";
+        public const string CONNECTION_IS_MANAGED = "Is_Managed";
         public const string CONNECTION_TIME_FROM = "Connection_Time";
         public const string CONNECTION_TIME_TO = "Disconnection_Time";
         public const string CONNECTION_ROW = "Row";

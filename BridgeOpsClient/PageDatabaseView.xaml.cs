@@ -86,9 +86,6 @@ namespace BridgeOpsClient
                 }
             }
 
-            if (cmbTable.SelectedIndex == 2 && cmbColumn.Items.Count > 0)
-                cmbColumn.Items.RemoveAt(0); // Removed Contact_ID as it's not required.
-
             cmbColumn.SelectedIndex = 0;
 
             txtSearch.IsEnabled = cmbColumn.Items.Count > 0;
@@ -135,7 +132,7 @@ namespace BridgeOpsClient
                 else if (App.Select(cmbTable.Text,
                                     new List<string> { "*" },
                                     lastSearchColumns, lastSearchValues, lastSearchConditionals,
-                                    out columnNames, out rows, lastSearchHistorical))
+                                    out columnNames, out rows, true, lastSearchHistorical))
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
             }
         }
@@ -200,7 +197,7 @@ namespace BridgeOpsClient
             if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                            new List<string> { "*" },
                            selectColumns, selectValues, conditionals,
-                           out columnNames, out rows, historical))
+                           out columnNames, out rows, true, historical))
             {
                 lastSearchWide = false;
                 lastSearchColumns = selectColumns;

@@ -55,7 +55,7 @@ namespace BridgeOpsClient
             MaxHeight = double.PositiveInfinity;
         }
 
-        struct Connection
+        public class Connection
         {
             public Button btnRemove;
             public Button btnUp;
@@ -65,8 +65,123 @@ namespace BridgeOpsClient
             public CustomControls.DateTimePicker dtpConnected;
             public CustomControls.DateTimePicker dtpDisconnected;
             public Button btnOrgSummary;
-            public int connectionId; // null if booking is new
+            public int connectionId; // -1 if booking is new
             public int row;
+            public string dialNo;
+            public string? orgRef;
+            public string? orgName;
+            public int? orgId;
+
+            public Connection()
+            {
+                dialNo = "";
+
+                btnRemove = new Button()
+                {
+                    Margin = new Thickness(10, 5, 0, 5),
+                    Content = "-",
+                    Width = 24,
+                    Height = 24,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                };
+
+                btnUp = new Button()
+                {
+                    Margin = new Thickness(5, 5, 5, 17),
+                    Height = 12,
+                    Width = 19,
+                    Content = "▲",
+                    Padding = new Thickness(0, -1, 0, 0),
+                    BorderThickness = new Thickness(1, 1, 1, 0),
+                    FontSize = 8
+                };
+
+                btnDown = new Button()
+                {
+                    Margin = new Thickness(5, 17, 5, 5),
+                    Height = 12,
+                    Width = 19,
+                    Content = "▼",
+                    Padding = new Thickness(0, -1, 0, 0),
+                    FontSize = 8
+                };
+
+                txtSearch = new TextBox()
+                {
+                    Height = 24,
+                    Margin = new Thickness(3, 5, 5, 5),
+                    VerticalContentAlignment = VerticalAlignment.Center
+                };
+
+                chkIsTest = new CheckBox()
+                {
+                    Margin = new Thickness(7, 5, 3, 5),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                dtpConnected = new()
+                {
+                    Height = 24,
+                    Margin = new Thickness(5, 5, 5, 5)
+                };
+
+                dtpDisconnected = new()
+                {
+                    Height = 24,
+                    Margin = new Thickness(5, 5, 5, 5)
+                };
+
+                btnOrgSummary = new()
+                {
+                    Height = 24,
+                    Background = Brushes.White,
+                    BorderThickness = new(0),
+                    Padding = new(6, 0,
+                    6, 0),
+                    Margin = new Thickness(-1, 5, 5, 5),
+                    HorizontalContentAlignment = HorizontalAlignment.Left
+                };
+
+                Grid.SetColumnSpan(txtSearch, 4);
+
+                Grid.SetColumn(btnRemove, 0);
+                Grid.SetColumn(btnUp, 1);
+                Grid.SetColumn(btnDown, 1);
+                Grid.SetColumn(txtSearch, 2);
+                Grid.SetColumn(chkIsTest, 2);
+                Grid.SetColumn(dtpConnected, 3);
+                Grid.SetColumn(dtpDisconnected, 4);
+                Grid.SetColumn(btnOrgSummary, 5);
+
+                ToggleSearch(true);
+            }
+
+            public void ApplySite(string dialNo) { ApplySite(dialNo, null, null, null); }
+            public void ApplySite(string dialNo, string? orgRef, string? orgName, int? orgId)
+            {
+                TextBlock tbDialNo = new()
+                { Text = dialNo, FontWeight = FontWeights.Bold };
+
+                if (orgRef != null && orgName != null)
+                {
+                    TextBlock tbOrgRef = new()
+                    { Margin = new(15, 0, 15, 0), Text = orgRef };
+                    TextBlock tbOrgName = new()
+                    { Text = orgName, FontStyle = FontStyles.Italic };
+
+                    btnOrgSummary.Content = new StackPanel()
+                    { Children = { tbDialNo, tbOrgRef, tbOrgName }, Orientation = Orientation.Horizontal };
+                }
+                else
+                {
+                    btnOrgSummary.Content = tbDialNo;
+                }
+
+                this.dialNo = dialNo;
+                this.orgRef = orgRef;
+                this.orgName = orgName;
+                this.orgId = orgId;
+            }
 
             public void ToggleSearch(bool search)
             {
@@ -123,7 +238,7 @@ namespace BridgeOpsClient
                 grid.Children.Remove(btnOrgSummary);
             }
         }
-        List<Connection> connections = new();
+        public List<Connection> connections = new();
 
         private void btnAddConnection_Click(object sender, RoutedEventArgs e)
         {
@@ -132,83 +247,11 @@ namespace BridgeOpsClient
                 return;
 
             Connection connection = new();
-
-            connection.btnRemove = new Button()
-            {
-                Margin = new Thickness(10, 5, 0, 5),
-                Content = "-",
-                Width = 24,
-                Height = 24,
-                VerticalContentAlignment = VerticalAlignment.Center
-            };
             connection.btnRemove.Click += RemoveConnection;
-
-            connection.btnUp = new Button()
-            {
-                Margin = new Thickness(5, 5, 5, 17),
-                Height = 12,
-                Width = 19,
-                Content = "▲",
-                Padding = new Thickness(0, -1, 0, 0),
-                BorderThickness = new Thickness(1, 1, 1, 0),
-                FontSize = 8
-            };
             connection.btnUp.Click += btnUp_Click;
-
-            connection.btnDown = new Button()
-            {
-                Margin = new Thickness(5, 17, 5, 5),
-                Height = 12,
-                Width = 19,
-                Content = "▼",
-                Padding = new Thickness(0, -1, 0, 0),
-                FontSize = 8
-            };
             connection.btnDown.Click += btnDown_Click;
-
-            connection.txtSearch = new TextBox()
-            {
-                Height = 24,
-                Margin = new Thickness(3, 5, 5, 5),
-                VerticalContentAlignment = VerticalAlignment.Center
-            };
             connection.txtSearch.KeyDown += txtSearch_KeyDown;
-
-            connection.chkIsTest = new CheckBox()
-            {
-                Margin = new Thickness(7, 5, 3, 5),
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            connection.dtpConnected = new()
-            {
-                Height = 24,
-                Margin = new Thickness(5, 5, 5, 5)
-            };
-
-            connection.dtpDisconnected = new()
-            {
-                Height = 24,
-                Margin = new Thickness(5, 5, 5, 5)
-            };
-
-            connection.btnOrgSummary = new()
-            {
-                Height = 24,
-                Margin = new Thickness(5, 5, 5, 5)
-            };
             connection.btnOrgSummary.Click += btnSummary_Click;
-
-            Grid.SetColumnSpan(connection.txtSearch, 4);
-
-            Grid.SetColumn(connection.btnRemove, 0);
-            Grid.SetColumn(connection.btnUp, 1);
-            Grid.SetColumn(connection.btnDown, 1);
-            Grid.SetColumn(connection.txtSearch, 2);
-            Grid.SetColumn(connection.chkIsTest, 2);
-            Grid.SetColumn(connection.dtpConnected, 3);
-            Grid.SetColumn(connection.dtpDisconnected, 4);
-            Grid.SetColumn(connection.btnOrgSummary, 5);
 
             grdConnections.RowDefinitions.Add(new() { Height = GridLength.Auto });
             grdConnections.Children.Add(connection.btnRemove);
@@ -219,8 +262,6 @@ namespace BridgeOpsClient
             grdConnections.Children.Add(connection.dtpConnected);
             grdConnections.Children.Add(connection.dtpDisconnected);
             grdConnections.Children.Add(connection.btnOrgSummary);
-
-            connection.ToggleSearch(true);
 
             connections.Add(connection);
 
@@ -251,19 +292,53 @@ namespace BridgeOpsClient
             if (sender is TextBox txt && txt.Text.Length > 0)
             {
                 int index = Grid.GetRow(txt) - 1;
-                connections[index].ToggleSearch(false);
+                Connection connection = connections[index];
+
+                if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                {
+                    connection.ToggleSearch(false);
+                    connection.ApplySite(txt.Text);
+                    return;
+                }
+
+                List<List<object?>> rows;
+
+                App.Select("Organisation", new() { Glo.Tab.DIAL_NO,
+                                                   Glo.Tab.ORGANISATION_REF,
+                                                   Glo.Tab.ORGANISATION_NAME,
+                                                   Glo.Tab.ORGANISATION_ID },
+                                           new() { Glo.Tab.ORGANISATION_REF, Glo.Tab.DIAL_NO },
+                                           new() { txt.Text,
+                                                   txt.Text },
+                                           new() { Conditional.Equals, Conditional.Equals },
+                                           out _, out rows,
+                                           false, false);
+
+                if (rows.Count == 0 || rows[0].Count != 4)
+                {
+                    connection.ToggleSearch(false);
+                    connection.ApplySite(txt.Text);
+                }
+                else if (rows[0][0] is string d && rows[0][1] is string r &&
+                         rows[0][2] is string n && rows[0][3] is int i)
+                {
+                    connection.ToggleSearch(false);
+                    connection.ApplySite(d, r, n, i);
+                }
+
             }
         }
 
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
+            {
                 SearchSite(sender, e);
+            }
             else if (e.Key == Key.Escape)
             {
                 Connection connection = connections[Grid.GetRow((TextBox)sender) - 1];
-                string? summary = (string?)connection.btnOrgSummary.Content;
-                if (summary != null && summary != "")
+                if (connection.dialNo != "")
                     connection.ToggleSearch(false);
             }
         }
@@ -271,7 +346,17 @@ namespace BridgeOpsClient
         private void btnSummary_Click(object sender, EventArgs e)
         {
             int index = Grid.GetRow((UIElement)sender) - 1;
-            connections[index].ToggleSearch(true);
+            Connection connection = connections[index];
+
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                connection.ToggleSearch(true);
+                connection.txtSearch.Focus();
+            }
+            else if (connection.orgId != null)
+            {
+                App.EditOrganisation(connection.orgId.ToString()!);
+            }
         }
 
         private void btnUp_Click(object sender, EventArgs e)

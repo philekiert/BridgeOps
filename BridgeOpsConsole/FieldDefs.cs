@@ -168,8 +168,10 @@ public class FieldDefs
         //defs.Add("Dial No Organisation Reference", new Definition(7, Glo.Tab.ORGANISATION_REF, typeOrgID, false, false, false));
 
         // Site Connections
-        defs.Add("Connection Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, false));
-        defs.Add("Connection Organisation Reference", new Definition(10, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
+        defs.Add("Connection ID", new Definition(10, Glo.Tab.CONNECTION_ID, "INT", false, true, true));
+        defs.Add("Connection Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, false, false));
+        defs.Add("Connection Dial No", new Definition(10, Glo.Tab.DIAL_NO, typeDialNo, false, false, false));
+        defs.Add("Connection Is Managed", new Definition(10, Glo.Tab.CONNECTION_IS_MANAGED, "BOOLEAN", false, false, false));
         defs.Add("Connection Connection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_FROM, "DATETIME", false, false, false));
         defs.Add("Connection Disconnection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_TO, "DATETIME", false, false, false));
         defs.Add("Connection Row", new Definition(10, Glo.Tab.CONNECTION_ROW, "TINYINT", false, false, false));

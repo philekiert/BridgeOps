@@ -352,6 +352,17 @@ namespace BridgeOpsClient
                     {
                         if (MainWindow.pageDatabase != null)
                             MainWindow.pageDatabase.RepeatSearches(0);
+
+                        // Update any conference windows with the new information if needed.
+                        foreach (Window w in Application.Current.Windows)
+                            if (w is NewConference nc)
+                                foreach (NewConference.Connection connection in nc.connections)
+                                    if (connection.orgId == id)
+                                    {
+                                        connection.ApplySite(txtDialNo.Text, txtOrgRef.Text, txtName.Text, id);
+                                        break;
+                                    }
+
                         Close();
                     }
                 }
@@ -553,6 +564,7 @@ namespace BridgeOpsClient
             txtOrgRef.IsReadOnly = !enabled;
             cmbOrgParentID.IsEnabled = enabled;
             txtDialNo.IsReadOnly = !enabled;
+            txtName.IsReadOnly = !enabled;
             txtNotes.IsReadOnly = !enabled;
             ditOrganisation.ToggleFieldsEnabled(enabled);
             btnEdit.IsEnabled = enabled;

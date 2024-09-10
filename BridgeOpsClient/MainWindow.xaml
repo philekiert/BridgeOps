@@ -42,9 +42,9 @@
                               Click="menuDatabaseNewContact_Click"/>
                      <!--Uncomment when adding conferencing support.
                          Make sure to uncomment references to these objects in the code-behind.-->
-                    <Separator/>
+                    <!--<Separator/>
                     <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
-                              Click="menuDatabaseNewResource_Click"/>
+                              Click="menuDatabaseNewResource_Click"/>-->
 
                 </MenuItem>
                 <Separator/>

@@ -145,7 +145,7 @@ namespace BridgeOpsClient
                                    new() { Glo.Tab.LOGIN_ID },
                                    new() { id.ToString() },
                                    new() { SendReceiveClasses.Conditional.Equals },
-                                   out columnNames, out rows, false))
+                                   out columnNames, out rows, true, false))
                     {
                         if (rows.Count > 0)
                         {

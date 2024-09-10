@@ -398,7 +398,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.ORGANISATION_ID },
                            new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows, false))
+                           out columnNames, out rows, true, false))
             {
                 if (rows.Count > 0)
                 {
@@ -443,7 +443,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.ASSET_ID },
                            new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows, false))
+                           out columnNames, out rows, true, false))
             {
                 if (rows.Count > 0)
                 {
@@ -475,7 +475,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.CONTACT_ID },
                            new List<string> { id.ToString() },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows, false))
+                           out columnNames, out rows, true, false))
             {
                 if (rows.Count > 0)
                 {
@@ -715,6 +715,7 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                         {
+                            returnID = "";
                             return SessionInvalidated();
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
@@ -740,7 +741,6 @@ namespace BridgeOpsClient
                 }
                 finally
                 {
-                    returnID = "";
                     if (stream != null) stream.Close();
                 }
             }
@@ -768,10 +768,9 @@ namespace BridgeOpsClient
                         {
                             DisplayError(PERMISSION_DENIED);
                         }
-                        else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError("The record could no longer be found.");
-                            string reason = sr.ReadString(stream);
+                            DisplayError(ErrorConcat("Could not update record. See Error:", sr.ReadString(stream)));
                         }
                     }
                     return false;
@@ -929,7 +928,8 @@ namespace BridgeOpsClient
         public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows,
                                      bool historical)
         {
-            return Select(table, new List<string> { "*" }, new(), new(), new(), out columnNames, out rows, historical);
+            return Select(table, new List<string> { "*" }, new(), new(), new(), out columnNames, out rows,
+                          true, historical);
         }
         public static bool SelectAll(string table, string likeColumn, string likeValue, Conditional conditional,
                                      out List<string?> columnNames, out List<List<object?>> rows, bool historical)
@@ -937,25 +937,29 @@ namespace BridgeOpsClient
             return Select(table, new List<string> { "*" },
                           new List<string> { likeColumn }, new List<string> { likeValue },
                           new List<Conditional> { conditional },
-                          out columnNames, out rows, historical);
+                          out columnNames, out rows, true, historical);
         }
         public static bool Select(string table, List<string> select,
                                   out List<string?> columnNames, out List<List<object?>> rows, bool historical)
         {
-            return Select(table, select, new(), new(), new(), out columnNames, out rows, historical);
+            return Select(table, select, new(), new(), new(), out columnNames, out rows, true, historical);
         }
         public static bool Select(string table, List<string> select,
                                   List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
-                                  out List<string?> columnNames, out List<List<object?>> rows, bool historical)
+                                  out List<string?> columnNames, out List<List<object?>> rows,
+                                  bool and, bool historical)
         {
             // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
             // the columns must be stated in the correct order when populating the DataInputTable.
-            var dictionary = ColumnRecord.GetDictionary(table, true);
-            if (dictionary != null)
+            if (select.Count == 0 || (select.Count == 1 && select[0] == "*"))
             {
-                select.Clear();
-                foreach (DictionaryEntry de in dictionary)
-                    select.Add((string)de.Key);
+                var dictionary = ColumnRecord.GetDictionary(table, true);
+                if (dictionary != null)
+                {
+                    select.Clear();
+                    foreach (DictionaryEntry de in dictionary)
+                        select.Add((string)de.Key);
+                }
             }
 
             lock (streamLock)
@@ -966,9 +970,9 @@ namespace BridgeOpsClient
                     {
                         if (stream != null)
                         {
-                            QuickSelectRequest req = new QuickSelectRequest(sd.sessionID, ColumnRecord.columnRecordID,
-                                                                  table, select, likeColumns, likeValues, conditionals,
-                                                                  historical);
+                            QuickSelectRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
+                                                        table, select, likeColumns, likeValues, conditionals,
+                                                        and, historical);
                             stream.WriteByte(Glo.CLIENT_SELECT_QUICK);
                             sr.WriteAndFlush(stream, sr.Serialise(req));
                             int response = stream.ReadByte();

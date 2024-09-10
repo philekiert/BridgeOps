@@ -419,8 +419,8 @@ public class DatabaseCreator
             // Entity Table Strings
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
                             ", CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference)" +
-                            ", CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference)" +
-                            ", CONSTRAINT u_OrgDialNo UNIQUE (Dial_No) );";
+                            ", CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference) );" +
+                             " CREATE UNIQUE INDEX u_OrgDialNo ON Organisation (Dial_No) WHERE Dial_No IS NOT NULL;"; // Needs adding separately due to the WHERE clause.
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
             login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
                      ", CONSTRAINT u_Username UNIQUE (Username) );";
@@ -443,9 +443,8 @@ public class DatabaseCreator
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
             //          ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE );";
-            connections += ", CONSTRAINT pk_ConfID_OrgRef PRIMARY KEY (Conference_ID, Organisation_Reference)" +
-                           ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
-                           ", CONSTRAINT fk_ConnectionOrgRef FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON UPDATE CASCADE );";
+            connections += ", CONSTRAINT pk_ConnID PRIMARY KEY (Connection_ID)" +
+                           ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             //conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
             //                    ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
@@ -513,12 +512,16 @@ public class DatabaseCreator
             //SendCommandSQL(junctionConfResource);
 
             // We can't have two foreign keys that cascade on the same table relating to the same column. Create a trigger to implement the second one manually.
-            Writer.Message("\nApplying trigger to Conference table for for editor deletions...");
-            SendCommandSQL("CREATE TRIGGER trg_deleteConfEditLogin ON Login " +
-                           "AFTER DELETE AS UPDATE Conference SET Edit_Login_ID = NULL WHERE Creation_Login_ID IN (SELECT Login_ID FROM DELETED);");
-            Writer.Message("Applying trigger to Conference table for for editor updates...");
+            Writer.Message("\nApplying triggers to Conference table for editor updates and deletions...");
             SendCommandSQL("CREATE TRIGGER trg_updateConfEditLogin ON Login " +
                            "AFTER UPDATE AS UPDATE Conference SET Edit_Login_ID = i.Login_ID FROM Conference c JOIN INSERTED i ON c.Edit_Login_ID = i.Login_ID;");
+            SendCommandSQL("CREATE TRIGGER trg_deleteConfEditLogin ON Login " +
+                           "AFTER DELETE AS UPDATE Conference SET Edit_Login_ID = NULL WHERE Edit_Login_ID IN (SELECT Login_ID FROM DELETED);");
+            Writer.Message("Applying triggers to Connection table for Dial No updates and deletions...");
+            SendCommandSQL("CREATE TRIGGER trg_updateConnDialNo ON Organisation " +
+                           "AFTER UPDATE AS UPDATE Connection SET Dial_No = i.Dial_No FROM Connection c JOIN INSERTED i ON c.Dial_No = i.Dial_No WHERE Is_Managed = 1;");
+            SendCommandSQL("CREATE TRIGGER trg_deleteConnDialNo ON Organisation " +
+                           "AFTER DELETE AS UPDATE Connection SET Is_Managed = 0 WHERE Dial_No IN (SELECT Dial_No FROM DELETED);"); // Doesnt matter if we catch unmanaged connections in this.
 
             Writer.Message("\nApplying column additions...");
             foreach (ColumnAddition addition in columnAdditions)

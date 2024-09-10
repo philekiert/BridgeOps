@@ -1456,7 +1456,7 @@ internal class BridgeOpsAgent
                 }
 
                 if (conditions.Count > 0)
-                    command += " WHERE " + string.Join(" AND ", conditions);
+                    command += " WHERE " + string.Join(req.and ? " AND " : " OR ", conditions);
             }
 
             if (historical)
@@ -1673,17 +1673,10 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            try
-            {
-                com.ExecuteNonQuery();
-                if (target == Glo.CLIENT_UPDATE_RESOURCE)
-                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            }
-            catch
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
-            }
+            com.ExecuteNonQuery();
+            if (target == Glo.CLIENT_UPDATE_RESOURCE)
+                SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
         }
         catch (Exception e)
         {

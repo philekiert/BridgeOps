@@ -7,7 +7,7 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New Conference" ResizeMode="CanResize"
-        UseLayoutRounding="True" MinHeight="500" MinWidth="850" Width="850"
+        UseLayoutRounding="True" MinHeight="500" MinWidth="850" Width="1000"
         Closed="Window_Closed" ContentRendered="Window_ContentRendered">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -26,8 +26,8 @@
             </Grid.RowDefinitions>
 
             <!-- Connections -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <Grid Grid.Row="0" x:Name="grdConnections">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Focusable="False">
+                <Grid Grid.Row="0" x:Name="grdConnections" Focusable="False">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="34"/>
