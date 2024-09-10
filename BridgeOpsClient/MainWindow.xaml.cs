@@ -62,6 +62,7 @@ namespace BridgeOpsClient
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
 
             mixedPaneRedrawOverride = true;
+            viewState = 2; // Comment out for conference view development
             ApplyViewState();
             GreyOutPermissions();
 
