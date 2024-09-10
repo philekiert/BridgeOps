@@ -31,6 +31,8 @@ namespace BridgeOpsClient
             this.columns = columns;
 
             Populate();
+
+            txtSearch.Focus();
         }
 
         public void Populate()
