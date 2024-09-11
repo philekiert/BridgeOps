@@ -7,8 +7,8 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        Closed="Window_Closed">
-    <TabControl>
+        Closed="Window_Closed" UseLayoutRounding="True">
+    <TabControl BorderThickness="1 1 0 0">
         <TabItem Header="Organisation">
             <Grid>
                 <Grid.RowDefinitions>
@@ -24,7 +24,9 @@
                 <Grid Grid.Row="1" Margin="0 10 0 0">
                     <Grid.Resources>
                         <Style TargetType="TextBox">
-                            <Setter Property="Margin" Value="10 5 10 5"/>
+                            <Setter Property="Margin" Value="10 4 10 4"/>
+                            <Setter Property="Height" Value="20"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
                         </Style>
                     </Grid.Resources>
                     <Grid.ColumnDefinitions>
@@ -32,25 +34,29 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition />
-                        <RowDefinition />
-                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Label Content="Organisation Reference" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"/>
+                    <Label Content="Organisation Reference" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"
+                           VerticalAlignment="Center"/>
                     <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgRef"
                              TextChanged="ValueChanged" />
-                    <Label Content="Parent Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"/>
-                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 2 10 2"
-                              SelectionChanged="ValueChanged"/>
-                    <Label Content="Organisation Name" Grid.Row="2" Grid.Column="0" x:Name="lblName"/>
+                    <Label Content="Parent Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"
+                           VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 4 10 4"
+                              SelectionChanged="ValueChanged" Height="20" Padding="4 2 4 2"/>
+                    <Label Content="Organisation Name" Grid.Row="2" Grid.Column="0" x:Name="lblName"
+                           VerticalAlignment="Center"/>
                     <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtName"
                              TextChanged="ValueChanged"/>
-                    <Label Content="Dial No" Grid.Row="3" Grid.Column="0" x:Name="lblDialNo"/>
+                    <Label Content="Dial No" Grid.Row="3" Grid.Column="0" x:Name="lblDialNo"
+                           VerticalAlignment="Center"/>
                     <TextBox Grid.Row="3" Grid.Column="1" x:Name="txtDialNo"
                              TextChanged="ValueChanged"/>
                 </Grid>
-                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="405" Margin="10,10,0,10"/>
+                <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="500" Margin="10,10,0,10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Center"
                        Margin="10,0,0,0" Height="26"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Center"

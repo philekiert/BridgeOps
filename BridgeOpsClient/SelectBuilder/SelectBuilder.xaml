@@ -63,7 +63,7 @@
 
         <!-- Start of lower section -->
         <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="15"
-                    SelectionChanged="tabControl_SelectionChanged">
+                    SelectionChanged="tabControl_SelectionChanged" BorderThickness="1 1 0 0">
         </TabControl>
     </Grid>
 </Window>

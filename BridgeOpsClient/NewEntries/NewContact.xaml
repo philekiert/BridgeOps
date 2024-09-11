@@ -7,7 +7,7 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New Contact" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        Closed="Window_Closed">
+        Closed="Window_Closed" UseLayoutRounding="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
