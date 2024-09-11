@@ -82,6 +82,7 @@ public class FieldDefs
     // Primary Key Types (defaults used only for override txt file generation)
     public string typeOrgID = "INT UNSIGNED";
     public string typeOrgRef = "VARCHAR(40)";
+    public string typeOrgName = "VARCHAR(200)";
     public string typeContactID = "SMALLINT UNSIGNED";
     public string typeLoginID = "SMALLINT UNSIGNED";
     public string typeAssetID = "INT UNSIGNED";
@@ -90,7 +91,7 @@ public class FieldDefs
     public string typeResourceCapacity = "INT UNSIGNED";
     public string typeConfID = "INT UNSIGNED";
     public string typeRecurrenceID = "INT UNSIGNED";
-    public string typeDialNo = "VARCHAR(7)";
+    public string typeDialNo = "VARCHAR(20)";
     public string typeOrgChangeID = "INT UNSIGNED";
     public string typeAssetChangeID = "INT UNSIGNED";
 
@@ -102,8 +103,8 @@ public class FieldDefs
         defs.Add("Organisation ID", new Definition(12, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, true));
         defs.Add("Organisation Reference", new Definition(12, Glo.Tab.ORGANISATION_REF, typeOrgRef, false, true, false));
         defs.Add("Organisation Organisation Reference", new Definition(12, Glo.Tab.PARENT_REF, typeOrgRef, false, false, false));
-        defs.Add("Organisation Name", new Definition(12, Glo.Tab.ORGANISATION_NAME, "VARCHAR(200)", true, false, false));
-        defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, true, false, false));
+        defs.Add("Organisation Name", new Definition(12, Glo.Tab.ORGANISATION_NAME, typeOrgName, false, true, false));
+        defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, false, true, false));
         defs.Add("Organisation Notes", new Definition(12, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Contact
@@ -139,7 +140,7 @@ public class FieldDefs
         // Conference
         defs.Add("Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, true));
         defs.Add("Conference Resource ID", new Definition(10, Glo.Tab.RESOURCE_ID, typeResourceID, false, false, false));
-        defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.CONFERENCE_RESOURCE_ROW, typeResourceID, false, false, false));
+        defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.CONFERENCE_RESOURCE_ROW, typeResourceCapacity, false, false, false));
         defs.Add("Conference Title", new Definition(10, Glo.Tab.CONFERENCE_TITLE, "VARCHAR(50)", true, false, false));
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
@@ -169,7 +170,7 @@ public class FieldDefs
         // Site Connections
         defs.Add("Connection ID", new Definition(10, Glo.Tab.CONNECTION_ID, "INT", false, true, true));
         defs.Add("Connection Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, false, false));
-        defs.Add("Connection Dial No", new Definition(10, Glo.Tab.DIAL_NO, typeDialNo, false, false, false));
+        defs.Add("Connection Organisation Dial No", new Definition(10, Glo.Tab.DIAL_NO, typeDialNo, false, false, false));
         defs.Add("Connection Is Managed", new Definition(10, Glo.Tab.CONNECTION_IS_MANAGED, "BOOLEAN", false, false, false));
         defs.Add("Connection Connection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_FROM, "DATETIME", false, false, false));
         defs.Add("Connection Disconnection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_TO, "DATETIME", false, false, false));
@@ -283,6 +284,8 @@ public class FieldDefs
                "\n" +
                "\nOrganisation ID:                      Type = " + typeOrgID +
                "\nOrganisation Reference:               Max Length = " + ExtractVARCHARLength(typeOrgRef) +
+               "\nOrganisation Dial No:                 Max Length = " + ExtractVARCHARLength(typeDialNo) +
+               "\nOrganisation Name:                    Max Length = " + ExtractVARCHARLength(typeOrgName) +
                "\nAsset ID:                             Type = " + typeAssetID +
                "\nAsset Reference:                      Max Length = " + ExtractVARCHARLength(typeAssetRef) +
                "\nContact ID:                           Type = " + typeContactID +

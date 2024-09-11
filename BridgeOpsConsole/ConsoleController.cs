@@ -435,7 +435,7 @@ public class ConsoleController
                                                      "name.");
                             }
                             else
-                                Writer.Negative("Line " + l + " stated an invalid table name.");
+                                Writer.Negative("Line " + l + " stated an invalid table or column name.");
                         }
                         else
                             Writer.Negative("Line " + l + " stated an empty name.");

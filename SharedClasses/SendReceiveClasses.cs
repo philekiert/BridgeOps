@@ -837,8 +837,8 @@ namespace SendReceiveClasses
                                                                                   dialNo,
                                                                                   notes));
             // Create a first change instance.
-            additionalCols.RemoveRange(additionalCols.Count - 4, 4); // ColConcat and ValConcat added the main fields
-            additionalVals.RemoveRange(additionalVals.Count - 4, 4); // to the Lists, so walk that back here.
+            additionalCols.RemoveRange(additionalCols.Count - 5, 5); // ColConcat and ValConcat added the main fields
+            additionalVals.RemoveRange(additionalVals.Count - 5, 5); // to the Lists, so walk that back here.
             int initialCount = additionalCols.Count;
             for (int i = 0; i < initialCount; ++i)
             {
@@ -870,7 +870,7 @@ namespace SendReceiveClasses
                                                             parentOrgRef, "1",
                                                             name, "1",
                                                             dialNo, "1",
-                                                            notes, "1")); ;
+                                                            notes, "1"));
             return SqlAssist.Transaction(com);
         }
 
