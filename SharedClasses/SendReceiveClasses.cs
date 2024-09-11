@@ -632,23 +632,23 @@ namespace SendReceiveClasses
                 if (friendly != null)
                 {
                     commands.Add($"IF EXISTS(SELECT 1 FROM FriendlyNames " +
-                                 $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
-                                 $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}') " +
-                                 "BEGIN " +
-                                 $"UPDATE FriendlyNames SET {Glo.Tab.FRIENDLY_NAME} = '{friendly}' " +
-                                 $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
-                                 $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}';" +
-                                 "END " +
-                                 $"ELSE IF EXISTS(SELECT 1 FROM FriendlyNames " +
-                                 $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
-                                 $"AND REPLACE({Glo.Tab.FRIENDLY_NAME}, ' ', '_') = REPLACE('{friendly}', ' ', '_')) " +
-                                  "BEGIN " +
-                                 $"THROW 50000, 'That friendly name already exists.', 1; " +
-                                 $"END " +
-                                 $"ELSE " +
-                                 $"BEGIN " +
-                                 $"INSERT INTO FriendlyNames VALUES ('{table}', '{column}', '{friendly}'); " +
-                                  "END;");
+                             $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
+                             $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}') " +
+                             "BEGIN " +
+                             $"UPDATE FriendlyNames SET {Glo.Tab.FRIENDLY_NAME} = '{friendly}' " +
+                             $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
+                             $"AND {Glo.Tab.FRIENDLY_COLUMN} = '{column}';" +
+                             "END " +
+                             $"ELSE IF EXISTS(SELECT 1 FROM FriendlyNames " +
+                             $"WHERE {Glo.Tab.FRIENDLY_TABLE} = '{table}' " +
+                             $"AND REPLACE({Glo.Tab.FRIENDLY_NAME}, ' ', '_') = REPLACE('{friendly}', ' ', '_')) " +
+                              "BEGIN " +
+                             $"THROW 50000, 'That friendly name already exists.', 1; " +
+                             $"END " +
+                             $"ELSE " +
+                             $"BEGIN " +
+                             $"INSERT INTO FriendlyNames VALUES ('{table}', '{column}', '{friendly}'); " +
+                              "END;");
                 }
 
                 if (commands.Count == 1)

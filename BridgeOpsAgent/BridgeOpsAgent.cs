@@ -2007,6 +2007,17 @@ internal class BridgeOpsAgent
                 }
             }
 
+            if (req.friendly != null)
+            {
+                string friendly = req.friendly.Replace(" ", "_");
+                OrderedDictionary? dictionary = ColumnRecord.GetDictionary(req.table, false);
+                if (dictionary == null)
+                    throw new Exception("Table name not recognised.");
+                if (dictionary.Contains(friendly))
+                    throw new Exception("Cannot select an existing column name as a friendly name.");
+            }
+
+
             string orderUpdateCommand = "";
 
             // Protect integral tables and columns (could be structured better, but I've tried to keep it readable).
