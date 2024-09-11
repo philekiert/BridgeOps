@@ -975,7 +975,7 @@ public class ConsoleController
         // Colour must be reset to white outside of this function.
         if (success) Console.ForegroundColor = ConsoleColor.DarkGreen;
         else Console.ForegroundColor = ConsoleColor.Red;
-        Console.Write("/");
+        Console.Write(":");
         Console.ForegroundColor = ConsoleColor.White;
     }
 
