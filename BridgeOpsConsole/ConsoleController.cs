@@ -580,7 +580,7 @@ public class ConsoleController
         string fileName = Path.Combine(Glo.PathImportFiles, commandValString);
         if (!File.Exists(fileName))
         {
-            Writer.Negative("File not found.");
+            Writer.Negative("\nFile not found.");
             return 1;
         }
 
@@ -593,7 +593,7 @@ public class ConsoleController
         string[]? types = parser.ReadFields();
         if (types == null)
         {
-            Writer.Negative("No types row found. Please see docs for explanation.");
+            Writer.Negative("\nNo types row found. Please see docs for explanation.");
             parser.Close();
             return 1;
         }
@@ -601,7 +601,7 @@ public class ConsoleController
         {
             if (type != "TEXT" && type != "NUMBER" && type != "DATETIME")
             {
-                Writer.Negative("Types must be TEXT, NUMBER or DATETIME.");
+                Writer.Negative("\nTypes must be TEXT, NUMBER or DATETIME.");
                 parser.Close();
                 return 1;
             }
@@ -611,7 +611,7 @@ public class ConsoleController
         string[]? headers = parser.ReadFields();
         if (headers == null || !headers.Contains(refKey))
         {
-            Writer.Negative("No " + refKey + " header found. This is a necessary key for the " +
+            Writer.Negative("\nNo " + refKey + " header found. This is a necessary key for the " +
                             table + " table and must be present.");
             parser.Close();
             return 1;
@@ -655,7 +655,7 @@ public class ConsoleController
         if (parentIndex != -1)
             parentPresent = true;
 
-        Writer.Message("Attempting inserts...");
+        Writer.Message($"\nAttempting {table.ToLower()} inserts from {commandValString}...");
 
         // Create a list of register column names, as these will all want setting to 1.
         string registersOn = "";
@@ -803,7 +803,7 @@ public class ConsoleController
 
         if (!File.Exists(fileName))
         {
-            Writer.Negative("File not found.");
+            Writer.Negative("\nFile not found.");
             return 1;
         }
 
@@ -816,7 +816,7 @@ public class ConsoleController
         string[]? types = parser.ReadFields();
         if (types == null)
         {
-            Writer.Negative("No types row found. Please see docs for explanation.");
+            Writer.Negative("\nNo types row found. Please see docs for explanation.");
             parser.Close();
             return 1;
         }
@@ -824,7 +824,7 @@ public class ConsoleController
         {
             if (type != "TEXT" && type != "NUMBER" && type != "DATETIME")
             {
-                Writer.Negative("Types must be TEXT, NUMBER or DATETIME.");
+                Writer.Negative("\nTypes must be TEXT, NUMBER or DATETIME.");
                 parser.Close();
                 return 1;
             }
@@ -835,7 +835,7 @@ public class ConsoleController
         string parentColName = (table == "Organisation" ? Glo.Tab.PARENT_REF : Glo.Tab.ORGANISATION_REF);
         if (headers == null || !(headers.Contains(refKey) && headers.Contains(parentColName)))
         {
-            Writer.Negative(refKey + " and " + parentColName + " columns must be present.");
+            Writer.Negative("\n" + refKey + " and " + parentColName + " columns must be present.");
             parser.Close();
             return 1;
         }
@@ -866,7 +866,7 @@ public class ConsoleController
                     idIndex = i;
         }
 
-        Writer.Message("Attempting updates...");
+        Writer.Message($"\nAttempting {table.ToLower()} parent updates from {commandValString}...");
 
         while (!parser.EndOfData)
         {
