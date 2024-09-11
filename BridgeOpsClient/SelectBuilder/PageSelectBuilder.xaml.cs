@@ -388,6 +388,10 @@ namespace BridgeOpsClient
             UpdateColumns();
         }
 
+        // This is used to allow the opening of relevant windows by double clicking on the SqlDataGrid when a
+        // compatible query has been run, i.e. ID as the first column.
+        enum RelevantTable { None, Organisation, Asset, Contact }
+        RelevantTable relevantTable = RelevantTable.None;
 
         // Used for retaining friendly names as we don't have the dictionaries to help us in the output stage.
         private List<string> chosenColumnNames = new();
@@ -480,7 +484,7 @@ namespace BridgeOpsClient
                 if (where.cmbColumn.SelectedIndex < 0 || where.cmbColumn.Text == "")
                     return Abort("All WHERE clauses must reference a column.");
                 if (!where.cmbOperator.Text.Contains("NULL"))
-                    if (ColumnRecord.IsTypeInt(where.type) && !int.TryParse(where.txtValue.Text, out _))
+                    if (ColumnRecord.IsTypeInt(where.type) && where.numValue.GetNumber() == null)
                         return Abort("All values for INT fields must be a whole number.");
                 whereColumns.Add(GetProperColumnName(where.cmbColumn.Text));
                 whereOperators.Add(where.cmbOperator.Text);
@@ -568,7 +572,14 @@ namespace BridgeOpsClient
                 if (fillGrid)
                     try
                     {
+                        relevantTable = RelevantTable.None;
                         dtgOutput.Update(columnNames, rows);
+                        if (selectRequest.columns[0] == $"Organisation.{Glo.Tab.ORGANISATION_ID}")
+                            relevantTable = RelevantTable.Organisation;
+                        else if (selectRequest.columns[0] == $"Asset.{Glo.Tab.ASSET_ID}")
+                            relevantTable = RelevantTable.Asset;
+                        else if (selectRequest.columns[0] == $"Contact.{Glo.Tab.CONTACT_ID}")
+                            relevantTable = RelevantTable.Contact;
                     }
                     catch (Exception e)
                     {
@@ -589,6 +600,19 @@ namespace BridgeOpsClient
             else
                 txtCode.Text = "SQL code could not be generated.";
             tabCode.Focus();
+        }
+
+        private void dtgOutput_CustomDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (relevantTable == RelevantTable.None)
+                return;
+
+            if (relevantTable == RelevantTable.Organisation)
+                App.EditOrganisation(dtgOutput.GetCurrentlySelectedID());
+            if (relevantTable == RelevantTable.Asset)
+                App.EditAsset(dtgOutput.GetCurrentlySelectedID());
+            if (relevantTable == RelevantTable.Contact)
+                App.EditContact(dtgOutput.GetCurrentlySelectedID());
         }
     }
 }

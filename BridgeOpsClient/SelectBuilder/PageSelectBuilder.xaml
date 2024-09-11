@@ -106,7 +106,7 @@
                       HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
         <TabControl Grid.Column="1">
             <TabItem Header="Output" x:Name="tabOutput">
-                <customcontrols:SqlDataGrid x:Name="dtgOutput"/>
+                <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"/>
             </TabItem>
             <TabItem Header="Query Code" x:Name="tabCode">
                 <customcontrols:CodeSpace x:Name="txtCode" IsReadOnly="True" Margin="10 10 10 10"/>

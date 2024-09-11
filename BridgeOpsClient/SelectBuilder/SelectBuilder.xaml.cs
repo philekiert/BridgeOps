@@ -276,7 +276,7 @@ namespace BridgeOpsClient
         private void SavePreset(string name)
         {
             if (cmbPresets.Text != "<New>" &&
-                App.DisplayQuestion("Overwrite current preset?", "Save Changes",
+                !App.DisplayQuestion("Overwrite current preset?", "Save Changes",
                                     App.QuestionOptions.YesNo))
                 return;
 
