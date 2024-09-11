@@ -195,7 +195,7 @@ namespace BridgeOpsClient
             originalNotes = txtNotes.Text;
 
             ditOrganisation.ValueChangedHandler = AnyInteraction; // Must be set before Populate().
-            ditOrganisation.Populate(data.GetRange(5, data.Count - 5));
+            ditOrganisation.Populate(data.GetRange(6, data.Count - 6));
             if (edit)
                 ditOrganisation.RememberStartingValues();
 
