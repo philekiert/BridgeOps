@@ -409,12 +409,30 @@ public class ConsoleController
                         names[1] = names[1].Replace(" ", "_");
                         if (names[0].Length > 0 || names[1].Length > 0 || names[2].Length > 0)
                         {
-                            if (names[0] == "Organisation" || names[0] == "Contact" ||
-                                names[0] == "Asset" || names[0] == "Conference")
+                            if (!Glo.Fun.ColumnRemovalAllowed(names[0], names[1].Replace(" ", "_")))
                             {
-                                dbCreate.friendlyNames.Add(names);
-                                Writer.Affirmative("'" + names[0] + '.' + names[1] + "' will display as '" + names[2] + "'");
-                                Writer.Affirmative($"'{names[0]}.{names[1]}' will display as '{names[2]}'");
+                                if (Glo.Fun.ColumnRemovalAllowed(names[0], names[2].Replace(" ", "_")))
+                                {
+                                    bool alreadyUsed = false;
+                                    foreach (string[] sa in dbCreate.friendlyNames)
+                                        if (sa[0] == names[0] &&
+                                            (sa[1].Replace(" ", "_") == names[1].Replace(" ", "_") ||
+                                             sa[2].Replace(" ", "_") == names[2].Replace(" ", "_")))
+                                        {
+                                            alreadyUsed = true;
+                                            break;
+                                        }
+                                    if (!alreadyUsed)
+                                    {
+                                        dbCreate.friendlyNames.Add(names);
+                                        Writer.Affirmative($"'{names[0]}.{names[1]}' will display as '{names[2]}'");
+                                    }
+                                    else
+                                        Writer.Negative($"Line {l} tried to use a previously assigned name.");
+                                }
+                                else
+                                    Writer.Negative($"Line {l} tried to use an existing column name as a friendly " +
+                                                     "name.");
                             }
                             else
                                 Writer.Negative("Line " + l + " stated an invalid table name.");

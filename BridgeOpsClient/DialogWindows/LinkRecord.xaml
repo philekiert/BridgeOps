@@ -14,7 +14,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="txtSearch" Height="24" Margin="10 10 10 10" TextChanged="txtSearch_TextChanged"
+        <TextBox x:Name="txtSearch" Height="24" Margin="10 10 10 0" TextChanged="txtSearch_TextChanged"
                  VerticalContentAlignment="Center"/>
         <custom:SqlDataGrid Grid.Row="1" x:Name="dtg"/>
     </Grid>
