@@ -266,40 +266,37 @@ public class FieldDefs
         List<int> longestKeys = GetLongestNamesByCategory(false, true);
 
 
-        string str = "# The intended purpose of this file is only to allow alterations to the sizes of data types. Invalid\n" +
-                     "# values are ignored.\n" +
-                     "\n" +
-                     "# Fields cannot be renamed.\n" +
-                     "# All values must be placed at the end of a line after a double-space, with no white space afterwards.\n" +
-                     "# VARCHAR length values must be between 1 and 65535.\n" +
-                     "# Type values are limited to TINYINT, SMALLINT and INT.\n" +
-                     "\n" +
-                     "# Primary key value MUST be placed above all others. Any placed out of order will be ignored.\n" +
-                     "\n";
+        string str = $"# The intended purpose of this file is only to allow alterations to the sizes of data types. Invalid{Glo.NL}" +
+                     $"# values are ignored.{Glo.DNL}" +
+                     $"# Fields cannot be renamed.{Glo.NL}" +
+                     $"# All values must be placed at the end of a line after a double-space, with no white space afterwards.{Glo.NL}" +
+                     $"# VARCHAR length values must be between 1 and 65535.{Glo.NL}" +
+                     $"# Type values are limited to TINYINT, SMALLINT and INT.{Glo.DNL}" +
+                     $"# Primary key value MUST be placed above all others. Any placed out of order will be ignored.{Glo.DNL}";
 
         // The primary keys need setting before anything else. These can be hard coded as they're far less likely to change.
 
-        str += "\n# Primary/Foreign Keys" +
-               "\n# ------------" +
-               "\n" +
-               "\nOrganisation ID:                      Type = " + typeOrgID +
-               "\nOrganisation Reference:               Max Length = " + ExtractVARCHARLength(typeOrgRef) +
-               "\nOrganisation Dial No:                 Max Length = " + ExtractVARCHARLength(typeDialNo) +
-               "\nOrganisation Name:                    Max Length = " + ExtractVARCHARLength(typeOrgName) +
-               "\nAsset ID:                             Type = " + typeAssetID +
-               "\nAsset Reference:                      Max Length = " + ExtractVARCHARLength(typeAssetRef) +
-               "\nContact ID:                           Type = " + typeContactID +
-               "\nLogin ID:                             Type = " + typeLoginID +
-               "\nResource ID:                          Type = " + typeResourceID +
-               "\nConference ID:                        Type = " + typeConfID +
-               "\nConference Recurrence Recurrence ID:  Type = " + typeRecurrenceID +
-               "\nOrganisation Change ID:               Type = " + typeOrgChangeID +
-               "\nAsset Change ID:                      Type = " + typeAssetChangeID +
-               "\n" +
-               "\n" +
-               "\n# Everything Else" +
-               "\n# ---------------" +
-               "\n";
+        str += $"{Glo.NL}# Primary/Foreign Keys" +
+               $"{Glo.NL}# ------------" +
+               $"{Glo.NL}" +
+               $"{Glo.NL}Organisation ID:                      Type = " + typeOrgID +
+               $"{Glo.NL}Organisation Reference:               Max Length = " + ExtractVARCHARLength(typeOrgRef) +
+               $"{Glo.NL}Organisation Dial No:                 Max Length = " + ExtractVARCHARLength(typeDialNo) +
+               $"{Glo.NL}Organisation Name:                    Max Length = " + ExtractVARCHARLength(typeOrgName) +
+               $"{Glo.NL}Asset ID:                             Type = " + typeAssetID +
+               $"{Glo.NL}Asset Reference:                      Max Length = " + ExtractVARCHARLength(typeAssetRef) +
+               $"{Glo.NL}Contact ID:                           Type = " + typeContactID +
+               $"{Glo.NL}Login ID:                             Type = " + typeLoginID +
+               $"{Glo.NL}Resource ID:                          Type = " + typeResourceID +
+               $"{Glo.NL}Conference ID:                        Type = " + typeConfID +
+               $"{Glo.NL}Conference Recurrence Recurrence ID:  Type = " + typeRecurrenceID +
+               $"{Glo.NL}Organisation Change ID:               Type = " + typeOrgChangeID +
+               $"{Glo.NL}Asset Change ID:                      Type = " + typeAssetChangeID +
+               $"{Glo.NL}" +
+               $"{Glo.NL}" +
+               $"{Glo.NL}# Everything Else" +
+               $"{Glo.NL}# ---------------" +
+               $"{Glo.NL}";
 
         // Then iterate through all definitions and format lines for relatively easy reading by the user.
         string lastCategory = "";
@@ -311,7 +308,7 @@ public class FieldDefs
                 string category = d.Key.Substring(0, d.Value.categoryLength);
                 if (category != lastCategory)
                 {
-                    str += "\n";
+                    str += Glo.NL;
                     ++categoryIndex;
                     lastCategory = category;
                 }
@@ -333,7 +330,7 @@ public class FieldDefs
                 else
                     str += "Cannot modify";
 
-                str += "\n";
+                str += Glo.NL;
             }
         }
 
@@ -381,30 +378,27 @@ public class FieldDefs
     public void CreateNewColumnAdditionsTemplate()
     {
         string template = "# Use this file to add columns to the database. Use the following format (without the '# '):" +
-                        "\n# [table] TableName [column] ColumnName [type] TYPE [allowed] list;of;values;semicolon;separated" +
-                        "\n# Example:" +
-                        "\n# [table] Contact [column] Favourite Food [type] VARCHAR(10) [allowed] Sandwiches;Pizza;Seicon" +
-                        "\n" +
-                        "\n# Notes:" +
-                        "\n#  - Spaces in the column name will be replaced with underscores in the database, and conversely, underscores" +
-                        "\n#    will be replaced with spaces when displayed in the client software. For this reason, underscores cannot" +
-                        "\n#    be displayed." +
-                        "\n#  - Do not end any column names with '_Register', as this could interfere with some operations, including " +
-                        "\n#    database creation." +
-                        "\n#  - Only the [allowed] section is optional and can be omitted." +
-                        "\n#  - [type] is restricted to the following values:" +
-                        "\n#      Integral: TINYINT, SMALLINT, INT (these cannot accept [allowed] values)" +
-                        "\n#      Floating Point: FLOAT (cannot accept [allowed] values)" +
-                        "\n#      Date/Time: DATE, DATETIME, TIME (cannot accept [allowed] values)" +
-                        "\n#      Text: VARCHAR(0 - 65535), VARCHAR(MAX) (either can accept [allowed] values)" +
-                        "\n#      Boolean: BOOLEAN (cannot accept [allowed] values)" +
-                        "\n#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +
-                        "\n" +
-                        "\n# ! Some knowledge of the listed SQL types is recommended before using this file." +
-                        "\n# ! One slight quirk... [allowed] values cannot contain square brackets (\"[\" or \"]\") as this would " +
-                        "\n#   interfere with some vital operations." +
-                        "\n" +
-                        "\n";
+                        $"{Glo.NL}# [table] TableName [column] ColumnName [type] TYPE [allowed] list;of;values;semicolon;separated" +
+                        $"{Glo.NL}# Example:" +
+                        $"{Glo.NL}# [table] Contact [column] Favourite Food [type] VARCHAR(10) [allowed] Sandwiches;Pizza;Seicon" +
+                        $"{Glo.DNL}# Notes:" +
+                        $"{Glo.NL}#  - Spaces in the column name will be replaced with underscores in the database, and conversely, underscores" +
+                        $"{Glo.NL}#    will be replaced with spaces when displayed in the client software. For this reason, underscores cannot" +
+                        $"{Glo.NL}#    be displayed." +
+                        $"{Glo.NL}#  - Do not end any column names with '_Register', as this could interfere with some operations, including " +
+                        $"{Glo.NL}#    database creation." +
+                        $"{Glo.NL}#  - Only the [allowed] section is optional and can be omitted." +
+                        $"{Glo.NL}#  - [type] is restricted to the following values:" +
+                        $"{Glo.NL}#      Integral: TINYINT, SMALLINT, INT (these cannot accept [allowed] values)" +
+                        $"{Glo.NL}#      Floating Point: FLOAT (cannot accept [allowed] values)" +
+                        $"{Glo.NL}#      Date/Time: DATE, DATETIME, TIME (cannot accept [allowed] values)" +
+                        $"{Glo.NL}#      Text: VARCHAR(0 - 65535), VARCHAR(MAX) (either can accept [allowed] values)" +
+                        $"{Glo.NL}#      Boolean: BOOLEAN (cannot accept [allowed] values)" +
+                        $"{Glo.NL}#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +
+                        $"{Glo.DNL}# ! Some knowledge of the listed SQL types is recommended before using this file." +
+                        $"{Glo.NL}# ! One slight quirk... [allowed] values cannot contain square brackets (\"[\" or \"]\") as this would " +
+                        $"{Glo.NL}#   interfere with some vital operations." +
+                        $"{Glo.DNL}";
         try
         {
             File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS), template);

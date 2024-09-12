@@ -22,6 +22,7 @@ using System.ComponentModel.Design;
 using System.Data;
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Net;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
@@ -464,15 +465,15 @@ public class ConsoleController
             File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES),
                             "# To use this file, simply write the table name, followed by the column name, followed" +
                             "# by the name you wish to be used, separated by ';;'. For example (omitting  the '# '):" +
-                            "\n" +
-                            "\n# TableName;;ColumnName;;Your Custom Field Name" +
-                            "\n# Food;;Bananas;;Yellow Fruit" +
-                            "\n# Food;;Raisins;;Dried Grapes" +
-                            "\n" +
-                            "\n# Only some columns in the Organisation, Asset, Contact and Conference tables are supported." +
-                            "\n" +
-                            "\n# This file supercedes the column names stated in " +
-                            Glo.CONFIG_COLUMN_ADDITIONS + ".\n\n");
+                            Glo.NL +
+                            Glo.NL + "# TableName;;ColumnName;;Your Custom Field Name" +
+                            Glo.NL + "# Food;;Bananas;;Yellow Fruit" +
+                            Glo.NL + "# Food;;Raisins;;Dried Grapes" +
+                            Glo.NL + "" +
+                            Glo.NL + "# Only some columns in the Organisation, Asset, Contact and Conference tables are supported." +
+                            Glo.NL + "" +
+                            Glo.NL + "# This file supercedes the column names stated in " +
+                            Glo.CONFIG_COLUMN_ADDITIONS + Glo.DNL);
         }
 
         return 0;
@@ -508,8 +509,9 @@ public class ConsoleController
                                           "Mars Colony",
                                           "Titan Shipyards",
                                           "Europa Deep Exploration Centre" };
-        StringBuilder o = new("TEXT,TEXT,TEXT,TEXT,TEXT\nOrganisation_Reference,Parent_Reference,Organisation_Name,Dial_No,Notes\n");
-        StringBuilder a = new("TEXT,TEXT,TEXT\nAsset_Reference,Organisation_Reference,Notes\n");
+        StringBuilder o = new($"TEXT,TEXT,TEXT,TEXT,TEXT{Glo.NL}" +
+                              $"Organisation_Reference,Parent_Reference,Organisation_Name,Dial_No,Notes{Glo.NL}");
+        StringBuilder a = new($"TEXT,TEXT,TEXT{Glo.NL}Asset_Reference,Organisation_Reference,Notes{Glo.NL}");
 
         o.AppendLine("Sol Space Agency");
         o.AppendLine($"{parents[0]},Sol Space Agency,{parents[0]}");
@@ -769,7 +771,7 @@ public class ConsoleController
         TryFileWrite:
             try
             {
-                File.WriteAllText(errorFileName, string.Join(',', types) + "\n");
+                File.WriteAllText(errorFileName, string.Join(',', types) + Glo.NL);
             }
             catch
             {
@@ -778,14 +780,13 @@ public class ConsoleController
                 Console.ReadKey(true);
                 goto TryFileWrite;
             }
-            File.AppendAllText(errorFileName, string.Join(',', headers) + "\n");
+            File.AppendAllText(errorFileName, string.Join(',', headers) + Glo.NL);
             foreach (List<string> line in failed)
             {
                 // Make data safe for CSV file again.
                 for (int i = 0; i < line.Count; ++i)
-                    if (line[i] != null && (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n')))
-                        line[i] = "\"" + line[i].Replace("\"", "\"\"") + "\"";
-                File.AppendAllText(errorFileName, string.Join(',', line) + "\n");
+                    line[i] = Glo.Fun.MakeSafeForCSV(line[i]);
+                File.AppendAllText(errorFileName, string.Join(',', line) + Glo.NL);
             }
         }
         if (failed.Count != rowNum)
@@ -957,7 +958,7 @@ public class ConsoleController
         TryFileWrite:
             try
             {
-                File.WriteAllText(errorFileName, string.Join(',', types) + "\n");
+                File.WriteAllText(errorFileName, string.Join(',', types) + Glo.NL);
             }
             catch
             {
@@ -966,14 +967,13 @@ public class ConsoleController
                 Console.ReadKey(true);
                 goto TryFileWrite;
             }
-            File.AppendAllText(errorFileName, string.Join(',', headers) + "\n");
+            File.AppendAllText(errorFileName, string.Join(',', headers) + Glo.NL);
             foreach (List<string> line in failed)
             {
                 // Make data safe for CSV file again.
                 for (int i = 0; i < line.Count; ++i)
-                    if (line[i] != null && (line[i].Contains('"') || line[i].Contains(',') || line[i].Contains('\n')))
-                        line[i] = "\"" + line[i].Replace("\"", "\"\"") + "\"";
-                File.AppendAllText(errorFileName, string.Join(',', line) + "\n");
+                    line[i] = Glo.Fun.MakeSafeForCSV(line[i]);
+                File.AppendAllText(errorFileName, string.Join(',', line) + Glo.NL);
             }
         }
         if (failed.Count != rowNum)
@@ -1199,8 +1199,8 @@ public class ConsoleController
     }
     public void CreateNetworkSettings(bool defaultSettings)
     {
-        string settings = Glo.NETWORK_SETTINGS_PORT_INBOUND + Glo.PORT_INBOUND_DEFAULT + "\n" +
-                          Glo.NETWORK_SETTINGS_PORT_OUTBOUND + Glo.PORT_OUTBOUND_DEFAULT + "\n";
+        string settings = Glo.NETWORK_SETTINGS_PORT_INBOUND + Glo.PORT_INBOUND_DEFAULT + Glo.NL +
+                          Glo.NETWORK_SETTINGS_PORT_OUTBOUND + Glo.PORT_OUTBOUND_DEFAULT + Glo.NL;
 
         // Agent also reads from this file, so 
         try

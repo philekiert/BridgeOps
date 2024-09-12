@@ -298,14 +298,21 @@ public static class ColumnRecord
 
         try
         {
-            string[] lines = columns.Split('\n');
+            System.IO.StringReader reader = new(columns);
+            List<string> lines = new();
+            string? lineString = reader.ReadLine();
+            while (lineString != null)
+            {
+                lines.Add(lineString);
+                lineString = reader.ReadLine();
+            }
 
             if (!int.TryParse(lines[0], out columnRecordID))
                 return false;
 
             // Start at 2, since the first line is the column record ID.
             int n = 2;
-            for (; n < lines.Length; ++n)
+            for (; n < lines.Count; ++n)
             {
                 if (lines[n] == "-")
                 {
@@ -331,7 +338,7 @@ public static class ColumnRecord
                 // Type and restriction will be corrected in a sec.
                 string type = restriction;
                 long max = 0;
-
+                    
                 // If type is text, change type name and set max length.
                 int r;
                 if (int.TryParse(restriction, out r))
@@ -377,7 +384,7 @@ public static class ColumnRecord
                     login.Add(column, col);
             }
 
-            for (; n < lines.Length; ++n) // Won't run if there are no friendly names.
+            for (; n < lines.Count; ++n) // Won't run if there are no friendly names.
             {
                 if (lines[n] == ">")
                 {
@@ -425,7 +432,7 @@ public static class ColumnRecord
                     AddFriendlyName(login);
             }
 
-            for (int o = 0; n < lines.Length && o < 4; ++n, ++o)
+            for (int o = 0; n < lines.Count && o < 4; ++n, ++o)
             {
                 if (lines[n] == "<")
                 {
@@ -458,7 +465,7 @@ public static class ColumnRecord
                 ++n;
 
             // This input is heavily vetted by the agent when creating the column record, so no need to check much.
-            for (int o = 0; n < lines.Length && o < 4; ++n, ++o)
+            for (int o = 0; n < lines.Count && o < 4; ++n, ++o)
             {
                 List<ColumnOrdering.Header> headerList;
                 if (o == 0)

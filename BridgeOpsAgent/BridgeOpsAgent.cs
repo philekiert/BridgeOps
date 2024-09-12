@@ -240,7 +240,7 @@ internal class BridgeOpsAgent
                     error += "   " + context;
                 if (e != null)
                     error += "   " + e.Message;
-                File.AppendAllText(Glo.PathAgentErrorLog, error + "\n");
+                File.AppendAllText(Glo.PathAgentErrorLog, error + Glo.NL);
             }
             catch { }
         }
@@ -384,7 +384,7 @@ internal class BridgeOpsAgent
             }
             reader.Close();
 
-            string fileText = (++columnRecordID).ToString() + "\n^\n";
+            string fileText = (++columnRecordID).ToString() + $"{Glo.NL}^{Glo.NL}";
 
             int[] orderCounts = new int[4]; // Record the column counts for the four tables that require ordering.
 
@@ -417,20 +417,20 @@ internal class BridgeOpsAgent
                         fileText += s;
                     }
                 }
-                fileText += '\n';
+                fileText += Glo.NL;
             }
 
-            fileText += "-\n";
+            fileText += "-" + Glo.NL;
 
             // Get any friendly names.
             sqlCommand = new SqlCommand("SELECT * FROM FriendlyNames;", sqlConnect);
             reader = sqlCommand.ExecuteReader();
             while (reader.Read())
                 if (reader.GetString(2) != "")
-                    fileText += reader.GetString(0) + ";;" + reader.GetString(1) + ";;" + reader.GetString(2) + "\n";
+                    fileText += reader.GetString(0) + ";;" + reader.GetString(1) + ";;" + reader.GetString(2) + Glo.NL;
             reader.Close();
 
-            fileText += ">\n";
+            fileText += ">" + Glo.NL;
 
             // Get the column order;
             void AddColumnOrder(string table, int columnCount)
@@ -448,7 +448,7 @@ internal class BridgeOpsAgent
                 reader.Read();
                 for (int i = 0; i < columnCount; ++i)
                     fileText += $"{reader.GetInt16(i)},";
-                fileText = fileText.Remove(fileText.Length - 1) + "\n";
+                fileText = fileText.Remove(fileText.Length - 1) + Glo.NL;
                 reader.Close();
             }
 
@@ -457,7 +457,7 @@ internal class BridgeOpsAgent
             AddColumnOrder("Contact", orderCounts[2]);
             AddColumnOrder("Conference", orderCounts[3]);
 
-            fileText += "<\n";
+            fileText += "<" + Glo.NL; ;
 
             // Add a line for headers from each table.
             Dictionary<string, List<string>> headerTables = new()
@@ -484,9 +484,9 @@ internal class BridgeOpsAgent
                 }
             }
 
-            fileText += string.Join(';', headerTables["Organisation"]) + "\n";
-            fileText += string.Join(';', headerTables["Asset"]) + "\n";
-            fileText += string.Join(';', headerTables["Contact"]) + "\n";
+            fileText += string.Join(';', headerTables["Organisation"]) + Glo.NL;
+            fileText += string.Join(';', headerTables["Asset"]) + Glo.NL;
+            fileText += string.Join(';', headerTables["Contact"]) + Glo.NL;
             fileText += string.Join(';', headerTables["Conference"]);
 
             columnRecord = fileText;

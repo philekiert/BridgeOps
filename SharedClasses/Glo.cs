@@ -11,6 +11,8 @@ public static class Glo
     public const int PORT_OUTBOUND_DEFAULT = 61_153;
     public const string SQL_SERVER_NAME_DEFAULT = "SQLEXPRESS";
 
+    public static string NL = Environment.NewLine;
+    public static string DNL = Environment.NewLine + Environment.NewLine;
 
     // Files and Folder Traversal
 #if DEBUG
@@ -311,6 +313,18 @@ public static class Glo
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                                           "BridgeOps", subdir);
+        }
+
+        public static bool IsUnsafeForCSV(string s)
+        {
+            return s != null && (s.Contains('"') || s.Contains(',') ||
+                   s.Contains('\n') || s.Contains('\r') || s.Contains(NL));
+        }
+        public static string MakeSafeForCSV(string s)
+        {
+            if (IsUnsafeForCSV(s))
+                return "\"" + s.Replace("\"", "\"\"") + "\"";
+            return s;
         }
     }
 }
