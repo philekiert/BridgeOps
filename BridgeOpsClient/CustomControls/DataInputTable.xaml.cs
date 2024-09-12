@@ -219,7 +219,7 @@ namespace BridgeOpsClient.CustomControls
                     label.Margin = new Thickness(-5, 0, 10, 15);
                 else
                 {
-                    label.Margin = new Thickness(-5, 15, 10, 10);
+                    label.Margin = row == 0 ? new Thickness(-5, 10, 10, 10) : new Thickness(-5, 15, 10, 10);
                     label.BorderBrush = Brushes.LightSteelBlue;
                     label.BorderThickness = new Thickness(0, 0, 0, 1);
                 }
