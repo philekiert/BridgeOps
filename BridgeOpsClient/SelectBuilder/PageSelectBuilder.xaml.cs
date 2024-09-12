@@ -26,6 +26,90 @@ namespace BridgeOpsClient
 
             dtgOutput.EnableMultiSelect();
             dtgOutput.AddWipeButton();
+
+            btnUpdateSelected = dtgOutput.AddContextMenuItem("Update Selected", false, btnUpdate_Click);
+            btnDeleteSelected = dtgOutput.AddContextMenuItem("Delete Selected", false, btnDelete_Click);
+            btnUpdateSelected.IsEnabled = false;
+            btnDeleteSelected.IsEnabled = false;
+        }
+
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            if (dtgOutput.dtg.SelectedItems.Count < 1)
+            {
+                App.DisplayError("You must select at least one item to update.");
+                return;
+            }
+
+            string table;
+            string idColumn;
+            int identity;
+            if (relevantTable == RelevantTable.Organisation)
+            {
+                table = "Organisation";
+                idColumn = Glo.Tab.ORGANISATION_ID;
+                identity = 0;
+            }
+            else if (relevantTable == RelevantTable.Asset)
+            {
+                table = "Asset";
+                idColumn = Glo.Tab.ASSET_ID;
+                identity = 1;
+            }
+            else if (relevantTable == RelevantTable.Contact)
+            {
+                table = "Contact";
+                idColumn = Glo.Tab.CONTACT_ID;
+                identity = 2;
+            }
+            else
+                return;
+
+            var columns = ColumnRecord.GetDictionary(table, true);
+            if (columns == null)
+                return;
+
+            UpdateMultiple updateMultiple = new(identity, table, columns,
+                                                idColumn, dtgOutput.GetCurrentlySelectedIDs(), true);
+            if (updateMultiple.ShowDialog() == true)
+                Run(out _, out _, true, true);
+            // Error message for failed updates are displayed by the UpdateMultiple window.
+        }
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1))
+                return;
+
+            string table;
+            string idColumn;
+            int identity;
+            if (relevantTable == RelevantTable.Organisation)
+            {
+                table = "Organisation";
+                idColumn = Glo.Tab.ORGANISATION_ID;
+                identity = 0;
+            }
+            else if (relevantTable == RelevantTable.Asset)
+            {
+                table = "Asset";
+                idColumn = Glo.Tab.ASSET_ID;
+                identity = 1;
+            }
+            else if (relevantTable == RelevantTable.Contact)
+            {
+                table = "Contact";
+                idColumn = Glo.Tab.CONTACT_ID;
+                identity = 2;
+            }
+            else
+                return;
+
+            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true) &&
+                MainWindow.pageDatabase != null)
+            {
+                MainWindow.pageDatabase.RepeatSearches(identity);
+                Run(out _, out _, true, true);
+            }
         }
 
         public struct FrameContent
@@ -45,6 +129,9 @@ namespace BridgeOpsClient
         public List<FrameContent> columns = new();
         public List<FrameContent> wheres = new();
         public List<FrameContent> orderBys = new();
+
+        MenuItem btnUpdateSelected;
+        MenuItem btnDeleteSelected;
 
         public PageSelectBuilderJoin Join(int index) { return (PageSelectBuilderJoin)joins[index].page; }
         public PageSelectBuilderColumn Column(int index) { return (PageSelectBuilderColumn)columns[index].page; }
@@ -554,6 +641,9 @@ namespace BridgeOpsClient
         private void DisplayCode()
         {
             txtCode.Text = selectRequest.SqlSelect();
+            dtgOutput.Wipe();
+            btnDeleteSelected.IsEnabled = false;
+            btnUpdateSelected.IsEnabled = false;
         }
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
@@ -563,9 +653,14 @@ namespace BridgeOpsClient
 
         public bool Run(out List<string?> columnNames, out List<List<object?>> rows, bool fillGrid)
         {
-            if (BuildQuery())
+            return Run(out columnNames, out rows, fillGrid, false);
+        }
+        public bool Run(out List<string?> columnNames, out List<List<object?>> rows, bool fillGrid, bool useLast)
+        {
+            if (useLast || BuildQuery())
             {
-                DisplayCode();
+                if (!useLast)
+                    DisplayCode();
                 tabOutput.Focus();
                 App.SendSelectRequest(selectRequest, out columnNames, out rows);
                 if (columnNames.Count == chosenColumnNames.Count)
@@ -576,12 +671,26 @@ namespace BridgeOpsClient
                     {
                         relevantTable = RelevantTable.None;
                         dtgOutput.Update(columnNames, rows);
+                        int permissionRelevancy = -1;
                         if (selectRequest.columns[0] == $"Organisation.{Glo.Tab.ORGANISATION_ID}")
+                        {
                             relevantTable = RelevantTable.Organisation;
+                            permissionRelevancy = Glo.PERMISSION_RECORDS;
+                        }
                         else if (selectRequest.columns[0] == $"Asset.{Glo.Tab.ASSET_ID}")
+                        {
                             relevantTable = RelevantTable.Asset;
+                            permissionRelevancy = Glo.PERMISSION_RECORDS;
+                        }
                         else if (selectRequest.columns[0] == $"Contact.{Glo.Tab.CONTACT_ID}")
+                        {
                             relevantTable = RelevantTable.Contact;
+                            permissionRelevancy = Glo.PERMISSION_RECORDS;
+                        }
+                        btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
+                                                      App.sd.deletePermissions[permissionRelevancy];
+                        btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
+                                                      App.sd.editPermissions[permissionRelevancy];
                     }
                     catch (Exception e)
                     {

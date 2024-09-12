@@ -154,10 +154,8 @@ namespace BridgeOpsClient
                 // Allowed will always be empty if we get here as the user cannot add an allowed list to core columns.
                 bool couldGetAllowList;
                 allowed = App.GetOrganisationList(out couldGetAllowList).ToList();
-                if (couldGetAllowList)
-                {
+                if (!couldGetAllowList)
                     Close();
-                }
             }
             if (allowed.Count > 0)
             {
@@ -195,6 +193,7 @@ namespace BridgeOpsClient
         {
             if (AssembleUpdate() && App.SendUpdate(request))
             {
+                DialogResult = true;
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(identity);
                 Close();
