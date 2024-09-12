@@ -229,5 +229,14 @@ namespace BridgeOpsClient
         {
             App.WindowClosed();
         }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            double screenHeight = SystemParameters.PrimaryScreenHeight;
+            if (Top + Height > screenHeight)
+                Top = screenHeight - Height;
+            if (Top < 0)
+                Top = 0;
+        }
     }
 }
