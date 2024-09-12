@@ -60,8 +60,8 @@ namespace BridgeOpsClient.CustomControls
             {
                 bool skip = false;
 
-                if (headerRows.Contains(iTotal))
-                    ++headerBump;
+                // The user may have consecutive headers with the same position integer.
+                headerBump += headers.Count(h => h.position == iTotal);
 
                 /* This is very very botch, it should be done more elegantly elsewhere but things are a bit tight
                    at the moment. It's here because the affected column names have dedicated fields. */
@@ -72,7 +72,7 @@ namespace BridgeOpsClient.CustomControls
                         skip = true;
                 }
                 else if (!Glo.Fun.ColumnRemovalAllowed("Organisation", col.Key))
-                        skip = true;
+                    skip = true;
                 else if (table == "Asset")
                 {
                     if (col.Key == Glo.Tab.ASSET_ID ||
@@ -102,6 +102,8 @@ namespace BridgeOpsClient.CustomControls
                     {
                         DatePicker datInput = new();
                         datInput.Height = 24;
+                        datInput.Width = 110;
+                        datInput.HorizontalAlignment = HorizontalAlignment.Left;
                         datInput.SetValue(Grid.ColumnProperty, 1);
                         datInput.SetValue(Grid.RowProperty, i + headerBump);
 #pragma warning disable CS8622
@@ -209,16 +211,21 @@ namespace BridgeOpsClient.CustomControls
                     Content = header.name,
                     VerticalContentAlignment = VerticalAlignment.Center,
                     HorizontalContentAlignment = HorizontalAlignment.Left,
-                    FontWeight = FontWeights.Bold
+                    FontSize = 14,
+                    FontWeight = FontWeights.SemiBold
                 };
 
-                if (row == 0)
-                    label.Margin = new Thickness(0, 0, 0, 2);
+                if (header.name == "")
+                    label.Margin = new Thickness(-5, 0, 10, 15);
                 else
-                    label.Margin = new Thickness(0, 10, 0, 2);
+                {
+                    label.Margin = new Thickness(-5, 15, 10, 10);
+                    label.BorderBrush = Brushes.LightSteelBlue;
+                    label.BorderThickness = new Thickness(0, 0, 0, 1);
+                }
 
                 if (header.name == "")
-                    label.Height = 15;
+                    label.Height = 14;
 
                 // others below down 1.
                 Grid.SetRow(label, row);

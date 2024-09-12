@@ -7,8 +7,8 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New Asset" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        Closed="Window_Closed">
-    <TabControl>
+        Closed="Window_Closed" UseLayoutRounding="True">
+    <TabControl BorderThickness="1 1 0 0">
         <TabItem Header="Asset">
             <Grid>
                 <Grid.RowDefinitions>
@@ -21,10 +21,11 @@
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" x:Name="lblViewingChange"
                        Content="Viewing change" Background="#F45" Height="0" Padding="5 1"/>
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="1" Margin="0 10 0 0">
                     <Grid.Resources>
                         <Style TargetType="TextBox">
-                            <Setter Property="Margin" Value="10 5 10 5" />
+                            <Setter Property="Margin" Value="10 4 10 4" />
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
                         </Style>
                     </Grid.Resources>
                     <Grid.ColumnDefinitions>
@@ -35,11 +36,14 @@
                         <RowDefinition/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Label Content="Asset Reference" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetRef"/>
-                    <Label Content="Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID"/>
-                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgRef" Margin="10 2 10 2"
-                             SelectionChanged="ValueChanged"/>
+                    <Label Content="Asset Reference" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID"
+                           VerticalAlignment="Center" />
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetRef" Height="20"
+                             VerticalContentAlignment="Center"/>
+                    <Label Content="Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID"
+                           VerticalAlignment="Center"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgRef" Margin="10 4 10 4" Height="20"
+                              SelectionChanged="ValueChanged"/>
                 </Grid>
                 <custom:DataInputTable x:Name="ditAsset" Grid.Row="2" MaxHeight="405" Margin="10 10 0 10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes"

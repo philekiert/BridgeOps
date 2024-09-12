@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:BridgeOpsClient"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="834"
-      Title="DatabasePage">
+      Title="DatabasePage" UseLayoutRounding="True">
 
     <Grid x:Name="grdPanes" Background="White">
         <Grid.Resources>

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
              mc:Ignorable="d" 
-             d:DesignHeight="400" d:DesignWidth="400">
+             d:DesignHeight="400" d:DesignWidth="400" UseLayoutRounding="True">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                   Margin="0 0 0 0" Padding="0 0 0 0" Height="Auto">
         <Grid x:Name="grdMain" Margin="0 0 0 0" Background="White">
@@ -23,7 +23,7 @@
                 </Style>
                 <Style TargetType="ComboBox">
                     <Setter Property="VerticalContentAlignment" Value="Center" />
-                    <Setter Property="Padding" Value="2 2 2 2" />
+                    <Setter Property="Padding" Value="4 2 4 2" />
                     <Setter Property="Margin" Value="0 3 10 3" />
                 </Style>
                 <Style TargetType="RowDefinition">
