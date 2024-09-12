@@ -527,6 +527,8 @@ namespace BridgeOpsClient
                                               where.type != "BIT" &&
                                               !where.type.Contains("BOOLEAN"));
             }
+            if (whereAndOrs.Count > 0)
+                whereAndOrs.RemoveAt(0);
 
             // Order By
             for (int i = 0; i < orderBys.Count; ++i)

@@ -762,11 +762,13 @@ namespace SendReceiveClasses
         public string? parentOrgRef;
         public string? name;
         public string? dialNo;
+        public bool? available;
         public string? notes;
         public bool organisationRefChanged;
         public bool parentOrgRefChanged;
         public bool nameChanged;
         public bool dialNoChanged;
+        public bool availableChanged;
         public bool notesChanged;
         public List<string> additionalCols;
         public List<string?> additionalVals;
@@ -775,9 +777,9 @@ namespace SendReceiveClasses
 
         public Organisation(string sessionID, int columnRecordID,
                             int organisationID, string? organisationRef, string? parentOrgRef, string? name,
-                            string? dialNo, string? notes, List<string> additionalCols,
-                                                           List<string?> additionalVals,
-                                                           List<bool> additionalNeedsQuotes)
+                            string? dialNo, bool? available, string? notes, List<string> additionalCols,
+                                                                            List<string?> additionalVals,
+                                                                            List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -786,6 +788,7 @@ namespace SendReceiveClasses
             this.parentOrgRef = parentOrgRef;
             this.name = name;
             this.dialNo = dialNo;
+            this.available = available;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
@@ -794,6 +797,7 @@ namespace SendReceiveClasses
             parentOrgRefChanged = false;
             nameChanged = false;
             dialNoChanged = false;
+            availableChanged = false;
             notesChanged = false;
             changeReason = "";
         }
@@ -830,15 +834,17 @@ namespace SendReceiveClasses
                                                                                   Glo.Tab.PARENT_REF,
                                                                                   Glo.Tab.ORGANISATION_NAME,
                                                                                   Glo.Tab.DIAL_NO,
+                                                                                  Glo.Tab.ORGANISATION_AVAILABLE,
                                                                                   Glo.Tab.NOTES),
                                               SqlAssist.ValConcat(additionalVals, organisationRef,
                                                                                   parentOrgRef,
                                                                                   name,
                                                                                   dialNo,
+                                                                                  available == true ? "1" : "0",
                                                                                   notes));
             // Create a first change instance.
-            additionalCols.RemoveRange(additionalCols.Count - 5, 5); // ColConcat and ValConcat added the main fields
-            additionalVals.RemoveRange(additionalVals.Count - 5, 5); // to the Lists, so walk that back here.
+            additionalCols.RemoveRange(additionalCols.Count - 6, 6); // ColConcat and ValConcat added the main fields
+            additionalVals.RemoveRange(additionalVals.Count - 6, 6); // to the Lists, so walk that back here.
             int initialCount = additionalCols.Count;
             for (int i = 0; i < initialCount; ++i)
             {
@@ -859,6 +865,8 @@ namespace SendReceiveClasses
                                                             Glo.Tab.ORGANISATION_NAME + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.DIAL_NO,
                                                             Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_SUFFIX,
+                                                            Glo.Tab.ORGANISATION_AVAILABLE,
+                                                            Glo.Tab.ORGANISATION_AVAILABLE + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.NOTES,
                                                             Glo.Tab.NOTES + Glo.Tab.CHANGE_SUFFIX),
                                         SqlAssist.ValConcat(additionalVals,
@@ -870,6 +878,7 @@ namespace SendReceiveClasses
                                                             parentOrgRef, "1",
                                                             name, "1",
                                                             dialNo, "1",
+                                                            available == true ? "1" : "0", "1",
                                                             notes, "1"));
             return SqlAssist.Transaction(com);
         }
@@ -903,6 +912,8 @@ namespace SendReceiveClasses
                 setters.Add(SqlAssist.Setter(Glo.Tab.ORGANISATION_NAME, name));
             if (dialNoChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo));
+            if (availableChanged)
+                setters.Add(Glo.Tab.ORGANISATION_AVAILABLE + " = " + (available == true ? "1": "0"));
             if (notesChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
@@ -944,6 +955,13 @@ namespace SendReceiveClasses
                 additionalCols.Add(Glo.Tab.DIAL_NO);
                 additionalCols.Add(Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add(dialNo);
+                additionalVals.Add("1");
+            }
+            if (availableChanged)
+            {
+                additionalCols.Add(Glo.Tab.ORGANISATION_AVAILABLE);
+                additionalCols.Add(Glo.Tab.ORGANISATION_AVAILABLE + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(available == true ? "1" : "0");
                 additionalVals.Add("1");
             }
             if (notesChanged)
@@ -1579,7 +1597,7 @@ namespace SendReceiveClasses
                    whereOperators.Count == whereValues.Count &&
                    whereValues.Count == whereValueTypesNeedQuotes.Count &&
                    whereBracketsOpen.Count == whereBracketsClose.Count &&
-                   (whereColumns.Count == 0 || whereAndOrs.Count != whereColumns.Count - 1) &&
+                   (whereColumns.Count == 0 || whereAndOrs.Count == whereColumns.Count - 1) &&
                    orderBy.Count == orderByAsc.Count;
         }
 
@@ -1632,7 +1650,7 @@ namespace SendReceiveClasses
                 for (int i = 0; i < whereColumns.Count; ++i)
                 {
                     if (i > 0)
-                        str.Append($"{(whereAndOrs[i] == "OR" ? "   " : "  ")}{whereAndOrs[i]} ");
+                        str.Append($"{(whereAndOrs[i - 1] == "OR" ? "   " : "  ")}{whereAndOrs[i - 1]} ");
                     str.Append($"{whereColumns[i]} {whereOperators[i]}");
                     if (whereValues[i] != null)
                         str.Append(whereValueTypesNeedQuotes[i] ?

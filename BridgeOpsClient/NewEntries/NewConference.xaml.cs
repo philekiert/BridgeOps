@@ -265,6 +265,8 @@ namespace BridgeOpsClient
 
             connections.Add(connection);
 
+            connection.txtSearch.Focus();
+
             ResetConnectionGridRows();
             ToggleConnectionDates(null, null);
         }
@@ -303,16 +305,25 @@ namespace BridgeOpsClient
 
                 List<List<object?>> rows;
 
-                App.Select("Organisation", new() { Glo.Tab.DIAL_NO,
-                                                   Glo.Tab.ORGANISATION_REF,
-                                                   Glo.Tab.ORGANISATION_NAME,
-                                                   Glo.Tab.ORGANISATION_ID },
-                                           new() { Glo.Tab.ORGANISATION_REF, Glo.Tab.DIAL_NO },
-                                           new() { txt.Text,
-                                                   txt.Text },
-                                           new() { Conditional.Equals, Conditional.Equals },
-                                           out _, out rows,
-                                           false, false);
+                // This could really use its own agent command, but will do for now.
+
+                SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                        "Organisation", false, new(), new(), new(), new(),
+                                        new() { Glo.Tab.DIAL_NO,
+                                                Glo.Tab.ORGANISATION_REF,
+                                                Glo.Tab.ORGANISATION_NAME,
+                                                Glo.Tab.ORGANISATION_ID }, new() { "", "", "", "" },
+                                        new() { Glo.Tab.ORGANISATION_REF,
+                                                Glo.Tab.DIAL_NO,
+                                                Glo.Tab.ORGANISATION_AVAILABLE },
+                                        new() { "=", "=", "=" },
+                                        new() { txt.Text,
+                                                txt.Text,
+                                                "1"},
+                                        new() { true, true, false },
+                                        new(), new(), new() { "OR", "AND" },
+                                        new(), new());
+                App.SendSelectRequest(req, out _, out rows);
 
                 if (rows.Count == 0 || rows[0].Count != 4)
                 {

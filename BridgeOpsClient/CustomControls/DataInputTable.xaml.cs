@@ -205,6 +205,11 @@ namespace BridgeOpsClient.CustomControls
             {
                 // iTotal - i because that's the number of skipped data rows, and + it because each header nudges the
                 int row = (header.position - (iTotal - i)) + it;
+                if (row == -1)
+                {
+                    ++it;
+                    continue;
+                }
 
                 Label label = new()
                 {

@@ -230,7 +230,7 @@ namespace BridgeOpsClient
                     }
                 }
 
-                AddTable("Organisation", ColumnRecord.orderedOrganisation, new string[0]);
+                AddTable("Organisation", ColumnRecord.orderedOrganisation, new[] { Glo.Tab.ORGANISATION_AVAILABLE });
                 AddTable("Asset", ColumnRecord.orderedAsset, new string[0]);
                 AddTable("Contact", ColumnRecord.orderedContact, new string[0]);
                 //AddTable("Conference", ColumnRecord.orderedConference, new[] { Glo.Tab.CONFERENCE_CANCELLED,

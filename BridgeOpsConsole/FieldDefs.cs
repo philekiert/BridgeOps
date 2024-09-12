@@ -105,6 +105,7 @@ public class FieldDefs
         defs.Add("Organisation Organisation Reference", new Definition(12, Glo.Tab.PARENT_REF, typeOrgRef, false, false, false));
         defs.Add("Organisation Name", new Definition(12, Glo.Tab.ORGANISATION_NAME, typeOrgName, false, true, false));
         defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, false, true, false));
+        defs.Add("Organisation Available For Conferencing", new Definition(12, Glo.Tab.ORGANISATION_AVAILABLE, "BIT", false, false, false));
         defs.Add("Organisation Notes", new Definition(12, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Contact

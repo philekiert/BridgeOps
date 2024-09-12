@@ -27,8 +27,9 @@ namespace BridgeOpsClient
         int id;
         string? originalRef = "";
         string? originalParent = "";
-        string? originalDialNo = "";
         string? originalName = "";
+        string? originalDialNo = "";
+        bool? originalAvailable = false;
         string? originalNotes = "";
 
         public void ApplyPermissions()
@@ -125,6 +126,9 @@ namespace BridgeOpsClient
             if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.DIAL_NO).friendlyName != "")
                 lblDialNo.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                           Glo.Tab.DIAL_NO).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.ORGANISATION_AVAILABLE).friendlyName != "")
+                lblAvailable.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                          Glo.Tab.ORGANISATION_AVAILABLE).friendlyName;
             if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.NOTES).friendlyName != "")
                 lblNotes.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                           Glo.Tab.NOTES).friendlyName;
@@ -181,8 +185,13 @@ namespace BridgeOpsClient
                 txtDialNo.Text = data[4].ToString();
             else
                 txtDialNo.Text = null;
+            txtName.Text = null;
             if (data[5] != null)
-                txtNotes.Text = data[5].ToString();
+                chkAvailable.IsChecked = (bool?)data[5] == true;
+            else
+                chkAvailable.IsChecked = false;
+            if (data[6] != null)
+                txtNotes.Text = data[6].ToString();
             else
                 txtNotes.Text = null;
 
@@ -192,10 +201,11 @@ namespace BridgeOpsClient
             originalParent = cmbOrgParentID.Text;
             originalName = txtName.Text;
             originalDialNo = txtDialNo.Text;
+            originalAvailable = chkAvailable.IsChecked;
             originalNotes = txtNotes.Text;
 
             ditOrganisation.ValueChangedHandler = AnyInteraction; // Must be set before Populate().
-            ditOrganisation.Populate(data.GetRange(6, data.Count - 6));
+            ditOrganisation.Populate(data.GetRange(7, data.Count - 7));
             if (edit)
                 ditOrganisation.RememberStartingValues();
 
@@ -250,6 +260,7 @@ namespace BridgeOpsClient
                 newOrg.parentOrgRef = cmbOrgParentID.Text.Length == 0 ? null : cmbOrgParentID.Text;
                 newOrg.name = txtName.Text.Length == 0 ? null : txtName.Text;
                 newOrg.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
+                newOrg.available = chkAvailable.IsChecked;
                 newOrg.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
                 ditOrganisation.ExtractValues(out newOrg.additionalCols, out newOrg.additionalVals);
@@ -337,6 +348,11 @@ namespace BridgeOpsClient
                     org.dialNo = txtDialNo.Text;
                     org.dialNoChanged = true;
                 }
+                if (chkAvailable.IsChecked != originalAvailable)
+                {
+                    org.available = chkAvailable.IsChecked == true;
+                    org.availableChanged = true;
+                }
                 if (txtNotes.Text != originalNotes)
                 {
                     org.notes = txtNotes.Text;
@@ -359,6 +375,7 @@ namespace BridgeOpsClient
                                 foreach (NewConference.Connection connection in nc.connections)
                                     if (connection.orgId == id)
                                     {
+                                        // Doesn't remove if made unavailable at this time.
                                         connection.ApplySite(txtDialNo.Text, txtOrgRef.Text, txtName.Text, id);
                                         break;
                                     }
@@ -562,8 +579,9 @@ namespace BridgeOpsClient
         {
             txtOrgRef.IsReadOnly = !enabled;
             cmbOrgParentID.IsEnabled = enabled;
-            txtDialNo.IsReadOnly = !enabled;
             txtName.IsReadOnly = !enabled;
+            txtDialNo.IsReadOnly = !enabled;
+            chkAvailable.IsEnabled = enabled;
             txtNotes.IsReadOnly = !enabled;
             ditOrganisation.ToggleFieldsEnabled(enabled);
             btnEdit.IsEnabled = enabled;
@@ -591,6 +609,8 @@ namespace BridgeOpsClient
 
         // Check for changes whenever the user interacts with a control.
         private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
+        private void chkAvailable_Click(object sender, RoutedEventArgs e)
+        { AnyInteraction(); }
         public bool AnyInteraction()
         {
             if (!IsLoaded)
@@ -599,13 +619,13 @@ namespace BridgeOpsClient
             string currentParent = cmbOrgParentID.SelectedItem == null ? "" : (string)cmbOrgParentID.SelectedItem;
             btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
                                 originalParent != currentParent ||
-                                originalDialNo != txtDialNo.Text ||
                                 originalName != txtName.Text ||
+                                originalDialNo != txtDialNo.Text ||
+                                originalAvailable != chkAvailable.IsChecked ||
                                 originalNotes != txtNotes.Text ||
                                 ditOrganisation.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
-
 
         private void btnCorrectReason_Click(object sender, RoutedEventArgs e)
         {

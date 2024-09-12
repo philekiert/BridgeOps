@@ -10,7 +10,7 @@
         Closed="Window_Closed" UseLayoutRounding="True" Loaded="Window_Loaded">
     <TabControl BorderThickness="1 1 0 0">
         <TabItem Header="Asset">
-            <Grid>
+            <Grid MaxWidth="470">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
