@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
         <custom:DataInputTable x:Name="ditContact" Grid.Row="0" MaxHeight="500"/>
         <Label Grid.Row="1" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
-               Margin="10,0,10,0" Height="26"/>
+               Margin="5,0,10,0" Height="26" FontWeight="SemiBold"/>
         <TextBox x:Name="txtNotes" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top"
                  Margin="10,0,10,10" TextWrapping="Wrap" Width="472" Height="179"
                  VerticalScrollBarVisibility="Auto" AcceptsReturn="True"

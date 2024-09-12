@@ -463,16 +463,13 @@ public class ConsoleController
         if (Writer.YesNo())
         {
             File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES),
-                            "# To use this file, simply write the table name, followed by the column name, followed" +
+                            "# To use this file, simply write the table name, followed by the column name, followed" + Glo.NL +
                             "# by the name you wish to be used, separated by ';;'. For example (omitting  the '# '):" +
-                            Glo.NL +
-                            Glo.NL + "# TableName;;ColumnName;;Your Custom Field Name" +
+                            Glo.DNL + "# TableName;;ColumnName;;Your Custom Field Name" +
                             Glo.NL + "# Food;;Bananas;;Yellow Fruit" +
                             Glo.NL + "# Food;;Raisins;;Dried Grapes" +
-                            Glo.NL + "" +
-                            Glo.NL + "# Only some columns in the Organisation, Asset, Contact and Conference tables are supported." +
-                            Glo.NL + "" +
-                            Glo.NL + "# This file supercedes the column names stated in " +
+                            Glo.DNL + "# Only some columns in the Organisation, Asset, Contact and Conference tables are supported." +
+                            Glo.DNL + "# This file supercedes the column names stated in " +
                             Glo.CONFIG_COLUMN_ADDITIONS + Glo.DNL);
         }
 

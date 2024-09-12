@@ -59,17 +59,16 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="AUto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" x:Name="txtDialNo"
-                             TextChanged="ValueChanged"/>
+                        <TextBox Grid.Column="0" x:Name="txtDialNo" TextChanged="ValueChanged"/>
                         <Label Content="Available for Conferences" Grid.Column="1" x:Name="lblAvailable"
-                           VerticalAlignment="Center" FontWeight="SemiBold" Margin="10 0 5 0"/>
-                        <CheckBox Grid.Column="2" x:Name="chkAvailable" Margin="0 0 10 0" VerticalAlignment="Center"
+                           VerticalAlignment="Center" Margin="10 0 5 0"/>
+                        <CheckBox Grid.Column="2" x:Name="chkAvailable" Margin="0 1 10 0" VerticalAlignment="Center"
                                   Click="chkAvailable_Click"/>
                     </Grid>
                 </Grid>
                 <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" MaxHeight="500" Margin="10,10,0,10"/>
-                <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Center"
-                       Margin="10,0,0,0" Height="26"/>
+                <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left"
+                       VerticalAlignment="Center" Margin="5,0,0,0" Height="26" FontWeight="SemiBold"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Center"
                          Margin="10,0,10,0" TextWrapping="Wrap" Width="500" Height="150"
                          VerticalScrollBarVisibility="Auto" AcceptsReturn="True"

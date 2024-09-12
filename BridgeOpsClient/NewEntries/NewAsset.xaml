@@ -48,7 +48,7 @@
                 <custom:DataInputTable x:Name="ditAsset" Grid.Row="2" MaxHeight="500" Margin="10 10 0 10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes"
                        HorizontalAlignment="Left" VerticalAlignment="Top"
-                       Margin="10,0,10,0" Height="26"/>
+                       Margin="5,0,10,0" Height="26" FontWeight="SemiBold"/>
                 <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
                          Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
                          VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
