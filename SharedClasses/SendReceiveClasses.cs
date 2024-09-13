@@ -351,7 +351,7 @@ namespace SendReceiveClasses
             }
 
             for (int n = 0; n < allowed.Count; ++n)
-                allowed[n] = SqlAssist.AddQuotes(SqlAssist.SecureColumn(allowed[n]))
+                allowed[n] = SqlAssist.AddQuotes(SqlAssist.SecureValue(allowed[n]))
                              .Replace("\r\n", "")
                              .Replace("\n", ""); // If any new lines sneak in, they could break the column record.
         }

@@ -40,7 +40,7 @@
             <ComboBoxItem Content="Organisation"/>
             <ComboBoxItem Content="Contact"/>
             <ComboBoxItem Content="Asset"/>
-            <ComboBoxItem Content="Conference"/>
+            <!--<ComboBoxItem Content="Conference"/>-->
         </ComboBox>
         <Label Grid.Row="1" Grid.Column="0" Content="Column Name"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtColumnName" MaxLength="128" TextChanged="InputHandler"/>
@@ -65,7 +65,7 @@
         <Label Grid.Row="5" Grid.Column="0" Content="Allowed"/>
         <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txtAllowed" Height="100"
                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible"
-                 TextChanged="InputHandler"/>
+                 TextChanged="InputHandler" VerticalContentAlignment="Top"/>
         <Grid Grid.Row="6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
