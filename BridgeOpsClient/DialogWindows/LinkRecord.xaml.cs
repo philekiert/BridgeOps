@@ -73,7 +73,7 @@ namespace BridgeOpsClient
                         return false;
 
                     foreach (object? cell in row.items)
-                        if (cell!.ToString()!.ToLower().Contains(text))
+                        if (cell != null && cell.ToString()!.ToLower().Contains(text))
                             return true;
                     return false;
                 };

@@ -84,6 +84,7 @@ namespace BridgeOpsClient
             {
                 string colName = (string)de.Key;
                 if (colName != idColumn && !(table == "Organisation" && colName == Glo.Tab.ORGANISATION_REF) &&
+                                           !(table == "Organisation" && colName == Glo.Tab.DIAL_NO) &&
                                            !(table == "Asset" && colName == Glo.Tab.ASSET_REF))
                     columnNames.Add(ColumnRecord.GetPrintName(de));
             }
