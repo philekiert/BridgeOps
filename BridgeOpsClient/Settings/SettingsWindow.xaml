@@ -32,7 +32,7 @@
                                 Click="btnUsersRefresh_Click" Height="20"/>
                         <Button Grid.Column="1" Content="Add" Width="70" x:Name="btnUserAdd"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
-                                Click="btnUserAdd_Click"/>
+                                Click="btnUserAdd_Click" Style="{StaticResource primary-button}"/>
                         <Button Grid.Column="2" Content="Log Out" Width="70" x:Name="btnUserLogOut"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
                                 Click="btnUserLogOut_Click" IsEnabled="False"/>
@@ -62,11 +62,11 @@
                                 Click="btnColumnsRefresh_Click" Height="20"/>
                         <Button Grid.Column="1" Content="Add" Width="70" x:Name="btnColumnAdd"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
-                                Click="btnColumnAdd_Click"/>
+                                Click="btnColumnAdd_Click" Style="{StaticResource primary-button}"/>
                         <Button Grid.Column="2" Content="Remove" Width="70" x:Name="btnColumnRemove"
                                 HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
                                 Click="btnColumnRemove_Click"/>
-                        <Button Grid.Column="5" Content="Reorder" Width="92" x:Name="btnReorder"
+                        <Button Grid.Column="5" Content="Reorder" Width="70" x:Name="btnReorder"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
                                 Click="btnReorder_Click"/>
                     </Grid>

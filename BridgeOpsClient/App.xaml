@@ -7,59 +7,65 @@
              Exit="ApplicationExit">
     <Application.Resources>
 
-        <!-- ComboBox -->
-        <Style TargetType="ComboBox">
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
-            <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
-            <!-- This enables virtualization on all ComboBoxes so they aren't too slow to load. -->
-            <Setter Property="ItemsPanel">
-                <Setter.Value>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <!-- Button -->
-        <Style TargetType="Button">
-            <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- DataInputTable -->
-        <Style TargetType="custom:DataInputTable">
-            <Setter Property="Padding" Value="0 0 0 0" />
-            <Setter Property="Margin" Value="10 10 10 10" />
-        </Style>
+            <!-- ComboBox -->
+            <Style TargetType="ComboBox">
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+                <!-- This enables virtualization on all ComboBoxes so they aren't too slow to load. -->
+                <Setter Property="ItemsPanel">
+                    <Setter.Value>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
-        <!-- Menu Bar -->
-        <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
-            <Setter Property="VerticalAlignment" Value="Bottom" />
-            <Setter Property="Height" Value="24" />
-            <Setter Property="Padding" Value="0 0 0 2" />
-            <Setter Property="Margin" Value="0 0 0 2" />
-            <Setter Property="Width" Value="24" />
-        </Style>
-        <Style TargetType="MenuItem">
-            <Setter Property="Height" Value="20" />
-            <Setter Property="Margin" Value="0 2 0 0" />
-            <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
-        </Style>
-        
-        <!-- Icons -->
-        <DataTemplate x:Key="tickIcon">
-            <TextBlock FontFamily="Segoe MDL2 Assets"
+            <!-- Button -->
+            <Style TargetType="Button">
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+            </Style>
+
+            <!-- DataInputTable -->
+            <Style TargetType="custom:DataInputTable">
+                <Setter Property="Padding" Value="0 0 0 0" />
+                <Setter Property="Margin" Value="10 10 10 10" />
+            </Style>
+
+            <!-- Menu Bar -->
+            <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
+                <Setter Property="VerticalAlignment" Value="Bottom" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Padding" Value="0 0 0 2" />
+                <Setter Property="Margin" Value="0 0 0 2" />
+                <Setter Property="Width" Value="24" />
+            </Style>
+            <Style TargetType="MenuItem">
+                <Setter Property="Height" Value="20" />
+                <Setter Property="Margin" Value="0 2 0 0" />
+                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+            </Style>
+
+            <!-- Icons -->
+            <DataTemplate x:Key="tickIcon">
+                <TextBlock FontFamily="Segoe MDL2 Assets"
                        FontSize="16"
                        FontWeight="Bold"
                        Text="&#xE73E;"/>
-        </DataTemplate>
+            </DataTemplate>
 
-        <!-- Old, may not want to use this eventually -->
-        <Style TargetType="ToolBarTray">
-            <Setter Property="IsLocked" Value="True" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
+            <!-- Old, may not want to use this eventually -->
+            <Style TargetType="ToolBarTray">
+                <Setter Property="IsLocked" Value="True" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
 
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

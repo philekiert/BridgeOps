@@ -71,21 +71,21 @@
                         </Grid.RowDefinitions>
                         <!-- Join Selection -->
                         <Button x:Name="btnAddJoin" Click="btnAddJoin_Click" Grid.Row="0" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+" />
+                                Margin="5 5 10 5" Style="{StaticResource plus-button}"/>
                         <Label Grid.Row="0" Grid.Column="1" Content="Table Joins"/>
                         <Grid x:Name="grdJoins" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                         <!-- Column Selection -->
                         <Button x:Name="btnAddColumn" Click="btnAddColumn_Click" Grid.Row="2" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
+                                Margin="5 5 10 5" Style="{StaticResource plus-button}"/>
                         <Label Grid.Row="2" Grid.Column="1" Content="Columns to Display" Grid.ColumnSpan="2"/>
                         <Grid x:Name="grdColumns" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                         <!-- WHERE Selection -->
                         <Button x:Name="btnAddWhere" Click="btnAddWhere_Click" Grid.Row="4" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
+                                Margin="5 5 10 5" Style="{StaticResource plus-button}"/>
                         <Label Grid.Row="4" Grid.Column="1" Content="Where Clauses" Grid.ColumnSpan="2"/>
                         <Grid x:Name="grdWheres" Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                         <Button x:Name="btnAddOrderBy" Click="btnAddOrderBy_Click"  Grid.Row="6" Grid.Column="0"
-                                Padding="0 -2 0 0" Margin="5 5 10 5" Width="24" Height="24" Content="+"/>
+                                Margin="5 5 10 5" Style="{StaticResource plus-button}"/>
                         <Label Grid.Row="6" Grid.Column="1" Content="Order By" Grid.ColumnSpan="2"/>
                         <Grid x:Name="grdOrderBys" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" Margin="34 0 0 0"/>
                     </Grid>
@@ -97,7 +97,7 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" x:Name="btnRun" Content="Run" Width="50" Margin="5 20 0 10"
-                        HorizontalAlignment="Left" Click="btnRun_Click"/>
+                        HorizontalAlignment="Left" Click="btnRun_Click" Style="{StaticResource primary-button}"/>
                 <Button Grid.Column="1" x:Name="btnDisplayCode" Content="Display Code" Width="100" Margin="10 20 0 10"
                         HorizontalAlignment="Left" Click="btnDisplayCode_Click"/>
             </Grid>

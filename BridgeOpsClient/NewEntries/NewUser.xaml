@@ -104,7 +104,7 @@
         <CheckBox Grid.Row="6" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkEnabled" Click="ValueChanged"
                   IsChecked="True"/>
         <Button Grid.Row="7" Grid.Column="0" Content="Add" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnAdd" Click="btnAdd_Click" />
+                    x:Name="btnAdd" Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
         <Button Grid.Row="7" Grid.Column="0" Content="Save" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
                     x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"/>
         <Button Grid.Row="7" Grid.Column="1" Content="Delete" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"

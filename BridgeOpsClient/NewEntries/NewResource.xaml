@@ -47,6 +47,6 @@
             <custom:NumberEntry Grid.Row="3" Grid.Column="1" x:Name="numRowsAdditional" Margin="10 0 10 0"/>
         </Grid>
         <Button x:Name="btnAdd" Grid.Row="1" Content="Add" Margin="10,15,0,15" HorizontalAlignment="Left" Width="70"
-                Click="btnAdd_Click" />
+                Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </Window>

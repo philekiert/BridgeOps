@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True" Loaded="Window_Loaded">
-    <TabControl BorderThickness="1 1 0 0">
+    <TabControl BorderThickness="0 1 0 0">
         <TabItem Header="Organisation">
             <Grid MaxWidth="520">
                 <Grid.RowDefinitions>
@@ -79,9 +79,10 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnAdd" Click="btnAdd_Click" />
+                            x:Name="btnAdd" Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
                     <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden" IsEnabled="False"/>
+                            x:Name="btnEdit" Click="btnEdit_Click"  Visibility="Hidden" IsEnabled="False"
+                            Style="{StaticResource primary-button}"/>
                     <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
                             x:Name="btnDelete" Click="btnDelete_Click"  Visibility="Hidden"/>
                 </Grid>
@@ -108,13 +109,14 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="btnAssetNew" Click="btnAssetNew_Click" Grid.Column="0" Content="Create New"
-                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0"
+                            Style="{StaticResource primary-button}"/>
                     <Button x:Name="btnAssetAdd" Click="btnAssetAdd_Click" Grid.Column="1" Content="Add Existing"
-                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0"/>
                     <Button x:Name="btnAssetRemove" Click="btnAssetRemove_Click" Grid.Column="2" Content="Detach"
-                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0"/>
                     <Button x:Name="btnAssetsRefresh" Click="btnAssetsRefresh_Click" Grid.Column="3" Content="Refresh"
-                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0"/>
                 </Grid>
                 <Label Grid.Row="3" Content="Contacts" Margin="5 10 0 0" Padding="5 5 5 0" FontWeight="SemiBold"/>
                 <custom:SqlDataGrid Grid.Row="4" x:Name="dtgContacts" Width="520" Height="150"
@@ -127,7 +129,8 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button x:Name="btnContactsNew" Click="btnContactsNew_Click" Grid.Column="0" Content="Create New"
-                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
+                            HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "
+                            Style="{StaticResource primary-button}"/>
                     <Button x:Name="btnContactsAdd" Click="btnContactsAdd_Click" Grid.Column="1" Content="Add Existing"
                             HorizontalAlignment="Left" Margin="10 0 0 0" Padding="10 0 10 0 "/>
                     <Button x:Name="btnContactsRemove" Click="btnContactsRemove_Click" Grid.Column="2" Content="Detach"

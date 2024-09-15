@@ -72,7 +72,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnAdd" Click="btnAdd_Click"/>
+                            x:Name="btnAdd" Click="btnAdd_Click"  Style="{StaticResource primary-button}"/>
         </Grid>
     </Grid>
 </Window>

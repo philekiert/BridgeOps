@@ -15,6 +15,6 @@
         <TextBox x:Name="txtName" Margin="10 10 10 0" Height="24" VerticalContentAlignment="Center" Grid.Row="0"
                  Width="220" KeyDown="txtName_KeyDown" MaxLength="128" TextChanged="txtName_TextChanged"/>
         <Button x:Name="btnConfirm" Margin="10 10 10 10" Grid.Row="1" Width="60"
-                Content="Confirm" Click="btnConfirm_Click"/>
+                Content="Confirm" Click="btnConfirm_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </Window>

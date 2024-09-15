@@ -58,12 +58,13 @@
         <Button Grid.Row="3" Grid.Column="0" Content="▼" x:Name="btnDown" FontSize="9"
                 Margin="10 -1 5 5" Width="24" Height="24" HorizontalAlignment="Right"
                 IsEnabled="False" Click="btnDown_Click"  Padding="0 -2 0 0"/>
-        <Button x:Name="btnAddHeader" Grid.Row="4" Grid.Column="1" Content="+" Click="btnAddHeader_Click"
-                Padding="0 -2 0 0" Margin="10 10 0 15" Width="24" Height="24"/>
+        <Button x:Name="btnAddHeader" Grid.Row="4" Grid.Column="1" Click="btnAddHeader_Click"
+                Margin="10 10 0 15" Style="{StaticResource plus-button}"/>
         <Button x:Name="btnRemoveHeader" Grid.Row="4" Grid.Column="2" Content="-" Click="btnRemoveHeader_Click"
-                Padding="0 -2 0 0" Margin="-1 10 5 15" Width="24" Height="24" IsEnabled="False"/>
+                Margin="-1 10 5 15" Style="{StaticResource minus-button}" IsEnabled="False"/>
         <Label Content="Add/Remove Headers" Grid.Column="3" Grid.Row="4" Margin="0 10 11 10"/>
         <Button Grid.Row="4" Grid.Column="4" Content="Apply" x:Name="btnApply" IsEnabled="False" Height="24"
-                Margin="10 10 10 15" Width="60" HorizontalAlignment="Right" Click="btnApply_Click"/>
+                Margin="10 10 10 15" Width="60" HorizontalAlignment="Right" Click="btnApply_Click"
+                Style="{StaticResource primary-button}"/>
     </Grid>
 </Window>

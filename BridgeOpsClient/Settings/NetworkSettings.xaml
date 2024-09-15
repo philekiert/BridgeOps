@@ -36,6 +36,6 @@
         <Button x:Name="btnInboundDefault" Margin="0 5 10 7" Grid.Row="2" Grid.Column="2" Content=" Default "
                 Click="btnInboundDefault_Click"/>
         <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="3" Grid.ColumnSpan="3"
-                Margin="10 10 10 10" Width="70" Click="btnConfirm_Click"/>
+                Margin="10 10 10 10" Width="70" Click="btnConfirm_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </Window>

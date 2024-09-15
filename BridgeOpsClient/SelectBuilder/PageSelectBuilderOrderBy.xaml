@@ -28,7 +28,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
-                Padding="0 -2 0 0" Margin="10 5 10 5" Width="24" Height="24" Content="-" />
+                Margin="10 5 10 5" Style="{StaticResource minus-button}"/>
         <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
                 Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
         <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
