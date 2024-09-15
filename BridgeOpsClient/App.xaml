@@ -29,7 +29,8 @@
 
             <!-- Button -->
             <Style TargetType="Button">
-                <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+                <Setter Property="Background" Value="{StaticResource brushButton}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource brushButtonBorder}"/>
             </Style>
 
             <!-- DataInputTable -->
