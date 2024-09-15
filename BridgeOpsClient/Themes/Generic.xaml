@@ -7,9 +7,9 @@
     <Color x:Key="colorPrimaryButtonBorder">#000</Color>
     <Color x:Key="colorPrimaryButtonHover">#569cd6</Color>
     <Color x:Key="colorPrimaryButtonHoverBorder">#333</Color>
-    <Color x:Key="colorAddButton">#75ebc1</Color>
+    <Color x:Key="colorAddButton">#3debac</Color>
     <Color x:Key="colorAddButtonBorder">#4a8a81</Color>
-    <Color x:Key="colorRemoveButton">#f272a4</Color>
+    <Color x:Key="colorRemoveButton">#ff6996</Color>
     <Color x:Key="colorRemoveButtonBorder">#ab5073</Color>
     <Color x:Key="colorButton">#eee</Color>
     <Color x:Key="colorButtonBorder">#aaa</Color>
@@ -23,6 +23,8 @@
     <SolidColorBrush x:Key="brushRemoveButtonBorder" Color="{StaticResource colorRemoveButtonBorder}"/>
     <SolidColorBrush x:Key="brushButton" Color="{StaticResource colorButton}"/>
     <SolidColorBrush x:Key="brushButtonBorder" Color="{StaticResource colorButtonBorder}"/>
+    
+    <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose-->
 
     <Style TargetType="Button" x:Key="primary-button">
         <Setter Property="Background" Value="{StaticResource brushPrimaryButton}"/>
@@ -122,6 +124,78 @@
                                     Value="{StaticResource brushRemoveButton}"/>
                             <Setter TargetName="path" Property="Stroke"
                                     Value="{StaticResource brushRemoveButtonBorder}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value=".3"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="Button" x:Key="back-button">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Padding" Value=".5 .5 0 0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" Opacity=".7">
+                        <Grid>
+                            <Path x:Name="path" Data="M6,12 L16,7 L16,17 Z"
+                                  Fill="{StaticResource brushPrimaryButton}"
+                                  Stroke="{StaticResource brushPrimaryButtonBorder}"
+                                  StrokeThickness="1">
+                                <Path.RenderTransform>
+                                    <TranslateTransform X="-.5" Y="-.5"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource brushButton}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource brushButtonBorder}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value=".3"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="Button" x:Key="forward-button">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Padding" Value=".5 .5 0 0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" Opacity=".7">
+                        <Grid>
+                            <Path x:Name="path" Data="M17,12 L7,7 L7,17 Z"
+                                  Fill="{StaticResource brushPrimaryButton}"
+                                  Stroke="{StaticResource brushPrimaryButtonBorder}"
+                                  StrokeThickness="1">
+                                <Path.RenderTransform>
+                                    <TranslateTransform X="-.5" Y="-.5"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource brushButton}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource brushButtonBorder}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value=".3"/>

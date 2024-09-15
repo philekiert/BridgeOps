@@ -352,7 +352,10 @@ namespace BridgeOpsClient
                 PresetLoad(true);
                 cmbPresets.SelectedItem = name;
                 skipPresetLoad = false;
-                App.DisplayError("Changes saved successfully.");
+                if (savingNew)
+                    App.DisplayError("Saved successfully");
+                else
+                    App.DisplayError("Changes saved successfully.");
             }
         }
 
@@ -426,7 +429,7 @@ namespace BridgeOpsClient
         private void cmbPresets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Clear down.
-            if (cmbPresets.SelectedIndex == 0 && !skipPresetLoad)
+            if (cmbPresets.SelectedIndex <= 0 && !skipPresetLoad)
             {
                 btnRemovePreset.IsEnabled = false;
                 btnRenamePreset.IsEnabled = false;
@@ -452,13 +455,16 @@ namespace BridgeOpsClient
             lastSelectedIndex = cmbPresets.SelectedIndex;
         }
 
+        bool savingNew = false;
         private void btnAddPreset_Click(object sender, RoutedEventArgs e)
         {
             string name = GetNewPresetName();
             if (name == "")
                 return;
 
+            savingNew = true;
             SavePreset(name);
+            savingNew = false;
         }
 
         private void btnRemovePreset_Click(object sender, RoutedEventArgs e)
@@ -506,6 +512,12 @@ namespace BridgeOpsClient
             catch (Exception ex)
             {
                 App.DisplayError(App.ErrorConcat("Could not remove the selected preset.", ex.Message));
+            }
+            finally
+            {
+                btnRemovePreset.IsEnabled = cmbPresets.Items.Count > 1 && cmbPresets.Text != "<New>" &&
+                                            App.sd.deletePermissions[Glo.PERMISSION_REPORTS];
+                btnSaveChanges.IsEnabled = false;
             }
         }
 
