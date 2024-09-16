@@ -22,20 +22,19 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
                 Margin="10 5 10 5" Style="{StaticResource minus-button}"/>
-        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
-                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
-        <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
-                Padding="0 -2 0 0" Margin="-1 5 20 5" Width="24" Content="▼"/>
-        <ComboBox Grid.Row="0" Grid.Column="3" MinWidth="80" Width="Auto" Margin="0 5 10 5"
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click" FontSize="8" BorderThickness="1 1 1 0"
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▲" VerticalAlignment="Top"/>
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnDown" Click="btnDown_Click" FontSize="8" 
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▼" VerticalAlignment="Bottom"/>
+        <ComboBox Grid.Row="0" Grid.Column="2" MinWidth="80" Width="Auto" Margin="15 5 10 5"
                   x:Name="cmbOrderBy"/>
-        <ComboBox Grid.Row="0" Grid.Column="4" Width="60" Margin="0 5 10 5" SelectedIndex="1"
+        <ComboBox Grid.Row="0" Grid.Column="3" Width="60" Margin="0 5 10 5" SelectedIndex="0"
                   x:Name="cmbAscDesc">
             <ComboBoxItem Content="ASC"/>
             <ComboBoxItem Content="DESC"/>

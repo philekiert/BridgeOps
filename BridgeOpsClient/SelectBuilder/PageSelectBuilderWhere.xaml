@@ -26,40 +26,38 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
                 Margin="10 5 10 5" Style="{StaticResource minus-button}"/>
-        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
-                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
-        <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
-                Padding="0 -2 0 0" Margin="-1 5 10 5" Width="24" Content="▼"/>
-        <ComboBox Grid.Row="0" Grid.Column="3" Width="55" SelectedIndex="0" Margin="10 5 10 5"
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click" FontSize="8" BorderThickness="1 1 1 0"
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▲" VerticalAlignment="Top"/>
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnDown" Click="btnDown_Click" FontSize="8" 
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▼" VerticalAlignment="Bottom"/>
+        <ComboBox Grid.Row="0" Grid.Column="2" Width="55" SelectedIndex="0" Margin="15 5 5 5"
                   x:Name="cmbAndOr">
             <ComboBoxItem Content="AND"/>
             <ComboBoxItem Content="OR"/>
         </ComboBox>
-        <Label Content="Where" Grid.Row="0" Grid.Column="4" Margin="5 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="5" MinWidth="80" x:Name="cmbColumn"
+        <Label Content="Where" Grid.Row="0" Grid.Column="3" Margin="10 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="4" MinWidth="80" x:Name="cmbColumn"
                   SelectionChanged="cmbColumn_SelectionChanged"/>
-        <ComboBox Grid.Row="0" Grid.Column="6" MinWidth="80" Margin="0 5 10 5" SelectedIndex="1" x:Name="cmbOperator"
+        <ComboBox Grid.Row="0" Grid.Column="5" MinWidth="80" Margin="0 5 10 5" SelectedIndex="1" x:Name="cmbOperator"
                   SelectionChanged="cmbOperator_SelectionChanged"/>
-        <TextBox Grid.Row="0" Grid.Column="7" Width="200" x:Name="txtValue" Margin="0 5 10 5"
+        <TextBox Grid.Row="0" Grid.Column="6" Width="200" x:Name="txtValue" Margin="0 5 10 5"
                  Visibility="Collapsed" VerticalContentAlignment="Center" Height="24"/>
-        <customcontrols:NumberEntry Grid.Row="0" Grid.Column="7" Margin="0 5 10 5" Width="190" x:Name="numValue"
+        <customcontrols:NumberEntry Grid.Row="0" Grid.Column="6" Margin="0 5 10 5" Width="190" x:Name="numValue"
                                     Visibility="Collapsed"/>
-        <customcontrols:DateTimePicker Grid.Row="0" Grid.Column="7" Margin="0 0 0 0" Width="190" x:Name="dtmValue"
+        <customcontrols:DateTimePicker Grid.Row="0" Grid.Column="6" Margin="0 0 0 0" Width="190" x:Name="dtmValue"
                                        Visibility="Collapsed"/>
-        <DatePicker Grid.Row="0" Grid.Column="7" Width="200" Height="20" Padding="0 0 0 0" Margin="0 0 10 0"
+        <DatePicker Grid.Row="0" Grid.Column="6" Width="200" Height="20" Padding="0 0 0 0" Margin="0 0 10 0"
                     x:Name="datValue" 
                     Visibility="Collapsed" />
-        <customcontrols:TimePicker Grid.Row="0" Grid.Column="7" Width="70" Margin="-6 0 6 0" x:Name="timValue"
+        <customcontrols:TimePicker Grid.Row="0" Grid.Column="6" Width="70" Margin="-6 0 6 0" x:Name="timValue"
                                    Visibility="Collapsed"/>
-        <CheckBox Grid.Row="0" Grid.Column="7" VerticalAlignment="Center" Margin="0 0 10 0" x:Name="chkValue" 
+        <CheckBox Grid.Row="0" Grid.Column="6" VerticalAlignment="Center" Margin="0 0 10 0" x:Name="chkValue" 
                   Visibility="Collapsed" />
     </Grid>
 </Page>

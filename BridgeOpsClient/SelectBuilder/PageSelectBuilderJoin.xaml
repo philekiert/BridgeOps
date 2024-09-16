@@ -29,19 +29,18 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
                 Margin="10 5 10 5" Style="{StaticResource minus-button}"/>
-        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
-                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲" HorizontalAlignment="Right"/>
-        <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
-                Padding="0 -2 0 0" Margin="-1 5 0 5" Width="24" Content="▼"/>
-        <Label Content="Table" Grid.Row="0" Grid.Column="3" Margin="15 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="4" MinWidth="80" x:Name="cmbTable"
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click" FontSize="8" BorderThickness="1 1 1 0"
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▲" VerticalAlignment="Top"/>
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnDown" Click="btnDown_Click" FontSize="8" 
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▼" VerticalAlignment="Bottom"/>
+        <Label Content="Table" Grid.Row="0" Grid.Column="2" Margin="10 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="3" MinWidth="80" x:Name="cmbTable"
                   SelectionChanged="cmbTable_SelectionChanged">
             <ComboBoxItem Content="Organisation"/>
             <ComboBoxItem Content="OrganisationChange"/>
@@ -50,14 +49,14 @@
             <ComboBoxItem Content="AssetChange"/>
             <ComboBoxItem Content="Contact"/>
         </ComboBox>
-        <Label Content="Columns" Grid.Row="0" Grid.Column="5" Margin="0 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="6" MinWidth="80" Margin="10 5 0 5"
+        <Label Content="Columns" Grid.Row="0" Grid.Column="4" Margin="0 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="5" MinWidth="80" Margin="10 5 0 5"
                   x:Name="cmbColumn1"/>
-        <Label Content="=" Grid.Row="0" Grid.Column="7" Margin="0 0 0 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="8" MinWidth="80" Margin="0 5 10 5"
+        <Label Content="=" Grid.Row="0" Grid.Column="6" Margin="0 0 0 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="7" MinWidth="80" Margin="0 5 10 5"
                   x:Name="cmbColumn2"/>
-        <Label Content="Type" Grid.Row="0" Grid.Column="9" Margin="0 0 -7 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="10" SelectedIndex="0" Width="104" x:Name="cmbType">
+        <Label Content="Type" Grid.Row="0" Grid.Column="8" Margin="0 0 -7 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="9" SelectedIndex="0" Width="104" x:Name="cmbType">
             <ComboBoxItem Content="INNER"/>
             <ComboBoxItem Content="LEFT"/>
             <ComboBoxItem Content="RIGHT"/>

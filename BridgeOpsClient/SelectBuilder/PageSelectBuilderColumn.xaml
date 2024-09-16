@@ -25,23 +25,22 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Button x:Name="btnRemove" Click="btnRemove_Click" Grid.Row="0" Grid.Column="0"
                 Margin="10 5 10 5" Style="{StaticResource minus-button}"/>
-        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click"
-                Padding="0 -2 0 0" Margin="10 5 0 5" Width="24" Content="▲"/>
-        <Button Grid.Row="0" Grid.Column="2" x:Name="btnDown" Click="btnDown_Click"
-                Padding="0 -2 0 0" Margin="-1 5 10 5" Width="24" Content="▼"/>
-        <Label Content="Column" Grid.Row="0" Grid.Column="3" Margin="5 0 -6 0"/>
-        <ComboBox Grid.Row="0" Grid.Column="4" MinWidth="80" x:Name="cmbColumn"
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnUp" Click="btnUp_Click" FontSize="8" BorderThickness="1 1 1 0"
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▲" VerticalAlignment="Top"/>
+        <Button Grid.Row="0" Grid.Column="1" x:Name="btnDown" Click="btnDown_Click" FontSize="8" 
+                Padding="0 -1 0 0" Margin="0 5 0 5" Width="24" Height="12" Content="▼" VerticalAlignment="Bottom"/>
+        <Label Content="Column" Grid.Row="0" Grid.Column="2" Margin="10 0 -6 0"/>
+        <ComboBox Grid.Row="0" Grid.Column="3" MinWidth="80" x:Name="cmbColumn"
                   SelectionChanged="cmbColumn_SelectionChanged"/>
-        <Label x:Name="lblAlias" Content="Alias" Grid.Row="0" Grid.Column="5" Margin="0 0 -6 0"
+        <Label x:Name="lblAlias" Content="Alias" Grid.Row="0" Grid.Column="4" Margin="0 0 -6 0"
                Visibility="Collapsed"/>
-        <TextBox Grid.Row="0" Grid.Column="6" Width="100" x:Name="txtAlias"
+        <TextBox Grid.Row="0" Grid.Column="5" Width="100" x:Name="txtAlias"
                  Visibility="Collapsed" VerticalContentAlignment="Center"/>
     </Grid>
 </Page>

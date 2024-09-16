@@ -315,7 +315,7 @@ namespace BridgeOpsClient
                                                     "change, as if the change is successful, any data loss will be " +
                                                     "irreversible." +
                                                     "\n\nAre you sure you wish to proceed?",
-                                                    "Change Type", App.QuestionOptions.OKCancel))
+                                                    "Change Type", DialogWindows.DialogBox.Buttons.OKCancel))
                             {
                                 stream.WriteByte(Glo.CLIENT_CONFIRM);
                                 response = stream.ReadByte();

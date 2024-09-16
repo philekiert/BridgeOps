@@ -336,7 +336,7 @@ namespace BridgeOpsClient
                                                     "There will be no way to retrieve this data, so it is advisable to back " +
                                                     "up the database before making changes that could result in data loss." +
                                                     "\n\nAre you sure you wish to proceed?",
-                                                    "Remove Column", App.QuestionOptions.OKCancel))
+                                                    "Remove Column", DialogWindows.DialogBox.Buttons.OKCancel))
                             {
                                 stream.WriteByte(Glo.CLIENT_CONFIRM);
                                 if (stream.ReadByte() != Glo.CLIENT_REQUEST_SUCCESS)

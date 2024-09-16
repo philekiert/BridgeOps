@@ -26,36 +26,29 @@ namespace BridgeOpsClient
         public static void DisplayError(string error) { DisplayError(error, ""); }
         public static void DisplayError(string error, string title)
         {
-            MessageBox.Show(error, title);
+            DialogWindows.DialogBox dialog = new(error, title);
+            dialog.ShowDialog();
         }
         public static void DisplayError(Window owner, string error) { DisplayError(owner, error, ""); }
         public static void DisplayError(Window owner, string error, string title)
         {
-            MessageBox.Show(owner, error, title);
+            DialogWindows.DialogBox dialog = new(error, title);
+            dialog.Owner = owner;
+            dialog.ShowDialog();
         }
         public enum QuestionOptions
         { YesNo, OKCancel }
-        public static bool DisplayQuestion(string error, string title, QuestionOptions questionOptions)
+        public static bool DisplayQuestion(string error, string title, DialogWindows.DialogBox.Buttons buttons)
         {
-            MessageBoxButton buttons = MessageBoxButton.YesNo;
-            if (questionOptions == QuestionOptions.YesNo)
-            {
-                buttons = MessageBoxButton.YesNo;
-                return MessageBox.Show(error, title, buttons) == MessageBoxResult.Yes;
-            }
-            if (questionOptions == QuestionOptions.OKCancel)
-            {
-                buttons = MessageBoxButton.OKCancel;
-                return MessageBox.Show(error, title, buttons) == MessageBoxResult.OK;
-            }
-            return false;
+            DialogWindows.DialogBox dialog = new(error, title, buttons);
+            return dialog.ShowDialog() == true;
         }
         public static bool DeleteConfirm(bool multiple)
         {
             return DisplayQuestion("Are you sure? It will be impossible to recover " +
                                   $"{(multiple ? "these items." : "this item")}",
                                    "Confirm Deletion",
-                                   QuestionOptions.OKCancel);
+                                   DialogWindows.DialogBox.Buttons.YesNo);
         }
 
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";

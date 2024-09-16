@@ -277,7 +277,7 @@ namespace BridgeOpsClient
         {
             if (cmbPresets.Text != "<New>" &&
                 !App.DisplayQuestion("Overwrite current preset?", "Save Changes",
-                                    App.QuestionOptions.YesNo))
+                                    DialogWindows.DialogBox.Buttons.YesNo))
                 return;
 
             JsonObject json = new();

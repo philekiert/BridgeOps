@@ -180,7 +180,7 @@ namespace BridgeOpsClient
                                     "settings, such as hidden columns, column orders and columns " +
                                     "widths.\n• Reset pane layout.\n\nYou will need to log back in.",
                                     "Reset View Settings",
-                                    App.QuestionOptions.YesNo))
+                                    DialogWindows.DialogBox.Buttons.YesNo))
             {
                 // Reset settings before LogOut(), and they will be stored on the database as part of that method.
                 App.us = new UserSettings();

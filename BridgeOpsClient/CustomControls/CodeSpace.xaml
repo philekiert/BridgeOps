@@ -6,7 +6,7 @@
          xmlns:local="clr-namespace:BridgeOpsClient.CustomControls"
          mc:Ignorable="d" 
          d:DesignHeight="450" d:DesignWidth="800"
-         Background="#303236"
+         Background="#3d4656"
          FontFamily="/BridgeOpsClient;component/Resources/Fonts/Roboto Mono/#Roboto Mono"
          FontSize="11"
          Foreground="#eee"
