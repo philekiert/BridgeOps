@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:BridgeOpsClient">
 
-    <Color x:Key="colorPrimaryButton">#505f7d</Color>
+    <Color x:Key="colorPrimaryButton">#556383</Color>
     <Color x:Key="colorPrimaryButtonBorder">#000</Color>
     <Color x:Key="colorPrimaryButtonHover">#569cd6</Color>
     <Color x:Key="colorPrimaryButtonHoverBorder">#333</Color>

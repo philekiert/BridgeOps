@@ -39,7 +39,7 @@
                  VerticalAlignment="Center" Width="130" Height="20"/>
         <Button Grid.Row="4" Grid.Column="1" x:Name="btnLogIn" Content="Log In" HorizontalAlignment="Center"
                 Margin="0,30,0,40" Padding="10 1 10 1" VerticalAlignment="Center" Click="btnLogIn_Click"
-                Style="{StaticResource primary-button}"/>
+                Style="{StaticResource primary-button}" Height="24"/>
     </Grid>
 
 </Window>
