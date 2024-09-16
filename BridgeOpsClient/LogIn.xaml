@@ -1,4 +1,4 @@
-﻿<Window x:Class="BridgeOpsClient.LogIn"
+﻿<local:CustomWindow x:Class="BridgeOpsClient.LogIn"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,9 +6,8 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         Title="Bridge Manager" WindowStartupLocation="CenterScreen" SizeToContent="Height" Width="210"
-        ResizeMode="NoResize"
         Loaded="Window_Loaded"
-        KeyDown="Window_KeyDown" KeyUp="ToggleNetworkSettings"
+        KeyDown="Window_KeyDown" KeyUp="CustomWindow_KeyUp"
         Closed="Window_Closed" UseLayoutRounding="True">
 
     <Grid>
@@ -42,4 +41,4 @@
                 Style="{StaticResource primary-button}" Height="24"/>
     </Grid>
 
-</Window>
+</local:CustomWindow>

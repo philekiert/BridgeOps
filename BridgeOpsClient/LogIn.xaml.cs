@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class LogIn : Window
+    public partial class LogIn : CustomWindow
     {
         MainWindow mainWindow;
 
@@ -47,6 +47,11 @@ namespace BridgeOpsClient
 
             ToggleNetworkSettings(sender, e);
         }
+
+        private void CustomWindow_KeyUp(object sender, KeyEventArgs e)
+            {
+                ToggleNetworkSettings(sender, e);
+            }
 
         private void ToggleNetworkSettings(object sender, EventArgs e)
         {
