@@ -30,6 +30,7 @@
         <Setter Property="Background" Value="{StaticResource brushPrimaryButton}"/>
         <Setter Property="BorderBrush" Value="{StaticResource brushPrimaryButtonBorder}"/>
         <Setter Property="Foreground" Value="White"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">

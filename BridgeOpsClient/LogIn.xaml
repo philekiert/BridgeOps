@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
+        Title="Bridge Manager" WindowStartupLocation="CenterScreen" SizeToContent="Height" Width="210"
         ResizeMode="NoResize"
-        Title="Log In" WindowStartupLocation="CenterScreen" SizeToContent="Height" Width="210"
         Loaded="Window_Loaded"
         KeyDown="Window_KeyDown" KeyUp="ToggleNetworkSettings"
         Closed="Window_Closed" UseLayoutRounding="True">
@@ -37,7 +37,7 @@
                VerticalAlignment="Center" Margin="0,20,0,0" FontSize="14" FontWeight="SemiBold"/>
         <PasswordBox Grid.Row="3" Grid.Column="1" x:Name="pwdPassword" HorizontalAlignment="Center" Margin="0,10,0,0"
                  VerticalAlignment="Center" Width="130" Height="20"/>
-        <Button Grid.Row="4" Grid.Column="1" x:Name="btnLogIn" Content="Log In" HorizontalAlignment="Center"
+        <Button Grid.Row="4" Grid.Column="1" x:Name="btnLogIn" Content="Log in" HorizontalAlignment="Center"
                 Margin="0,30,0,40" Padding="10 1 10 1" VerticalAlignment="Center" Click="btnLogIn_Click"
                 Style="{StaticResource primary-button}" Height="24"/>
     </Grid>
