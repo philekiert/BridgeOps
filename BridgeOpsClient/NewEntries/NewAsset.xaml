@@ -39,7 +39,7 @@
                     <Label Content="Asset Reference" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetRef" Height="20"
-                             VerticalContentAlignment="Center"/>
+                             VerticalContentAlignment="Center" TextChanged="ValueChanged"/>
                     <Label Content="Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgRef" Margin="10 4 10 4" Height="20"

@@ -162,11 +162,11 @@ namespace BridgeOpsClient
         {
             if (ditAsset.ScoopValues())
             {
-                if (txtAssetRef.Text == "")
-                {
-                    App.DisplayError($"You must input a value for {lblAssetID.Content}.");
-                    return;
-                }
+                //if (txtAssetRef.Text == "")
+                //{
+                //    App.DisplayError($"You must input a value for {lblAssetID.Content}.");
+                //    return;
+                //}
 
                 Asset newAsset = new();
                 newAsset.changeReason = ""; // Set automatically.
@@ -175,6 +175,8 @@ namespace BridgeOpsClient
                 newAsset.columnRecordID = ColumnRecord.columnRecordID;
 
                 newAsset.assetRef = txtAssetRef.Text;
+                if (newAsset.assetRef == "")
+                    newAsset.assetRef = null;
                 newAsset.organisationRef = cmbOrgRef.Text.Length == 0 ? null : cmbOrgRef.Text;
                 newAsset.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
@@ -207,11 +209,11 @@ namespace BridgeOpsClient
         {
             if (ditAsset.ScoopValues())
             {
-                if (txtAssetRef.Text == "")
-                {
-                    App.DisplayError("You must input a value for Asset ID");
-                    return;
-                }
+                //if (txtAssetRef.Text == "")
+                //{
+                //    App.DisplayError("You must input a value for Asset ID");
+                //    return;
+                //}
 
                 Asset asset = new Asset();
                 asset.sessionID = App.sd.sessionID;

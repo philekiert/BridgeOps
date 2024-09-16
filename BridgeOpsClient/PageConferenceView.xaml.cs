@@ -248,7 +248,7 @@ namespace BridgeOpsClient
         private void schView_MouseDown(object sender, MouseButtonEventArgs e)
         {
             // Double Click
-            if (e.ClickCount == 2)
+            if (e.ClickCount == 2 && App.sd.createPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
                 int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);

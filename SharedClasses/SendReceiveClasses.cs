@@ -1091,9 +1091,9 @@ namespace SendReceiveClasses
             Prepare();
 
             // Not allowed under any circumstances.
-            if (assetRef == null || assetRef == "" ||
-                assetRef == "''" || assetRef == "NULL")
-                return "";
+            //if (assetRef == null || assetRef == "" ||
+            //    assetRef == "''" || assetRef == "NULL")
+            //    return "";
 
             string com = SqlAssist.InsertInto("Asset",
                                               SqlAssist.ColConcat(additionalCols, Glo.Tab.ASSET_REF,
@@ -1139,10 +1139,10 @@ namespace SendReceiveClasses
             Prepare();
 
             // Not allowed under any circumstances.
-            if (assetRefChanged)
-                if (assetRef == null || assetRef == "" ||
-                    assetRef == "''" || assetRef == "NULL")
-                    return "";
+            //if (assetRefChanged)
+            //    if (assetRef == null || assetRef == "" ||
+            //        assetRef == "''" || assetRef == "NULL")
+            //        return "";
 
             List<string> setters = new();
             if (assetRefChanged)

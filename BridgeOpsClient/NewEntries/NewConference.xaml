@@ -40,13 +40,13 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <Button x:Name="btnAddConnection" Grid.Row="0" Content="+" Height="24" Width="24"
-                            Margin="10 10 0 5" HorizontalAlignment="Left" VerticalAlignment="Top"
-                            Padding="0 -2 0 0" Click="btnAddConnection_Click"/>
-                    <Label Grid.Column="2" Margin="0 8 0 0" Content="Test"/>
-                    <Label Grid.Column="3" Margin="0 8 0 0" Content="Connected"/>
-                    <Label Grid.Column="4" Margin="0 8 0 0" Content="Disconnected"/>
-                    <Label Grid.Column="5" Margin="0 8 0 0" Content="Site"/>
+                    <Button x:Name="btnAddConnection" Grid.Row="0" Margin="10 10 0 5" Padding="0 -2 0 0"
+                            HorizontalAlignment="Left" VerticalAlignment="Top"
+                            Style="{StaticResource plus-button}" Click="btnAddConnection_Click"/>
+                    <Label Grid.Column="2" Margin="0 8 0 0" Content="Test" FontWeight="SemiBold"/>
+                    <Label Grid.Column="3" Margin="0 8 0 0" Content="Connected" FontWeight="SemiBold"/>
+                    <Label Grid.Column="4" Margin="0 8 0 0" Content="Disconnected" FontWeight="SemiBold"/>
+                    <Label Grid.Column="5" Margin="0 8 0 0" Content="Site" FontWeight="SemiBold"/>
                 </Grid>
             </ScrollViewer>
 
@@ -56,7 +56,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Label Grid.Row="0" Content="Notes" Margin="6 10 10 0"/>
+                <Label Grid.Row="0" Content="Notes" FontWeight="SemiBold" Margin="6 10 10 0"/>
                 <TextBox Grid.Row="1" Margin="10 0 10 10" AcceptsReturn="True" Height="120"
                          HorizontalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
             </Grid>
@@ -92,7 +92,8 @@
                     <Setter Property="Margin" Value="10 0 2 0"/>
                 </Style>
             </Grid.Resources>
-            <Label Content="Title" Grid.Row="0" Grid.Column="0" x:Name="lblTitle" Margin="0 10 10 1"/>
+            <Label Content="Title" Grid.Row="0" Grid.Column="0" x:Name="lblTitle" Margin="0 10 10 1"
+                   FontWeight="SemiBold"/>
             <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtTitle" Margin="10 10 10 2" Height="24"
                      VerticalContentAlignment="Center"/>
             <Label Content="Start" Grid.Row="1" Grid.Column="0" x:Name="lblStart"/>
@@ -117,11 +118,11 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="btnSave" Grid.Column="0" Content="Save"
-                        Margin="10 10 5 15" Height="24" Width="46" Style="{StaticResource primary-button}"/>
+                        Margin="10 10 5 15" Height="24" Width="46" Style="{StaticResource primary-button}" Click="btnSave_Click"/>
                 <Button x:Name="btnCancel" Grid.Column="1" Content="Cancel"
-                        Margin="5 10 5 15" Height="24" Width="52"/>
+                        Margin="5 10 5 15" Height="24" Width="52" IsEnabled="False"/>
                 <Button x:Name="btnDelete" Grid.Column="2" Content="Delete"
-                        Margin="5 10 5 15" Height="24" Width="50"/>
+                        Margin="5 10 5 15" Height="24" Width="50" IsEnabled="False"/>
             </Grid>
         </Grid>
     </Grid>

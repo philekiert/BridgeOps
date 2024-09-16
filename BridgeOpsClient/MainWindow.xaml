@@ -11,7 +11,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="0"/> <!-- Set to 24 when adding conferencing support -->
+            <RowDefinition Height="24"/> <!-- Set to 24 when adding conferencing support -->
             <RowDefinition/>
         </Grid.RowDefinitions>
 

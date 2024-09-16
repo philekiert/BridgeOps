@@ -43,6 +43,8 @@ namespace BridgeOpsClient
 
             ditConference.headers = ColumnRecord.organisationHeaders;
             ditConference.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
+
+            btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -79,9 +81,6 @@ namespace BridgeOpsClient
                 btnRemove = new Button()
                 {
                     Margin = new Thickness(10, 5, 0, 5),
-                    Content = "-",
-                    Width = 24,
-                    Height = 24,
                     VerticalContentAlignment = VerticalAlignment.Center
                 };
 
@@ -253,6 +252,8 @@ namespace BridgeOpsClient
             connection.txtSearch.KeyDown += txtSearch_KeyDown;
             connection.btnOrgSummary.Click += btnSummary_Click;
 
+            connection.btnRemove.Style = (Style)FindResource("minus-button");
+
             grdConnections.RowDefinitions.Add(new() { Height = GridLength.Auto });
             grdConnections.Children.Add(connection.btnRemove);
             grdConnections.Children.Add(connection.btnUp);
@@ -359,14 +360,14 @@ namespace BridgeOpsClient
             int index = Grid.GetRow((UIElement)sender) - 1;
             Connection connection = connections[index];
 
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && connection.orgId != null)
+            {
+                App.EditOrganisation(connection.orgId.ToString()!);
+            }
+            else
             {
                 connection.ToggleSearch(true);
                 connection.txtSearch.Focus();
-            }
-            else if (connection.orgId != null)
-            {
-                App.EditOrganisation(connection.orgId.ToString()!);
             }
         }
 
@@ -412,6 +413,11 @@ namespace BridgeOpsClient
                 grdConnections.ColumnDefinitions[3].MaxWidth = 175;
                 grdConnections.ColumnDefinitions[4].MaxWidth = 175;
             }
+        }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
