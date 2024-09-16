@@ -142,7 +142,7 @@ namespace BridgeOpsClient
             {
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (!GetBuilder(tab).Run(out columnNames, out rows, false))
+                if (!GetBuilder(tab).Run(out columnNames, out rows, true))
                     return;
 
                 PageSelectBuilder builder = GetBuilder(tab);
