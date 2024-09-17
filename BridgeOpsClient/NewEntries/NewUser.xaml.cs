@@ -6,7 +6,7 @@ using System.Windows.Controls;
 
 namespace BridgeOpsClient
 {
-    public partial class NewUser : Window
+    public partial class NewUser : CustomWindow
     {
         public bool didSomething = false;
         public int id = 0;

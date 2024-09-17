@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class NetworkSettings : Window
+    public partial class NetworkSettings : CustomWindow
     {
         public NetworkSettings()
         {

@@ -6,11 +6,12 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         Title="Bridge Manager" WindowStartupLocation="CenterScreen" SizeToContent="Height" Width="210"
+        ResizeMode="CanMinimize"
         Loaded="Window_Loaded"
         KeyDown="Window_KeyDown" KeyUp="CustomWindow_KeyUp"
         Closed="Window_Closed" UseLayoutRounding="True">
 
-    <Grid>
+    <Grid Background="Transparent">
         <Grid.Resources>
             <Style TargetType="TextBox">
                 <Setter Property="VerticalContentAlignment" Value="Center"/>

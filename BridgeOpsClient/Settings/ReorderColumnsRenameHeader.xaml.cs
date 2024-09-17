@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class ReorderColumnsRenameHeader : Window
+    public partial class ReorderColumnsRenameHeader : CustomWindow
     {
         public string name = "";
 

@@ -1,4 +1,4 @@
-﻿<Window x:Class="BridgeOpsClient.NewResource"
+﻿<local:CustomWindow x:Class="BridgeOpsClient.NewResource"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -49,4 +49,4 @@
         <Button x:Name="btnAdd" Grid.Row="1" Content="Add" Margin="10,15,0,15" HorizontalAlignment="Left" Width="70"
                 Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
     </Grid>
-</Window>
+</local:CustomWindow>

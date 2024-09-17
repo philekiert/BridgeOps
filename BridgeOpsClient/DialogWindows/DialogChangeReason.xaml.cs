@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace BridgeOpsClient.DialogWindows
 {
-    public partial class DialogChangeReason : Window
+    public partial class DialogChangeReason : CustomWindow
     {
         string table = "";
 

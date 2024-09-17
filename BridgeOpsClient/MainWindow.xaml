@@ -1,4 +1,4 @@
-﻿<Window x:Class="BridgeOpsClient.MainWindow"
+﻿<local:CustomWindow x:Class="BridgeOpsClient.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,11 +11,11 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="24"/> <!-- Set to 24 when adding conferencing support -->
+            <RowDefinition Height="0"/> <!-- Set to 24 when adding conferencing support -->
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False">
+        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False" Background="{StaticResource brushMenuBar}">
             <MenuItem Header="_File">
                 <MenuItem Header="Log _In" IsEnabled="False"
                           x:Name="menuUserLogIn" Click="menuUserLogIn_Click"/>
@@ -88,4 +88,4 @@
             <Frame Grid.Column="1" x:Name="frameData" IsTabStop="False"/>
         </Grid>
     </Grid>
-</Window>
+</local:CustomWindow>

@@ -16,7 +16,7 @@ using SendReceiveClasses;
 
 namespace BridgeOpsClient
 {
-    public partial class PasswordChange : Window
+    public partial class PasswordChange : CustomWindow
     {
         int id;
         bool adminReset = false; // Switched on if the window was opened by the admin for another user.

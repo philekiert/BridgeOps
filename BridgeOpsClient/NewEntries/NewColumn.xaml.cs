@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class NewColumn : Window
+    public partial class NewColumn : CustomWindow
     {
         ColumnRecord.Column columnDetails;
         bool edit = false;

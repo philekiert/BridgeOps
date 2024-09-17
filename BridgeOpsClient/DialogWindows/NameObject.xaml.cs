@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient.DialogWindows
 {
-    public partial class NameObject : Window
+    public partial class NameObject : CustomWindow
     {
         public NameObject(string title)
         {

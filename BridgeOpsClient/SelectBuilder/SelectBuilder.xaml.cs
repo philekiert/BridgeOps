@@ -20,7 +20,7 @@ using DocumentFormat.OpenXml.Office2010.ExcelAc;
 
 namespace BridgeOpsClient
 {
-    public partial class SelectBuilder : Window
+    public partial class SelectBuilder : CustomWindow
     {
         public SelectBuilder()
         {

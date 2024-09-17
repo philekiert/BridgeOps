@@ -4,7 +4,7 @@ using System.Windows;
 
 namespace BridgeOpsClient
 {
-    public partial class NewResource : Window
+    public partial class NewResource : CustomWindow
     {
         int connMax = Int32.MaxValue;
         int confMax = Int16.MaxValue;

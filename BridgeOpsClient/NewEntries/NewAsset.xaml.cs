@@ -19,7 +19,7 @@ using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
-    public partial class NewAsset : Window
+    public partial class NewAsset : CustomWindow
     {
         bool edit = false;
         int id;

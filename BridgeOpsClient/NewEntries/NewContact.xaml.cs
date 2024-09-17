@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class NewContact : Window
+    public partial class NewContact : CustomWindow
     {
         bool edit = false;
         public string id = "";

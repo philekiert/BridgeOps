@@ -21,7 +21,7 @@ using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
-    public partial class NewOrganisation : Window
+    public partial class NewOrganisation : CustomWindow
     {
         bool edit = false;
         int id;

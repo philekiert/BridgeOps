@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class LinkRecord : Window
+    public partial class LinkRecord : CustomWindow
     {
         string table;
         OrderedDictionary columns;

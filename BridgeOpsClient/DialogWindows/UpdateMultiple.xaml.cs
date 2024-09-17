@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class UpdateMultiple : Window
+    public partial class UpdateMultiple : CustomWindow
     {
         int identity;
         string table;

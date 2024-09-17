@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Shell;
+using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
@@ -11,8 +16,11 @@ namespace BridgeOpsClient
 
     public class CustomWindow : Window
     {
+        const double borderRadius = 7d;
+
+        private Border windowBorder;
         private Grid grid;
-        private TextBlock title;
+        private Border titleBar;
         private Border minimiseButton;
         private Border maximiseButton;
         private Border closeButton;
@@ -20,37 +28,103 @@ namespace BridgeOpsClient
         public CustomWindow()
         {
             WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
 
             // Set WindowChrome properties
             var windowChrome = new WindowChrome
             {
                 CaptionHeight = 30,
-                ResizeBorderThickness = SystemParameters.WindowResizeBorderThickness
+                ResizeBorderThickness = new Thickness(6)
             };
             WindowChrome.SetWindowChrome(this, windowChrome);
 
+            // This hard coding of the dictionary index is not ideal, but I can't load the resources from FindName here
+            // for some reason. Might need updating if more dictionaries are added.
+            var resources = Application.Current.Resources.MergedDictionaries[0];
+
+            windowBorder = new()
+            {
+                CornerRadius = new CornerRadius(borderRadius),
+                BorderBrush = (Brush)resources["brushWindowBorder"],
+                BorderThickness = new Thickness(1),
+                Background = Brushes.White,
+            };
+
             grid = new();
-            grid.RowDefinitions.Add(new() { Height = new GridLength(30) });
+            grid.RowDefinitions.Add(new() { Height = new GridLength(35) });
             grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
+            windowBorder.Child = grid;
 
+            FontFamily robotoMono = new FontFamily(new Uri("pack://application:,,,/"),
+                                                           "./Resources/Fonts/Roboto Mono/#Roboto Mono");
+            // Set up the title bar.
+            titleBar = new()
+            {
+                CornerRadius = new CornerRadius(borderRadius, 0, 0, 0),
+                Background = resources["brushTitleBar"] as Brush,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            Grid.SetRow(titleBar, 0);
+            grid.Children.Add(titleBar);
+
+            Path minimisePath = new()
+            {
+                StrokeThickness = 0,
+                Stroke = (Brush)resources["brushPrimaryButton"],
+                Fill = (Brush)resources["brushPrimaryButton"],
+                Data = new RectangleGeometry(new Rect(10, 18, 10, 3))
+            };
+            CombinedGeometry combinedGeometry = new(GeometryCombineMode.Exclude,
+                                                    new RectangleGeometry(new Rect(10, 11, 10, 11)),
+                                                    new RectangleGeometry(new Rect(11, 14, 8, 7)));
+            Path maximisePath = new()
+            {
+                StrokeThickness = 0,
+                Stroke = (Brush)resources["brushPrimaryButton"],
+                Fill = (Brush)resources["brushPrimaryButton"],
+                Data = combinedGeometry
+            };
+
+            TextBlock closeText = new()
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Brush)resources["brushRemoveButton"],
+                FontFamily = robotoMono,
+                FontSize = 20,
+                FontWeight = FontWeights.Black,
+                Margin = new Thickness(-2.5, -2, 0, 0),
+                Text = "x"
+            };
             minimiseButton = new()
             {
                 Width = 30,
-                Background = Brushes.Gray
+                Background = (Brush)resources["brushMinimise"],
+                Child = minimisePath,
+                Style = (Style)resources["title-bar-button"],
+                Margin = new Thickness(0, 0, 0, 5)
             };
             maximiseButton = new()
             {
                 Width = 30,
-                Background = Brushes.LightGray
+                Background = (Brush)resources["brushMaximise"],
+                Child = maximisePath,
+                Style = (Style)resources["title-bar-button"],
+                Margin = new Thickness(0, 0, 0, 5)
             };
             closeButton = new()
             {
+                CornerRadius = new CornerRadius(0, borderRadius, 0, 0),
                 Width = 30,
-                Background = Brushes.Gray
+                Background = (Brush)resources["brushClose"],
+                Child = closeText,
+                Style = (Style)resources["title-bar-button"],
+                Margin = new Thickness(0, 0, 0, 5)
             };
 
             WindowChrome.SetIsHitTestVisibleInChrome(minimiseButton, true);
@@ -59,10 +133,18 @@ namespace BridgeOpsClient
 
             minimiseButton.MouseUp += MinimiseButton_MouseUp;
             minimiseButton.MouseDown += MinimiseButton_MouseDown;
+            minimiseButton.MouseEnter += Button_MouseEnter;
+            minimiseButton.MouseLeave += Button_MouseLeave;
             maximiseButton.MouseUp += MaximiseButton_MouseUp;
             maximiseButton.MouseDown += MaximiseButton_MouseDown;
-            closeButton.MouseUp += CloseButton_MouseUp;
+            maximiseButton.MouseEnter += Button_MouseEnter;
+            maximiseButton.MouseLeave += Button_MouseLeave;
+            closeButton.PreviewMouseUp += CloseButton_MouseUp;
             closeButton.MouseDown += CloseButton_MouseDown;
+            closeButton.MouseEnter += Button_MouseEnter;
+            closeButton.MouseLeave += Button_MouseLeave;
+            PreviewMouseUp += CustomWindow_PreviewMouseUp;
+            MouseUp += CustomWindow_MouseUp;
 
             Grid.SetColumn(minimiseButton, 1);
             Grid.SetColumn(maximiseButton, 2);
@@ -71,8 +153,7 @@ namespace BridgeOpsClient
             grid.Children.Add(maximiseButton);
             grid.Children.Add(closeButton);
 
-            // Set up the title bar.
-            title = new()
+            TextBlock title = new()
             {
                 Foreground = Brushes.Black,
                 FontWeight = FontWeights.SemiBold,
@@ -80,17 +161,37 @@ namespace BridgeOpsClient
                 FontSize = 14,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            Content = grid;
-            Grid.SetRow(title, 0);
-            grid.Children.Add(title);
+
+            titleBar.Child = title;
+
+            Content = windowBorder;
 
             Loaded += CustomWindow_Loaded;
         }
 
+        private void Button_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            ((Border)sender).Opacity = .75d;
+        }
+
+        private void Button_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            ((Border)sender).Opacity = 1d;
+        }
+
         int buttonPressed = -1;
 
+        private void CustomWindow_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        { buttonPressed = -1; }
+        private void CustomWindow_PreviewMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            grid.Children[1].ClearValue(OpacityProperty);
+            grid.Children[2].ClearValue(OpacityProperty);
+            grid.Children[3].ClearValue(OpacityProperty);
+        }
+
         private void MinimiseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        { buttonPressed = 0; }
+        { buttonPressed = 0; ((Border)sender).Opacity = .5f; }
         private void MinimiseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 0)
@@ -99,7 +200,7 @@ namespace BridgeOpsClient
         }
 
         private void MaximiseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        { buttonPressed = 1; }
+        { buttonPressed = 1; ((Border)sender).Opacity = .5f; }
         private void MaximiseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 1)
@@ -107,13 +208,16 @@ namespace BridgeOpsClient
                 if (WindowState == WindowState.Maximized)
                     WindowState = WindowState.Normal;
                 else if (WindowState == WindowState.Normal)
+                {
                     WindowState = WindowState.Maximized;
+                    MaxHeight = SystemParameters.MaximumWindowTrackHeight;
+                }
             }
             buttonPressed = -1;
         }
 
         private void CloseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        { buttonPressed = 2; }
+        { buttonPressed = 2; ((Border)sender).Opacity = .5f; }
         private void CloseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 2)
@@ -132,10 +236,151 @@ namespace BridgeOpsClient
             // This has to be done after load, or the content defined in XAML just overrides the grid.
             object initialContent = Content;
             contentPresenter.Content = initialContent;
-            Content = grid;
+            Content = windowBorder;
 
             // Carry out some other tasks after load to take advantage of properties set in XAML.
-            title.Text = Title;
+            ((TextBlock)titleBar.Child).Text = Title;
+            if (ResizeMode == ResizeMode.CanMinimize)
+                grid.ColumnDefinitions[2].Width = new GridLength(0);
+            if (ResizeMode == ResizeMode.NoResize)
+            {
+                grid.ColumnDefinitions[1].Width = new GridLength(0);
+                grid.ColumnDefinitions[2].Width = new GridLength(0);
+                ((Border)grid.Children[2]).Background = ((Border)grid.Children[0]).Background;
+            }
         }
+
+        // All code below is David Rickard's with a touch of myself and Copilot. It handles maximised window placement.
+        // The original code had an issue where the taskbar wouldn't display if set to auto-hide. This is fixed here,
+        // but bear in mind that it only works when not debugging for some reason I can't prioritise getting to the
+        // bottom of.
+
+        #region Maximise logic
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            ((HwndSource)PresentationSource.FromVisual(this)).AddHook(HookProc);
+        }
+
+        public static IntPtr HookProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_GETMINMAXINFO)
+            {
+                // We need to tell the system what our size should be when maximized. Otherwise it will cover the whole screen,
+                // including the task bar.
+                MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO))!;
+
+                // Adjust the maximized size and position to fit the work area of the correct monitor
+                IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+                if (monitor != IntPtr.Zero)
+                {
+                    MONITORINFO monitorInfo = new MONITORINFO();
+                    monitorInfo.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+                    GetMonitorInfo(monitor, ref monitorInfo);
+                    RECT rcWorkArea = monitorInfo.rcWork;
+                    RECT rcMonitorArea = monitorInfo.rcMonitor;
+
+                    // Check if the taskbar is set to auto-hide
+                    APPBARDATA appBarData = new APPBARDATA();
+                    appBarData.cbSize = Marshal.SizeOf(typeof(APPBARDATA));
+                    int autoHide = (int)SHAppBarMessage(ABM_GETSTATE, ref appBarData);
+
+                    // If the taskbar is set to auto-hide, leave a few pixels at the bottom
+                    if ((autoHide & ABS_AUTOHIDE) == ABS_AUTOHIDE)
+                    {
+                        rcWorkArea.Bottom -= 1; // Adjust this value as needed
+                    }
+
+                    mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
+                    mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
+                    mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
+                    mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top);
+                }
+
+                Marshal.StructureToPtr(mmi, lParam, true);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private const int WM_GETMINMAXINFO = 0x0024;
+        private const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
+        private const int ABS_AUTOHIDE = 0x1;
+        private const int ABM_GETSTATE = 0x4;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromWindow(IntPtr handle, uint flags);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        [DllImport("shell32.dll")]
+        private static extern IntPtr SHAppBarMessage(int dwMessage, ref APPBARDATA pData);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct APPBARDATA
+        {
+            public int cbSize;
+            public IntPtr hWnd;
+            public uint uCallbackMessage;
+            public uint uEdge;
+            public RECT rc;
+            public int lParam;
+        }
+
+        [Serializable]
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+
+            public RECT(int left, int top, int right, int bottom)
+            {
+                this.Left = left;
+                this.Top = top;
+                this.Right = right;
+                this.Bottom = bottom;
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
+        }
+
+        [Serializable]
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+
+            public POINT(int x, int y)
+            {
+                this.X = x;
+                this.Y = y;
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MINMAXINFO
+        {
+            public POINT ptReserved;
+            public POINT ptMaxSize;
+            public POINT ptMaxPosition;
+            public POINT ptMinTrackSize;
+            public POINT ptMaxTrackSize;
+        }
+
+        #endregion
     }
 }

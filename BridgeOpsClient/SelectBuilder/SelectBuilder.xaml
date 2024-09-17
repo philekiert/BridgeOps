@@ -1,4 +1,4 @@
-﻿<Window x:Class="BridgeOpsClient.SelectBuilder"
+﻿<local:CustomWindow x:Class="BridgeOpsClient.SelectBuilder"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -64,8 +64,9 @@
                 Padding="0 0 0 0" Margin="0 10 10 10" Width="44" Height="24"/>
 
         <!-- Start of lower section -->
-        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="15"
-                    SelectionChanged="tabControl_SelectionChanged" BorderThickness="1 1 0 0">
+        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="15" Background="Transparent"
+                    SelectionChanged="tabControl_SelectionChanged" BorderThickness="0 1 0 0" Margin="-1 0 0 0"
+                    Padding="0 0 0 0">
         </TabControl>
     </Grid>
-</Window>
+</local:CustomWindow>

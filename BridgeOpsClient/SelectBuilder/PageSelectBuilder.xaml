@@ -104,7 +104,7 @@
         </Grid>
         <GridSplitter Grid.Column="0" x:Name="gridSplitter" Width="5"
                       HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
-        <TabControl Grid.Column="1">
+        <TabControl Grid.Column="1" Background="Transparent" BorderThickness="1 1 0 0" Margin="0 5 0 0">
             <TabItem Header="Output" x:Name="tabOutput">
                 <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"/>
             </TabItem>

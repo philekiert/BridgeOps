@@ -3,6 +3,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:BridgeOpsClient">
 
+    <Color x:Key="colorTitleBar">#eee</Color>
+    <Color x:Key="colorMinimise">#ddd</Color>
+    <Color x:Key="colorMaximise">#ccc</Color>
+    <Color x:Key="colorClose">#eee</Color>
+    <Color x:Key="colorWindowBorder">#bbb</Color>
+    <Color x:Key="colorMenuBar">#fff</Color>
     <Color x:Key="colorPrimaryButton">#556383</Color>
     <Color x:Key="colorPrimaryButtonBorder">#000</Color>
     <Color x:Key="colorPrimaryButtonHover">#569cd6</Color>
@@ -13,6 +19,12 @@
     <Color x:Key="colorRemoveButtonBorder">#ab5073</Color>
     <Color x:Key="colorButton">#eee</Color>
     <Color x:Key="colorButtonBorder">#aaa</Color>
+    <SolidColorBrush x:Key="brushTitleBar" Color="{StaticResource colorTitleBar}"/>
+    <SolidColorBrush x:Key="brushMinimise" Color="{StaticResource colorMinimise}"/>
+    <SolidColorBrush x:Key="brushMaximise" Color="{StaticResource colorMaximise}"/>
+    <SolidColorBrush x:Key="brushClose" Color="{StaticResource colorClose}"/>
+    <SolidColorBrush x:Key="brushWindowBorder" Color="{StaticResource colorWindowBorder}"/>
+    <SolidColorBrush x:Key="brushMenuBar" Color="{StaticResource colorMenuBar}"/>
     <SolidColorBrush x:Key="brushPrimaryButton" Color="{StaticResource colorPrimaryButton}"/>
     <SolidColorBrush x:Key="brushPrimaryButtonBorder" Color="{StaticResource colorPrimaryButtonBorder}"/>
     <SolidColorBrush x:Key="brushPrimaryButtonHover" Color="{StaticResource colorPrimaryButtonHover}"/>
@@ -26,6 +38,14 @@
     
     <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose-->
 
+    <Style TargetType="Border" x:Key="title-bar-button">
+        <Style.Triggers>
+            <!--<Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Opacity" Value=".75"/>
+            </Trigger>-->
+        </Style.Triggers>
+    </Style>
+    
     <Style TargetType="Button" x:Key="primary-button">
         <Setter Property="Background" Value="{StaticResource brushPrimaryButton}"/>
         <Setter Property="BorderBrush" Value="{StaticResource brushPrimaryButtonBorder}"/>

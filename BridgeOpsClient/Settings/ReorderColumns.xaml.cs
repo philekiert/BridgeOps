@@ -18,7 +18,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient
 {
-    public partial class ReorderColumns : Window
+    public partial class ReorderColumns : CustomWindow
     {
         public ReorderColumns()
         {

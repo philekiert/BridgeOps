@@ -24,7 +24,7 @@ using SendReceiveClasses;
 
 namespace BridgeOpsClient
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : CustomWindow
     {
         public const int CONF_PANE_MIN_WIDTH = 500;
         public const int DATA_PANE_MIN_WIDTH = 818;

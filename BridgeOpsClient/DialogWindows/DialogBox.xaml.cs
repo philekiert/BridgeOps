@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient.DialogWindows
 {
-    public partial class DialogBox : Window
+    public partial class DialogBox : CustomWindow
     {
         public enum Buttons { YesNo, OKCancel }
 
@@ -68,7 +68,7 @@ namespace BridgeOpsClient.DialogWindows
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && btnCancel.Visibility == Visibility.Visible)
+            if (e.Key == Key.Enter && btnCancel.Visibility != Visibility.Visible)
             {
                 Set(true);
                 Close();

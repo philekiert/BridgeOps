@@ -18,7 +18,7 @@ using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
-    public partial class NewConference : Window
+    public partial class NewConference : CustomWindow
     {
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
         {
