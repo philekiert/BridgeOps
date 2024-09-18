@@ -57,9 +57,9 @@
             <Button Grid.Column="5" Content="^" Padding="0 2 0 0" x:Name="btnDayToday" Click="btnDayToday_Click"
                     Style="{StaticResource ToolbarButton}"/>
             <Button Grid.Column="6" Content="&lt;" x:Name="btnDayPrevious" Click="btnDayPrevious_Click"
-                    Style="{StaticResource ToolbarButton}"/>
+                    Style="{StaticResource back-button}"/>
             <Button Grid.Column="7" Content="&gt;" x:Name="btnDayNext" Click="btnDayNext_Click"
-                    Style="{StaticResource ToolbarButton}"/>
+                    Style="{StaticResource forward-button}"/>
         </Grid>
         <Grid Grid.Row="1" x:Name="grdScheduleView">
             <Grid.ColumnDefinitions>

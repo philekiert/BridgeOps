@@ -418,15 +418,43 @@ namespace BridgeOpsClient
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            if (txtTitle.Text == null)
-                App.DisplayError("Must enter a conference title.");
+            Save();
+        }
+
+        private bool Save()
+        {
+            bool Abort(string message)
+            {
+                App.DisplayError(message);
+                return false;
+            }
+
+            if (txtTitle.Text == null || txtTitle.Text == "")
+                return Abort("Must enter a conference title.");
             DateTime? start = dtpStart.GetDateTime();
             if (start == null)
-                App.DisplayError("Must select a start date and time.");
+                return Abort("Must select a start date and time.");
             DateTime? end = dtpEnd.GetDateTime();
-            if (start == null)
-                App.DisplayError("Must select an end date and time.");
-            string resource = cmbResource.Text;
+            if (end == null)
+                return Abort("Must select an end date and time.");
+            if (start >= end)
+                return Abort("End cannot be before the start date and time.");
+            int indexResourceNameSplit = cmbResource.Text.LastIndexOf(' ');
+            string resourceName;
+            int resourceRow;
+            if (indexResourceNameSplit > 0 && indexResourceNameSplit < cmbResource.Text.Length - 1)
+            {
+                resourceName = cmbResource.Text.Remove(indexResourceNameSplit);
+                if (resourceName == "" || !int.TryParse(cmbResource.Text.Substring(indexResourceNameSplit + 1),
+                                                                                   out resourceRow))
+                    return Abort("Must select a valid resource.");
+            }
+            foreach (Connection c in connections)
+                if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
+                    return Abort("All connection rows must have a dial number selected.");
+
+            return true;
         }
+
     }
 }
