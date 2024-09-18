@@ -51,8 +51,8 @@ namespace BridgeOpsClient
             // Only instantiate once.
             if (tmrWindowLeaveDetect == null)
             {
-                tmrWindowLeaveDetect = new()
-                { Interval = new TimeSpan(1_000_000), /* 1/10 second. */ };
+                tmrWindowLeaveDetect = new(DispatcherPriority.Render)
+                { Interval = new TimeSpan(100_000), /* 1/100 second. */ };
                 tmrWindowLeaveDetect.Tick += TmrWindowLeaveDetect_Tick;
                 tmrWindowLeaveDetect.Start();
             }
@@ -227,11 +227,17 @@ namespace BridgeOpsClient
                 return;
             }
             if (minimiseButton.IsMouseOver)
-                minimiseButton.Opacity = hoverOpacity;
+                minimiseButton.Opacity = Mouse.LeftButton == MouseButtonState.Pressed &&
+                                         buttonPressed == 0 ? clickOpacity :
+                                                              hoverOpacity;
             if (maximiseButton.IsMouseOver)
-                maximiseButton.Opacity = hoverOpacity;
+                maximiseButton.Opacity = Mouse.LeftButton == MouseButtonState.Pressed &&
+                                         buttonPressed == 1 ? clickOpacity :
+                                                              hoverOpacity;
             if (closeButton.IsMouseOver)
-                closeButton.Opacity = hoverOpacity;
+                closeButton.Opacity = Mouse.LeftButton == MouseButtonState.Pressed &&
+                                      buttonPressed == 2 ? clickOpacity :
+                                                           hoverOpacity;
         }
 
         public void CentreTitle(bool centre)
