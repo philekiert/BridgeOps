@@ -27,13 +27,13 @@ namespace BridgeOpsClient
                 if (win is CustomWindow cw)
                 {
                     System.Drawing.Point mousePosition = System.Windows.Forms.Cursor.Position;
-                    if (mousePosition.X < cw.Left || mousePosition.X > cw.Left + cw.ActualWidth ||
-                        mousePosition.Y < cw.Top || mousePosition.Y > cw.Left + cw.ActualHeight)
-                        cw.UnhoverTitleBarButtons();
+                    cw.UnhoverTitleBarButtons(cw.WindowState != WindowState.Maximized &&
+                    (mousePosition.X < cw.Left || mousePosition.X > cw.Left + cw.ActualWidth ||
+                     mousePosition.Y < cw.Top || mousePosition.Y > cw.Left + cw.ActualHeight));
                 }
         }
         const double borderRadius = 7d;
-        public const double titleBarHeight = 30;
+        public const double titleBarHeight = 28;
 
         private Border windowBorder;
         private Grid grid;
@@ -42,6 +42,9 @@ namespace BridgeOpsClient
         private Border minimiseButton;
         private Border maximiseButton;
         private Border closeButton;
+
+        private double hoverOpacity = .75d;
+        private double clickOpacity = .5d;
 
         public CustomWindow()
         {
@@ -80,7 +83,7 @@ namespace BridgeOpsClient
             };
 
             grid = new();
-            grid.RowDefinitions.Add(new() { Height = new GridLength(35) });
+            grid.RowDefinitions.Add(new() { Height = new GridLength(titleBarHeight + 5) });
             grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
@@ -94,6 +97,7 @@ namespace BridgeOpsClient
             // Set up the title bar.
             titleBar = new()
             {
+                Height = titleBarHeight,
                 CornerRadius = new CornerRadius(borderRadius, 0, 0, 0),
                 Background = resources["brushTitleBar"] as Brush,
                 Margin = new Thickness(0, 0, 0, 5),
@@ -117,11 +121,11 @@ namespace BridgeOpsClient
             Path minimisePath = new()
             {
                 Fill = (Brush)resources["brushPrimaryButton"],
-                Data = new RectangleGeometry(new Rect(10, 18, 10, 3))
+                Data = new RectangleGeometry(new Rect(9, 17, 10, 3))
             };
             CombinedGeometry combinedGeometry = new(GeometryCombineMode.Exclude,
-                                                    new RectangleGeometry(new Rect(10, 10, 10, 11)),
-                                                    new RectangleGeometry(new Rect(11, 13, 8, 7)));
+                                                    new RectangleGeometry(new Rect(9, 9, 10, 11)),
+                                                    new RectangleGeometry(new Rect(10, 12, 8, 7)));
             Path maximisePath = new()
             {
                 Fill = (Brush)resources["brushPrimaryButton"],
@@ -136,11 +140,12 @@ namespace BridgeOpsClient
                 FontFamily = robotoMono,
                 FontSize = 20,
                 FontWeight = FontWeights.Black,
-                Margin = new Thickness(-2.5, -2, 0, 0),
+                Margin = new Thickness(-1, -2.5, 0, 0),
                 Text = "x"
             };
             minimiseButton = new()
             {
+                Height = titleBarHeight,
                 Width = titleBarHeight,
                 Background = (Brush)resources["brushMinimise"],
                 BorderThickness = new Thickness(0, 0, 0, 1),
@@ -150,6 +155,7 @@ namespace BridgeOpsClient
             };
             maximiseButton = new()
             {
+                Height = titleBarHeight,
                 Width = titleBarHeight,
                 Background = (Brush)resources["brushMaximise"],
                 BorderThickness = new Thickness(0, 0, 0, 1),
@@ -160,6 +166,7 @@ namespace BridgeOpsClient
             closeButton = new()
             {
                 CornerRadius = new CornerRadius(0, borderRadius, 0, 0),
+                Height = titleBarHeight,
                 Width = titleBarHeight,
                 Background = (Brush)resources["brushClose"],
                 BorderThickness = new Thickness(0, 0, 0, 1),
@@ -210,11 +217,21 @@ namespace BridgeOpsClient
             Loaded += CustomWindow_Loaded;
         }
 
-        private void UnhoverTitleBarButtons()
+        private void UnhoverTitleBarButtons(bool unhover)
         {
-            minimiseButton.Opacity = 1;
-            maximiseButton.Opacity = 1;
-            closeButton.Opacity = 1;
+            if (unhover)
+            {
+                minimiseButton.Opacity = 1;
+                maximiseButton.Opacity = 1;
+                closeButton.Opacity = 1;
+                return;
+            }
+            if (minimiseButton.IsMouseOver)
+                minimiseButton.Opacity = hoverOpacity;
+            if (maximiseButton.IsMouseOver)
+                maximiseButton.Opacity = hoverOpacity;
+            if (closeButton.IsMouseOver)
+                closeButton.Opacity = hoverOpacity;
         }
 
         public void CentreTitle(bool centre)
@@ -234,7 +251,7 @@ namespace BridgeOpsClient
 
         private void Button_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            ((Border)sender).Opacity = .75d;
+            ((Border)sender).Opacity = hoverOpacity;
         }
 
         private void Button_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
@@ -254,7 +271,7 @@ namespace BridgeOpsClient
         }
 
         private void MinimiseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        { buttonPressed = 0; ((Border)sender).Opacity = .5f; }
+        { buttonPressed = 0; ((Border)sender).Opacity = clickOpacity; }
         private void MinimiseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 0)
@@ -263,7 +280,7 @@ namespace BridgeOpsClient
         }
 
         private void MaximiseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        { buttonPressed = 1; ((Border)sender).Opacity = .5f; }
+        { buttonPressed = 1; ((Border)sender).Opacity = clickOpacity; }
         private void MaximiseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 1)
@@ -280,7 +297,7 @@ namespace BridgeOpsClient
         }
 
         private void CloseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        { buttonPressed = 2; ((Border)sender).Opacity = .5f; }
+        { buttonPressed = 2; ((Border)sender).Opacity = clickOpacity; }
         private void CloseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 2)

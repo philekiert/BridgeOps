@@ -59,7 +59,7 @@ namespace BridgeOpsClient
 
             grdMain.Children.Remove(menuBar);
             grdMain.RowDefinitions[0].Height = new(0);
-            AssignMenuBar(menuBar, 4);
+            AssignMenuBar(menuBar, 2);
 
             frameConf.Content = new PageConferenceView();
             pageDatabase = new PageDatabase(this);
