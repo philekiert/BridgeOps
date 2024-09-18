@@ -1430,6 +1430,10 @@ namespace BridgeOpsClient
                 Environment.Exit(0);
             }
         }
+
+
+        //   C O N F E R E N C I N G
+        //public static 
     }
 
     public class SessionDetails

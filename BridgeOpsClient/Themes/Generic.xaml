@@ -4,9 +4,11 @@
     xmlns:local="clr-namespace:BridgeOpsClient">
 
     <Color x:Key="colorTitleBar">#eee</Color>
+    <Color x:Key="colorTitleBarBorder">#ccc</Color>
     <Color x:Key="colorMinimise">#ddd</Color>
     <Color x:Key="colorMaximise">#ccc</Color>
     <Color x:Key="colorClose">#eee</Color>
+    <Color x:Key="colorCloseButton">#f54e80</Color>
     <Color x:Key="colorWindowBorder">#bbb</Color>
     <Color x:Key="colorMenuBar">#fff</Color>
     <Color x:Key="colorPrimaryButton">#556383</Color>
@@ -20,9 +22,11 @@
     <Color x:Key="colorButton">#eee</Color>
     <Color x:Key="colorButtonBorder">#aaa</Color>
     <SolidColorBrush x:Key="brushTitleBar" Color="{StaticResource colorTitleBar}"/>
+    <SolidColorBrush x:Key="brushTitleBarBorder" Color="{StaticResource colorTitleBarBorder}"/>
     <SolidColorBrush x:Key="brushMinimise" Color="{StaticResource colorMinimise}"/>
     <SolidColorBrush x:Key="brushMaximise" Color="{StaticResource colorMaximise}"/>
     <SolidColorBrush x:Key="brushClose" Color="{StaticResource colorClose}"/>
+    <SolidColorBrush x:Key="brushCloseButton" Color="{StaticResource colorCloseButton}"/>
     <SolidColorBrush x:Key="brushWindowBorder" Color="{StaticResource colorWindowBorder}"/>
     <SolidColorBrush x:Key="brushMenuBar" Color="{StaticResource colorMenuBar}"/>
     <SolidColorBrush x:Key="brushPrimaryButton" Color="{StaticResource colorPrimaryButton}"/>
@@ -37,14 +41,6 @@
     <SolidColorBrush x:Key="brushButtonBorder" Color="{StaticResource colorButtonBorder}"/>
     
     <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose-->
-
-    <Style TargetType="Border" x:Key="title-bar-button">
-        <Style.Triggers>
-            <!--<Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Opacity" Value=".75"/>
-            </Trigger>-->
-        </Style.Triggers>
-    </Style>
     
     <Style TargetType="Button" x:Key="primary-button">
         <Setter Property="Background" Value="{StaticResource brushPrimaryButton}"/>

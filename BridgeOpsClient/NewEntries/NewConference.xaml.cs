@@ -360,9 +360,10 @@ namespace BridgeOpsClient
             int index = Grid.GetRow((UIElement)sender) - 1;
             Connection connection = connections[index];
 
-            if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && connection.orgId != null)
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                App.EditOrganisation(connection.orgId.ToString()!);
+                if (connection.orgId != null)
+                    App.EditOrganisation(connection.orgId.ToString()!);
             }
             else
             {
@@ -417,7 +418,15 @@ namespace BridgeOpsClient
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-
+            if (txtTitle.Text == null)
+                App.DisplayError("Must enter a conference title.");
+            DateTime? start = dtpStart.GetDateTime();
+            if (start == null)
+                App.DisplayError("Must select a start date and time.");
+            DateTime? end = dtpEnd.GetDateTime();
+            if (start == null)
+                App.DisplayError("Must select an end date and time.");
+            string resource = cmbResource.Text;
         }
     }
 }

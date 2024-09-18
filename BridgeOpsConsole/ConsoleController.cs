@@ -506,8 +506,9 @@ public class ConsoleController
                                           "Mars Colony",
                                           "Titan Shipyards",
                                           "Europa Deep Exploration Centre" };
-        StringBuilder o = new($"TEXT,TEXT,TEXT,TEXT,TEXT{Glo.NL}" +
-                              $"Organisation_Reference,Parent_Reference,Organisation_Name,Dial_No,Notes{Glo.NL}");
+        StringBuilder o = new($"TEXT,TEXT,TEXT,TEXT,TEXT,NUMBER{Glo.NL}" +
+                              $"Organisation_Reference,Parent_Reference,Organisation_Name,Dial_No,Notes," +
+                              $"Available_for_Conferencing{Glo.NL}");
         StringBuilder a = new($"TEXT,TEXT,TEXT{Glo.NL}Asset_Reference,Organisation_Reference,Notes{Glo.NL}");
 
         o.AppendLine("Sol Space Agency");
@@ -527,7 +528,7 @@ public class ConsoleController
         for (int i = 0; i < commandValInt; ++i)
         {
             string parent = parents[r.Next(0, 4)];
-            o.AppendLine($"SSA{i},{parent},{parent} SSA{i},{i},{orgNotes[r.Next(0, 4)]}");
+            o.AppendLine($"SSA{i},{parent},{parent} SSA{i},{i},{orgNotes[r.Next(0, 4)]},1");
 
             int assets = r.Next(0, 10);
             for (int j = 0; j < assets; ++j)

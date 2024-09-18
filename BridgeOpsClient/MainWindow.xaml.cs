@@ -33,9 +33,9 @@ namespace BridgeOpsClient
             if (option == 0)
                 MinWidth = CONF_PANE_MIN_WIDTH;
             else if (option == 1)
-                MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
+                MinWidth = CONF_PANE_MIN_WIDTH + DATA_PANE_MIN_WIDTH;
             else if (option == 2)
-                MinWidth = DATA_PANE_MIN_WIDTH + 16;
+                MinWidth = DATA_PANE_MIN_WIDTH;
         }
 
         public static List<PageConferenceView> pageConferenceViews = new();
@@ -43,6 +43,8 @@ namespace BridgeOpsClient
 
         public MainWindow()
         {
+            App.mainWindow = this;
+
             // Request login credentials on startup.
             LogIn logIn = new LogIn(this);
             logIn.ShowDialog();
@@ -55,6 +57,10 @@ namespace BridgeOpsClient
             InitializeComponent();
             grdConfData.Focus();
 
+            grdMain.Children.Remove(menuBar);
+            grdMain.RowDefinitions[0].Height = new(0);
+            AssignMenuBar(menuBar, 4);
+
             frameConf.Content = new PageConferenceView();
             pageDatabase = new PageDatabase(this);
             frameData.Content = pageDatabase;
@@ -65,8 +71,6 @@ namespace BridgeOpsClient
             viewState = 2; // Comment out for conference view development
             ApplyViewState();
             GreyOutPermissions();
-
-            App.mainWindow = this;
         }
 
         public void ApplyViewState()

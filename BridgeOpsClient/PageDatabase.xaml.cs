@@ -158,8 +158,18 @@ namespace BridgeOpsClient
 
         private void EnforceMinimumSize()
         {
-            // This needs automating at some point, because these measurements could be OS-dependent.
-            containingWindow.MinHeight = 180 * paneCount + 87;
+            double minHeight = 180 * paneCount;
+            if (App.mainWindow != null)
+                for (int i = 0; i < App.mainWindow.grdMain.RowDefinitions.Count - 1; ++i)
+                    minHeight += App.mainWindow.grdMain.RowDefinitions[i].Height.Value;
+
+            minHeight += CustomWindow.titleBarHeight;
+
+            minHeight += Margin.Top;
+            minHeight += 1; // Border compensation.
+            minHeight += 10; // Margin somewhere.
+
+            containingWindow.MinHeight = minHeight;
         }
 
         public void ClearSqlDataGrids()
@@ -186,7 +196,7 @@ namespace BridgeOpsClient
             }
 
             foreach (PageDatabaseView view in views)
-                            view.RepeatSearch(identity);
+                view.RepeatSearch(identity);
         }
 
         public void ReflectPermissions()

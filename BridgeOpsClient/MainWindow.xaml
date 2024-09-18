@@ -8,14 +8,14 @@
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
         Title="Bridge Manager" Height="700" Width="800"
         Closed="Window_Closed">
-    <Grid>
+    <Grid x:Name="grdMain">
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="0"/> <!-- Set to 24 when adding conferencing support -->
-            <RowDefinition/>
+            <RowDefinition Height="24"/> <!-- Set to 24 when adding conferencing support -->
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False" Background="{StaticResource brushMenuBar}">
+        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False">
             <MenuItem Header="_File">
                 <MenuItem Header="Log _In" IsEnabled="False"
                           x:Name="menuUserLogIn" Click="menuUserLogIn_Click"/>
@@ -42,9 +42,9 @@
                               Click="menuDatabaseNewContact_Click"/>
                      <!--Uncomment when adding conferencing support.
                          Make sure to uncomment references to these objects in the code-behind.-->
-                    <!--<Separator/>
+                    <Separator/>
                     <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
-                              Click="menuDatabaseNewResource_Click"/>-->
+                              Click="menuDatabaseNewResource_Click"/>
 
                 </MenuItem>
                 <Separator/>
