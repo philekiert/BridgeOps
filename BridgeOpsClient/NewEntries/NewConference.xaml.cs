@@ -418,11 +418,14 @@ namespace BridgeOpsClient
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            Save();
+            if (Save())
+                Close();
         }
 
         private bool Save()
         {
+            // Vet all inputs.
+
             bool Abort(string message)
             {
                 App.DisplayError(message);
@@ -441,20 +444,53 @@ namespace BridgeOpsClient
                 return Abort("End cannot be before the start date and time.");
             int indexResourceNameSplit = cmbResource.Text.LastIndexOf(' ');
             string resourceName;
-            int resourceRow;
+            int resourceID = -1;
+            int resourceRow = -1;
             if (indexResourceNameSplit > 0 && indexResourceNameSplit < cmbResource.Text.Length - 1)
             {
                 resourceName = cmbResource.Text.Remove(indexResourceNameSplit);
                 if (resourceName == "" || !int.TryParse(cmbResource.Text.Substring(indexResourceNameSplit + 1),
                                                                                    out resourceRow))
                     return Abort("Must select a valid resource.");
+                bool foundResource = false;
+                foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources)
+                {
+                    if (ri.name == resourceName && resourceRow >= 0 && resourceRow < ri.rowsTotal)
+                    {
+                        foundResource = true;
+                        resourceID = ri.id;
+                        break;
+                    }
+                }
+                if (!foundResource)
+                    return Abort("Must select a valid resource.");
             }
+
+            List<Conference.Connection> conferenceConnections = new();
             foreach (Connection c in connections)
+            {
                 if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
                     return Abort("All connection rows must have a dial number selected.");
 
-            return true;
-        }
+                conferenceConnections.Add(new Conference.Connection(null, c.dialNo, c.orgRef == null,
+                                                                    c.dtpConnected.GetDateTime(),
+                                                                    c.dtpDisconnected.GetDateTime(),
+                                                                    c.row, c.chkIsTest.IsChecked == true));
+            }
 
+            Conference conference = new(App.sd.sessionID, ColumnRecord.columnRecordID,
+                                        resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
+                                        App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
+
+            ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);
+
+            // Obtain types and determine whether or not quotes will be needed.
+            conference.additionalNeedsQuotes = new();
+            foreach (string c in conference.additionalCols)
+                conference.additionalNeedsQuotes.Add(
+                    SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.organisation, c).type));
+
+            return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
+        }
     }
 }

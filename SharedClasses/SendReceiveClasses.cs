@@ -1268,62 +1268,159 @@ namespace SendReceiveClasses
 
     struct Conference
     {
+        public struct Connection
+        {
+            public int? connectionID;
+            public int? conferenceID;
+            public string dialNo;
+            public bool isManaged;
+            public DateTime? connected;
+            public DateTime? disconnected;
+            public int row;
+            public bool isTest;
+
+            public Connection(int? conferenceID, string dialNo, bool isManaged,
+                              DateTime? connected, DateTime? disconnected, int row, bool isTest)
+            {
+                connectionID = null;
+                this.conferenceID = conferenceID;
+                this.dialNo = dialNo;
+                this.isManaged = isManaged;
+                this.connected = connected;
+                this.disconnected = disconnected;
+                this.row = row;
+                this.isTest = isTest;
+            }
+
+            public void Prepare()
+            {
+                if (dialNo != null)
+                    dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(dialNo));
+            }
+        }
+
         public string sessionID;
         public int columnRecordID;
-        public int conferenceID;
-        public int typeID;
+        public int? conferenceID;
+        public int resourceID;
+        public int resourceRow;
         public string? title;
-        public DateTime start;
-        public DateTime end;
-        public TimeSpan buffer;
-        public string? organisationID;
-        public int? recurrenceID;
+        public DateTime? start;
+        public DateTime? end;
+        public int? createLoginID;
+        public DateTime? createTime;
+        public int? editLoginID;
+        public DateTime? editDateTime;
         public string? notes;
         public List<string> additionalCols;
         public List<string?> additionalVals;
+        public List<bool> additionalNeedsQuotes;
+        public List<Connection> connections;
 
         public Conference(string sessionID, int columnRecordID,
-                          int conferenceID, int typeID, string? title,
-                          DateTime start, DateTime end, TimeSpan buffer,
-                          string? organisationID, int? recurrenceID, string? notes, List<string> additionalCols,
-                                                                                    List<string?> additionalVals)
+                          int resourceID, int resourceRow, string? title,
+                          DateTime start, DateTime end,
+                          int createLoginID,
+                          string? notes, List<string> additionalCols,
+                                         List<string?> additionalVals,
+                                         List<bool> additionalNeedsQuotes,
+                          List<Connection> connections)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
-            this.conferenceID = conferenceID;
-            this.typeID = typeID;
+            conferenceID = null;
+            this.resourceID = resourceID;
+            this.resourceRow = resourceRow;
             this.title = title;
             this.start = start;
             this.end = end;
-            this.buffer = buffer;
-            this.organisationID = organisationID;
-            this.recurrenceID = recurrenceID;
+            this.createLoginID = createLoginID;
+            createTime = null;
+            editLoginID = null;
+            editDateTime = null;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
+            this.additionalNeedsQuotes = additionalNeedsQuotes;
+            this.connections = connections;
 
             SqlAssist.LevelAdditionals(ref additionalCols, ref additionalVals);
         }
 
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (title != null)
+                title = SqlAssist.AddQuotes(SqlAssist.SecureValue(title));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
         public string SqlInsert()
         {
-            return SqlAssist.InsertInto("Conference",
-                                        SqlAssist.ColConcat(additionalCols, Glo.Tab.CONFERENCE_TYPE_ID,
-                                                                            Glo.Tab.CONFERENCE_TITLE,
-                                                                            Glo.Tab.CONFERENCE_START,
-                                                                            Glo.Tab.CONFERENCE_END,
-                                                                            Glo.Tab.CONFERENCE_CANCELLED,
-                                                                            Glo.Tab.ORGANISATION_REF,
-                                                                            Glo.Tab.RECURRENCE_ID,
-                                                                            "Notes"),
-                                        SqlAssist.ValConcat(additionalVals, typeID.ToString(),
-                                                                            title,
-                                                                            SqlAssist.DateTimeToSQL(start, false),
-                                                                            SqlAssist.DateTimeToSQL(end, false),
-                                                                            SqlAssist.TimeSpanToSQL(buffer),
-                                                                            organisationID,
-                                                                            recurrenceID.ToString(),
-                                                                            notes));
+            Prepare();
+
+            List<string> commands = new()
+            {
+                SqlAssist.InsertInto("Conference",
+                                     SqlAssist.ColConcat(additionalCols, Glo.Tab.RESOURCE_ID,
+                                                                         Glo.Tab.CONFERENCE_RESOURCE_ROW,
+                                                                         Glo.Tab.CONFERENCE_TITLE,
+                                                                         Glo.Tab.CONFERENCE_START,
+                                                                         Glo.Tab.CONFERENCE_END,
+                                                                         Glo.Tab.CONFERENCE_CREATION_LOGIN,
+                                                                         Glo.Tab.CONFERENCE_CREATION_TIME,
+                                                                         Glo.Tab.CONFERENCE_CANCELLED,
+                                                                         "Notes"),
+                                     SqlAssist.ValConcat(additionalVals, resourceID.ToString(),
+                                                                         resourceRow.ToString(),
+                                                                         title,
+                                                                         SqlAssist.DateTimeToSQL((DateTime)start!,
+                                                                                                 false, true),
+                                                                         SqlAssist.DateTimeToSQL((DateTime)end!,
+                                                                                                 false, true),
+                                                                         createLoginID.ToString(),
+                                                                         SqlAssist.DateTimeToSQL(DateTime.Now,
+                                                                                                 false, true),
+                                                                         "0",
+                                                                         notes == null ? "NULL" : notes))
+            };
+
+            if (connections.Count > 0)
+            {
+                commands.Add("DECLARE @NewID INT; SET @NewID = SCOPE_IDENTITY();");
+
+                foreach (Connection c in connections)
+                {
+                    c.Prepare();
+                    commands.Add(SqlAssist.InsertInto("Connection",
+                                          SqlAssist.ColConcat(Glo.Tab.CONFERENCE_ID,
+                                                              Glo.Tab.DIAL_NO,
+                                                              Glo.Tab.CONNECTION_IS_MANAGED,
+                                                              Glo.Tab.CONNECTION_TIME_FROM,
+                                                              Glo.Tab.CONNECTION_TIME_TO,
+                                                              Glo.Tab.CONNECTION_ROW,
+                                                              Glo.Tab.CONNECTION_IS_TEST),
+                                          SqlAssist.ValConcat(c.conferenceID == null ? "@NewID" :
+                                                                                       c.conferenceID.ToString(),
+                                                              c.dialNo,
+                                                              c.isManaged ? "1" : "0",
+                                                              c.connected == null ? "NULL" :
+                                                              SqlAssist.DateTimeToSQL((DateTime)c.connected,
+                                                                                      false, true),
+                                                              c.disconnected == null ? "NULL" :
+                                                              SqlAssist.DateTimeToSQL((DateTime)c.disconnected,
+                                                                                      false, true),
+                                                              c.row.ToString(),
+                                                              c.isTest ? "1" : "0")));
+                }
+            }
+
+
+            return SqlAssist.Transaction(commands.ToArray());
         }
     }
 
@@ -1410,7 +1507,6 @@ namespace SendReceiveClasses
         public string SqlInsert()
         {
             Prepare();
-
 
             return SqlAssist.InsertInto("Login",
                                         SqlAssist.ColConcat(Glo.Tab.LOGIN_USERNAME,
@@ -2376,13 +2472,19 @@ namespace SendReceiveClasses
 
         public static string DateTimeToSQL(DateTime dateTime, bool dateOnly)
         {
+            return DateTimeToSQL(dateTime, dateOnly, false);
+        }
+        public static string DateTimeToSQL(DateTime dateTime, bool dateOnly, bool addQuotes)
+        {
             if (dateOnly)
             {
-                return dateTime.ToString("yyyy-MM-dd");
+                return addQuotes ? "'" + dateTime.ToString("yyyy-MM-dd") + "'" :
+                                   dateTime.ToString("yyyy-MM-dd");
             }
             else
             {
-                return dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                return addQuotes ? "'" + dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff") + "'" :
+                                   dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
             }
         }
         public static string TimeSpanToSQL(TimeSpan timeSpan)
