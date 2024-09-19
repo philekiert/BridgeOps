@@ -831,6 +831,8 @@ internal class BridgeOpsAgent
                     ClientDeleteSelectBuilderPreset(stream);
                 else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_RENAME)
                     ClientRenameSelectBuilderPreset(stream);
+                else if (fncByte == Glo.CLIENT_CONFERENCE_VIEW_SEARCH)
+                    ClientConferenceViewSearch(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -2400,6 +2402,60 @@ internal class BridgeOpsAgent
         finally
         {
             stream.Close();
+        }
+    }
+
+    private static void ClientConferenceViewSearch(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            string sessionID = sr.ReadString(stream);
+            string start = SqlAssist.DateTimeToSQL(sr.Deserialise<DateTime>(sr.ReadString(stream)), false);
+            string end = SqlAssist.DateTimeToSQL(sr.Deserialise<DateTime>(sr.ReadString(stream)), false);
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+            }
+
+            SqlCommand com = new($"SELECT Conference.{Glo.Tab.CONFERENCE_ID}, " +
+                                        $"Conference.{Glo.Tab.CONFERENCE_TITLE}, " +
+                                        $"Conference.{Glo.Tab.CONFERENCE_START}, " +
+                                        $"Conference.{Glo.Tab.CONFERENCE_END}, " +
+                                        $"Conference.{Glo.Tab.RESOURCE_ID}, " +
+                                        $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
+                                         "COUNT(*) " +
+                                  "FROM Conference " +
+                                 $"INNER JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
+                                                          $"Connection.{Glo.Tab.CONFERENCE_ID} " +
+                                 $"WHERE Conference.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
+                                   $"AND Conference.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
+                                 $"GROUP BY Conference.{Glo.Tab.CONFERENCE_ID}, " +
+                                          $"Conference.{Glo.Tab.CONFERENCE_TITLE}, " +
+                                          $"Conference.{Glo.Tab.CONFERENCE_START}, " +
+                                          $"Conference.{Glo.Tab.CONFERENCE_END}, " +
+                                          $"Conference.{Glo.Tab.RESOURCE_ID}, " +
+                                          $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW};",
+                                 sqlConnect);
+
+            SelectResult result = new(com.ExecuteReader());
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't get list of conferences for client schedule view, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
         }
     }
 }

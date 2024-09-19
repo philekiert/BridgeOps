@@ -80,6 +80,7 @@ namespace BridgeOpsClient
                 BorderBrush = (Brush)resources["brushWindowBorder"],
                 BorderThickness = new Thickness(1),
                 Background = Brushes.White,
+                ClipToBounds = true
             };
 
             grid = new();
@@ -336,7 +337,7 @@ namespace BridgeOpsClient
             }
         }
 
-        // All code below is David Rickard's with a touch of myself and Copilot. It handles maximised window placement.
+        // All code below is slightly modified from David Rickard's. It handles maximised window placement.
         // The original code had an issue where the taskbar wouldn't display if set to auto-hide. This is fixed here,
         // but bear in mind that it only works when not debugging for some reason I can't prioritise getting to the
         // bottom of.

@@ -77,6 +77,7 @@ public static class Glo
     public const int CLIENT_SELECT_BUILDER_PRESET_LOAD = 61;
     public const int CLIENT_SELECT_BUILDER_PRESET_DELETE = 62;
     public const int CLIENT_SELECT_BUILDER_PRESET_RENAME = 63;
+    public const int CLIENT_CONFERENCE_VIEW_SEARCH = 70;
 
     public const int SERVER_CLIENT_NUDGE = 0;           // Not yet implemented
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;
@@ -156,7 +157,6 @@ public static class Glo
         public const string ASSET_ID = "Asset_ID";
         public const string ASSET_REF = "Asset_Reference";
 
-        public const string CONFERENCE_TYPE_ID = "Type_ID";
         public const string CONFERENCE_RESOURCE_ROW = "Resource_Row";
         public const string CONFERENCE_ID = "Conference_ID";
         public const string CONFERENCE_TITLE = "Title";
@@ -261,7 +261,6 @@ public static class Glo
                     (column == Glo.Tab.CONFERENCE_ID ||
                      column == Glo.Tab.RESOURCE_ID ||
                      column == Glo.Tab.CONFERENCE_RESOURCE_ROW ||
-                     column == Glo.Tab.CONFERENCE_TYPE_ID ||
                      column == Glo.Tab.CONFERENCE_TITLE ||
                      column == Glo.Tab.CONFERENCE_START ||
                      column == Glo.Tab.CONFERENCE_END ||

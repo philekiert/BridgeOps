@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
@@ -124,7 +125,26 @@ namespace BridgeOpsClient
             schRuler.view = schView;
             schRuler.res = schResources;
 
+            schView.conferenceView = this;
+
             MainWindow.pageConferenceViews.Add(this);
+        }
+
+        public struct Conference
+        {
+            public int id;
+            public string title;
+            public DateTime start;
+            public DateTime end;
+            public int resourceID;
+            public int resourceRow;
+            public int connectionCount;
+        }
+        List<Conference> conferences = new();
+
+        public void SearchWindow(DateTime start, DateTime end)
+        {
+            App.SendConferenceViewSearchRequest(start, end, conferences);
         }
 
         void RedrawRuler()
@@ -363,7 +383,9 @@ namespace BridgeOpsClient
                 if (ShiftDown())
                     schView.ZoomResource(e.Delta > 0 ? 1 : -1);
                 else
+                {
                     schView.ZoomTime(e.Delta > 0 ? 1 : -1);
+                }
                 RedrawGrid();
                 RedrawRuler();
             }
@@ -404,8 +426,14 @@ namespace BridgeOpsClient
 
     public class ScheduleRuler : Canvas
     {
+        public ScheduleRuler() { ClipToBounds = true; }
+
         public ScheduleView? view;
         public ScheduleResources? res;
+
+        Typeface segoeUI = new Typeface("Segoe UI");
+        Typeface segoeUISemiBold = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold,
+                                                FontStretches.Normal);
 
         // OnRender() has some repeated code from ScheduleView, but I have kept the draw code for the ruler separate
         // due to not wanting to redraw the ruler unless we have to. The function still makes use of some public
@@ -450,7 +478,6 @@ namespace BridgeOpsClient
                 // Irritating to have to do this, but I don't want to create a new formatted text every draw, and the
                 // text property doesn't have a setter that I can see.
                 FormattedText[] formattedText = new FormattedText[24];
-                Typeface segoeUI = new Typeface("Segoe UI");
                 for (int i = 0; i < 24; ++i)
                     formattedText[i] = new(i < 10 ? "0" + i.ToString() : i.ToString(),
                                            CultureInfo.CurrentCulture,
@@ -477,7 +504,8 @@ namespace BridgeOpsClient
                 double firstDateX = double.MaxValue;
                 string firstDateStringOverride = "";
 
-                DateTime partialFirstDay = new DateTime(); // Used for printing the partial day at the start.
+                // partialFirstDay is used for printing the partial day at the start if needed.
+                DateTime partialFirstDay = (t - new TimeSpan(TimeSpan.TicksPerDay)).AddDays(1);
                 int hourDisplay = 1;
                 if (zoomTimeDisplay < 12)
                     hourDisplay = 4;
@@ -511,7 +539,7 @@ namespace BridgeOpsClient
                                 FormattedText date = new($"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}",
                                            CultureInfo.CurrentCulture,
                                            FlowDirection.LeftToRight,
-                                           segoeUI,
+                                           segoeUISemiBold,
                                            12,
                                            Brushes.Black,
                                            VisualTreeHelper.GetDpi(this).PixelsPerDip);
@@ -521,9 +549,6 @@ namespace BridgeOpsClient
                             }
                             else
                                 firstDateStringOverride = $"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}";
-
-                            if (partialFirstDay.Ticks == 0 && t.Ticks >= TimeSpan.TicksPerDay)
-                                partialFirstDay = t - new TimeSpan(TimeSpan.TicksPerDay);
                         }
                     }
 
@@ -539,7 +564,7 @@ namespace BridgeOpsClient
                                                 firstDateStringOverride,
                                              CultureInfo.CurrentCulture,
                                              FlowDirection.LeftToRight,
-                                             segoeUI,
+                                             segoeUISemiBold,
                                              12,
                                              Brushes.Black,
                                              VisualTreeHelper.GetDpi(this).PixelsPerDip);
@@ -566,8 +591,11 @@ namespace BridgeOpsClient
         Pen penDivider;
         public ScheduleResources()
         {
+            ClipToBounds = true;
+
             brsHighlight = new SolidColorBrush(Color.FromArgb(20, 0, 0, 0));
-            brsDivider = new SolidColorBrush(Color.FromArgb(255, 120, 120, 120));
+            brsDivider = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0
+                ));
             penDivider = new Pen(brsDivider, 1);
 
             penDivider.Freeze();
@@ -647,6 +675,8 @@ namespace BridgeOpsClient
 
     public class ScheduleView : Canvas
     {
+        public PageConferenceView? conferenceView;
+
         public double gridHeight = 0;
 
         public bool smoothZoom = true;
@@ -680,15 +710,51 @@ namespace BridgeOpsClient
         Brush brsCursor;
         Pen penCursor;
         Brush brsStylus;
+        LinearGradientBrush brsStylusFade;
         Pen penStylus;
+        Pen penStylusFade;
         public ScheduleView()
         {
+            ClipToBounds = true;
+
             brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
             penCursor = new Pen(brsCursor, 1);
-            brsStylus = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+            brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
+            brsStylusFade = new LinearGradientBrush(Color.FromArgb(100, 0, 0, 0), Color.FromArgb(0, 0, 0, 0), 90);
             penStylus = new Pen(brsStylus, 1);
+            penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
             penStylus.Freeze();
+            brsStylusFade.Freeze();
+        }
+
+        public DateTime start = new();
+        public DateTime end = new();
+        public DateTime lastSearchStart = new();
+        public DateTime lastSearchEnd = new();
+        public void UpdateStartAndEnd()
+        {
+            // Get number of intervals for half the width of the view.
+            double viewHalfHours = (ActualWidth * .5d) / DisplayTimeZoom();
+            double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
+            int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
+            int viewHalfDays = (int)(viewHalfHours / 24);
+
+            TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+
+            start = scheduleTime - half;
+            end = scheduleTime + half;
+
+            DateTime startSearchThresh = start - (half);
+            DateTime endSearchThresh = end + (half);
+
+            if ((startSearchThresh < lastSearchStart || endSearchThresh > lastSearchEnd)
+                && conferenceView != null)
+            {
+                lastSearchStart = start - (half * 2);
+                lastSearchEnd = end + (half * 2);
+                conferenceView.SearchWindow(lastSearchStart, lastSearchEnd);
+            }
         }
 
         protected override void OnRender(DrawingContext dc)
@@ -740,17 +806,7 @@ namespace BridgeOpsClient
                 penScheduleLineDay.Freeze();
 
                 // Time
-
-                // Get number of intervals for half the width of the view.
-                double viewHalfHours = (ActualWidth * .5d) / zoomTimeDisplay;
-                double viewHalfMinutes = (viewHalfHours - (int)viewHalfHours) * 60;
-                int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
-                int viewHalfDays = (int)(viewHalfHours / 24);
-
-                TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
-
-                DateTime start = scheduleTime - half;
-                DateTime end = scheduleTime + half;
+                UpdateStartAndEnd();
 
                 double incrementX;
                 long incrementTicks;
@@ -831,14 +887,17 @@ namespace BridgeOpsClient
 
                         dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
                                                new Point(x, y + zoomResourceDisplay));
-                        dc.DrawLine(penCursor, new Point(x, -5d),
-                                               new Point(x, .5d));
+
+                        dc.DrawGeometry(null, penStylusFade,
+                                        new LineGeometry(new Point(x, y * .6d), new Point(x, 0d)));
                     }
                 }
 
+                // This is a central vertical line in the centre of the screen to indicate the current time, but it
+                // needs to be prettier to use it.
                 // Draw the stylus.
-                dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
-                                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
+                //dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
+                //                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
             }
         }
 

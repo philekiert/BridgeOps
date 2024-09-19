@@ -26,13 +26,13 @@ namespace BridgeOpsClient
 
             InitializeComponent();
 
-            dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
-            dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
-
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
 
             ToggleConnectionDates(null, null);
+
+            dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
+            dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
             // Populate available resources and select whichever one the user clicked on in the schedule view.
             cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
@@ -344,8 +344,8 @@ namespace BridgeOpsClient
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
-            {
-                SearchSite(sender, e);
+                {
+                    SearchSite(sender, e);
             }
             else if (e.Key == Key.Escape)
             {
@@ -353,6 +353,29 @@ namespace BridgeOpsClient
                 if (connection.dialNo != "")
                     connection.ToggleSearch(false);
             }
+            else
+                return;
+
+            bool foundNewFocus = false;
+            int row = Grid.GetRow((TextBox)sender);
+            for (int i = row; i < connections.Count; ++i)
+            {
+                if (connections[i].txtSearch.Visibility == Visibility.Visible)
+                {
+                    connections[i].txtSearch.Focus();
+                    foundNewFocus = true;
+                    break;
+                }
+            }
+            if (!foundNewFocus)
+                for (int i = 0; i < row; ++i)
+                {
+                    if (connections[i].txtSearch.Visibility == Visibility.Visible)
+                    {
+                        connections[i].txtSearch.Focus();
+                        break;
+                    }
+                }
         }
 
         private void btnSummary_Click(object sender, EventArgs e)
@@ -409,6 +432,8 @@ namespace BridgeOpsClient
             }
             else
             {
+                if (Width < 1000) // Widen the window or the user will certainly need to scroll to read site names.
+                    Width = 1000;
                 grdConnections.ColumnDefinitions[3].Width = new GridLength(175);
                 grdConnections.ColumnDefinitions[4].Width = new GridLength(175);
                 grdConnections.ColumnDefinitions[3].MaxWidth = 175;
@@ -491,6 +516,21 @@ namespace BridgeOpsClient
                     SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.organisation, c).type));
 
             return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
+        }
+
+        // Don't scroll to fit in the summary button if the user clicks one that extends out of view.
+        bool dontScroll = false;
+        private void ScrollViewer_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        { dontScroll = true; }
+        double lastScroll = 0;
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (dontScroll)
+            {
+                ((ScrollViewer)sender).ScrollToHorizontalOffset(lastScroll);
+                dontScroll = false;
+            }
+            lastScroll = ((ScrollViewer)sender).HorizontalOffset;
         }
     }
 }

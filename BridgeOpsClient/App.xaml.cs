@@ -8,8 +8,6 @@ using System.Net.Sockets;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
-using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Threading;
 using SendReceiveClasses;
 
@@ -1333,6 +1331,68 @@ namespace BridgeOpsClient
                 finally
                 {
                     if (stream != null) stream.Close();
+                }
+            }
+        }
+
+        public static bool SendConferenceViewSearchRequest(DateTime start, DateTime end,
+                                                           List<PageConferenceView.Conference> conferences)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_CONFERENCE_VIEW_SEARCH);
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            sr.WriteAndFlush(stream, sr.Serialise(start));
+                            sr.WriteAndFlush(stream, sr.Serialise(end));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
+                                conferences.Clear();
+                                foreach (List<object?> row in result.rows)
+                                {
+                                    PageConferenceView.Conference conference = new();
+                                    conference.id = (int)row[0]!;
+                                    conference.title = (string)row[1]!;
+                                    conference.start = (DateTime)row[2]!;
+                                    conference.end = (DateTime)row[3]!;
+                                    conference.resourceID = (int)row[4]!;
+                                    conference.resourceRow = (int)row[5]!;
+                                    conference.connectionCount = (int)row[6]!;
+                                    conferences.Add(conference);
+                                }
+                                return true;
+                            }
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                DisplayError("The SQL query could not be run. See error:\n\n" +
+                                                sr.ReadString(stream));
+                                return false;
+                            }
+                            throw new Exception();
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not run or return query.");
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
                 }
             }
         }

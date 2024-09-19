@@ -185,7 +185,6 @@ namespace BridgeOpsClient
                 txtDialNo.Text = data[4].ToString();
             else
                 txtDialNo.Text = null;
-            txtName.Text = null;
             if (data[5] != null)
                 chkAvailable.IsChecked = (bool?)data[5] == true;
             else
