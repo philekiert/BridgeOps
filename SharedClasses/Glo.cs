@@ -78,6 +78,7 @@ public static class Glo
     public const int CLIENT_SELECT_BUILDER_PRESET_DELETE = 62;
     public const int CLIENT_SELECT_BUILDER_PRESET_RENAME = 63;
     public const int CLIENT_CONFERENCE_VIEW_SEARCH = 70;
+    public const int CLIENT_CONFERENCE_SELECT = 71;
 
     public const int SERVER_CLIENT_NUDGE = 0;           // Not yet implemented
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;
@@ -326,6 +327,27 @@ public static class Glo
             if (IsUnsafeForCSV(s))
                 return "\"" + s.Replace("\"", "\"\"") + "\"";
             return s;
+        }
+
+        public static Int32? GetInt32FromNullableObject(object? i)
+        {
+            if (i is byte b)
+                return b;
+            if (i is Int16 i16)
+                return i16;
+            else if (i is Int32 i32)
+                return i32;
+            return null;
+        }
+        public static Int64? GetInt64FromNullableObject(object? i)
+        {
+            if (i is Int16 i16)
+                return i16;
+            else if (i is Int32 i32)
+                return i32;
+            else if (i is Int64 i64)
+                return i64;
+            return null;
         }
     }
 }

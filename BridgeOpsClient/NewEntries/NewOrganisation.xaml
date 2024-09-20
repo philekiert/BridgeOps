@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True" Loaded="Window_Loaded">
-    <TabControl BorderThickness="0 1 0 0" Background="Transparent" Margin="-1 0 0 0">
+    <TabControl BorderThickness="0 1 0 0" Background="Transparent" Margin="-1 0 0 0" Padding="0">
         <TabItem Header="Organisation">
             <Grid MaxWidth="520">
                 <Grid.RowDefinitions>
@@ -19,8 +19,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label Grid.Row="0" x:Name="lblViewingChange"
-                       Content="Viewing change" Background="#F45" Height="0" Padding="5 1"/>
+                <Label Grid.Row="0" x:Name="lblViewingChange" Margin="0"
+                       Content="Viewing change" Background="#F45" Height="0" Padding="5 1" FontWeight="SemiBold"/>
                 <Grid Grid.Row="1" Margin="0 10 0 0">
                     <Grid.Resources>
                         <Style TargetType="TextBox">

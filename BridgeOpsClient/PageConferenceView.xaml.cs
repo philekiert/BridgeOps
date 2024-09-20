@@ -138,9 +138,11 @@ namespace BridgeOpsClient
             public DateTime end;
             public int resourceID;
             public int resourceRow;
+            public bool cancelled;
+            public bool test;
             public int connectionCount;
         }
-        List<Conference> conferences = new();
+        public List<Conference> conferences = new();
 
         public void SearchWindow(DateTime start, DateTime end)
         {
@@ -272,7 +274,11 @@ namespace BridgeOpsClient
             {
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
                 int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
-                if (resource != -1)
+                if (schView.currentConference != null)
+                {
+                    App.EditConference(schView.currentConference.Value.id);
+                }
+                else if (resource != -1)
                 {
                     NewConference newConf = new(GetResourceFromSelectedRow(resource), time);
                     try { newConf.Show(); } catch { }
@@ -677,6 +683,10 @@ namespace BridgeOpsClient
     {
         public PageConferenceView? conferenceView;
 
+        Typeface segoeUI = new Typeface("Segoe UI");
+        Typeface segoeUISemiBold = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold,
+                                                FontStretches.Normal);
+
         public double gridHeight = 0;
 
         public bool smoothZoom = true;
@@ -711,21 +721,37 @@ namespace BridgeOpsClient
         Pen penCursor;
         Brush brsStylus;
         LinearGradientBrush brsStylusFade;
+        Brush brsConference;
+        Brush brsConferenceHover;
+        Brush brsConferenceBorder;
+        Pen penConferenceBorder;
         Pen penStylus;
         Pen penStylusFade;
         public ScheduleView()
         {
             ClipToBounds = true;
 
-            brsCursor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
-            penCursor = new Pen(brsCursor, 1);
+            brsCursor = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
+            penCursor = new Pen(brsCursor, 1.4);
             brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
             brsStylusFade = new LinearGradientBrush(Color.FromArgb(100, 0, 0, 0), Color.FromArgb(0, 0, 0, 0), 90);
+            Color clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorPrimaryButton"];
+            clrConference.A = 100;
+            brsConference = new SolidColorBrush(clrConference);
+            clrConference.A = 200;
+            brsConferenceHover = new SolidColorBrush(clrConference);
+            clrConference.A = 255;
+            brsConferenceBorder = new SolidColorBrush(clrConference);
+            penConferenceBorder = new Pen(brsConferenceBorder, 1);
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
             penStylus.Freeze();
             brsStylusFade.Freeze();
+            brsConference.Freeze();
+            brsConferenceHover.Freeze();
+            brsConferenceBorder.Freeze();
+            penConferenceBorder.Freeze();
         }
 
         public DateTime start = new();
@@ -756,6 +782,8 @@ namespace BridgeOpsClient
                 conferenceView.SearchWindow(lastSearchStart, lastSearchEnd);
             }
         }
+
+        public PageConferenceView.Conference? currentConference;
 
         protected override void OnRender(DrawingContext dc)
         {
@@ -873,6 +901,91 @@ namespace BridgeOpsClient
                                                     new Point(ActualWidth, yPix));
                 }
 
+                // This is a central vertical line in the centre of the screen to indicate the current time, but it
+                // needs to be prettier to use it.
+                // Draw the stylus.
+                //dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
+                //                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
+
+                // Draw conferences
+                if (conferenceView == null)
+                    return;
+
+                bool isMouseOverConference = false;
+                lock (conferenceView.conferences)
+                {
+                    Point cursorPoint = new();
+                    if (cursor != null)
+                        cursorPoint = cursor.Value;
+
+                    foreach (PageConferenceView.Conference conference in conferenceView.conferences)
+                    {
+                        if (conference.end > start && conference.start < end)
+                        {
+                            double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
+                                                               zoomTimeDisplay);
+                            double endX = GetXfromDateTime(conference.end < end ? conference.end : end,
+                                                             zoomTimeDisplay);
+                            startX = startX < 0 ? (int)(startX - 1) : (int)startX;
+                            endX = endX < 0 ? (int)(endX - 1) : (int)endX;
+
+                            // Never end need to start before -1, and never any need to proceed if end < 0.
+                            if (startX < -1)
+                                startX = -1;
+                            if (endX < 0)
+                                continue;
+
+                            int startY = (int)GetYfromResource(conference.resourceRow);
+                            Rect area = new Rect(startX + .5, startY + .5, ((int)endX - startX), (int)zoomResourceDisplay);
+
+                            if (area.Contains(cursorPoint))
+                            {
+                                currentConference = conference;
+                                isMouseOverConference = true;
+                                dc.DrawRectangle(brsConferenceHover, penConferenceBorder, area);
+                            }
+                            else
+                                dc.DrawRectangle(brsConference, penConferenceBorder, area);
+
+                            if (area.Width > 8)
+                            {
+                                // Draw title.
+                                FormattedText title = new(conference.title,
+                                                          CultureInfo.CurrentCulture,
+                                                          FlowDirection.LeftToRight,
+                                                          segoeUISemiBold,
+                                                          12,
+                                                          Brushes.Black,
+                                                          VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+                                Geometry clipGeometry = new RectangleGeometry(area);
+                                dc.PushClip(clipGeometry);
+
+                                dc.DrawText(title, new(startX + 4, startY + 3));
+
+                                // Draw start and end time.
+                                if (area.Height > 25)
+                                {
+                                    FormattedText time = new(conference.start.ToString("hh:mm") + " - " +
+                                                             conference.end.ToString("hh:mm"),
+                                                             CultureInfo.CurrentCulture,
+                                                             FlowDirection.LeftToRight,
+                                                             segoeUI,
+                                                             12,
+                                                             Brushes.Black,
+                                                             VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                                    dc.DrawText(time, new(startX + 4, startY + 21));
+                                }
+
+                                dc.Pop();
+                            }
+                        }
+                    }
+                }
+
+                if (!isMouseOverConference)
+                    currentConference = null;
+
                 // Draw the cursor.
                 if (cursor != null)
                 {
@@ -885,19 +998,14 @@ namespace BridgeOpsClient
                         xDT = SnapDateTime(xDT, zoomTimeDisplay);
                         x = (int)GetXfromDateTime(xDT, zoomTimeDisplay) + .5d;
 
-                        dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
-                                               new Point(x, y + zoomResourceDisplay));
+                        if (!isMouseOverConference)
+                            dc.DrawLine(penCursor, new Point(x, y < 0 ? 0 : y),
+                                                   new Point(x, y + zoomResourceDisplay));
 
                         dc.DrawGeometry(null, penStylusFade,
                                         new LineGeometry(new Point(x, y * .6d), new Point(x, 0d)));
                     }
                 }
-
-                // This is a central vertical line in the centre of the screen to indicate the current time, but it
-                // needs to be prettier to use it.
-                // Draw the stylus.
-                //dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
-                //                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
             }
         }
 

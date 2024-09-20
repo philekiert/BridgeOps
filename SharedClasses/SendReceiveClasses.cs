@@ -1266,7 +1266,7 @@ namespace SendReceiveClasses
         }
     }
 
-    struct Conference
+    public struct Conference
     {
         public struct Connection
         {
@@ -1278,6 +1278,9 @@ namespace SendReceiveClasses
             public DateTime? disconnected;
             public int row;
             public bool isTest;
+            public int? orgId;
+            public string? orgReference;
+            public string? orgName;
 
             public Connection(int? conferenceID, string dialNo, bool isManaged,
                               DateTime? connected, DateTime? disconnected, int row, bool isTest)
@@ -1290,6 +1293,9 @@ namespace SendReceiveClasses
                 this.disconnected = disconnected;
                 this.row = row;
                 this.isTest = isTest;
+                orgId = null;
+                orgReference = null;
+                orgName = null;
             }
 
             public void Prepare()
@@ -1307,6 +1313,7 @@ namespace SendReceiveClasses
         public string? title;
         public DateTime? start;
         public DateTime? end;
+        public bool? cancelled;
         public int? createLoginID;
         public DateTime? createTime;
         public int? editLoginID;
@@ -1334,6 +1341,7 @@ namespace SendReceiveClasses
             this.title = title;
             this.start = start;
             this.end = end;
+            cancelled = null;
             this.createLoginID = createLoginID;
             createTime = null;
             editLoginID = null;
@@ -1844,6 +1852,7 @@ namespace SendReceiveClasses
                         row.Add(reader[i]);
                 rows.Add(row);
             }
+            reader.Close();
         }
     }
 

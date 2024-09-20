@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -88,9 +89,9 @@ namespace BridgeOpsClient
             grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
-            grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
-            grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
+            grid.ColumnDefinitions.Add(new() { Width = new GridLength(titleBarHeight) });
+            grid.ColumnDefinitions.Add(new() { Width = new GridLength(titleBarHeight) });
+            grid.ColumnDefinitions.Add(new() { Width = new GridLength(titleBarHeight) });
             windowBorder.Child = grid;
 
             FontFamily robotoMono = new FontFamily(new Uri("pack://application:,,,/"),

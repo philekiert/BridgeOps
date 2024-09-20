@@ -833,6 +833,8 @@ internal class BridgeOpsAgent
                     ClientRenameSelectBuilderPreset(stream);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_VIEW_SEARCH)
                     ClientConferenceViewSearch(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT)
+                    ClientConferenceSelect(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -2429,10 +2431,12 @@ internal class BridgeOpsAgent
                                         $"Conference.{Glo.Tab.CONFERENCE_END}, " +
                                         $"Conference.{Glo.Tab.RESOURCE_ID}, " +
                                         $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
-                                         "COUNT(*) " +
+                                        $"Conference.{Glo.Tab.CONFERENCE_CANCELLED}, " +
+                                        $"MAX(CONVERT(INT, Connection.{Glo.Tab.CONNECTION_IS_TEST})) AS IsTest, " +
+                                         "COUNT(*) AS ConnectionCount " +
                                   "FROM Conference " +
-                                 $"INNER JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
-                                                          $"Connection.{Glo.Tab.CONFERENCE_ID} " +
+                                 $"LEFT JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
+                                                         $"Connection.{Glo.Tab.CONFERENCE_ID} " +
                                  $"WHERE Conference.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
                                    $"AND Conference.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
                                  $"GROUP BY Conference.{Glo.Tab.CONFERENCE_ID}, " +
@@ -2440,6 +2444,7 @@ internal class BridgeOpsAgent
                                           $"Conference.{Glo.Tab.CONFERENCE_START}, " +
                                           $"Conference.{Glo.Tab.CONFERENCE_END}, " +
                                           $"Conference.{Glo.Tab.RESOURCE_ID}, " +
+                                          $"Conference.{Glo.Tab.CONFERENCE_CANCELLED}, " +
                                           $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW};",
                                  sqlConnect);
 
@@ -2450,6 +2455,100 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't get list of conferences for client schedule view, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientConferenceSelect(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            sqlConnect.Open();
+            string sessionID = sr.ReadString(stream);
+            int conferenceID;
+            if (!int.TryParse(sr.ReadString(stream), out conferenceID))
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                SafeFail(stream, "Conference ID was not an integer.");
+                return;
+            }
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+            }
+
+            // Get the conference details.
+
+            SqlCommand com = new($"SELECT * FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};",
+                                 sqlConnect);
+            SelectResult result = new(com.ExecuteReader());
+            Conference conf = new()
+            {
+                sessionID = sessionID,
+                columnRecordID = columnRecordID,
+                conferenceID = conferenceID,
+                resourceID = (int)Glo.Fun.GetInt32FromNullableObject(result.rows[0][1])!,
+                resourceRow = Convert.ToInt32(result.rows[0][2]!),
+                title = (string?)result.rows[0][3]!,
+                start = (DateTime)result.rows[0][4]!,
+                end = (DateTime)result.rows[0][5]!,
+                cancelled = (bool?)result.rows[0][6]!,
+                createLoginID = (int)Glo.Fun.GetInt32FromNullableObject(result.rows[0][7])!,
+                createTime = (DateTime?)result.rows[0][8]!,
+                editLoginID = result.rows[0][9] == null ? null : Convert.ToInt32(result.rows[0][9]!),
+                editDateTime = (DateTime?)result.rows[0][10]!,
+                notes = (string?)result.rows[0][11]!
+            };
+
+            // Get a list of connections.
+
+            com.CommandText = $"SELECT Connection.*, " +
+                                     $"Organisation.{Glo.Tab.ORGANISATION_ID}, " +
+                                     $"Organisation.{Glo.Tab.ORGANISATION_REF}, " +
+                                     $"Organisation.{Glo.Tab.ORGANISATION_NAME} " +
+                              $"FROM Connection " +
+                              $"LEFT JOIN Organisation ON Organisation.{Glo.Tab.DIAL_NO} = " +
+                                                         $"Connection.{Glo.Tab.DIAL_NO} " +
+                              $"WHERE Connection.{Glo.Tab.CONFERENCE_ID} = {conferenceID} " +
+                              $"ORDER BY {Glo.Tab.CONNECTION_ROW};";
+            result = new(com.ExecuteReader());
+
+            conf.connections = new();
+            foreach (var row in result.rows)
+            {
+                Conference.Connection connection = new()
+                {
+                    connectionID = (int)Glo.Fun.GetInt32FromNullableObject(row[0])!,
+                    conferenceID = conferenceID,
+                    dialNo = (string)row[2]!,
+                    isManaged = row[3] != null && (bool)row[3]!,
+                    connected = (DateTime?)row[4],
+                    disconnected = (DateTime?)row[5],
+                    row = (int)Glo.Fun.GetInt32FromNullableObject(row[6])!,
+                    isTest = row[7] != null && (bool)row[7]!,
+                    orgId = Glo.Fun.GetInt32FromNullableObject(row[8]),
+                    orgReference = (string?)row[9],
+                    orgName = (string?)row[10]
+                };
+                conf.connections.Add(connection);
+            }
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(conf));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't load conference, see error:", e);
             SafeFail(stream, e.Message);
         }
         finally

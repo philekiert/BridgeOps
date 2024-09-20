@@ -10,6 +10,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using SendReceiveClasses;
+using static BridgeOpsClient.PageConferenceView;
 
 namespace BridgeOpsClient
 {
@@ -24,29 +25,41 @@ namespace BridgeOpsClient
         public static void DisplayError(string error) { DisplayError(error, ""); }
         public static void DisplayError(string error, string title)
         {
+            try
+            {
             DialogWindows.DialogBox dialog = new(error, title);
             dialog.ShowDialog();
+            } catch { }
         }
         public static void DisplayError(Window owner, string error) { DisplayError(owner, error, ""); }
         public static void DisplayError(Window owner, string error, string title)
         {
+            try
+            {
             DialogWindows.DialogBox dialog = new(error, title);
             dialog.Owner = owner;
             dialog.ShowDialog();
+            } catch { }
         }
         public enum QuestionOptions
         { YesNo, OKCancel }
         public static bool DisplayQuestion(string error, string title, DialogWindows.DialogBox.Buttons buttons)
         {
+            try
+            {
             DialogWindows.DialogBox dialog = new(error, title, buttons);
             return dialog.ShowDialog() == true;
+            } catch { return false; }
         }
         public static bool DeleteConfirm(bool multiple)
         {
-            return DisplayQuestion("Are you sure? It will be impossible to recover " +
+            try
+            {
+                return DisplayQuestion("Are you sure? It will be impossible to recover " +
                                   $"{(multiple ? "these items." : "this item")}",
                                    "Confirm Deletion",
                                    DialogWindows.DialogBox.Buttons.YesNo);
+            } catch { return false; }
         }
 
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
@@ -488,6 +501,54 @@ namespace BridgeOpsClient
                     DisplayError("Could no longer retrieve record.");
             }
             return true;
+        }
+
+        public static bool EditConference(int id)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_CONFERENCE_SELECT);
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            sr.WriteAndFlush(stream, id.ToString());
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                SendReceiveClasses.Conference conference = 
+                                    sr.Deserialise<SendReceiveClasses.Conference>(sr.ReadString(stream));
+                                NewConference newConf = new(conference);
+                                newConf.ShowDialog();
+                                return true;
+                            }
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                DisplayError("The conference could not be loaded. See error:\n\n" +
+                                                sr.ReadString(stream));
+                                return false;
+                            }
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not run or return conference query.");
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
         }
 
         static bool columnRecordPulInProgress = false;
@@ -1365,7 +1426,9 @@ namespace BridgeOpsClient
                                     conference.end = (DateTime)row[3]!;
                                     conference.resourceID = (int)row[4]!;
                                     conference.resourceRow = (int)row[5]!;
-                                    conference.connectionCount = (int)row[6]!;
+                                    conference.cancelled = (bool)row[6]!;
+                                    conference.test = row[7] != null && (int)row[7]! == 1;
+                                    conference.connectionCount =  (int)row[8]!;
                                     conferences.Add(conference);
                                 }
                                 return true;
@@ -1380,7 +1443,6 @@ namespace BridgeOpsClient
                                                 sr.ReadString(stream));
                                 return false;
                             }
-                            throw new Exception();
                         }
                         throw new Exception();
                     }

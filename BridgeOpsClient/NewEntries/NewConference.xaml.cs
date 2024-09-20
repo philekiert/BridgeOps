@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace BridgeOpsClient
 {
@@ -45,6 +46,66 @@ namespace BridgeOpsClient
             ditConference.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
 
             btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
+        }
+
+        public NewConference(Conference conf)
+        {
+            MaxHeight = 400;
+
+            InitializeComponent();
+
+            txtTitle.Text = conf.title;
+
+            if (conf.start != null)
+                dtpStart.SetDateTime((DateTime)conf.start);
+            if (conf.end != null)
+                dtpEnd.SetDateTime((DateTime)conf.end);
+
+            ToggleConnectionDates(null, null);
+
+            dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
+            dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
+
+            string resourceName = "";
+            foreach (PageConferenceView.ResourceInfo rInfo in PageConferenceView.resources)
+                if (rInfo.id == conf.resourceID)
+                {
+                    resourceName = rInfo.name;
+                    break;
+                }
+            resourceName += " " + (conf.resourceRow + 1).ToString();
+
+            cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
+            cmbResource.Text = resourceName;
+            if (cmbResource.SelectedIndex == -1)
+                App.DisplayError("Could not determine resource name from conference record.");
+
+            ditConference.headers = ColumnRecord.organisationHeaders;
+            ditConference.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
+
+            btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
+
+            txtNotes.Text = conf.notes;
+
+            for (int i = 0; i < conf.connections.Count; ++i)
+            {
+                Conference.Connection connection = conf.connections[i];
+                btnAddConnection_Click(null, null);
+                connections[i].txtSearch.Text = connection.dialNo;
+                connections[i].chkIsTest.IsChecked = connection.isTest == true;
+                if (connection.connected != null)
+                    connections[i].dtpConnected.SetDateTime((DateTime)connection.connected);
+                if (connection.disconnected != null)
+                    connections[i].dtpConnected.SetDateTime((DateTime)connection.disconnected);
+                if (connection.isManaged && connection.orgReference != null)
+                {
+                    connections[i].ApplySite(connection.dialNo, connection.orgReference,
+                                             connection.orgName, connection.orgId);
+                }
+                else
+                    connections[i].ApplySite(connection.dialNo);
+                connections[i].ToggleSearch(false);
+            }
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -239,7 +300,7 @@ namespace BridgeOpsClient
         }
         public List<Connection> connections = new();
 
-        private void btnAddConnection_Click(object sender, RoutedEventArgs e)
+        private void btnAddConnection_Click(object? sender, RoutedEventArgs? e)
         {
             if (connections.Count >= ColumnRecord.GetColumn(ColumnRecord.connection,
                                                             Glo.Tab.CONNECTION_ROW).restriction - 1)
@@ -344,8 +405,8 @@ namespace BridgeOpsClient
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
-                {
-                    SearchSite(sender, e);
+            {
+                SearchSite(sender, e);
             }
             else if (e.Key == Key.Escape)
             {
@@ -477,6 +538,7 @@ namespace BridgeOpsClient
                 if (resourceName == "" || !int.TryParse(cmbResource.Text.Substring(indexResourceNameSplit + 1),
                                                                                    out resourceRow))
                     return Abort("Must select a valid resource.");
+                --resourceRow; // Row names add 1 to the row number for user readability.
                 bool foundResource = false;
                 foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources)
                 {
@@ -497,7 +559,7 @@ namespace BridgeOpsClient
                 if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
                     return Abort("All connection rows must have a dial number selected.");
 
-                conferenceConnections.Add(new Conference.Connection(null, c.dialNo, c.orgRef == null,
+                conferenceConnections.Add(new Conference.Connection(null, c.dialNo, c.orgRef != null,
                                                                     c.dtpConnected.GetDateTime(),
                                                                     c.dtpDisconnected.GetDateTime(),
                                                                     c.row, c.chkIsTest.IsChecked == true));
