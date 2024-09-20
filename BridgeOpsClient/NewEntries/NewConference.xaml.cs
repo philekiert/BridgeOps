@@ -21,6 +21,8 @@ namespace BridgeOpsClient
 {
     public partial class NewConference : CustomWindow
     {
+        string id = "";
+
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
         {
             MaxHeight = 400;
@@ -50,6 +52,8 @@ namespace BridgeOpsClient
 
         public NewConference(Conference conf)
         {
+            id = conf.conferenceID.ToString()!;
+
             MaxHeight = 400;
 
             InitializeComponent();
@@ -83,8 +87,6 @@ namespace BridgeOpsClient
             ditConference.headers = ColumnRecord.organisationHeaders;
             ditConference.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
 
-            btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
-
             txtNotes.Text = conf.notes;
 
             for (int i = 0; i < conf.connections.Count; ++i)
@@ -106,6 +108,27 @@ namespace BridgeOpsClient
                     connections[i].ApplySite(connection.dialNo);
                 connections[i].ToggleSearch(false);
             }
+
+            btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+            if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+            {
+                btnSave.IsEnabled = false;
+                btnCancel.IsEnabled = false;
+                btnAddConnection.IsEnabled = false;
+                txtTitle.IsReadOnly = true;
+                dtpStart.ToggleEnabled(false);
+                dtpEnd.ToggleEnabled(false);
+                cmbResource.IsEnabled = false;
+                txtNotes.IsReadOnly = true;
+                foreach (Connection connection in connections)
+                {
+                    connection.btnDown.IsEnabled = false;
+                    connection.btnUp.IsEnabled = false;
+                    connection.btnRemove.IsEnabled = false;
+                }
+            }
+            else
+                btnSave.IsEnabled = true;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -444,7 +467,9 @@ namespace BridgeOpsClient
             int index = Grid.GetRow((UIElement)sender) - 1;
             Connection connection = connections[index];
 
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            // If the user lacks edit permissions and can't make changes anyway, just load the organisation.
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) ||
+                !App.sd.editPermissions[Glo.Tab.CONFERENCE_STATIC_COUNT])
             {
                 if (connection.orgId != null)
                     App.EditOrganisation(connection.orgId.ToString()!);
@@ -593,6 +618,12 @@ namespace BridgeOpsClient
                 dontScroll = false;
             }
             lastScroll = ((ScrollViewer)sender).HorizontalOffset;
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, id, false))
+                Close();
         }
     }
 }
