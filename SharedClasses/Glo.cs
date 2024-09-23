@@ -201,7 +201,7 @@ public static class Glo
         public const int ORGANISATION_STATIC_COUNT = 7;
         public const int ASSET_STATIC_COUNT = 4;
         public const int CONTACT_STATIC_COUNT = 2;
-        public const int CONFERENCE_STATIC_COUNT = 11;
+        public const int CONFERENCE_STATIC_COUNT = 12;
 
         public const string NOTES = "Notes";
     }

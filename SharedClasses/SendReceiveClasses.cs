@@ -1324,6 +1324,10 @@ namespace SendReceiveClasses
         public List<bool> additionalNeedsQuotes;
         public List<Connection> connections;
 
+        // Both of these are for use in select requests only:
+        public List<string?> additionalValTypes;
+        public List<object?> additionalValObjects;
+
         public Conference(string sessionID, int columnRecordID,
                           int resourceID, int resourceRow, string? title,
                           DateTime start, DateTime end,
@@ -1349,8 +1353,12 @@ namespace SendReceiveClasses
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
+            additionalValObjects = new();
             this.additionalNeedsQuotes = additionalNeedsQuotes;
             this.connections = connections;
+
+            additionalValTypes = new();
+            additionalValObjects = new();
 
             SqlAssist.LevelAdditionals(ref additionalCols, ref additionalVals);
         }
@@ -2401,10 +2409,6 @@ namespace SendReceiveClasses
                 for (int i = 0; i < additionalVals.Count; ++i)
                     if (additionalVals[i] == null)
                         additionalVals[i] = "NULL";
-                    else
-#pragma warning disable CS8602
-                        additionalVals[i] = additionalVals[i];
-#pragma warning restore CS8602
                 return string.Join(", ", additionalVals);
             }
             else return "";

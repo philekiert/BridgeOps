@@ -27,19 +27,21 @@ namespace BridgeOpsClient
         {
             try
             {
-            DialogWindows.DialogBox dialog = new(error, title);
-            dialog.ShowDialog();
-            } catch { }
+                DialogWindows.DialogBox dialog = new(error, title);
+                dialog.ShowDialog();
+            }
+            catch { }
         }
         public static void DisplayError(Window owner, string error) { DisplayError(owner, error, ""); }
         public static void DisplayError(Window owner, string error, string title)
         {
             try
             {
-            DialogWindows.DialogBox dialog = new(error, title);
-            dialog.Owner = owner;
-            dialog.ShowDialog();
-            } catch { }
+                DialogWindows.DialogBox dialog = new(error, title);
+                dialog.Owner = owner;
+                dialog.ShowDialog();
+            }
+            catch { }
         }
         public enum QuestionOptions
         { YesNo, OKCancel }
@@ -47,9 +49,10 @@ namespace BridgeOpsClient
         {
             try
             {
-            DialogWindows.DialogBox dialog = new(error, title, buttons);
-            return dialog.ShowDialog() == true;
-            } catch { return false; }
+                DialogWindows.DialogBox dialog = new(error, title, buttons);
+                return dialog.ShowDialog() == true;
+            }
+            catch { return false; }
         }
         public static bool DeleteConfirm(bool multiple)
         {
@@ -59,7 +62,8 @@ namespace BridgeOpsClient
                                   $"{(multiple ? "these items." : "this item")}",
                                    "Confirm Deletion",
                                    DialogWindows.DialogBox.Buttons.YesNo);
-            } catch { return false; }
+            }
+            catch { return false; }
         }
 
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
@@ -516,11 +520,14 @@ namespace BridgeOpsClient
                             stream.WriteByte(Glo.CLIENT_CONFERENCE_SELECT);
                             sr.WriteAndFlush(stream, sd.sessionID);
                             sr.WriteAndFlush(stream, id.ToString());
+                            sr.WriteAndFlush(stream, ColumnRecord.columnRecordID.ToString());
                             int response = stream.ReadByte();
                             if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             {
-                                SendReceiveClasses.Conference conference = 
+                                SendReceiveClasses.Conference conference =
                                     sr.Deserialise<SendReceiveClasses.Conference>(sr.ReadString(stream));
+                                ConvertUnknownJsonObjectsToRespectiveTypes(conference.additionalValTypes,
+                                                                           new() { conference.additionalValObjects });
                                 NewConference newConf = new(conference);
                                 newConf.ShowDialog();
                                 return true;
@@ -1428,7 +1435,7 @@ namespace BridgeOpsClient
                                     conference.resourceRow = (int)row[5]!;
                                     conference.cancelled = (bool)row[6]!;
                                     conference.test = row[7] != null && (int)row[7]! == 1;
-                                    conference.connectionCount =  (int)row[8]!;
+                                    conference.connectionCount = (int)row[8]!;
                                     conferences.Add(conference);
                                 }
                                 return true;

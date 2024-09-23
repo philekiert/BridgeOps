@@ -44,32 +44,35 @@ namespace BridgeOpsClient
             else
                 cmbResource.SelectedIndex = resource.SelectedRowTotal;
 
-            ditConference.headers = ColumnRecord.organisationHeaders;
-            ditConference.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
+            ditConference.headers = ColumnRecord.conferenceHeaders;
+            ditConference.Initialise(ColumnRecord.orderedConference, "Conference");
 
             btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
         }
 
         public NewConference(Conference conf)
         {
-            id = conf.conferenceID.ToString()!;
-
+            // Updated after load. This is to make sure the scrollviewer doesn't expand to fill the whole screen.
             MaxHeight = 400;
 
             InitializeComponent();
 
+            id = conf.conferenceID.ToString()!;
             txtTitle.Text = conf.title;
+            txtNotes.Text = conf.notes;
 
+            // Apply conference start and end times.
             if (conf.start != null)
                 dtpStart.SetDateTime((DateTime)conf.start);
             if (conf.end != null)
                 dtpEnd.SetDateTime((DateTime)conf.end);
 
+            // Add methods to create space for date pickers if needed.
             ToggleConnectionDates(null, null);
-
             dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
             dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
+            // Set build the resource name for the dropdown.
             string resourceName = "";
             foreach (PageConferenceView.ResourceInfo rInfo in PageConferenceView.resources)
                 if (rInfo.id == conf.resourceID)
@@ -84,11 +87,7 @@ namespace BridgeOpsClient
             if (cmbResource.SelectedIndex == -1)
                 App.DisplayError("Could not determine resource name from conference record.");
 
-            ditConference.headers = ColumnRecord.organisationHeaders;
-            ditConference.Initialise(ColumnRecord.orderedOrganisation, "Organisation");
-
-            txtNotes.Text = conf.notes;
-
+            // Add rows for all connections.
             for (int i = 0; i < conf.connections.Count; ++i)
             {
                 Conference.Connection connection = conf.connections[i];
@@ -100,15 +99,19 @@ namespace BridgeOpsClient
                 if (connection.disconnected != null)
                     connections[i].dtpConnected.SetDateTime((DateTime)connection.disconnected);
                 if (connection.isManaged && connection.orgReference != null)
-                {
                     connections[i].ApplySite(connection.dialNo, connection.orgReference,
                                              connection.orgName, connection.orgId);
-                }
                 else
                     connections[i].ApplySite(connection.dialNo);
                 connections[i].ToggleSearch(false);
             }
 
+            // Set up the data input table.
+            ditConference.headers = ColumnRecord.conferenceHeaders;
+            ditConference.Initialise(ColumnRecord.orderedConference, "Conference");
+            ditConference.Populate(conf.additionalValObjects);
+
+            // Apply permissions.
             btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
             if (!App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
@@ -469,7 +472,7 @@ namespace BridgeOpsClient
 
             // If the user lacks edit permissions and can't make changes anyway, just load the organisation.
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) ||
-                !App.sd.editPermissions[Glo.Tab.CONFERENCE_STATIC_COUNT])
+                !App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 if (connection.orgId != null)
                     App.EditOrganisation(connection.orgId.ToString()!);
@@ -594,13 +597,14 @@ namespace BridgeOpsClient
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
 
+            ditConference.ScoopValues();
             ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);
 
             // Obtain types and determine whether or not quotes will be needed.
             conference.additionalNeedsQuotes = new();
             foreach (string c in conference.additionalCols)
                 conference.additionalNeedsQuotes.Add(
-                    SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.organisation, c).type));
+                    SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.conference, c).type));
 
             return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
         }

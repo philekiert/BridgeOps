@@ -49,6 +49,8 @@ namespace BridgeOpsClient
 
         public CustomWindow()
         {
+            Activated += CustomWindow_Activated;
+
             // Only instantiate once.
             if (tmrWindowLeaveDetect == null)
             {
@@ -335,6 +337,15 @@ namespace BridgeOpsClient
                 grid.ColumnDefinitions[2].Width = new GridLength(0);
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
                 ((Border)grid.Children[4]).Background = ((Border)grid.Children[4]).Background;
+            }
+        }
+
+        private void CustomWindow_Activated(object? sender, EventArgs e)
+        {
+            foreach (Window w in Application.Current.Windows)
+            {
+                if (w.Owner == this)
+                    w.Activate();
             }
         }
 

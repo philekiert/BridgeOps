@@ -5,8 +5,8 @@
 
     <Color x:Key="colorTitleBar">#eee</Color>
     <Color x:Key="colorTitleBarBorder">#ccc</Color>
-    <Color x:Key="colorMinimise">#ddd</Color>
-    <Color x:Key="colorMaximise">#ccc</Color>
+    <Color x:Key="colorMinimise">#e2e2e2</Color>
+    <Color x:Key="colorMaximise">#d5d5d5</Color>
     <Color x:Key="colorClose">#eee</Color>
     <Color x:Key="colorCloseButton">#f54e80</Color>
     <Color x:Key="colorWindowBorder">#bbb</Color>

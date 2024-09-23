@@ -450,10 +450,9 @@ namespace BridgeOpsClient
             schView.scheduleTime = new DateTime(DateTime.Now.Year,
                                                 DateTime.Now.Month,
                                                 DateTime.Now.Day,
-                                                schView.scheduleTime.Hour,
-                                                schView.scheduleTime.Minute,
-                                                schView.scheduleTime.Second,
-                                                schView.scheduleTime.Millisecond);
+                                                12,
+                                                30,
+                                                0);
         }
 
         private void scrollBar_SizeChanged(object sender, SizeChangedEventArgs e)
