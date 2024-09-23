@@ -210,14 +210,18 @@ namespace BridgeOpsClient
             {
                 if (schView.smoothZoom)
                 {
-
                     MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime,
                                                              smoothZoomSpeed * deltaTime, .2d);
 
-                    schView.scheduleTime = new DateTime((long)(MathHelper.Lerp((double)schView.scheduleTime.Ticks, schView.xZoomTimeTarget.Ticks, smoothZoomSpeed * deltaTime)));
+                    schView.scheduleTime = new DateTime((long)(MathHelper.Lerp((double)schView.scheduleTime.Ticks,
+                                                                               schView.zoomTimeTarget.Ticks,
+                                                                               smoothZoomSpeed * deltaTime)));
                 }
                 else
+                {
                     schView.zoomTimeCurrent = schView.zoomTime;
+                    schView.scheduleTime = schView.zoomTimeTarget;
+                }
 
                 horizontalChange = true;
             }
@@ -225,16 +229,29 @@ namespace BridgeOpsClient
             {
                 double old = schView.zoomResourceCurrent;
                 if (schView.smoothZoom)
+                {
                     MathHelper.Lerp(ref schView.zoomResourceCurrent, schView.zoomResource,
                                                                      smoothZoomSpeed * deltaTime, .2d);
+                    //MathHelper.Lerp(ref schView.scrollResource, schView.zoomResourceScrollTarget,
+                    //                                            smoothZoomSpeed * deltaTime);
+                }
                 else
+                {
                     schView.zoomResourceCurrent = schView.zoomResource;
+                }
 
-                // Nudge the scroll down .5 of the screen so that the zoom tracks with the middle of the scroll,
-                // not the start.
-                schView.scrollResource += schView.ActualHeight * .5d;
-                schView.scrollResource *= schView.zoomResourceCurrent / old;
-                schView.scrollResource -= schView.ActualHeight * .5d;
+                // Nudge the scroll down a certain percentage of the screen so that the zoom tracks with the relative
+                // position of the mouse cursor, not the start. The * .2d and * 1.4 are to widen the window in which
+                // this takes place in order to feel slightly more natural. i.e. if you want to zoom in on the top row,
+                // you want it to move slightly closer to the centre.
+                schView.scrollResource += -(schView.ActualHeight * .2d) +
+                                           (schView.ActualHeight * (schView.zoomResourceScrollCentre
+                                                                 / schView.ActualHeight) * 1.4d);
+                schView.scrollResource += (schView.scrollResource * (schView.zoomResourceCurrent / old))
+                                          - schView.scrollResource;
+                schView.scrollResource -= -(schView.ActualHeight * .2d) +
+                                           (schView.ActualHeight * (schView.zoomResourceScrollCentre
+                                                                 / schView.ActualHeight) * 1.4d);
                 schView.EnforceResourceScrollLimits();
 
                 UpdateScrollBar();
@@ -389,20 +406,30 @@ namespace BridgeOpsClient
 
         private void schView_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (CtrlDown())
+            bool redrawGrid = false;
+            bool redrawRuler = false;
+
+            if (CtrlDown() || ShiftDown())
             {
-                if (ShiftDown())
-                    schView.ZoomResource(e.Delta > 0 ? 1 : -1);
-                else
+                if (CtrlDown())
                 {
                     schView.ZoomTime(e.Delta > 0 ? 1 : -1, e.GetPosition(schView).X);
+                    redrawGrid = true;
+                    redrawRuler = true;
                 }
-                RedrawGrid();
-                RedrawRuler();
+                if (ShiftDown())
+                {
+                    schView.ZoomResource(e.Delta > 0 ? 1 : -1, e.GetPosition(schView).Y);
+                    redrawGrid = true;
+                    redrawRuler = true;
+                }
+
+                if (redrawGrid) RedrawGrid();
+                if (redrawRuler) RedrawRuler();
             }
             else
             {
-                if (ShiftDown())
+                if (AltDown())
                     schView.scheduleTime = schView.scheduleTime.AddTicks(
                         (long)((66.66d * (e.Delta > 0 ? -ScheduleView.ticks1Hour : ScheduleView.ticks1Hour)) /
                         schView.zoomTimeCurrent));
@@ -697,13 +724,13 @@ namespace BridgeOpsClient
         public bool smoothZoom = true;
         public int zoomTime = 70;
         public double zoomTimeCurrent = 70d; // Used for smooth Lerp()ing.
-        public DateTime xZoomTimeTarget = DateTime.Now;
+        public DateTime zoomTimeTarget = DateTime.Now;
         public int zoomTimeMinimum = 10; // How many pixels an hour can be reduced to.
         public int zoomTimeMaximum = 210;
         public int zoomTimeSensitivity = 10;
         public int zoomResource = 40;
         public double zoomResourceCurrent = 40d; // Used for smooth Lerp()ing.
-        public int zoomResourceTarget = 40;
+        public double zoomResourceScrollCentre = 0;
         public int zoomResourceMinimum = 20; // How many pixels a resource can be reduced to.
         public int zoomResourceMaximum = 200;
         public int zoomResourceSensitivity = 20;
@@ -1045,14 +1072,25 @@ namespace BridgeOpsClient
             // as it all seems very arbitrary, but the .4d and .1d as opposed to 1 feel better to me that scrolling the
             // whole way towards the target. Likewise, reversing the zoom out direction just feels more natural.
             if (strength > 0)
-                xZoomTimeTarget = scheduleTime.AddSeconds(xDif * .4d * (3600 * (1 / DisplayTimeZoom())));
+                zoomTimeTarget = scheduleTime.AddSeconds(xDif * .4d * (3600 * (1 / DisplayTimeZoom())));
             else
-                xZoomTimeTarget = scheduleTime.AddSeconds(-xDif * .1d * (3600 * (1 / DisplayTimeZoom())));
+                zoomTimeTarget = scheduleTime.AddSeconds(-xDif * .1d * (3600 * (1 / DisplayTimeZoom())));
         }
         public void ZoomResource(int strength)
         {
+            ZoomResource(strength, ActualHeight * .5f);
+        }
+        public void ZoomResource(int strength, double yCentre)
+        {
             zoomResource += zoomResourceSensitivity * strength;
             zoomResource = Math.Clamp(zoomResource, zoomResourceMinimum, zoomResourceMaximum);
+            EnforceResourceScrollLimits();
+
+            // See reason for weird values above in ZoomTime(int, double).
+            if (strength > 0)
+                zoomResourceScrollCentre = yCentre;
+            else
+                zoomResourceScrollCentre = ActualHeight * .5f;
         }
         public void ScrollResource(double strength)
         {
