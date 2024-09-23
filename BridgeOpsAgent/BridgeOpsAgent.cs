@@ -1635,10 +1635,11 @@ internal class BridgeOpsAgent
                 }
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
                 {
-                    // Make sure, when you get around to implementing this, that you check for permissions (as above).
                     Conference update = sr.Deserialise<Conference>(sr.ReadString(stream));
-                    //if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid))
-                    //    com.CommandText = update.SqlUpdate();
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_RESOURCE)
                 {

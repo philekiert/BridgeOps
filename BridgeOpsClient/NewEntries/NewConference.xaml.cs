@@ -22,6 +22,7 @@ namespace BridgeOpsClient
     public partial class NewConference : CustomWindow
     {
         string id = "";
+        bool edit = false;
 
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
         {
@@ -104,6 +105,7 @@ namespace BridgeOpsClient
                 else
                     connections[i].ApplySite(connection.dialNo);
                 connections[i].ToggleSearch(false);
+                connections[i].connectionId = connection.connectionID;
             }
 
             // Set up the data input table.
@@ -154,7 +156,7 @@ namespace BridgeOpsClient
             public CustomControls.DateTimePicker dtpConnected;
             public CustomControls.DateTimePicker dtpDisconnected;
             public Button btnOrgSummary;
-            public int connectionId; // -1 if booking is new
+            public int? connectionId;
             public int row;
             public string dialNo;
             public string? orgRef;
@@ -581,24 +583,32 @@ namespace BridgeOpsClient
                     return Abort("Must select a valid resource.");
             }
 
+            int conferenceId;
+            if (!int.TryParse(id, out conferenceId))
+                return Abort("Could not determine conference ID.");
+
             List<Conference.Connection> conferenceConnections = new();
             foreach (Connection c in connections)
             {
                 if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
                     return Abort("All connection rows must have a dial number selected.");
 
-                conferenceConnections.Add(new Conference.Connection(null, c.dialNo, c.orgRef != null,
-                                                                    c.dtpConnected.GetDateTime(),
-                                                                    c.dtpDisconnected.GetDateTime(),
-                                                                    c.row, c.chkIsTest.IsChecked == true));
+                Conference.Connection confC = new Conference.Connection(conferenceId, c.dialNo, c.orgRef != null,
+                                                                        c.dtpConnected.GetDateTime(),
+                                                                        c.dtpDisconnected.GetDateTime(),
+                                                                        c.row, c.chkIsTest.IsChecked == true);
+                confC.connectionID = c.connectionId;
+                conferenceConnections.Add(confC);
             }
 
             Conference conference = new(App.sd.sessionID, ColumnRecord.columnRecordID,
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
+            conference.conferenceID = conferenceId;
 
             ditConference.ScoopValues();
             ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);
+
 
             // Obtain types and determine whether or not quotes will be needed.
             conference.additionalNeedsQuotes = new();
@@ -606,7 +616,7 @@ namespace BridgeOpsClient
                 conference.additionalNeedsQuotes.Add(
                     SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.conference, c).type));
 
-            return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
+            return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference);
         }
 
         // Don't scroll to fit in the summary button if the user clicks one that extends out of view.

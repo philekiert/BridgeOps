@@ -913,7 +913,7 @@ namespace SendReceiveClasses
             if (dialNoChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo));
             if (availableChanged)
-                setters.Add(Glo.Tab.ORGANISATION_AVAILABLE + " = " + (available == true ? "1": "0"));
+                setters.Add(Glo.Tab.ORGANISATION_AVAILABLE + " = " + (available == true ? "1" : "0"));
             if (notesChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
@@ -1278,6 +1278,8 @@ namespace SendReceiveClasses
             public DateTime? disconnected;
             public int row;
             public bool isTest;
+
+            // Just for select requests to speed things up:
             public int? orgId;
             public string? orgReference;
             public string? orgName;
@@ -1434,6 +1436,77 @@ namespace SendReceiveClasses
                                                               c.isTest ? "1" : "0")));
                 }
             }
+
+
+            return SqlAssist.Transaction(commands.ToArray());
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new()
+            {
+                SqlAssist.Setter(Glo.Tab.RESOURCE_ID, resourceID.ToString()),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_RESOURCE_ROW, resourceRow.ToString()),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_TITLE, title),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_START, SqlAssist.DateTimeToSQL((DateTime)start!, false, true)),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_END, SqlAssist.DateTimeToSQL((DateTime)end!, false, true)),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_EDIT_LOGIN, editLoginID.ToString()),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_EDIT_TIME, SqlAssist.DateTimeToSQL(DateTime.Now, false, true)),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_CANCELLED, cancelled == true ? "1" : "0"),
+                SqlAssist.Setter(Glo.Tab.NOTES, notes == null ? "NULL" : notes)
+            };
+
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
+
+            List<string> commands = new()
+            {
+                SqlAssist.Update("Conference", string.Join(", ", setters),
+                                 Glo.Tab.CONFERENCE_ID, conferenceID.ToString()!)
+            };
+
+            List<string> connectionIDs = new();
+            foreach (Connection c in connections)
+                if (c.connectionID != null)
+                    connectionIDs.Add(c.connectionID.ToString()!);
+
+            if (connectionIDs.Count > 0)
+            commands.Add("DELETE FROM Connection " +
+                        $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID.ToString()!} " +
+                          $"AND {Glo.Tab.CONNECTION_ID} NOT IN ({string.Join(", ", connectionIDs)});");
+
+            
+            //if (connections.Count > 0)
+            //{
+            //    commands.Add("DECLARE @NewID INT; SET @NewID = SCOPE_IDENTITY();");
+
+            //    foreach (Connection c in connections)
+            //    {
+            //        c.Prepare();
+            //        commands.Add(SqlAssist.InsertInto("Connection",
+            //                              SqlAssist.ColConcat(Glo.Tab.CONFERENCE_ID,
+            //                                                  Glo.Tab.DIAL_NO,
+            //                                                  Glo.Tab.CONNECTION_IS_MANAGED,
+            //                                                  Glo.Tab.CONNECTION_TIME_FROM,
+            //                                                  Glo.Tab.CONNECTION_TIME_TO,
+            //                                                  Glo.Tab.CONNECTION_ROW,
+            //                                                  Glo.Tab.CONNECTION_IS_TEST),
+            //                              SqlAssist.ValConcat(c.conferenceID == null ? "@NewID" :
+            //                                                                           c.conferenceID.ToString(),
+            //                                                  c.dialNo,
+            //                                                  c.isManaged ? "1" : "0",
+            //                                                  c.connected == null ? "NULL" :
+            //                                                  SqlAssist.DateTimeToSQL((DateTime)c.connected,
+            //                                                                          false, true),
+            //                                                  c.disconnected == null ? "NULL" :
+            //                                                  SqlAssist.DateTimeToSQL((DateTime)c.disconnected,
+            //                                                                          false, true),
+            //                                                  c.row.ToString(),
+            //                                                  c.isTest ? "1" : "0")));
+            //    }
+            //}
 
 
             return SqlAssist.Transaction(commands.ToArray());
@@ -2407,7 +2480,7 @@ namespace SendReceiveClasses
             if (additionalVals.Count > 0)
             {
                 for (int i = 0; i < additionalVals.Count; ++i)
-                    if (additionalVals[i] == null)
+                    if (additionalVals[i] == null || additionalVals[i] == "")
                         additionalVals[i] = "NULL";
                 return string.Join(", ", additionalVals);
             }
