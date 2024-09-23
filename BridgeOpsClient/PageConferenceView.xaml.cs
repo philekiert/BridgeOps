@@ -209,8 +209,13 @@ namespace BridgeOpsClient
             if (schView.zoomTimeCurrent != schView.zoomTime)
             {
                 if (schView.smoothZoom)
+                {
+
                     MathHelper.Lerp(ref schView.zoomTimeCurrent, schView.zoomTime,
                                                              smoothZoomSpeed * deltaTime, .2d);
+
+                    schView.scheduleTime = new DateTime((long)(MathHelper.Lerp((double)schView.scheduleTime.Ticks, schView.xZoomTimeTarget.Ticks, smoothZoomSpeed * deltaTime)));
+                }
                 else
                     schView.zoomTimeCurrent = schView.zoomTime;
 
@@ -390,7 +395,7 @@ namespace BridgeOpsClient
                     schView.ZoomResource(e.Delta > 0 ? 1 : -1);
                 else
                 {
-                    schView.ZoomTime(e.Delta > 0 ? 1 : -1);
+                    schView.ZoomTime(e.Delta > 0 ? 1 : -1, e.GetPosition(schView).X);
                 }
                 RedrawGrid();
                 RedrawRuler();
@@ -690,14 +695,16 @@ namespace BridgeOpsClient
         public double gridHeight = 0;
 
         public bool smoothZoom = true;
-        public int zoomTime = 70; // How many pixels an hour can be reduced to.
+        public int zoomTime = 70;
         public double zoomTimeCurrent = 70d; // Used for smooth Lerp()ing.
-        public int zoomTimeMinimum = 10;
+        public DateTime xZoomTimeTarget = DateTime.Now;
+        public int zoomTimeMinimum = 10; // How many pixels an hour can be reduced to.
         public int zoomTimeMaximum = 210;
         public int zoomTimeSensitivity = 10;
         public int zoomResource = 40;
         public double zoomResourceCurrent = 40d; // Used for smooth Lerp()ing.
-        public int zoomResourceMinimum = 20;
+        public int zoomResourceTarget = 40;
+        public int zoomResourceMinimum = 20; // How many pixels a resource can be reduced to.
         public int zoomResourceMaximum = 200;
         public int zoomResourceSensitivity = 20;
 
@@ -1029,9 +1036,18 @@ namespace BridgeOpsClient
         }
         public void ZoomTime(int strength, double xCentre)
         {
-
             zoomTime += zoomTimeSensitivity * strength;
             zoomTime = Math.Clamp(zoomTime, zoomTimeMinimum, zoomTimeMaximum);
+
+            double xDif = xCentre - (ActualWidth * .5d);
+
+            // This sets the target time for zooming relative to the mouse cursor. I can't really explain my reasoning
+            // as it all seems very arbitrary, but the .4d and .1d as opposed to 1 feel better to me that scrolling the
+            // whole way towards the target. Likewise, reversing the zoom out direction just feels more natural.
+            if (strength > 0)
+                xZoomTimeTarget = scheduleTime.AddSeconds(xDif * .4d * (3600 * (1 / DisplayTimeZoom())));
+            else
+                xZoomTimeTarget = scheduleTime.AddSeconds(-xDif * .1d * (3600 * (1 / DisplayTimeZoom())));
         }
         public void ZoomResource(int strength)
         {

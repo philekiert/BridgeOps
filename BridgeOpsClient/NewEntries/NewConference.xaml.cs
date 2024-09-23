@@ -110,7 +110,7 @@ namespace BridgeOpsClient
             }
 
             btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
-            if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+            if (!App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 btnSave.IsEnabled = false;
                 btnCancel.IsEnabled = false;
