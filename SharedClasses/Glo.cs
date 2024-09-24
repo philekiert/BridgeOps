@@ -83,8 +83,9 @@ public static class Glo
 
     public const int SERVER_CLIENT_NUDGE = 0;           // Not yet implemented
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;
-    public const int SERVER_RESOURCES_UPDATED = 2;      // Not yet implemented
-    public const int SERVER_FORCE_LOGOUT = 3;           // Not yet implemented
+    public const int SERVER_RESOURCES_UPDATED = 2;
+    public const int SERVER_FORCE_LOGOUT = 3;
+    public const int SERVER_CONFERENCES_UPDATED = 4;
 
 
     // Console/Agent Function Specifiers

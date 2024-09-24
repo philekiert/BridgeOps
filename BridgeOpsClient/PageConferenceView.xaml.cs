@@ -143,10 +143,40 @@ namespace BridgeOpsClient
             public int connectionCount;
         }
         public List<Conference> conferences = new();
+        List<Conference> conferencesUpdate = new();
 
-        public void SearchWindow(DateTime start, DateTime end)
+        object conferenceSearchLock = new();
+        object conferenceSearchThreadLock = new();
+        bool searchTimeframeThreadQueued = false;
+        DateTime searchStart;
+        DateTime searchEnd;
+        public void SearchTimeframe() { SearchTimeframe(searchStart, searchEnd); }
+        public void SearchTimeframe(DateTime start, DateTime end)
         {
-            App.SendConferenceViewSearchRequest(start, end, conferences);
+            // We never need more than one search queued, so cancel if one is already pending after the current thread.
+            // Occasionally one might sneak through, but it's not the end of the world.
+            if (searchTimeframeThreadQueued)
+                return;
+            searchTimeframeThreadQueued = true;
+
+            lock (conferenceSearchLock)
+            {
+                searchStart = start;
+                searchEnd = end;
+                Thread searchThread = new Thread(SearchTimeFrameThread);
+                searchThread.Start();
+            }
+        }
+        private void SearchTimeFrameThread()
+        {
+            lock (conferenceSearchThreadLock)
+                lock (App.streamLock)
+                    App.SendConferenceViewSearchRequest(searchStart, searchEnd, conferencesUpdate);
+
+            lock (conferences)
+                conferences = conferencesUpdate.ToList();
+
+            searchTimeframeThreadQueued = false;
         }
 
         void RedrawRuler()
@@ -812,7 +842,7 @@ namespace BridgeOpsClient
             {
                 lastSearchStart = start - (half * 2);
                 lastSearchEnd = end + (half * 2);
-                conferenceView.SearchWindow(lastSearchStart, lastSearchEnd);
+                conferenceView.SearchTimeframe(lastSearchStart, lastSearchEnd);
             }
         }
 

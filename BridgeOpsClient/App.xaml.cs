@@ -200,6 +200,13 @@ namespace BridgeOpsClient
                     {
                         forceLogoutQueued = true;
                     }
+                    else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
+                    {
+                        foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                        {
+                            pcv.SearchTimeframe();
+                        }
+                    }
                 }
                 catch
                 {

@@ -125,6 +125,12 @@ internal class BridgeOpsAgent
                 LogError($"Logged out notification could not be sent to {ipString} " +
                          $"after {notificationSendRetries} retries.");
         }
+        public void SendConferenceChangeNotification()
+        {
+            if (!SendNotification(Glo.SERVER_CONFERENCES_UPDATED))
+                LogError($"Conferences updated notification could not be sent to {ipString} " +
+                         $"after {notificationSendRetries} retries.");
+        }
 
         public void SendNudge()
         {
@@ -555,6 +561,8 @@ internal class BridgeOpsAgent
                     notificationThread = new Thread(kvp.Value.SendColumnRecordChangeNotification);
                 else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
                     notificationThread = new Thread(kvp.Value.SendResourceChangeNotification);
+                else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
+                    notificationThread = new Thread(kvp.Value.SendConferenceChangeNotification);
                 else
                     continue;
 
@@ -1358,6 +1366,8 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                     if (target == Glo.CLIENT_NEW_RESOURCE)
                         SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                    else if (target == Glo.CLIENT_NEW_CONFERENCE)
+                        SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
                 }
             }
         }
@@ -1683,9 +1693,11 @@ internal class BridgeOpsAgent
             }
 
             com.ExecuteNonQuery();
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             if (target == Glo.CLIENT_UPDATE_RESOURCE)
                 SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
+                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
         }
         catch (Exception e)
         {
@@ -1732,6 +1744,8 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (req.table == "Resource")
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                else if (req.table == "Conference")
+                    SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -1783,6 +1797,8 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (req.table == "Resource")
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                else if (req.table == "Conference")
+                    SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -2621,7 +2637,10 @@ internal class BridgeOpsAgent
                 sr.WriteAndFlush(stream, "Conference could not be found in the database.");
             }
             else
+            {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            }
         }
         catch (Exception e)
         {

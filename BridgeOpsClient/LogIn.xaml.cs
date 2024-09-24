@@ -98,7 +98,12 @@ namespace BridgeOpsClient
                         App.LogOut();
                     }
                     else
+                    {
+                        if (MainWindow.pageConferenceViews.Count > 0)
+                            foreach (PageConferenceView pcv in MainWindow.pageConferenceViews)
+                                pcv.SearchTimeframe();
                         Close();
+                    }
                 }
                 else
                 {
