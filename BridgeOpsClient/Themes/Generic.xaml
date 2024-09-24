@@ -21,6 +21,7 @@
     <Color x:Key="colorRemoveButtonBorder">#ab5073</Color>
     <Color x:Key="colorButton">#eee</Color>
     <Color x:Key="colorButtonBorder">#aaa</Color>
+    <Color x:Key="colorNegativeBackground">#F45</Color>
     <SolidColorBrush x:Key="brushTitleBar" Color="{StaticResource colorTitleBar}"/>
     <SolidColorBrush x:Key="brushTitleBarBorder" Color="{StaticResource colorTitleBarBorder}"/>
     <SolidColorBrush x:Key="brushMinimise" Color="{StaticResource colorMinimise}"/>
@@ -39,9 +40,10 @@
     <SolidColorBrush x:Key="brushRemoveButtonBorder" Color="{StaticResource colorRemoveButtonBorder}"/>
     <SolidColorBrush x:Key="brushButton" Color="{StaticResource colorButton}"/>
     <SolidColorBrush x:Key="brushButtonBorder" Color="{StaticResource colorButtonBorder}"/>
-    
+    <SolidColorBrush x:Key="brushNegativeBackground" Color="{StaticResource colorNegativeBackground}"/>
+
     <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose-->
-    
+
     <Style TargetType="Button" x:Key="primary-button">
         <Setter Property="Background" Value="{StaticResource brushPrimaryButton}"/>
         <Setter Property="BorderBrush" Value="{StaticResource brushPrimaryButtonBorder}"/>

@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Reorder Columns" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner">
-    <Grid>
+    <Grid Margin="0 5 0 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>

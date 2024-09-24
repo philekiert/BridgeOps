@@ -14,7 +14,7 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <TextBox Grid.Row="0" Grid.ColumnSpan="2" x:Name="txtName" TextChanged="txtName_TextChanged"
-                     Width="200" Height="24" Margin="10" TextWrapping="NoWrap" MaxLines="1"/>
+                     Width="200" Height="24" Margin="10 15 10 10" TextWrapping="NoWrap" MaxLines="1"/>
             <Button Grid.Row="1" x:Name="btnSubmit" Content="Submit" Margin="10 0 10 10" Width="60"
                     Click="btnSubmit_Click" IsEnabled="False" Style="{StaticResource primary-button}"/>
         </Grid>

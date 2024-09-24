@@ -15,7 +15,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace BridgeOpsClient
 {
@@ -23,6 +22,7 @@ namespace BridgeOpsClient
     {
         string id = "";
         bool edit = false;
+        bool cancelled = false;
 
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
         {
@@ -62,6 +62,14 @@ namespace BridgeOpsClient
             id = conf.conferenceID.ToString()!;
             txtTitle.Text = conf.title;
             txtNotes.Text = conf.notes;
+
+            cancelled = conf.cancelled == true;
+            if (cancelled)
+            {
+                btnCancel.Content = "Uncancel";
+                btnCancel.Width = 66;
+                grdMain.RowDefinitions[0].Height = new(20);
+            }
 
             // Apply conference start and end times.
             if (conf.start != null)
@@ -134,7 +142,10 @@ namespace BridgeOpsClient
                 }
             }
             else
+            {
                 btnSave.IsEnabled = true;
+                btnCancel.IsEnabled = true;
+            }
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -621,6 +632,7 @@ namespace BridgeOpsClient
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
             conference.conferenceID = conferenceIdNullable;
+            conference.cancelled =
 
             ditConference.ScoopValues();
             ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);
@@ -655,8 +667,22 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, id, false))
-                Close();
+            if (App.DisplayQuestion("Are you sure?", "Delete Conference", DialogWindows.DialogBox.Buttons.YesNo))
+                if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, id, false))
+                    Close();
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            int confID;
+            if (!int.TryParse(id, out confID))
+                App.DisplayError("Could not determine conference ID to cancel.");
+            else
+            {
+                // Error message displayed by the below function if it doesn't succeed.
+                if (App.SendConferenceCancelRequest(confID, cancelled))
+                    Close();
+            }
         }
     }
 }

@@ -79,6 +79,7 @@ public static class Glo
     public const int CLIENT_SELECT_BUILDER_PRESET_RENAME = 63;
     public const int CLIENT_CONFERENCE_VIEW_SEARCH = 70;
     public const int CLIENT_CONFERENCE_SELECT = 71;
+    public const int CLIENT_CONFERENCE_CANCEL = 72;
 
     public const int SERVER_CLIENT_NUDGE = 0;           // Not yet implemented
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;

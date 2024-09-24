@@ -769,6 +769,8 @@ internal class BridgeOpsAgent
 
             try
             {
+                // Move this ridiculousness to a dictionary at some point.
+
                 int fncByte = stream.ReadByte();
                 if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
                     ClientPullColumnRecord(stream);
@@ -835,6 +837,8 @@ internal class BridgeOpsAgent
                     ClientConferenceViewSearch(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT)
                     ClientConferenceSelect(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_CONFERENCE_CANCEL)
+                    ClientConferenceCancel(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -1637,7 +1641,7 @@ internal class BridgeOpsAgent
                 {
                     Conference update = sr.Deserialise<Conference>(sr.ReadString(stream));
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_CONFERENCES, edit,
                         out permission))
                         com.CommandText = update.SqlUpdate();
                 }
@@ -2469,7 +2473,6 @@ internal class BridgeOpsAgent
     {
         try
         {
-            sqlConnect.Open();
             string sessionID = sr.ReadString(stream);
             int conferenceID;
             string conferenceIdStr = sr.ReadString(stream);
@@ -2496,6 +2499,7 @@ internal class BridgeOpsAgent
             foreach (DictionaryEntry de in ColumnRecord.orderedConference)
                 conferenceColNames.Add((string)de.Key);
 
+            sqlConnect.Open();
             SqlCommand com = new($"SELECT {string.Join(", ", conferenceColNames)} " +
                                  $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};",
                                  sqlConnect);
@@ -2567,6 +2571,61 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't load conference, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    // Permission restricted.
+    private static void ClientConferenceCancel(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            string conferenceID = sr.ReadString(stream);
+            bool uncancel = stream.ReadByte() == 1;
+            if (!int.TryParse(conferenceID, out _))
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                SafeFail(stream, "Conference ID was not an integer.");
+                return;
+            }
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_CONFERENCES,
+                                                                       Glo.PERMISSION_EDIT))
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+            }
+
+            // Get the conference details.
+
+            sqlConnect.Open();
+            SqlCommand com = new($"UPDATE Conference SET {Glo.Tab.CONFERENCE_CANCELLED} = {(uncancel ? "0" : "1")} " +
+                                 $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};", sqlConnect);
+            if (com.ExecuteNonQuery() == 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, "Conference could not be found in the database.");
+            }
+            else
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't cancel conference, see error:", e);
             SafeFail(stream, e.Message);
         }
         finally

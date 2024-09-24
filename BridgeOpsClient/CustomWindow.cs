@@ -68,7 +68,8 @@ namespace BridgeOpsClient
             // Set WindowChrome properties
             var windowChrome = new WindowChrome
             {
-                CaptionHeight = titleBarHeight,
+                // I have no idea why - 5, but it overshoots otherwise. Possible the border thickness size is included.
+                CaptionHeight = titleBarHeight - 5,
                 ResizeBorderThickness = new Thickness(6)
             };
             WindowChrome.SetWindowChrome(this, windowChrome);
@@ -87,7 +88,7 @@ namespace BridgeOpsClient
             };
 
             grid = new();
-            grid.RowDefinitions.Add(new() { Height = new GridLength(titleBarHeight + 5) });
+            grid.RowDefinitions.Add(new() { Height = new GridLength(titleBarHeight) });
             grid.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Auto) });
             grid.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
@@ -104,7 +105,7 @@ namespace BridgeOpsClient
                 Height = titleBarHeight,
                 CornerRadius = new CornerRadius(borderRadius, 0, 0, 0),
                 Background = resources["brushTitleBar"] as Brush,
-                Margin = new Thickness(0, 0, 0, 5),
+                Margin = new Thickness(0, 0, 0, 0),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 BorderBrush = resources["brushTitleBarBorder"] as Brush
             };
@@ -114,7 +115,7 @@ namespace BridgeOpsClient
             {
                 Height = titleBarHeight,
                 Background = resources["brushTitleBar"] as Brush,
-                Margin = new Thickness(0, 0, 0, 5),
+                Margin = new Thickness(0, 0, 0, 0),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 BorderBrush = resources["brushTitleBarBorder"] as Brush,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -155,7 +156,7 @@ namespace BridgeOpsClient
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 BorderBrush = resources["brushTitleBarBorder"] as Brush,
                 Child = minimisePath,
-                Margin = new Thickness(0, 0, 0, 5)
+                Margin = new Thickness(0, 0, 0, 0)
             };
             maximiseButton = new()
             {
@@ -165,7 +166,7 @@ namespace BridgeOpsClient
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 BorderBrush = resources["brushTitleBarBorder"] as Brush,
                 Child = maximisePath,
-                Margin = new Thickness(0, 0, 0, 5)
+                Margin = new Thickness(0, 0, 0, 0)
             };
             closeButton = new()
             {
@@ -176,7 +177,7 @@ namespace BridgeOpsClient
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 BorderBrush = resources["brushTitleBarBorder"] as Brush,
                 Child = closeText,
-                Margin = new Thickness(0, 0, 0, 5),
+                Margin = new Thickness(0, 0, 0, 0),
             };
 
             WindowChrome.SetIsHitTestVisibleInChrome(minimiseButton, true);

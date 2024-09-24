@@ -17,7 +17,7 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="txtMessage" IsReadOnly="True" Grid.Row="0" Text="This is a test." Margin="10 10 10 10"
+        <TextBox x:Name="txtMessage" IsReadOnly="True" Grid.Row="0" Text="This is a test." Margin="10 15 10 10"
                  BorderThickness="0" AcceptsReturn="True" MaxHeight="400" TextWrapping="Wrap" Grid.ColumnSpan="2"/>
         <Button x:Name="btnOkay" Grid.Row="1" Grid.Column="0" Content="OK" HorizontalAlignment="Center" Height="24"
                 Padding="6 2 6 2" MinWidth="80" Margin="10 10 10 10" Style="{StaticResource primary-button}"

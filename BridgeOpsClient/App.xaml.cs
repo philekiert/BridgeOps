@@ -1466,6 +1466,51 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool SendConferenceCancelRequest(int conferenceID, bool uncancel)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_CONFERENCE_CANCEL);
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            sr.WriteAndFlush(stream, conferenceID.ToString());
+                            stream.WriteByte(uncancel ? (byte)1 : (byte)0);
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                return true;
+                            }
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                DisplayError("The conference could not be cancelled. See error:\n\n" +
+                                                sr.ReadString(stream));
+                                return false;
+                            }
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not cancel conference.");
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
         static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes,
                                                                        List<List<object?>> rows)
         {
