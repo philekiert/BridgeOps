@@ -46,18 +46,20 @@ namespace BridgeOpsClient.CustomControls
             //        1 Date
             //        2 Time
 
+            // If the date is null, return null unless only the time was requested, and vice versa.
             TimeSpan? time = timePicker.GetTime();
-            if (time == null)
+            if (time == null && which != 1)
                 return null;
-            if (datePicker.SelectedDate == null)
+            if (datePicker.SelectedDate == null && which != 2)
                 return null;
 
             if (which == 0)
-                return (dateVisible ? (DateTime)datePicker.SelectedDate : new DateTime()).Add((TimeSpan)time);
+                return (dateVisible || datePicker.SelectedDate != null ? (DateTime)datePicker.SelectedDate! :
+                                                                         new DateTime()).Add((TimeSpan)time!);
             else if (which == 1 && dateVisible)
-                return (DateTime)datePicker.SelectedDate;
+                return (DateTime)datePicker.SelectedDate!;
             else if (which == 2)
-                return new DateTime().Add((TimeSpan)time);
+                return new DateTime().Add((TimeSpan)time!);
 
             return null;
         }
@@ -70,6 +72,7 @@ namespace BridgeOpsClient.CustomControls
         }
 
         bool dateVisible = true;
+        public bool DateVisible { get { return dateVisible; } }
         public void ToggleDatePicker(bool show)
         {
             grd.ColumnDefinitions[0].Width = show ? new GridLength(110) : new GridLength(0);

@@ -58,6 +58,7 @@ namespace BridgeOpsClient
 
             InitializeComponent();
 
+            edit = true;
             id = conf.conferenceID.ToString()!;
             txtTitle.Text = conf.title;
             txtNotes.Text = conf.notes;
@@ -583,9 +584,15 @@ namespace BridgeOpsClient
                     return Abort("Must select a valid resource.");
             }
 
+            // Set the ID as null if we're creating, otherwise use the ID.
+            int? conferenceIdNullable;
             int conferenceId;
-            if (!int.TryParse(id, out conferenceId))
+            if (!edit)
+                conferenceIdNullable = null;
+            else if (!int.TryParse(id, out conferenceId))
                 return Abort("Could not determine conference ID.");
+            else
+                conferenceIdNullable = conferenceId;
 
             List<Conference.Connection> conferenceConnections = new();
             foreach (Connection c in connections)
@@ -593,18 +600,27 @@ namespace BridgeOpsClient
                 if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
                     return Abort("All connection rows must have a dial number selected.");
 
-                Conference.Connection confC = new Conference.Connection(conferenceId, c.dialNo, c.orgRef != null,
+                Conference.Connection confC = new Conference.Connection(conferenceIdNullable,
+                                                                        c.dialNo, c.orgRef != null,
                                                                         c.dtpConnected.GetDateTime(),
                                                                         c.dtpDisconnected.GetDateTime(),
                                                                         c.row, c.chkIsTest.IsChecked == true);
                 confC.connectionID = c.connectionId;
+
+                // If the date pickers aren't visible and times are set, automatically set them to the day of the
+                // conference.
+                if (confC.connected != null && !c.dtpConnected.DateVisible && c.dtpConnected.GetTime() != null)
+                    confC.connected = dtpStart.GetDate() + ((DateTime)confC.connected!).TimeOfDay;
+                if (confC.disconnected != null && !c.dtpDisconnected.DateVisible && c.dtpDisconnected.GetTime() != null)
+                    confC.disconnected = dtpStart.GetDate() + ((DateTime)confC.disconnected!).TimeOfDay;
+
                 conferenceConnections.Add(confC);
             }
 
             Conference conference = new(App.sd.sessionID, ColumnRecord.columnRecordID,
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
-            conference.conferenceID = conferenceId;
+            conference.conferenceID = conferenceIdNullable;
 
             ditConference.ScoopValues();
             ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);
@@ -616,7 +632,10 @@ namespace BridgeOpsClient
                 conference.additionalNeedsQuotes.Add(
                     SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.conference, c).type));
 
-            return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference);
+            if (edit)
+                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference);
+            else
+                return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
         }
 
         // Don't scroll to fit in the summary button if the user clicks one that extends out of view.

@@ -1467,46 +1467,75 @@ namespace SendReceiveClasses
                                  Glo.Tab.CONFERENCE_ID, conferenceID.ToString()!)
             };
 
+            // Delete any connections that are no longer included.
             List<string> connectionIDs = new();
             foreach (Connection c in connections)
                 if (c.connectionID != null)
                     connectionIDs.Add(c.connectionID.ToString()!);
-
             if (connectionIDs.Count > 0)
-            commands.Add("DELETE FROM Connection " +
-                        $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID.ToString()!} " +
-                          $"AND {Glo.Tab.CONNECTION_ID} NOT IN ({string.Join(", ", connectionIDs)});");
+                commands.Add("DELETE FROM Connection " +
+                            $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID.ToString()!} " +
+                              $"AND {Glo.Tab.CONNECTION_ID} NOT IN ({string.Join(", ", connectionIDs)});");
 
-            
-            //if (connections.Count > 0)
-            //{
-            //    commands.Add("DECLARE @NewID INT; SET @NewID = SCOPE_IDENTITY();");
 
-            //    foreach (Connection c in connections)
-            //    {
-            //        c.Prepare();
-            //        commands.Add(SqlAssist.InsertInto("Connection",
-            //                              SqlAssist.ColConcat(Glo.Tab.CONFERENCE_ID,
-            //                                                  Glo.Tab.DIAL_NO,
-            //                                                  Glo.Tab.CONNECTION_IS_MANAGED,
-            //                                                  Glo.Tab.CONNECTION_TIME_FROM,
-            //                                                  Glo.Tab.CONNECTION_TIME_TO,
-            //                                                  Glo.Tab.CONNECTION_ROW,
-            //                                                  Glo.Tab.CONNECTION_IS_TEST),
-            //                              SqlAssist.ValConcat(c.conferenceID == null ? "@NewID" :
-            //                                                                           c.conferenceID.ToString(),
-            //                                                  c.dialNo,
-            //                                                  c.isManaged ? "1" : "0",
-            //                                                  c.connected == null ? "NULL" :
-            //                                                  SqlAssist.DateTimeToSQL((DateTime)c.connected,
-            //                                                                          false, true),
-            //                                                  c.disconnected == null ? "NULL" :
-            //                                                  SqlAssist.DateTimeToSQL((DateTime)c.disconnected,
-            //                                                                          false, true),
-            //                                                  c.row.ToString(),
-            //                                                  c.isTest ? "1" : "0")));
-            //    }
-            //}
+            if (connections.Count > 0)
+            {
+                commands.Add("DECLARE @NewID INT; SET @NewID = SCOPE_IDENTITY();");
+
+                foreach (Connection c in connections)
+                {
+                    c.Prepare();
+
+                    // Create the update command if we believe the connection ID already exists.
+                    if (c.connectionID != null)
+                    {
+                        setters = new()
+                        {
+                            // Conference ID not needed as it can never change.
+                            SqlAssist.Setter(Glo.Tab.DIAL_NO, c.dialNo),
+                            SqlAssist.Setter(Glo.Tab.CONNECTION_IS_MANAGED, c.isManaged == true ? "1" : "0"),
+                            SqlAssist.Setter(Glo.Tab.CONNECTION_TIME_FROM, c.connected == null ? "NULL" :
+                                                                        SqlAssist.DateTimeToSQL((DateTime)c.connected,
+                                                                        false, true)),
+                            SqlAssist.Setter(Glo.Tab.CONNECTION_TIME_TO, c.disconnected == null ? "NULL" :
+                                                                      SqlAssist.DateTimeToSQL((DateTime)c.disconnected,
+                                                                      false, true)),
+                            SqlAssist.Setter(Glo.Tab.CONNECTION_ROW, c.row.ToString()),
+                            SqlAssist.Setter(Glo.Tab.CONNECTION_IS_TEST, c.isTest ? "1" : "0")
+                        };
+
+                        commands.Add(SqlAssist.Update("Connection", string.Join(", ", setters),
+                                     Glo.Tab.CONNECTION_ID, c.connectionID.ToString()!));
+                    }
+
+                    // Even if the connection ID already exists, we'll add an insert just in case no rows were
+                    // affected.
+                    commands.Add(SqlAssist.InsertInto("Connection",
+                                          SqlAssist.ColConcat(Glo.Tab.CONFERENCE_ID,
+                                                              Glo.Tab.DIAL_NO,
+                                                              Glo.Tab.CONNECTION_IS_MANAGED,
+                                                              Glo.Tab.CONNECTION_TIME_FROM,
+                                                              Glo.Tab.CONNECTION_TIME_TO,
+                                                              Glo.Tab.CONNECTION_ROW,
+                                                              Glo.Tab.CONNECTION_IS_TEST),
+                                          SqlAssist.ValConcat(c.conferenceID == null ? "@NewID" :
+                                                                                       c.conferenceID.ToString(),
+                                                              c.dialNo,
+                                                              c.isManaged ? "1" : "0",
+                                                              c.connected == null ? "NULL" :
+                                                              SqlAssist.DateTimeToSQL((DateTime)c.connected,
+                                                                                      false, true),
+                                                              c.disconnected == null ? "NULL" :
+                                                              SqlAssist.DateTimeToSQL((DateTime)c.disconnected,
+                                                                                      false, true),
+                                                              c.row.ToString(),
+                                                              c.isTest ? "1" : "0")));
+
+                    // If an update was tried before, only attempt the insert if the update failed.
+                    if (c.connectionID != null)
+                        commands[commands.Count - 1] = "IF @@ROWCOUNT = 0 BEGIN " + commands[commands.Count - 1] + " END";
+                }
+            }
 
 
             return SqlAssist.Transaction(commands.ToArray());
