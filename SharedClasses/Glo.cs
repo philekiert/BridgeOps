@@ -36,7 +36,8 @@ public static class Glo
     public const string CONFIG_SQL_SERVER_NAME = "sql-server-name.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
-    public const string CONFIG_HEADERS = "section-headers.txt";
+    public const string CONFIG_HEADERS = "section-headers";
+    public const string CONFIG_SOFT_DUPLICATE_CHECKS = "soft-duplicate-checks";
     public const string FOLDER_QUERY_BUILDER_PRESETS = "Query Builder Presets";
 
     // Client/Agent Function Specifiers

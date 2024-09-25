@@ -493,7 +493,13 @@ internal class BridgeOpsAgent
             fileText += string.Join(';', headerTables["Organisation"]) + Glo.NL;
             fileText += string.Join(';', headerTables["Asset"]) + Glo.NL;
             fileText += string.Join(';', headerTables["Contact"]) + Glo.NL;
-            fileText += string.Join(';', headerTables["Conference"]);
+            fileText += string.Join(';', headerTables["Conference"]) + Glo.NL;
+
+            // Lastly, the soft duplicate check columns.
+            fileText += "&" + Glo.NL;
+            string softDupesFile = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SOFT_DUPLICATE_CHECKS);
+            if (File.Exists(softDupesFile))
+                fileText += File.ReadAllText(softDupesFile);
 
             columnRecord = fileText;
 
@@ -2045,11 +2051,11 @@ internal class BridgeOpsAgent
 
             string orderUpdateCommand = "";
 
+            string column = req.column;
             // Protect integral tables and columns (could be structured better, but I've tried to keep it readable).
             if (req.intent == TableModification.Intent.Removal ||
                 (req.intent == TableModification.Intent.Modification && req.columnType != null))
             {
-                string column = req.column;
                 string table = req.table;
                 if (req.intent == TableModification.Intent.Removal)
                 {
@@ -2126,6 +2132,38 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             else
             {
+                // Last of all, rebuild the file containing soft duplicate check columns.
+                column = req.column.Replace(' ', '_');
+                if (Glo.Fun.ColumnRemovalAllowed(req.table, column))
+                {
+                    string file = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SOFT_DUPLICATE_CHECKS);
+                    List<string> softDupCols = new();
+
+                    void AddDictionaries(OrderedDictionary dict, string table)
+                    {
+                        foreach (DictionaryEntry de in dict)
+                        {
+                            var col = (ColumnRecord.Column)de.Value!;
+                            if (Glo.Fun.ColumnRemovalAllowed(table, (string)de.Key) &&
+                                ((ColumnRecord.Column)de.Value!).softDuplicateCheck &&
+                                // Don't add this one, as we'll maybe add it at the end.
+                                !(table == req.table && (string)de.Key == req.column))
+                                softDupCols.Add(table + "." + (string)de.Key);
+                        }
+                    }
+
+                    AddDictionaries(ColumnRecord.GetDictionary("Organisation", false)!, "Organisation");
+                    AddDictionaries(ColumnRecord.GetDictionary("Contact", false)!, "Contact");
+                    AddDictionaries(ColumnRecord.GetDictionary("Asset", false)!, "Asset");
+                    AddDictionaries(ColumnRecord.GetDictionary("Conference", false)!, "Conference");
+
+                    if (req.softDuplicateCheck)
+                        softDupCols.Add(req.table + "." +
+                                        (req.columnRename == null ? column : req.columnRename.Replace(' ', '_')));
+
+                    File.WriteAllText(file, string.Join(';', softDupCols));
+                }
+
                 // Update the column record. Error message printed in both functions if this fails.
                 columnRecordIntact = RebuildColumnRecord(sqlConnect);
                 columnRecordIntact = ParseColumnRecord(false);
@@ -2618,6 +2656,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
+            string loginID;
             lock (clientSessions)
             {
                 if (!clientSessions.ContainsKey(sessionID))
@@ -2631,12 +2670,16 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                     return;
                 }
+                loginID = clientSessions[sessionID].loginID.ToString();
             }
 
             // Get the conference details.
 
             sqlConnect.Open();
-            SqlCommand com = new($"UPDATE Conference SET {Glo.Tab.CONFERENCE_CANCELLED} = {(uncancel ? "0" : "1")} " +
+            SqlCommand com = new($"UPDATE Conference " +
+                                 $"SET {Glo.Tab.CONFERENCE_CANCELLED} = {(uncancel ? "0" : "1")}, " +
+                                 $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID},h " +
+                                 $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
                                  $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};", sqlConnect);
             if (com.ExecuteNonQuery() == 0)
             {

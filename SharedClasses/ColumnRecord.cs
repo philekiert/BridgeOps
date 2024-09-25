@@ -19,6 +19,7 @@ public static class ColumnRecord
         public long restriction; // Only for character strings
         public string[] allowed; // Allowed values, only ever present in user-added columns
         public string friendlyName;
+        public bool softDuplicateCheck;
 
         public Column(string type, long restriction, string[] allowed, string friendlyName)
         {
@@ -26,6 +27,7 @@ public static class ColumnRecord
             this.restriction = restriction;
             this.allowed = allowed;
             this.friendlyName = friendlyName;
+            softDuplicateCheck = false;
         }
     }
 
@@ -460,7 +462,7 @@ public static class ColumnRecord
                 }
             }
 
-            // We might have exited out of organisations without encountering < and incrementing.
+            // We might have exited out of friendly names without encountering < and incrementing.
             if (lines[n] == "<")
                 ++n;
 
@@ -489,6 +491,24 @@ public static class ColumnRecord
 
                 // Make sure they're stored in order.
                 headerList = headerList.OrderBy(h => h.position).ToList();
+            }
+
+            // Soft duplicate checks
+            string[] columnsToSet = lines[lines.Count - 1].Split(';');
+            foreach (string c in columnsToSet)
+            {
+                string[] names = c.Split(".");
+                if (names.Length != 2)
+                    continue;
+                OrderedDictionary? dict = GetDictionary(names[0], false);
+                if (dict == null)
+                    continue;
+                if (names[1].Length > 0 && dict.Contains(names[1]))
+                {
+                    Column col = (Column)dict[names[1]]!;
+                    col.softDuplicateCheck = true;
+                    dict[names[1]] = col;
+                }
             }
 
             // Check the order integrity.

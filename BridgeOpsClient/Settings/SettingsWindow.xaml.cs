@@ -223,6 +223,7 @@ namespace BridgeOpsClient
                                                     // Boolean is more widely understood by the user than BIT.
                                                     col.type == "BIT" ? "BOOLEAN" : col.type,
                                                     col.restriction == 0 ? "" : col.restriction.ToString(),
+                                                    col.softDuplicateCheck ? "✓" : "",
                                                     string.Join("; ", col.allowed) };
                         if (col.type == "VARCHAR" && col.restriction == Int32.MaxValue)
                             row[3] = "VARCHAR(MAX)";
@@ -257,7 +258,7 @@ namespace BridgeOpsClient
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 
                 dtgColumns.Update(new List<string?>() { "Table", "Column", "Friendly Name",
-                                                        "Type", "Max", "Allowed" }, rows);
+                                                        "Type", "Max", "SDC", "Allowed" }, rows);
             }
         }
 

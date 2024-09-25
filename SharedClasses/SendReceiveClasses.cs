@@ -288,6 +288,7 @@ namespace SendReceiveClasses
         public string? friendly;
         public string? columnType;
         public List<string> allowed;
+        public bool softDuplicateCheck;
 
         // Removal
         public TableModification(string sessionID, int columnRecordID, string table, string column)
@@ -301,6 +302,7 @@ namespace SendReceiveClasses
             friendly = null;
             columnType = null;
             allowed = new();
+            softDuplicateCheck = false;
         }
 
         // Addition
@@ -316,6 +318,7 @@ namespace SendReceiveClasses
             friendly = null;
             this.columnType = columnType;
             this.allowed = allowed;
+            softDuplicateCheck = false;
         }
 
         // Modification
@@ -332,6 +335,7 @@ namespace SendReceiveClasses
             this.friendly = friendly;
             this.columnType = columnType;
             this.allowed = allowed;
+            softDuplicateCheck = false;
         }
 
         private void Prepare()
