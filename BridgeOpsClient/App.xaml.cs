@@ -257,6 +257,7 @@ namespace BridgeOpsClient
                         sd.createPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
                         sd.editPermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
                         sd.deletePermissions = Glo.Fun.GetPermissionsArray(stream.ReadByte());
+                        sd.username = username;
 
                         if (!int.TryParse(sr.ReadString(stream), out sd.loginID))
                             return "";

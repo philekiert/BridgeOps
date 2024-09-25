@@ -30,6 +30,9 @@ namespace BridgeOpsClient
 
             InitializeComponent();
 
+            // No idea why App.sd.username isn't accessible from here, but we have to pass it in.
+            lblCreatedBy.Content = "Created by " + App.sd.username;
+
             dtpStart.SetDateTime(start);
             dtpEnd.SetDateTime(start.AddHours(1));
 
@@ -57,6 +60,21 @@ namespace BridgeOpsClient
             MaxHeight = 400;
 
             InitializeComponent();
+
+            StringBuilder str = new("Created by ");
+            str.Append(conf.createdUsername == null ? "[user deleted]" : conf.createdUsername);
+            str.Append(" on ");
+            str.Append(conf.createTime == null ? "[date missing]" :
+                                                 ((DateTime)conf.createTime).ToString("dd/MM/yyyy HH:mm"));
+            lblCreatedBy.Content = str;
+            if (conf.editTime != null)
+            {
+                str = new("Edited by ");
+                str.Append(conf.editedUsername == null ? "[user deleted]" : conf.editedUsername);
+                str.Append(" on ");
+                str.Append(((DateTime)conf.editTime).ToString("dd/MM/yyyy HH:mm"));
+                lblEditedBy.Content = str;
+            }
 
             edit = true;
             id = conf.conferenceID.ToString()!;
@@ -140,6 +158,8 @@ namespace BridgeOpsClient
                     connection.btnUp.IsEnabled = false;
                     connection.btnRemove.IsEnabled = false;
                 }
+
+                ditConference.ToggleFieldsEnabled(false);
             }
             else
             {
@@ -632,7 +652,10 @@ namespace BridgeOpsClient
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
             conference.conferenceID = conferenceIdNullable;
-            conference.cancelled =
+
+            // Note that when making an update, the creation login is ignored by Conference.SqlUpdate.
+            if (edit)
+                conference.editLoginID = App.sd.loginID;
 
             ditConference.ScoopValues();
             ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);

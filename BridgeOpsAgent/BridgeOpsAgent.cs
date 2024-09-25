@@ -2513,11 +2513,15 @@ internal class BridgeOpsAgent
 
             List<string> conferenceColNames = new();
             foreach (DictionaryEntry de in ColumnRecord.orderedConference)
-                conferenceColNames.Add((string)de.Key);
+                conferenceColNames.Add("c." + (string)de.Key);
 
             sqlConnect.Open();
-            SqlCommand com = new($"SELECT {string.Join(", ", conferenceColNames)} " +
-                                 $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};",
+            SqlCommand com = new($"SELECT {string.Join(", ", conferenceColNames)}, " +
+                                 $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME} " +
+                                 $"FROM Conference c " +
+                                 $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
+                                 $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +
+                                 $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};",
                                  sqlConnect);
             SelectResult result = new(com.ExecuteReader());
             List<object?> confRow = result.rows[0];
@@ -2535,10 +2539,13 @@ internal class BridgeOpsAgent
                 createLoginID = (int)Glo.Fun.GetInt32FromNullableObject(confRow[7])!,
                 createTime = (DateTime?)confRow[8]!,
                 editLoginID = confRow[9] == null ? null : Convert.ToInt32(confRow[9]!),
-                editDateTime = (DateTime?)confRow[10]!,
+                editTime = (DateTime?)confRow[10]!,
                 notes = (string?)confRow[11]!,
                 additionalValTypes = new(),
-                additionalValObjects = new()
+                additionalValObjects = new(),
+                // Additional columns were sandwiched before these, so count back from the end.
+                createdUsername = (string?)confRow[confRow.Count - 2],
+                editedUsername = (string?)confRow[confRow.Count - 1]
             };
 
             // Add the additional columns.

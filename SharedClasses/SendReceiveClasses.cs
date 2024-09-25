@@ -1319,16 +1319,18 @@ namespace SendReceiveClasses
         public int? createLoginID;
         public DateTime? createTime;
         public int? editLoginID;
-        public DateTime? editDateTime;
+        public DateTime? editTime;
         public string? notes;
         public List<string> additionalCols;
         public List<string?> additionalVals;
         public List<bool> additionalNeedsQuotes;
         public List<Connection> connections;
 
-        // Both of these are for use in select requests only:
+        // These are for use in select requests only to speed things up:
         public List<string?> additionalValTypes;
         public List<object?> additionalValObjects;
+        public string? createdUsername;
+        public string? editedUsername;
 
         public Conference(string sessionID, int columnRecordID,
                           int resourceID, int resourceRow, string? title,
@@ -1351,7 +1353,7 @@ namespace SendReceiveClasses
             this.createLoginID = createLoginID;
             createTime = null;
             editLoginID = null;
-            editDateTime = null;
+            editTime = null;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
@@ -1361,6 +1363,8 @@ namespace SendReceiveClasses
 
             additionalValTypes = new();
             additionalValObjects = new();
+            createdUsername = null;
+            editedUsername = null;
 
             SqlAssist.LevelAdditionals(ref additionalCols, ref additionalVals);
         }

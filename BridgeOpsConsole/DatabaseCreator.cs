@@ -433,9 +433,8 @@ public class DatabaseCreator
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
                           ", CONSTRAINT fk_ConfResource FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID)" +
                           //", CONSTRAINT fk_ConfType FOREIGN KEY (Type_ID) REFERENCES ConferenceType (Type_ID)" +
-                          ", CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE" +
+                          ", CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL );";
             //               We have to manually implement the Edit_Login_ID cascades below due to SQL Server's cautious nature regarding cascade cycles.
-                          ", CONSTRAINT fk_ConfEditLogin FOREIGN KEY (Edit_Login_ID) REFERENCES Login (Login_ID) ON DELETE NO ACTION ON UPDATE NO ACTION); ";
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
             conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
                                     ", CONSTRAINT fk_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
@@ -513,13 +512,13 @@ public class DatabaseCreator
 
             // We can't have two foreign keys that cascade on the same table relating to the same column. Create a trigger to implement the second one manually.
             Writer.Message("\nApplying triggers to Conference table for editor updates and deletions...");
-            SendCommandSQL("CREATE TRIGGER trg_updateConfEditLogin ON Login " +
-                           "AFTER UPDATE AS UPDATE Conference SET Edit_Login_ID = i.Login_ID FROM Conference c JOIN INSERTED i ON c.Edit_Login_ID = i.Login_ID;");
+            //SendCommandSQL("CREATE TRIGGER trg_updateConfEditLogin ON Login " +
+            //               "AFTER UPDATE AS UPDATE Conference SET Edit_Login_ID = i.Login_ID FROM Conference c JOIN UPDATED i ON c.Edit_Login_ID = i.Login_ID;");
             SendCommandSQL("CREATE TRIGGER trg_deleteConfEditLogin ON Login " +
                            "AFTER DELETE AS UPDATE Conference SET Edit_Login_ID = NULL WHERE Edit_Login_ID IN (SELECT Login_ID FROM DELETED);");
             Writer.Message("Applying triggers to Connection table for Dial No updates and deletions...");
             SendCommandSQL("CREATE TRIGGER trg_updateConnDialNo ON Organisation " +
-                           "AFTER UPDATE AS UPDATE Connection SET Dial_No = i.Dial_No FROM Connection c JOIN INSERTED i ON c.Dial_No = i.Dial_No WHERE Is_Managed = 1;");
+                           "AFTER UPDATE AS UPDATE Connection SET Dial_No = (SELECT i.Dial_No FROM INSERTED i) FROM Connection c JOIN DELETED d ON c.Dial_No = d.Dial_No WHERE c.Is_Managed = 1;");
             SendCommandSQL("CREATE TRIGGER trg_deleteConnDialNo ON Organisation " +
                            "AFTER DELETE AS UPDATE Connection SET Is_Managed = 0 WHERE Dial_No IN (SELECT Dial_No FROM DELETED);"); // Doesnt matter if we catch unmanaged connections in this.
 
