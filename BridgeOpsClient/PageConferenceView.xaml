@@ -84,7 +84,9 @@
                 <local:ScheduleView x:Name="schView" Grid.Row="1" Background="White"
                                     MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
                                     MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
-                                    PreviewMouseWheel="schView_PreviewMouseWheel"/>
+                                    PreviewMouseWheel="schView_PreviewMouseWheel"
+                                    KeyDown="schView_PreviewKeyDown"
+                                    Focusable="True"/>
             </Grid>
             <Grid Grid.Column="2" Background="White">
                 <Grid.RowDefinitions>

@@ -34,7 +34,10 @@ namespace BridgeOpsClient
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
                 btnAdd.IsEnabled = false;
             if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
+            {
                 btnEdit.IsEnabled = false;
+                ToggleFieldsEnabled(false);
+            }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
                 btnDelete.IsEnabled = false;
 
@@ -325,8 +328,6 @@ namespace BridgeOpsClient
             cmbOrgRef.IsEnabled = enabled;
             txtNotes.IsReadOnly = !enabled;
             ditAsset.ToggleFieldsEnabled(enabled);
-            btnEdit.IsEnabled = enabled;
-            btnDelete.IsEnabled = enabled;
         }
 
         private void dtgChangeLog_MouseDoubleClick(object sender, MouseButtonEventArgs e)

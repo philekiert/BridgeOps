@@ -32,7 +32,11 @@ namespace BridgeOpsClient
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
                 btnAdd.IsEnabled = false;
             if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
+            {
                 btnEdit.IsEnabled = false;
+                txtNotes.IsReadOnly = true;
+                ditContact.ToggleFieldsEnabled(false);
+            }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
                 btnDelete.IsEnabled = false;
         }
