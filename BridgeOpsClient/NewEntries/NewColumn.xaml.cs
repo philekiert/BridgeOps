@@ -50,6 +50,7 @@ namespace BridgeOpsClient
             txtLimit.Text = columnDetails.restriction.ToString();
             txtAllowed.Text = string.Join("\r\n", columnDetails.allowed);
             chkSoftDuplicate.IsChecked = columnDetails.softDuplicateCheck;
+            chkUnique.IsChecked = columnDetails.unique;
 
             if (columnDetails.type == "VARCHAR" && columnDetails.restriction == Int32.MaxValue)
                 cmbType.SelectedIndex = 1;
@@ -60,6 +61,7 @@ namespace BridgeOpsClient
             {
                 // Soft duplicates are only allowed for added columns.
                 chkSoftDuplicate.IsEnabled = false;
+                chkUnique.IsEnabled = false;
 
                 if (columnDetails.type.Contains("INT"))
                 {
@@ -176,7 +178,7 @@ namespace BridgeOpsClient
             {
                 SendReceiveClasses.TableModification mod = new(App.sd.sessionID, ColumnRecord.columnRecordID,
                                                                cmbTable.Text, ColumnName,
-                                                               cmbType.Text, allowed);
+                                                               cmbType.Text, allowed, chkUnique.IsChecked == true);
                 mod.softDuplicateCheck = chkSoftDuplicate.IsChecked == true;
 
                 VARCHAR(ref mod);
@@ -197,7 +199,7 @@ namespace BridgeOpsClient
                         ColumnName != originalColumn ? ColumnName : null,
                         txtFriendlyName.Text != originalFriendly ? txtFriendlyName.Text : null,
                         cmbType.Text != originalType || varcharMaxChanged ? cmbType.Text : null,
-                        allowed);
+                        allowed, chkUnique.IsChecked == true);
 
                 if (!integral)
                     mod.softDuplicateCheck = chkSoftDuplicate.IsChecked == true;
@@ -270,6 +272,7 @@ namespace BridgeOpsClient
         int originalMax = 0;
         string originalAllowed = "";
         bool originalSoftDuplicate = false;
+        bool originalUnique = false;
 
         private void StoreOriginalValues()
         {
@@ -280,6 +283,7 @@ namespace BridgeOpsClient
             int.TryParse(txtLimit.Text, out originalMax);
             originalAllowed = txtAllowed.Text;
             originalSoftDuplicate = chkSoftDuplicate.IsChecked == true;
+            originalUnique = chkUnique.IsChecked == true;
         }
         private bool DetectAlterations()
         {
@@ -292,7 +296,8 @@ namespace BridgeOpsClient
                            originalType != (string)((ComboBoxItem)cmbType.Items[cmbType.SelectedIndex]).Content ||
                            originalMax != newMax ||
                            originalAllowed != txtAllowed.Text ||
-                           originalSoftDuplicate != (chkSoftDuplicate.IsChecked == true);
+                           originalSoftDuplicate != (chkSoftDuplicate.IsChecked == true) ||
+                           originalUnique != (chkUnique.IsChecked == true);
 
             btnAdd.IsEnabled = altered;
             return altered;
@@ -395,7 +400,7 @@ namespace BridgeOpsClient
             App.WindowClosed();
         }
 
-        private void chkSoftDuplicate_Click(object sender, RoutedEventArgs e)
+        private void chk_Click(object sender, RoutedEventArgs e)
         {
             InputHandler(null, null);
         }

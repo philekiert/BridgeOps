@@ -289,6 +289,7 @@ namespace SendReceiveClasses
         public string? columnType;
         public List<string> allowed;
         public bool softDuplicateCheck;
+        public bool unique;
 
         // Removal
         public TableModification(string sessionID, int columnRecordID, string table, string column)
@@ -303,11 +304,12 @@ namespace SendReceiveClasses
             columnType = null;
             allowed = new();
             softDuplicateCheck = false;
+            unique = false;
         }
 
         // Addition
         public TableModification(string sessionID, int columnRecordID, string table, string column,
-                                 string columnType, List<string> allowed)
+                                 string columnType, List<string> allowed, bool unique)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -319,12 +321,13 @@ namespace SendReceiveClasses
             this.columnType = columnType;
             this.allowed = allowed;
             softDuplicateCheck = false;
+            this.unique = unique;
         }
 
         // Modification
         public TableModification(string sessionID, int columnRecordID, string table, string column,
                                  string? columnRename, string? friendly,
-                                 string? columnType, List<string> allowed)
+                                 string? columnType, List<string> allowed, bool unique)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -336,6 +339,7 @@ namespace SendReceiveClasses
             this.columnType = columnType;
             this.allowed = allowed;
             softDuplicateCheck = false;
+            this.unique = unique;
         }
 
         private void Prepare()
@@ -360,13 +364,21 @@ namespace SendReceiveClasses
                              .Replace("\n", ""); // If any new lines sneak in, they could break the column record.
         }
 
-        private string DropConstraint(string table, string column)
+        private string DropConstraints(string table, string column)
         {
-            return $"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                   $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
-                    "BEGIN " +
-                   $"ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column}; " +
-                    "END ";
+            // First drop the allow list if there was one, then the unique constraint if there was one.
+            string command = $"IF EXISTS(SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+                             $"WHERE CONSTRAINT_TYPE = 'CHECK' AND CONSTRAINT_NAME = 'chk_{table}{column}') " +
+                              "BEGIN " +
+                             $"ALTER TABLE {table} DROP CONSTRAINT chk_{table}{column}; " +
+                              "END ";
+            if (Glo.Fun.ColumnRemovalAllowed(table, column))
+                command += $"IF EXISTS(SELECT 1 FROM sys.indexes " +
+                           $"WHERE name = 'u_{table}{column}') " +
+                            "BEGIN " +
+                           $"DROP INDEX u_{table}{column} ON {table}; " +
+                            "END ";
+            return command;
         }
 
         public string SqlCommand()
@@ -381,10 +393,10 @@ namespace SendReceiveClasses
                 command = $"ALTER TABLE {table} ";
                 command += $"ADD {column} {columnType}";
                 if (allowed.Count > 0)
-                {
                     command += $" CONSTRAINT chk_{table}{column}" +
                                $" CHECK ({column} IN ({string.Join(", ", allowed)}))";
-                }
+                if (unique)
+                    command += $" CONSTRAINT u_{table}{column} UNIQUE ({column})";
                 command += ";";
 
                 // Create register columns if needed.
@@ -404,7 +416,7 @@ namespace SendReceiveClasses
             // Removal
             else if (intent == Intent.Removal)
             {
-                command = DropConstraint(table, column);
+                command = DropConstraints(table, column);
                 command += $"ALTER TABLE {table} DROP COLUMN {column};";
 
                 // Remove register columns if needed.
@@ -428,7 +440,7 @@ namespace SendReceiveClasses
                 bool renamingColumn = columnRename != null;
                 if (renamingColumn)
                 {
-                    commands.Add(DropConstraint(table, column));
+                    commands.Add(DropConstraints(table, column));
                     droppedConstraint = true;
 
                     commands.Add($"EXEC sp_rename '{table}.{column}', '{columnRename}', 'COLUMN';");
@@ -453,7 +465,7 @@ namespace SendReceiveClasses
                 }
                 if (allowed.Count == 0 && !droppedConstraint)
                 {
-                    commands.Add(DropConstraint(table, column));
+                    commands.Add(DropConstraints(table, column));
                     droppedConstraint = true;
                 }
 
@@ -466,7 +478,7 @@ namespace SendReceiveClasses
                     if (!droppedConstraint)
                     {
                         // The constraint needs to be dropped and remade due to the column being renamed.
-                        commands.Add(DropConstraint(table, column));
+                        commands.Add(DropConstraints(table, column));
                         droppedConstraint = true;
                     }
 
@@ -532,7 +544,6 @@ namespace SendReceiveClasses
                         {
                             reAddKeys = true;
                             commands.Add("ALTER TABLE Conference DROP CONSTRAINT fk_ConfCreationLogin;");
-                            commands.Add("ALTER TABLE Conference DROP CONSTRAINT fk_ConfEditLogin;");
                             commands.Add("ALTER TABLE OrganisationChange DROP CONSTRAINT fk_OrgChange_LoginID;");
                             commands.Add("ALTER TABLE AssetChange DROP CONSTRAINT fk_AssetChange_LoginID;");
                             commands.Add("ALTER TABLE Login DROP CONSTRAINT pk_LoginID;");
@@ -610,9 +621,8 @@ namespace SendReceiveClasses
                             if (column == Glo.Tab.LOGIN_ID)
                             {
                                 commands.Add("ALTER TABLE Login ADD CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID);");
-                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE;");
+                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL;");
                                 // fk_ConfEditLogin cascades are handled in triggers trg_deleteConfEditLogin and trg_updateConfEditLogin to avoid cascade cycle warnings.
-                                commands.Add("ALTER TABLE Conference ADD CONSTRAINT fk_ConfEditLogin FOREIGN KEY (Edit_Login_ID) REFERENCES Login (Login_ID) ON DELETE NO ACTION ON UPDATE NO ACTION;");
                                 commands.Add("ALTER TABLE OrganisationChange ADD CONSTRAINT fk_OrgChange_LoginID FOREIGN KEY (Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE;");
                                 commands.Add("ALTER TABLE AssetChange ADD CONSTRAINT fk_AssetChange_LoginID FOREIGN KEY (Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL ON UPDATE CASCADE;");
                             }
@@ -626,11 +636,19 @@ namespace SendReceiveClasses
                 if (allowed.Count > 0)
                 {
                     if (!droppedConstraint)
-                        commands.Add(DropConstraint(table, column));
+                        commands.Add(DropConstraints(table, column));
                     commands.Add($"EXEC sp_executesql N'ALTER TABLE {table} " +
                                  $"ADD CONSTRAINT chk_{table}{column} " +
                                  $"CHECK ({column} " +
                                  $"IN ('{string.Join("','", allowed)}'));'");
+                }
+                if ((unique && Glo.Fun.ColumnRemovalAllowed(table, column)))
+                {
+                    if (!droppedConstraint)
+                        commands.Add(DropConstraints(table, column));
+                    commands.Add($"EXEC sp_executesql N'" +
+                                 $"CREATE UNIQUE INDEX u_{table}{column} ON {table} ({column}) " +
+                                 $"WHERE {column} IS NOT NULL;'");
                 }
 
                 if (friendly != null)

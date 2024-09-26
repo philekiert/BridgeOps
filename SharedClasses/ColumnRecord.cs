@@ -20,14 +20,16 @@ public static class ColumnRecord
         public string[] allowed; // Allowed values, only ever present in user-added columns
         public string friendlyName;
         public bool softDuplicateCheck;
+        public bool unique;
 
-        public Column(string type, long restriction, string[] allowed, string friendlyName)
+        public Column(string type, long restriction, string[] allowed, string friendlyName, bool unique)
         {
             this.type = type;
             this.restriction = restriction;
             this.allowed = allowed;
             this.friendlyName = friendlyName;
             softDuplicateCheck = false;
+            this.unique = unique;
         }
     }
 
@@ -98,8 +100,6 @@ public static class ColumnRecord
     public static OrderedDictionary orderedAsset = new();
     public static OrderedDictionary orderedContact = new();
     public static OrderedDictionary orderedConference = new();
-
-
 
     public static List<ColumnOrdering.Header> organisationHeaders = new();
     public static List<ColumnOrdering.Header> assetHeaders = new();
@@ -327,6 +327,12 @@ public static class ColumnRecord
                 int aInd = lines[n].IndexOf("[A]"); // Likely the first of many
 
                 string table = lines[n].Remove(cInd);
+
+                // Record uniqueness.
+                bool unique = table.StartsWith("[U]");
+                if (unique)
+                    table = table.Substring(3);
+
                 string column = lines[n].Substring(cInd + 3, rInd - (cInd + 3));
                 string restriction = lines[n].Substring(rInd + 3);
                 string[] allowedArr = new string[0];
@@ -358,7 +364,7 @@ public static class ColumnRecord
                     max = 2_147_483_647;
                 // else max remains 0 for dates.
 
-                Column col = new Column(type, max, allowedArr, "");
+                Column col = new Column(type, max, allowedArr, "", unique);
 
 
                 // Add column to the relevant Dictionary, using the column name as the key.

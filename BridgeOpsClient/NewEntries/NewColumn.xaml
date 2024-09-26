@@ -31,6 +31,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -68,12 +69,17 @@
         <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txtAllowed" Height="100"
                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible"
                  TextChanged="InputHandler" VerticalContentAlignment="Top"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.ColumnSpan="2" Margin="0 10 0 12">
-            <Label Content="Soft Duplicate Check"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.ColumnSpan="2" Margin="0 10 0 0">
+            <Label Content="Soft Duplicate Check" Width="120"/>
             <CheckBox x:Name="chkSoftDuplicate" IsChecked="False" VerticalAlignment="Center" Margin="10 0 0 0"
-                      Click="chkSoftDuplicate_Click"/>
+                      Click="chk_Click"/>
         </StackPanel>
-        <Button Grid.Row="7" Grid.ColumnSpan="2" Content="Add" Margin="10,5,0,15" Width="70" HorizontalAlignment="Left"
+        <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.ColumnSpan="2" Margin="0 0 0 15">
+            <Label Content="Unique" Width="120"/>
+            <CheckBox x:Name="chkUnique" IsChecked="False" VerticalAlignment="Center" Margin="10 0 0 0"
+                      Click="chk_Click"/>
+        </StackPanel>
+        <Button Grid.Row="8" Grid.ColumnSpan="2" Content="Add" Margin="5,5,0,15" Width="70" HorizontalAlignment="Left"
                 x:Name="btnAdd" Click="btnAdd_Click"  Style="{StaticResource primary-button}"/>
     </Grid>
 </local:CustomWindow>

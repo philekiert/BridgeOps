@@ -332,16 +332,41 @@ internal class BridgeOpsAgent
             if (sqlConnect.State != ConnectionState.Open)
                 sqlConnect.Open();
 
-            // Get a list of columns and their allowed values.
-            SqlCommand sqlCommand = new SqlCommand("SELECT t.[name], con.[definition] " +
-                                                   "FROM sys.check_constraints con " +
-                                                       "LEFT OUTER JOIN sys.objects t " +
-                                                           "ON con.parent_object_id = t.object_id " +
-                                                       "LEFT OUTER JOIN sys.all_columns col " +
-                                                           "ON con.parent_column_id = col.column_id " +
-                                                           "AND con.parent_object_id = col.object_id;", sqlConnect);
+            // Get a list of unique columns
+            SqlCommand sqlCommand = new("SELECT t.name AS TableName, " +
+                                        "c.name AS ColumnName " +
+                                        "FROM " +
+                                        "sys. indexes i " +
+                                        "INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id " +
+                                                                       "AND i.index_id = ic.index_id " +
+                                        "INNER JOIN sys.columns c ON ic.object_id = c.object_id " +
+                                                                "AND ic.column_id = c.column_id " +
+                                        "INNER JOIN sys.tables t ON i.object_id = t.object_id " +
+                                        "WHERE " +
+                                        "i.is_unique = 1", sqlConnect);
 
             SqlDataReader reader = sqlCommand.ExecuteReader(CommandBehavior.Default);
+            HashSet<string> uniqueColNames = new();
+            while (reader.Read())
+            {
+                try
+                {
+                    uniqueColNames.Add(reader.GetString(0) + "." + reader.GetString(1));
+                }
+                catch { /* Just ignore the exception and press on, but there shouldn't ever be any */ }
+            }
+            reader.Close();
+
+            // Get a list of columns and their allowed values.
+            sqlCommand = new("SELECT t.[name], con.[definition] " +
+                             "FROM sys.check_constraints con " +
+                                 "LEFT OUTER JOIN sys.objects t " +
+                                     "ON con.parent_object_id = t.object_id " +
+                                 "LEFT OUTER JOIN sys.all_columns col " +
+                                     "ON con.parent_column_id = col.column_id " +
+                                     "AND con.parent_object_id = col.object_id;", sqlConnect);
+
+            reader = sqlCommand.ExecuteReader(CommandBehavior.Default);
             Dictionary<string, string[]> checkConstraints = new Dictionary<string, string[]>();
 
             while (reader.Read())
@@ -404,6 +429,9 @@ internal class BridgeOpsAgent
                     ++orderCounts[2];
                 else if (column[0] == "Conference")
                     ++orderCounts[3];
+
+                if (uniqueColNames.Contains(column[0] + "." + column[1]))
+                    fileText += "[U]";
 
                 fileText += column[0] + "[C]" + column[1] + "[R]";
                 if (column[3] == "") // int or text
