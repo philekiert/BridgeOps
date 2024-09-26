@@ -764,6 +764,77 @@ namespace BridgeOpsClient
         }
         public static bool SendInsert(byte fncByte, object toSerialise, out string returnID)
         {
+            // Carry out soft duplicate checks if needed.
+            try
+            {
+                string table = "";
+                List<string> columns = new();
+                List<string?> values = new();
+                List<bool> needsQuotes = new();
+                if (toSerialise is Organisation org)
+                {
+                    table = "Organisation";
+                    columns = org.additionalCols;
+                    values = org.additionalVals;
+                    needsQuotes = org.additionalNeedsQuotes;
+                }
+                else if (toSerialise is Asset asset)
+                {
+                    table = "Asset";
+                    columns = asset.additionalCols;
+                    values = asset.additionalVals;
+                    needsQuotes = asset.additionalNeedsQuotes;
+                }
+                else if (toSerialise is Contact contact)
+                {
+                    table = "Contact";
+                    columns = contact.additionalCols;
+                    values = contact.additionalVals;
+                    needsQuotes = contact.additionalNeedsQuotes;
+                }
+                else if (toSerialise is SendReceiveClasses.Conference conf)
+                {
+                    table = "Conference";
+                    columns = conf.additionalCols;
+                    values = conf.additionalVals;
+                    needsQuotes = conf.additionalNeedsQuotes;
+                }
+
+                if (table != "")
+                {
+                    List<string> columnsToSend = new();
+                    List<string?> valuesToSend = new();
+                    List<bool> needsQuotesToSend = new();
+
+                    var dict = ColumnRecord.GetDictionary(table, false)!;
+                    for (int i = 0; i < columns.Count; ++i)
+                    {
+                        ColumnRecord.Column col = ColumnRecord.GetColumn(dict, columns[i]);
+                        if (col.softDuplicateCheck)
+                        {
+                            columnsToSend.Add(columns[i]);
+                            valuesToSend.Add(values[i]);
+                            needsQuotesToSend.Add(needsQuotes[i]);
+                        }
+                    }
+
+                    if (columnsToSend.Count > 0 &&
+                        !SoftDuplicateCheck(table, "", new(), false,
+                                            columnsToSend, valuesToSend, needsQuotesToSend))
+                    {
+                        returnID = "";
+                        return false;
+                    }
+                }
+            }
+            catch
+            {
+                DisplayError("Soft duplicate check could not be carried out. Cancelling save.");
+                returnID = "";
+                return false;
+            }
+
+            // Carry out the insert.
             lock (streamLock)
             {
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);

@@ -1636,9 +1636,13 @@ internal class BridgeOpsAgent
             int i = 0;
             for (; i < req.columns.Count; ++i)
             {
+                if (req.values[i] == null)
+                    req.values[i] = "NULL";
                 command.CommandText = $"SELECT TOP 1 {req.columns[i]} FROM {req.table} " +
-                                      $"WHERE {req.columns[i]} = {req.values[i]} AND" +
-                                           $" {req.idColumn} NOT IN ({idsIn});";
+                                      $"WHERE {req.columns[i]} = {req.values[i]}";
+                if (idsIn.Length > 0)
+                    command.CommandText += $" AND {req.idColumn} NOT IN ({idsIn})";
+                command.CommandText += ";";
                 reader = command.ExecuteReader();
                 if (reader.Read())
                     columnsToReport.Add(req.columns[i]);

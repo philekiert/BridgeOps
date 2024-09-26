@@ -1,4 +1,5 @@
-﻿using SendReceiveClasses;
+﻿using DocumentFormat.OpenXml.Office.Word;
+using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,6 +140,7 @@ namespace BridgeOpsClient
             ditConference.headers = ColumnRecord.conferenceHeaders;
             ditConference.Initialise(ColumnRecord.orderedConference, "Conference");
             ditConference.Populate(conf.additionalValObjects);
+            ditConference.RememberStartingValues();
 
             // Apply permissions.
             btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
@@ -657,9 +659,23 @@ namespace BridgeOpsClient
             if (edit)
                 conference.editLoginID = App.sd.loginID;
 
+            // Get the any changed data from the DataInputTable.
             ditConference.ScoopValues();
             ditConference.ExtractValues(out conference.additionalCols, out conference.additionalVals);
-
+            if (edit)
+            {
+                List<int> toRemove = new();
+                for (int i = 0; i < conference.additionalCols.Count; ++i)
+                    if (conference.additionalVals[i] == ditConference.startingValues[i])
+                        toRemove.Add(i);
+                int mod = 0; // Each one we remove, we need to take into account that the list is now 1 less.
+                foreach (int i in toRemove)
+                {
+                    conference.additionalCols.RemoveAt(i - mod);
+                    conference.additionalVals.RemoveAt(i - mod);
+                    ++mod;
+                }
+            }
 
             // Obtain types and determine whether or not quotes will be needed.
             conference.additionalNeedsQuotes = new();
