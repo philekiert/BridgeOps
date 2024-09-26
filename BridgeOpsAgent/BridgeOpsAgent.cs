@@ -620,6 +620,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Open();
                 // Send a pointless but minimal query just to make sure we have a working connection.
                 SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 Username FROM Login;", sqlConnect);
+                sqlCommand.ExecuteNonQuery();
 
                 // If we got this far in the try/catch, we're in business.
                 successfulSqlConnection = true;
@@ -825,6 +826,8 @@ internal class BridgeOpsAgent
                     ClientSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_WIDE)
                     ClientSelectWide(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_EXISTS)
+                    ClientSelectExists(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_DELETE)
                     ClientDelete(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LINK_CONTACT)
@@ -1601,6 +1604,59 @@ internal class BridgeOpsAgent
         {
             LogError("Couldn't run or return query, see error:", e);
             SafeFail(stream);
+        }
+        finally
+        {
+            if (sqlConnect.State == System.Data.ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelectExists(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            ExistenceCheck req = sr.Deserialise<ExistenceCheck>(sr.ReadString(stream));
+            if (!CheckSessionValidity(req.sessionID, req.columnRecordID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            if (!req.Prepare())
+                throw new Exception("Received lists were of uneven lengths.");
+
+            List<string> columnsToReport = new();
+
+            string idsIn = string.Join(", ", req.IDs);
+
+            sqlConnect.Open();
+            SqlCommand command = new("", sqlConnect);
+            SqlDataReader reader;
+            int i = 0;
+            for (; i < req.columns.Count; ++i)
+            {
+                command.CommandText = $"SELECT TOP 1 {req.columns[i]} FROM {req.table} " +
+                                      $"WHERE {req.columns[i]} = {req.values[i]} AND" +
+                                           $" {req.idColumn} NOT IN ({idsIn});";
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                    columnsToReport.Add(req.columns[i]);
+                reader.Close();
+            }
+
+            if (columnsToReport.Count == 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            else
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, sr.Serialise(columnsToReport));
+            }
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't run or return value existence check result, see error:", e);
+            SafeFail(stream, e.Message);
         }
         finally
         {

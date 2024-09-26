@@ -1737,6 +1737,50 @@ namespace SendReceiveClasses
         }
     }
 
+    public struct ExistenceCheck
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public string table;
+        public string idColumn;
+        public List<string?> IDs;
+        public bool idNeedsQuotes;
+        public List<string> columns;
+        public List<string?> values;
+        public List<bool> needsQuotes;
+
+        public ExistenceCheck(string sessionID, int columnRecordID,
+                              string table, string idColumn, List<string?> IDs, bool idNeedsQuotes,
+                              List<string> columns, List<string?> values, List<bool> needsQuotes)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.table = table;
+            this.idColumn = idColumn;
+            this.IDs = IDs;
+            this.idNeedsQuotes = idNeedsQuotes;
+            this.columns = columns;
+            this.values = values;
+            this.needsQuotes = needsQuotes;
+        }
+
+        public bool Prepare()
+        {
+            table = SqlAssist.SecureColumn(table);
+            idColumn = SqlAssist.SecureColumn(idColumn);
+            SqlAssist.SecureValue(IDs);
+            if (idNeedsQuotes)
+                SqlAssist.AddQuotes(IDs);
+            SqlAssist.SecureColumn(columns);
+            SqlAssist.SecureValue(values);
+            SqlAssist.AddQuotes(values, needsQuotes);
+
+            return (columns.Count == values.Count &&
+                    columns.Count == needsQuotes.Count);
+        }
+    }
+
+
     public struct SelectRequest // Public due to App.SendSelectRequest() being public.
     {
         public string sessionID;

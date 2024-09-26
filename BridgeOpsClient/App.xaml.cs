@@ -5,12 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using SendReceiveClasses;
 using static BridgeOpsClient.PageConferenceView;
+using CR = ColumnRecord;
 
 namespace BridgeOpsClient
 {
@@ -817,6 +819,83 @@ namespace BridgeOpsClient
 
         public static bool SendUpdate(byte fncByte, object toSerialise)
         {
+            // Carry out soft duplicate checks if needed.
+            try
+            {
+                string table = "";
+                string idColumn = "";
+                string id = "";
+                List<string> columns = new();
+                List<string?> values = new();
+                List<bool> needsQuotes = new();
+                if (toSerialise is Organisation org)
+                {
+                    table = "Organisation";
+                    idColumn = Glo.Tab.ORGANISATION_ID;
+                    id = org.organisationID.ToString();
+                    columns = org.additionalCols;
+                    values = org.additionalVals;
+                    needsQuotes = org.additionalNeedsQuotes;
+                }
+                else if (toSerialise is Asset asset)
+                {
+                    table = "Asset";
+                    idColumn = Glo.Tab.ASSET_ID;
+                    id = asset.assetID.ToString();
+                    columns = asset.additionalCols;
+                    values = asset.additionalVals;
+                    needsQuotes = asset.additionalNeedsQuotes;
+                }
+                else if (toSerialise is Contact contact)
+                {
+                    table = "Contact";
+                    idColumn = Glo.Tab.CONTACT_ID;
+                    id = contact.contactID.ToString();
+                    columns = contact.additionalCols;
+                    values = contact.additionalVals;
+                    needsQuotes = contact.additionalNeedsQuotes;
+                }
+                else if (toSerialise is SendReceiveClasses.Conference conf)
+                {
+                    table = "Conference";
+                    idColumn = Glo.Tab.CONFERENCE_ID;
+                    id = conf.conferenceID.ToString()!;
+                    columns = conf.additionalCols;
+                    values = conf.additionalVals;
+                    needsQuotes = conf.additionalNeedsQuotes;
+                }
+
+                if (table != "")
+                {
+                    List<string> columnsToSend = new();
+                    List<string?> valuesToSend = new();
+                    List<bool> needsQuotesToSend = new();
+
+                    var dict = ColumnRecord.GetDictionary(table, false)!;
+                    for (int i = 0; i < columns.Count; ++i)
+                    {
+                        ColumnRecord.Column col = ColumnRecord.GetColumn(dict, columns[i]);
+                        if (col.softDuplicateCheck)
+                        {
+                            columnsToSend.Add(columns[i]);
+                            valuesToSend.Add(values[i]);
+                            needsQuotesToSend.Add(needsQuotes[i]);
+                        }
+                    }
+
+                    if (columnsToSend.Count > 0 &&
+                        !SoftDuplicateCheck(table, idColumn, new() { id }, false,
+                                            columnsToSend, valuesToSend, needsQuotesToSend))
+                        return false;
+                }
+            }
+            catch
+            {
+                DisplayError("Soft duplicate check could not be carried out. Cancelling save.");
+                return false;
+            }
+
+            // Carry out the update.
             lock (streamLock)
             {
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
@@ -858,6 +937,56 @@ namespace BridgeOpsClient
 
         public static bool SendUpdate(UpdateRequest req)
         {
+            // Carry out soft duplicate checks if needed.
+            try
+            {
+                List<string> tablesToSend = new();
+                List<string> columnsToSend = new();
+                List<string?> valuesToSend = new();
+                List<bool> needsQuotesToSend = new();
+
+                var dict = ColumnRecord.GetDictionary(req.table, false)!;
+                for (int i = 0; i < req.columns.Count; ++i)
+                {
+                    CR.Column col = ColumnRecord.GetColumn(dict, req.columns[i]);
+                    if (col.softDuplicateCheck)
+                    {
+                        tablesToSend.Add(req.table);
+                        columnsToSend.Add(req.columns[i]);
+                        valuesToSend.Add(req.values[i]);
+                        needsQuotesToSend.Add(req.columnsNeedQuotes[i]);
+                    }
+                }
+
+                // If the number of IDs is > 1, then obviously it will inttroduce duplicates, no need to trouble
+                // the server.
+                if (tablesToSend.Count > 0)
+                {
+                    if (req.ids.Count > 1)
+                    {
+                        StringBuilder message = new("The chosen values are already in use in the following " +
+                                                    "columns:\n");
+                        foreach (string s in columnsToSend)
+                        {
+                            message.Append($"\n• {CR.GetPrintName(s, (CR.Column)dict![s]!)}");
+                        }
+                        message.Append("\n\nAre you sure you wish to proceed?");
+                        if (!DisplayQuestion(message.ToString(), "Soft Duplicate Check",
+                                             DialogWindows.DialogBox.Buttons.YesNo))
+                            return false;
+                    }
+                    else if (!SoftDuplicateCheck(req.table, req.idColumn, req.ids.Cast<string?>().ToList(),
+                                                 req.idQuotes, columnsToSend, valuesToSend, needsQuotesToSend))
+                        return false;
+                }
+            }
+            catch
+            {
+                DisplayError("Soft duplicate check could not be carried out. Cancelling update.");
+                return false;
+            }
+
+            // Carry out the update.
             lock (streamLock)
             {
                 NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
@@ -944,6 +1073,61 @@ namespace BridgeOpsClient
                 catch
                 {
                     DisplayError("Could not delete record.");
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                }
+            }
+        }
+
+        public static bool SoftDuplicateCheck(string table, string idColumn, List<string?> ids, bool idNeedsQuotes,
+                                              List<string> columns, List<string?> values, List<bool> needsQuotes)
+        {
+            lock (streamLock)
+            {
+                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                try
+                {
+                    if (stream != null)
+                    {
+                        ExistenceCheck check = new(sd.sessionID, CR.columnRecordID,
+                                                   table, idColumn, ids, idNeedsQuotes, columns, values, needsQuotes);
+                        stream.WriteByte(Glo.CLIENT_SELECT_EXISTS);
+                        sr.WriteAndFlush(stream, sr.Serialise(check));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        else if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
+                        {
+                            List<string> columnsAffected = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
+                            StringBuilder message = new("The chosen values are already in use in the following " +
+                                                        "columns:\n");
+                            foreach (string s in columnsAffected)
+                            {
+                                var dict = CR.GetDictionary(table, false);
+                                message.Append($"\n• {CR.GetPrintName(s, (CR.Column)dict![s]!)}");
+                            }
+                            message.Append("\n\nAre you sure you wish to proceed?");
+                            return DisplayQuestion(message.ToString(), "Soft Duplicate Check",
+                                                   DialogWindows.DialogBox.Buttons.YesNo);
+                        }
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError("The SQL query could not be run. See error:\n\n" +
+                                            sr.ReadString(stream));
+                            return false;
+                        }
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        return false;
+                    }
+                    return false;
+                }
+                catch
+                {
+                    DisplayError("Could not run soft duplicate check.");
                     return false;
                 }
                 finally

@@ -67,7 +67,8 @@ public static class Glo
     public const int CLIENT_SELECT_QUICK = 31;
     public const int CLIENT_SELECT = 32;
     public const int CLIENT_SELECT_WIDE = 33;
-    public const int CLIENT_DELETE = 34;
+    public const int CLIENT_SELECT_EXISTS = 34;
+    public const int CLIENT_DELETE = 35;
     public const int CLIENT_LINK_CONTACT = 40;
     public const int CLIENT_LINKED_CONTACT_SELECT = 41;
     public const int CLIENT_SELECT_HISTORY = 42;
@@ -82,7 +83,7 @@ public static class Glo
     public const int CLIENT_CONFERENCE_SELECT = 71;
     public const int CLIENT_CONFERENCE_CANCEL = 72;
 
-    public const int SERVER_CLIENT_NUDGE = 0;           // Not yet implemented
+    public const int SERVER_CLIENT_NUDGE = 0;
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;
     public const int SERVER_RESOURCES_UPDATED = 2;
     public const int SERVER_FORCE_LOGOUT = 3;
