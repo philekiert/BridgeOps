@@ -34,7 +34,7 @@ namespace BridgeOpsClient
                 }
         }
         const double borderRadius = 7d;
-        public const double titleBarHeight = 28;
+        public const double titleBarHeight = 26;
 
         private Border windowBorder;
         private Grid grid;
@@ -126,11 +126,11 @@ namespace BridgeOpsClient
             Path minimisePath = new()
             {
                 Fill = (Brush)resources["brushPrimaryButton"],
-                Data = new RectangleGeometry(new Rect(9, 17, 10, 3))
+                Data = new RectangleGeometry(new Rect(8, 16, 10, 3))
             };
             CombinedGeometry combinedGeometry = new(GeometryCombineMode.Exclude,
-                                                    new RectangleGeometry(new Rect(9, 9, 10, 11)),
-                                                    new RectangleGeometry(new Rect(10, 12, 8, 7)));
+                                                    new RectangleGeometry(new Rect(8, 8, 10, 11)),
+                                                    new RectangleGeometry(new Rect(9, 11, 8, 7)));
             Path maximisePath = new()
             {
                 Fill = (Brush)resources["brushPrimaryButton"],
@@ -143,9 +143,9 @@ namespace BridgeOpsClient
                 VerticalAlignment = VerticalAlignment.Center,
                 Foreground = (Brush)resources["brushCloseButton"],
                 FontFamily = robotoMono,
-                FontSize = 20,
+                FontSize = 21,
                 FontWeight = FontWeights.Black,
-                Margin = new Thickness(-1, -2.5, 0, 0),
+                Margin = new Thickness(-1, -3, 0, 0),
                 Text = "x"
             };
             minimiseButton = new()

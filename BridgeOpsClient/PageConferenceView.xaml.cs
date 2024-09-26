@@ -313,20 +313,20 @@ namespace BridgeOpsClient
             {
                 double pos = Mouse.GetPosition(schView).X;
                 double difference;
-                if (pos < 200)
-                    difference = (pos - 200);
-                else if (pos > schView.ActualWidth - 200)
-                    difference = (pos - schView.ActualWidth) + 200;
+                if (pos < 100)
+                    difference = (pos - 100);
+                else if (pos > schView.ActualWidth - 100)
+                    difference = (pos - schView.ActualWidth) + 100;
                 else
                     difference = 0;
 
-                difference = Math.Clamp(difference, -200, 200);
+                difference = Math.Clamp(difference, -100, 100);
 
                 // Scroll an amount that's relavent to the current zoom.
                 difference *= 1d / schView.DisplayTimeZoom();
 
-                // 2_000_000_000 feels comfortable.
-                schView.scheduleTime = new DateTime(schView.scheduleTime.Ticks + (long)(difference * 2_000_000_000));
+                // 4_000_000_000 feels comfortable.
+                schView.scheduleTime = new DateTime(schView.scheduleTime.Ticks + (long)(difference * 4_000_000_000));
                 horizontalChange = true;
 
                 dragPositionChanged = true;
@@ -336,20 +336,20 @@ namespace BridgeOpsClient
             {
                 double pos = Mouse.GetPosition(schView).Y;
                 double difference;
-                if (pos < 200)
-                    difference = (pos - 200);
-                else if (pos > schView.ActualHeight - 200)
-                    difference = (pos - schView.ActualHeight) + 200;
+                if (pos < 100)
+                    difference = (pos - 100);
+                else if (pos > schView.ActualHeight - 100)
+                    difference = (pos - schView.ActualHeight) + 100;
                 else
                     difference = 0;
 
-                difference = Math.Clamp(difference, -200, 200);
+                difference = Math.Clamp(difference, -100, 100);
 
                 // Scroll an amount that's relavent to the current zoom.
                 difference *= 1d / schView.zoomResourceCurrent;
 
-                // .07d feels comfortable.
-                schView.ScrollResource(difference * .07d);
+                // .14d feels comfortable.
+                schView.ScrollResource(difference * .14d);
                 UpdateScrollBar();
                 verticalChange = true;
 
@@ -783,7 +783,7 @@ namespace BridgeOpsClient
                         {
                             if (xInt >= 2)
                             {
-                                FormattedText date = new($"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}",
+                                FormattedText date = new($"{t.Day}/{t.Month}/{t.Year} {t.DayOfWeek}",
                                            CultureInfo.CurrentCulture,
                                            FlowDirection.LeftToRight,
                                            segoeUISemiBold,
@@ -795,7 +795,7 @@ namespace BridgeOpsClient
                                     firstDateX = xInt;
                             }
                             else
-                                firstDateStringOverride = $"{t.DayOfWeek} {t.Day}/{t.Month}/{t.Year}";
+                                firstDateStringOverride = $"{t.Day}/{t.Month}/{t.Year} {t.DayOfWeek}";
                         }
                     }
 

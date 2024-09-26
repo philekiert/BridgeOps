@@ -73,11 +73,13 @@ namespace BridgeOpsClient.CustomControls
             int value;
             if (int.TryParse(textBox.Text, out value))
             {
+                int selection = textBox.SelectionStart;
                 // Shouldn't trigger if the user has erased both characters.
                 if (value > max)
                     textBox.Text = max.ToString();
                 else if (value < 0)
                     textBox.Text = "00";
+                textBox.SelectionStart = selection;
             }
         }
 

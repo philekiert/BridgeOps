@@ -77,6 +77,7 @@ namespace BridgeOpsClient.CustomControls
         {
             grd.ColumnDefinitions[0].Width = show ? new GridLength(110) : new GridLength(0);
             dateVisible = show;
+            datePicker.Focusable = show;
         }
     }
 }
