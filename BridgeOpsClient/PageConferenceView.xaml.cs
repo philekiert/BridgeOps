@@ -444,7 +444,7 @@ namespace BridgeOpsClient
                 }
 
                 // Send off any conference updates needed if the user was making edits.
-                if (wasDraggingConference && schView.currentConference != null)
+                if (wasDraggingConference && schView.currentConference != null && dragMouseHasMoved)
                 {
                     // Use the selectedConferences list even if it isn't in use to keep things concise.
                     bool borrowedList = schView.selectedConferences.Count == 0;
