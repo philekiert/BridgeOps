@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -429,6 +430,9 @@ namespace BridgeOpsClient
                 (e.ChangedButton == MouseButton.Middle ||
                  e.ChangedButton == MouseButton.Left))
             {
+                // Carry this section out first, storing drag in this bool, otherwise an error message could display
+                // and wreak havoc with autoscroll while the user has no control over it.
+                bool wasDraggingConference = drag == Drag.Move || drag == Drag.Resize;
                 drag = Drag.None;
                 dragMouseHasMoved = false;
                 ((IInputElement)sender).ReleaseMouseCapture();
@@ -437,6 +441,35 @@ namespace BridgeOpsClient
                 {
                     schView.SetCursor((int)e.GetPosition(schView).X, (int)e.GetPosition(schView).Y);
                     cursorMoved = true;
+                }
+
+                // Send off any conference updates needed if the user was making edits.
+                if (wasDraggingConference && schView.currentConference != null)
+                {
+                    // Use the selectedConferences list even if it isn't in use to keep things concise.
+                    bool borrowedList = schView.selectedConferences.Count == 0;
+                    if (borrowedList)
+                        schView.selectedConferences.Add(schView.currentConference);
+
+                    List<int> conferenceIDs = new();
+                    List<DateTime> starts = new();
+                    List<DateTime> ends = new();
+                    List<int> resourceIDs = new();
+                    List<int> resourceRows = new();
+                    foreach (Conference c in schView.selectedConferences)
+                    {
+                        conferenceIDs.Add(c.id);
+                        starts.Add(c.start);
+                        ends.Add(c.end);
+                        resourceIDs.Add(c.resourceID);
+                        resourceRows.Add(c.resourceRow);
+                    }
+
+                    App.SendConferenceQuickMoveRequest(conferenceIDs, starts, ends,
+                                                       resourceIDs, resourceRows);
+
+                    if (borrowedList)
+                        schView.selectedConferences.Clear();
                 }
             }
         }
@@ -1026,7 +1059,9 @@ namespace BridgeOpsClient
             }
         }
 
-        public PageConferenceView.Conference? currentConference;
+        // currentConference represents the currently hovered over conference, selectedConferences is for multi-select.
+        public PageConferenceView.Conference? currentConference = null;
+        public List<PageConferenceView.Conference> selectedConferences = new();
 
         protected override void OnRender(DrawingContext dc)
         {

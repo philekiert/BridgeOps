@@ -884,6 +884,8 @@ internal class BridgeOpsAgent
                     ClientConferenceSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_CANCEL)
                     ClientConferenceCancel(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_CONFERENCE_QUICK_MOVE)
+                    ClientConferenceQuickMove(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -2766,7 +2768,7 @@ internal class BridgeOpsAgent
             sqlConnect.Open();
             SqlCommand com = new($"UPDATE Conference " +
                                  $"SET {Glo.Tab.CONFERENCE_CANCELLED} = {(uncancel ? "0" : "1")}, " +
-                                 $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID},h " +
+                                 $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
                                  $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
                                  $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};", sqlConnect);
             if (com.ExecuteNonQuery() == 0)
@@ -2783,6 +2785,80 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't cancel conference, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    // Permission restricted
+    private static void ClientConferenceQuickMove(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            List<int>? conferenceIDs = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            List<DateTime>? conferenceStarts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
+            List<DateTime>? conferenceEnds = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
+            List<int>? conferenceResources = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            List<int>? conferenceResourceRows = sr.Deserialise<List<int>>(sr.ReadString(stream));
+
+            if (conferenceIDs == null || conferenceStarts == null || conferenceEnds == null ||
+                conferenceResources == null || conferenceResourceRows == null ||
+                conferenceIDs.Count != conferenceStarts.Count ||
+                conferenceIDs.Count != conferenceEnds.Count ||
+                conferenceIDs.Count != conferenceResources.Count ||
+                conferenceIDs.Count != conferenceResourceRows.Count)
+                throw new("Conference list information was missing or corrupted, quick move cancelled.");
+
+            string loginID;
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_CONFERENCES,
+                                                                       Glo.PERMISSION_EDIT))
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+                loginID = clientSessions[sessionID].loginID.ToString();
+            }
+
+            // Get the conference details.
+
+            sqlConnect.Open();
+            List<string> coms = new();
+            for (int i = 0; i < conferenceIDs.Count; ++i)
+                coms.Add("UPDATE Conference " +
+                        $"SET {Glo.Tab.CONFERENCE_START} = '{SqlAssist.DateTimeToSQL(conferenceStarts[i], false)}', " +
+                            $"{Glo.Tab.CONFERENCE_END} = '{SqlAssist.DateTimeToSQL(conferenceEnds[i], false)}', " +
+                            $"{Glo.Tab.RESOURCE_ID} = {conferenceResources[i]}, " +
+                            $"{Glo.Tab.CONFERENCE_RESOURCE_ROW} = {conferenceResourceRows[i]}, " +
+                            $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
+                            $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
+                        $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
+
+            SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
+            if (com.ExecuteNonQuery() == 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+            }
+            else
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            }
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't move conference, see error:", e);
             SafeFail(stream, e.Message);
         }
         finally

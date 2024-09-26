@@ -1774,6 +1774,57 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool SendConferenceQuickMoveRequest(List<int> conferenceIDs,
+                                                          List<DateTime> starts, List<DateTime> ends,
+                                                          List<int> resourceIDs, List<int> resourceRows)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            string json = sr.Serialise(conferenceIDs);
+                            stream.WriteByte(Glo.CLIENT_CONFERENCE_QUICK_MOVE);
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            sr.WriteAndFlush(stream, sr.Serialise(conferenceIDs));
+                            sr.WriteAndFlush(stream, sr.Serialise(starts));
+                            sr.WriteAndFlush(stream, sr.Serialise(ends));
+                            sr.WriteAndFlush(stream, sr.Serialise(resourceIDs));
+                            sr.WriteAndFlush(stream, sr.Serialise(resourceRows));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                return true;
+                            }
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                DisplayError("Could not carry out quick move. See error:\n\n" +
+                                                sr.ReadString(stream));
+                                return false;
+                            }
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not cancel conference.");
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
         static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes,
                                                                        List<List<object?>> rows)
         {
