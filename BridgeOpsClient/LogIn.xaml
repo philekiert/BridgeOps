@@ -28,6 +28,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Grid.Column="1" Content="Username" Height="30" HorizontalAlignment="Stretch"
                VerticalAlignment="Center" Margin="0,35,0,0" FontSize="14" FontWeight="SemiBold" Padding="0 10 0 0"/>
@@ -40,6 +41,9 @@
         <Button Grid.Row="4" Grid.Column="1" x:Name="btnLogIn" Content="Log in" HorizontalAlignment="Left"
                 Margin="0,40,0,52" Padding="10 1 10 1" VerticalAlignment="Center" Click="btnLogIn_Click"
                 Style="{StaticResource primary-button}" Height="24"/>
+        <Border Grid.Row="5" Grid.ColumnSpan="3" Height="7" Background="{StaticResource brushDerynsPurpleBar}"
+                CornerRadius="0 0 6 6" Margin="-1 0 -1 -1" BorderThickness="0 1 0 0"
+                BorderBrush="{StaticResource brushDerynsPurpleBarBorder}"/>
     </Grid>
 
 </local:CustomWindow>

@@ -1667,7 +1667,7 @@ namespace BridgeOpsClient
         }
 
         public static bool SendConferenceViewSearchRequest(DateTime start, DateTime end,
-                                                           List<PageConferenceView.Conference> conferences)
+                                                           Dictionary<int, PageConferenceView.Conference> conferences)
         {
             lock (streamLock)
             {
@@ -1699,7 +1699,7 @@ namespace BridgeOpsClient
                                     conference.cancelled = (bool)row[6]!;
                                     conference.test = row[7] != null && (int)row[7]! == 1;
                                     conference.connectionCount = (int)row[8]!;
-                                    conferences.Add(conference);
+                                    conferences.Add(conference.id, conference);
                                 }
                                 return true;
                             }
