@@ -6,7 +6,7 @@ using System.Xml.Linq;
 public static class Glo
 {
     // Communication
-    public const string PIPE_CONSOLE = "BridgeOpsConsole";
+    public const string PIPE_CONSOLE = "BridgeManagerAgent";
     public const int PORT_INBOUND_DEFAULT = 61_152;
     public const int PORT_OUTBOUND_DEFAULT = 61_153;
     public const string SQL_SERVER_NAME_DEFAULT = "SQLEXPRESS";
@@ -22,8 +22,8 @@ public static class Glo
     public const string PATH_AGENT = "";
     public const string PATH_CONSOLE = "";
 #endif
-    public const string EXE_AGENT = "BridgeOpsAgent.exe";
-    public const string EXE_CONSOLE = "BridgeOpsConsole.exe";
+    public const string EXE_AGENT = "BridgeManagerAgent.exe";
+    public const string EXE_CONSOLE = "BridgeManagerConsole.exe";
     public static string PathConfigFiles
     { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "Config Files"); } }
     public static string PathImportFiles

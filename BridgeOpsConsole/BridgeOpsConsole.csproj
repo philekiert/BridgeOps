@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StartupObject>BridgeOpsConsole</StartupObject>
+    <AssemblyName>BridgeManagerConsole</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
