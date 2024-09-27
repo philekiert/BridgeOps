@@ -314,12 +314,12 @@ public static class Glo
         public static string ApplicationFolder()
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                          "BridgeOps");
+                                          "Bridge Manager");
         }
         public static string ApplicationFolder(string subdir)
         {
             return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                          "BridgeOps", subdir);
+                                          "Bridge Manager", subdir);
         }
 
         public static bool IsUnsafeForCSV(string s)

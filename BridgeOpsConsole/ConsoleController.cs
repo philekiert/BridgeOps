@@ -157,7 +157,7 @@ public class ConsoleController
         AddCommand("create database", ValType.None, menu, CreateDatabase,
                    "Create a new database on the localhost\\SQLEXPRESS server.");
         AddCommand("delete database", ValType.None, menu, DeleteDatabase,
-                   "Delete the BridgeOps database on the localhost\\SQLEXPRESS server.");
+                   "Delete the BridgeManager database on the localhost\\SQLEXPRESS server.");
 
         // Data
         menu = MENU_DATA;
@@ -184,9 +184,9 @@ public class ConsoleController
         // Agent
         menu = MENU_AGENT;
         AddCommand("start", ValType.None, menu, StartAgent,
-                   "Start the BridgeOps agent responsible for carrying out requests from the client application.");
+                   "Start the Bridge Manager agent responsible for carrying out requests from the client application.");
         AddCommand("stop", ValType.None, menu, StopAgent,
-                   "Stop the BridgeOps agent. Clients will no longer be able to communicate with the server " +
+                   "Stop the Bridge Manager agent. Clients will no longer be able to communicate with the server " +
                    "application, and all users will be logged out.");
         AddCommand("status", ValType.None, menu, CheckAgent,
                    "Check to see if agent is running.");

@@ -16,9 +16,9 @@ using static System.Net.Mime.MediaTypeNames;
 
 public class DatabaseCreator
 {
-    public const string DATABASE_NAME = "BridgeOps";
-    public const string DATABASE_FILENAME = "BridgeOps_Data.mdf";
-    public const string DATABASE_LOGNAME = "BridgeOps_Log.ldf";
+    public const string DATABASE_NAME = "BridgeManager";
+    public const string DATABASE_FILENAME = "BridgeManager_Data.mdf";
+    public const string DATABASE_LOGNAME = "BridgeManager_Log.ldf";
     public static string DatabaseFilePath
     { get { return Path.Combine(Glo.Fun.ApplicationFolder(), DATABASE_FILENAME); } }
     public static string DatabaseLogPath
@@ -43,7 +43,7 @@ public class DatabaseCreator
                                             "integrated security=SSPI;" +
                                             "encrypt=false;" +
                                             "database=master;" +
-                                            "Application Name=BridgeOpsConsole;");
+                                            "Application Name=BridgeManageConsole;");
             sqlCommand = new SqlCommand("", sqlConnect);
 
             // Test opening a connection and operating on sqlConnect.
@@ -55,7 +55,7 @@ public class DatabaseCreator
                 Writer.Message("SQL Server Version: " + version);
                 CloseSQL();
 
-                // Try switching to BridgeOps database.
+                // Try switching to bridge Manager database.
                 if (!CheckDatabaseFileExistence())
                     Writer.Negative("Database not yet created.");
                 else
@@ -312,7 +312,7 @@ public class DatabaseCreator
                             "FILENAME = '" + DatabaseFilePath + "', " +
                             "SIZE = 2GB, MAXSIZE = 10GB, FILEGROWTH = 10%) " +
                           "LOG ON (" +
-                            "NAME = BridgeOps_Log, " +
+                            "NAME = BridgeManager_Log, " +
                             "FILENAME = '" + DatabaseLogPath + "', " +
                             "SIZE = 1GB, MAXSIZE = 5GB, FILEGROWTH = 10%)";
 
@@ -849,7 +849,7 @@ public class DatabaseCreator
                                                "integrated security=SSPI;" +
                                                "encrypt=false;" +
                                                "database=" + dbName + ";" +
-                                               "Application Name=BridgeOpsConsole;";
+                                               "Application Name=BridgeManagerConsole;";
 
                 Writer.Affirmative(string.Format("Switched from {0} to {1}.", oldDb, dbName));
 

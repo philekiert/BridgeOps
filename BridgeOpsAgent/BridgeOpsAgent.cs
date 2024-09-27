@@ -395,7 +395,7 @@ internal class BridgeOpsAgent
 
             // Get the max lengths of varchars.
             sqlCommand = new SqlCommand("SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH " +
-                                        "FROM BridgeOps.INFORMATION_SCHEMA.COLUMNS " +
+                                        "FROM BridgeManager.INFORMATION_SCHEMA.COLUMNS " +
                                         "WHERE TABLE_NAME != 'OrganisationOrder' AND " +
                                               "TABLE_NAME != 'AssetOrder' AND " +
                                               "TABLE_NAME != 'ContactOrder' AND " +
@@ -614,8 +614,8 @@ internal class BridgeOpsAgent
             return $"server=localhost\\{sqlServerName};" +
                     "integrated security=SSPI;" +
                     "encrypt=false;" +
-                    "database=BridgeOps;" +
-                    "Application Name=BridgeOpsAgent;";
+                    "database=BridgeManager;" +
+                    "Application Name=BridgeManagerAgent;";
         }
     }
 
@@ -638,7 +638,7 @@ internal class BridgeOpsAgent
             if (File.Exists(serverNameFile))
                 sqlServerName = File.ReadAllLines(serverNameFile)[0];
             else
-                LogError($"Unable to locate \"BridgeOps/{Glo.CONFIG_SQL_SERVER_NAME}\". " +
+                LogError($"Unable to locate \"BridgeManager/{Glo.CONFIG_SQL_SERVER_NAME}\". " +
                          $"Connecting using default SLQ Server instance name: {sqlServerName}.");
 
             SqlConnection sqlConnect = new SqlConnection(ConnectionString);
@@ -2392,7 +2392,7 @@ internal class BridgeOpsAgent
             int index = jsonString.IndexOf("\",");
             string name = jsonString.Substring(9, index - 9);
             string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string folder = Path.Combine(documents, "BridgeOps", Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            string folder = Path.Combine(documents, "Bridge Manager", Glo.FOLDER_QUERY_BUILDER_PRESETS);
             lock (selectBuilderPresetFileLock)
             {
                 Glo.Fun.ExistsOrCreateFolder(folder);
