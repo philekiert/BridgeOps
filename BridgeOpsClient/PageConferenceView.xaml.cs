@@ -109,6 +109,18 @@ namespace BridgeOpsClient
             }
             return null;
         }
+        public static int GetResourceRowInView(int resourceID, int resourceRow)
+        {
+            int rowsSoFar = 0;
+            foreach (ResourceInfo r in resources)
+            {
+                if (r.id == resourceID)
+                    return rowsSoFar + resourceRow;
+                else
+                    rowsSoFar += r.rowsTotal;
+            }
+            return 0;
+        }
 
         public static int totalCapacity = 0;
         float smoothZoomSpeed = .25f;
@@ -150,6 +162,7 @@ namespace BridgeOpsClient
             public DateTime moveOriginStart = new(); // The time the conference started at when dragging to move.
             public int moveOriginResourceID = new(); // The resource the conference started when dragging to move.
             public int moveOriginResourceRow = new(); // ^^
+            public int moveOriginTotalRow = 0;
         }
         public Dictionary<int, Conference> conferences = new();
         public Dictionary<int, Conference> conferencesUpdate = new();
@@ -398,7 +411,10 @@ namespace BridgeOpsClient
             }
 
             if (dragPositionChanged)
+            {
                 UpdateDragResizeOrMove();
+                dragPositionChanged = false;
+            }
 
             if (!horizontalChange && cursorMoved)
             {
@@ -455,27 +471,30 @@ namespace BridgeOpsClient
                         schView.selectedConferences.Add(schView.currentConference);
                         conferenceSelectionAffected = true;
                     }
-                }
 
-                var dragConfs = DragConferences;
-                if (schView.Cursor == Cursors.SizeWE)
-                {
-                    drag = Drag.Resize;
-                    foreach (Conference c in dragConfs)
+                    var dragConfs = DragConferences;
+                    if (schView.Cursor == Cursors.SizeWE)
                     {
-                        c.resizeOriginStart = c.start;
-                        c.resizeOriginEnd = c.end;
+                        drag = Drag.Resize;
+                        currentAtStartOfDrag = schView.currentConference;
+                        foreach (Conference c in dragConfs)
+                        {
+                            c.resizeOriginStart = c.start;
+                            c.resizeOriginEnd = c.end;
+                        }
                     }
-                }
-                else if (schView.currentConference != null)
-                {
-                    drag = Drag.Move;
-                    moveOriginCursor = schView.GetDateTimeFromX(e.GetPosition(schView).X);
-                    foreach (Conference c in dragConfs)
+                    else if (schView.currentConference != null)
                     {
-                        c.moveOriginStart = c.start;
-                        c.moveOriginResourceID = c.resourceID;
-                        c.moveOriginResourceRow = c.resourceRow;
+                        drag = Drag.Move;
+                        currentAtStartOfDrag = schView.currentConference;
+                        moveOriginCursor = schView.GetDateTimeFromX(e.GetPosition(schView).X);
+                        foreach (Conference c in dragConfs)
+                        {
+                            c.moveOriginStart = c.start;
+                            c.moveOriginResourceID = c.resourceID;
+                            c.moveOriginResourceRow = c.resourceRow;
+                            c.moveOriginTotalRow = GetResourceRowInView(c.resourceID, c.resourceRow);
+                        }
                     }
                 }
 
@@ -546,6 +565,7 @@ namespace BridgeOpsClient
             }
 
             conferenceSelectionAffected = false;
+            currentAtStartOfDrag = null;
         }
 
         private List<Conference> DragConferences
@@ -563,12 +583,13 @@ namespace BridgeOpsClient
         // This means that MouseMove switches on dragMoved, and it's updated in the timer. dragMoved is also switched
         // on if the TimerUpdate caused the scroll to change while dragging.
         bool dragPositionChanged = false; // Switched on by MouseMove or when smooth scrolling.
-        bool dragMouseHasMoved = false; // Off until MouseMove, this is to prevent auto scrolling while double-clicking.
+        public bool dragMouseHasMoved = false; // Off until MouseMove, this is to prevent auto scrolling while double-clicking.
+        Conference? currentAtStartOfDrag = null; // Make sure we retain the same primary selection while dragging.
         private void UpdateDragResizeOrMove()
         {
-            if (drag == Drag.Resize)
+            if (drag == Drag.Resize && dragMouseHasMoved)
             {
-                if (schView.currentConference != null)
+                if (currentAtStartOfDrag != null)
                 {
                     DateTime time = schView.GetDateTimeFromX(Mouse.GetPosition(schView).X);
 
@@ -584,8 +605,8 @@ namespace BridgeOpsClient
                     bool resizeLegal = true;
 
                     // Get the potential resize difference.
-                    TimeSpan dif = new((resizeStart ? schView.currentConference.resizeOriginStart.Ticks :
-                                                      schView.currentConference.resizeOriginEnd.Ticks) - time.Ticks);
+                    TimeSpan dif = new((resizeStart ? currentAtStartOfDrag.resizeOriginStart.Ticks :
+                                                      currentAtStartOfDrag.resizeOriginEnd.Ticks) - time.Ticks);
                     dif = -dif;
 
                     foreach (Conference c in dragConfs)
@@ -606,25 +627,45 @@ namespace BridgeOpsClient
             }
             else if (drag == Drag.Move && dragMouseHasMoved)
             {
-                if (schView.currentConference != null)
+                if (currentAtStartOfDrag != null)
                 {
-                    int resourceRow = schView.GetResourceFromY(Mouse.GetPosition(schView).Y);
-                    ResourceInfo? ri = GetResourceFromSelectedRow(resourceRow);
-
                     var dragConfs = DragConferences;
 
-                    if (ri != null)
-                    {
-                        schView.currentConference.resourceID = ri.id;
-                        schView.currentConference.resourceRow = ri.SelectedRow;
-                    }
+                    int resourceRow = schView.GetResourceFromY(Mouse.GetPosition(schView).Y);
+                    int resourceRowDif = resourceRow - currentAtStartOfDrag.moveOriginTotalRow;
 
+                    // Make sure the row difference is legal and restrict if it isn't.
+                    int correction = 0;
+                    int worstBreach = 0;
+                    foreach (Conference c in dragConfs)
+                    {
+                        int rowInView = GetResourceRowInView(c.moveOriginResourceID, c.moveOriginResourceRow);
+                        int potentialRow = rowInView + resourceRowDif;
+                        if (potentialRow < 0 && potentialRow < worstBreach)
+                        {
+                            correction = -potentialRow;
+                            worstBreach = potentialRow;
+                        }
+                        else if (potentialRow >= resourceRowNames.Count && potentialRow > worstBreach)
+                        {
+                            if (potentialRow == 50)
+                            {
+                                bool stopHere = true;
+                            }
+                            correction = (resourceRowNames.Count - 1) - potentialRow;
+                            worstBreach = potentialRow;
+                        }
+                    }
+                    resourceRowDif += correction;
+
+                    // Record the desired time for the primarily selected conference, and the difference to move all
+                    // the others by.
                     DateTime time = schView.GetDateTimeFromX(Mouse.GetPosition(schView).X);
                     TimeSpan cursorDifference = new(moveOriginCursor.Ticks - time.Ticks);
 
-                    if (schView.selectedConferences.Count == 0)
+                    foreach (Conference c in dragConfs)
                     {
-                        DateTime newConfStart = schView.currentConference.moveOriginStart - cursorDifference;
+                        DateTime newConfStart = c.moveOriginStart - cursorDifference;
 
                         // Snap to grid unless ctrl is pressed, then snap to 5 mins.
                         if (CtrlDown())
@@ -632,25 +673,16 @@ namespace BridgeOpsClient
                         else
                             newConfStart = schView.SnapDateTime(newConfStart);
 
-                        TimeSpan confLength = new(schView.currentConference.end.Ticks - schView.currentConference.start.Ticks);
-                        schView.currentConference.start = newConfStart;
-                        schView.currentConference.end = newConfStart + confLength;
-                    }
-                    else
-                    {
-                        foreach (Conference c in schView.selectedConferences)
+                        TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
+                        c.start = newConfStart;
+                        c.end = newConfStart + confLength;
+
+                        // Apply the new resource.
+                        ResourceInfo? ri = GetResourceFromSelectedRow(c.moveOriginResourceRow + resourceRowDif);
+                        if (ri != null)
                         {
-                            DateTime newConfStart = c.moveOriginStart - cursorDifference;
-
-                            // Snap to grid unless ctrl is pressed, then snap to 5 mins.
-                            if (CtrlDown())
-                                newConfStart = schView.SnapDateTime(newConfStart, schView.zoomTimeMaximum);
-                            else
-                                newConfStart = schView.SnapDateTime(newConfStart);
-
-                            TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
-                            c.start = newConfStart;
-                            c.end = newConfStart + confLength;
+                            c.resourceID = ri.id;
+                            c.resourceRow = ri.SelectedRow;
                         }
                     }
                 }
@@ -1370,7 +1402,7 @@ namespace BridgeOpsClient
                             if (endX < 0)
                                 continue;
 
-                            int startY = (int)GetYfromResource(conference.resourceRow);
+                            int startY = (int)GetYfromResource(conference.resourceID, conference.resourceRow);
                             Rect area = new Rect(startX + .5, startY + .5,
                                                  ((int)endX - startX), (int)zoomResourceDisplay);
 
@@ -1390,7 +1422,8 @@ namespace BridgeOpsClient
                                 {
                                     Cursor = Cursors.SizeWE;
                                     resizeCursorSet = true;
-                                    conferenceView.resizeStart = cursorPoint.X < area.Left + 5;
+                                    if (!conferenceView.dragMouseHasMoved)
+                                        conferenceView.resizeStart = cursorPoint.X < area.Left + 5;
                                 }
                             }
                             else if (selectedConferences.Contains(conference))
@@ -1588,11 +1621,12 @@ namespace BridgeOpsClient
         public int GetResourceFromY(double y)
         {
             int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
-            return resource < PageConferenceView.totalCapacity ? resource : -1;
+            return resource < PageConferenceView.totalCapacity ? resource : PageConferenceView.totalCapacity - 1;
         }
-        public double GetYfromResource(int resource)
+        public double GetYfromResource(int resourceID, int resourceRow)
         {
-            double y = resource * zoomResourceCurrent;
+            double row = PageConferenceView.GetResourceRowInView(resourceID, resourceRow);
+            double y = row * zoomResourceCurrent;
             return y - DisplayResourceScroll();
         }
         public DateTime GetDateTimeFromX(double x)
