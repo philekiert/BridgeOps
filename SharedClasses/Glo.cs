@@ -2,6 +2,12 @@ using System;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Xml.Linq;
+using System.Reflection;
+
+// Application version
+[assembly: AssemblyVersion("0.5.1")]
+[assembly: AssemblyFileVersion("0.5.1")]
+[assembly: AssemblyInformationalVersion("0.5.1")]
 
 public static class Glo
 {
@@ -121,7 +127,7 @@ public static class Glo
     public const int PERMISSION_RECORDS = 0; // Keep at zero, and subsequent values in order.
     public const int PERMISSION_CONFERENCES = 1;
     public const int PERMISSION_RESOURCES = 2;
-    public const int PERMISSION_CONFERENCE_TYPES = 3;
+    public const int PERMISSION_UNUSED = 3;
     public const int PERMISSION_REPORTS = 4;
     public const int PERMISSION_USER_ACC_MGMT = 5;
     public const int PERMISSIONS_MAX_VALUE = 63;
@@ -238,7 +244,7 @@ public static class Glo
             if (table == "Resource")
                 return PERMISSION_RESOURCES;
             if (table == "ConferenceType")
-                return PERMISSION_CONFERENCE_TYPES;
+                return PERMISSION_UNUSED;
             if (table == "Login")
                 return PERMISSION_USER_ACC_MGMT;
             else return -1;

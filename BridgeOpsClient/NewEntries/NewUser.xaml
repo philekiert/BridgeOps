@@ -54,7 +54,7 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
-                <RowDefinition/>
+                <!--<RowDefinition/>-->
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
@@ -84,21 +84,21 @@
             <CheckBox Grid.Row="3" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkResourcesEdit"/>
             <CheckBox Grid.Row="3" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkResourcesDelete"/>
             <CheckBox Grid.Row="3" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkResourcesAll"/>
-            <Label Content="Conference Types" Grid.Row="4" Grid.Column="0" x:Name="lblConfTypes"/>
+            <!--<Label Content="Conference Types" Grid.Row="4" Grid.Column="0" x:Name="lblConfTypes"/>
             <CheckBox Grid.Row="4" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkConfTypesCreate"/>
             <CheckBox Grid.Row="4" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkConfTypesEdit"/>
             <CheckBox Grid.Row="4" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkConfTypesDelete"/>
-            <CheckBox Grid.Row="4" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkConfTypesAll"/>
-            <Label Content="Reports" Grid.Row="5" Grid.Column="0" x:Name="lblReports"/>
-            <CheckBox Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkReportsCreate"/>
-            <CheckBox Grid.Row="5" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkReportsEdit"/>
-            <CheckBox Grid.Row="5" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkReportsDelete"/>
-            <CheckBox Grid.Row="5" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkReportsAll"/>
-            <Label Content="User Account Management" Grid.Row="6" Grid.Column="0" x:Name="lblUserAccountManagement"/>
-            <CheckBox Grid.Row="6" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementCreate"/>
-            <CheckBox Grid.Row="6" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementEdit"/>
-            <CheckBox Grid.Row="6" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
-            <CheckBox Grid.Row="6" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementAll"/>
+            <CheckBox Grid.Row="4" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkConfTypesAll"/>-->
+            <Label Content="Reports" Grid.Row="4" Grid.Column="0" x:Name="lblReports"/>
+            <CheckBox Grid.Row="4" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkReportsCreate"/>
+            <CheckBox Grid.Row="4" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkReportsEdit"/>
+            <CheckBox Grid.Row="4" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkReportsDelete"/>
+            <CheckBox Grid.Row="4" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkReportsAll"/>
+            <Label Content="User Account Management" Grid.Row="5" Grid.Column="0" x:Name="lblUserAccountManagement"/>
+            <CheckBox Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementCreate"/>
+            <CheckBox Grid.Row="5" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementEdit"/>
+            <CheckBox Grid.Row="5" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
+            <CheckBox Grid.Row="5" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementAll"/>
         </Grid>
         <Label Content="Enabled" Grid.Row="6" Grid.Column="0" x:Name="lblEnabled" />
         <CheckBox Grid.Row="6" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkEnabled" Click="ValueChanged"
