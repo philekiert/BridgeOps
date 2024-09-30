@@ -57,6 +57,7 @@ namespace BridgeOpsClient
                 if (paneCount > 1)
                 {
                     GridSplitter splitter = new GridSplitter();
+                    splitter.Background = Brushes.Transparent;
                     frame.SetValue(Grid.RowProperty, index);
                     grdPanes.Children.Add(splitter);
                 }
@@ -158,7 +159,10 @@ namespace BridgeOpsClient
 
         private void EnforceMinimumSize()
         {
-            double minHeight = 180 * paneCount;
+            double minHeight = 182 * paneCount;
+            if (paneCount > 1)
+                minHeight += 4 * (paneCount - 1); // No idea why, could be grid splitters.
+
             if (App.mainWindow != null)
                 for (int i = 0; i < App.mainWindow.grdMain.RowDefinitions.Count - 1; ++i)
                     minHeight += App.mainWindow.grdMain.RowDefinitions[i].Height.Value;

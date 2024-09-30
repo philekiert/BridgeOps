@@ -12,7 +12,8 @@
     <Grid x:Name="pageGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="44"/>
-            <RowDefinition/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="22"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" MaxWidth="818" HorizontalAlignment="Left">
             <!-- Search bar -->
@@ -59,5 +60,16 @@
                                 Width="{Binding ActualWidth, ElementName=pageGrid}"
                                 Height="{Binding ActualHeight, ElementName=resultsArea}"/>
         </Grid>
+        
+        <!-- Status -->
+        <Border Margin="10 -10 10 0" Height="23" Grid.Row="2" Background="#dddedf" VerticalAlignment="Top"
+                CornerRadius="0 0 4 4"/>
+        <StackPanel Grid.Row="2" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
+            <Label x:Name="lblRows" Padding="20 0 0 0" FontWeight="SemiBold"/>
+            <Label x:Name="lblColumns" Padding="15 0 0 0"/>
+            <Label x:Name="lblColumnsSearched" Padding="15 0 0 0"/>
+        </StackPanel>
+        <Label Grid.Row="2" x:Name="lblTable" Padding="15 0 0 0" HorizontalAlignment="Right" Margin="0 -7 20 0"
+               FontWeight="SemiBold"/>
     </Grid>
 </Page>

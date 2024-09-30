@@ -51,11 +51,17 @@ namespace BridgeOpsClient
             txtSearch.Focus();
 
             dtgResults.AddWipeButton();
+            dtgResults.WipeCallback = WipeCallback;
 
             dtgResults.AddContextMenuItem("Update Selected", false, btnUpdate_Click).IsEnabled =
                 App.sd.editPermissions[Glo.PERMISSION_RECORDS];
             dtgResults.AddContextMenuItem("Delete Selected", false, btnDelete_Click).IsEnabled =
                 App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
+        }
+
+        private void WipeCallback()
+        {
+            SetStatusBar();
         }
 
         public void PopulateColumnComboBox()
@@ -128,12 +134,21 @@ namespace BridgeOpsClient
                 List<List<object?>> rows;
                 if (lastSearchWide && App.SelectWide(table, txtSearch.Text,
                                                      out columnNames, out rows, lastSearchHistorical))
+                {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
+                    SetStatusBar(rows.Count, columnNames.Count, -1);
+                }
                 else if (App.Select(cmbTable.Text,
                                     new List<string> { "*" },
                                     lastSearchColumns, lastSearchValues, lastSearchConditionals,
                                     out columnNames, out rows, true, lastSearchHistorical))
+                {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
+                    SetStatusBar(rows.Count, columnNames.Count, lastSearchColumns.Count);
+                }
+                else
+                    SetStatusBar();
+
             }
         }
 
@@ -207,7 +222,11 @@ namespace BridgeOpsClient
 
                 dtgResults.identity = identity;
                 dtgResults.Update(tableColDefs, columnNames, rows);
+
+                SetStatusBar(rows.Count, columnNames.Count, selectColumns.Count);
             }
+            else
+                SetStatusBar();
         }
 
         // Wide search on either enter or click.
@@ -245,7 +264,11 @@ namespace BridgeOpsClient
 
                 dtgResults.identity = identity;
                 dtgResults.Update(tableColDefs, columnNames, rows);
+
+                SetStatusBar(rows.Count, columnNames.Count, -1);
             }
+            else
+                SetStatusBar();
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
         {
@@ -255,6 +278,32 @@ namespace BridgeOpsClient
         {
             if (e.Key == Key.Enter)
                 WideSearch(cmbTable.SelectedIndex);
+        }
+
+        private void SetStatusBar(params int[] vals)
+        {
+            if (vals.Length != 3)
+            {
+                lblRows.Content = "";
+                lblColumns.Content = "";
+                lblTable.Content = "";
+                lblColumnsSearched.Content = "";
+                return;
+            }
+
+            lblRows.Content = "Rows: " + vals[0].ToString();
+            lblColumns.Content = "Columns: " + vals[1].ToString();
+            lblColumnsSearched.Content = vals[2] == -1 ? "Wide search" : ("Fields searched: " + vals[2].ToString());
+
+            string tableSearched = "Organisations";
+            if (dtgResults.identity == 1)
+                tableSearched = "Assets";
+            else if (dtgResults.identity == 2)
+                tableSearched = "Contacts";
+            lblTable.Content = tableSearched;
+
+            // Highlight searches where more than one field was searched in case the user was not aware.
+            lblColumnsSearched.FontWeight = vals[2] > 1 ? FontWeights.SemiBold : FontWeights.Normal;
         }
 
         // Highlight fields with values, and reload those values when selecting fields.

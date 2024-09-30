@@ -76,11 +76,15 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
+        public Action? WipeCallback = null;
         public void Wipe()
         {
             identity = -1;
             dtg.ItemsSource = null;
             dtg.Columns.Clear();
+
+            if (WipeCallback != null)
+                WipeCallback();
         }
         public void btnWipe_Click(object sender, EventArgs e) { Wipe(); }
 

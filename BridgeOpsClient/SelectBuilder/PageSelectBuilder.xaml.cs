@@ -26,6 +26,7 @@ namespace BridgeOpsClient
 
             dtgOutput.EnableMultiSelect();
             dtgOutput.AddWipeButton();
+            dtgOutput.WipeCallback = WipeCallback;
 
             btnUpdateSelected = dtgOutput.AddContextMenuItem("Update Selected", false, btnUpdate_Click);
             btnDeleteSelected = dtgOutput.AddContextMenuItem("Delete Selected", false, btnDelete_Click);
@@ -691,10 +692,12 @@ namespace BridgeOpsClient
                                                       App.sd.deletePermissions[permissionRelevancy];
                         btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
                                                       App.sd.editPermissions[permissionRelevancy];
+                        SetStatusBar(rows.Count, columnNames.Count);
                     }
                     catch (Exception e)
                     {
                         App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
+                        SetStatusBar();
                         return false;
                     }
                 return true;
@@ -702,6 +705,24 @@ namespace BridgeOpsClient
             columnNames = new();
             rows = new();
             return false;
+        }
+
+        private void WipeCallback()
+        {
+            SetStatusBar();
+        }
+
+        private void SetStatusBar(params int[] vals)
+        {
+            if (vals.Length != 2)
+            {
+                lblRows.Content = "";
+                lblColumns.Content = "";
+                return;
+            }
+
+            lblRows.Content = "Rows: " + vals[0].ToString();
+            lblColumns.Content = "Columns: " + vals[1].ToString();
         }
 
         private void btnDisplayCode_Click(object sender, RoutedEventArgs e)

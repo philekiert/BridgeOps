@@ -106,7 +106,19 @@
                       HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
         <TabControl Grid.Column="1" Background="Transparent" BorderThickness="1 1 0 0" Margin="0 5 0 0">
             <TabItem Header="Output" x:Name="tabOutput">
-                <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"/>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="25"/>
+                    </Grid.RowDefinitions>
+                    <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"/>
+                    <Border Margin="10 -10 10 0" Height="23" Grid.Row="2" Background="#dddedf" VerticalAlignment="Top"
+                    CornerRadius="0 0 4 4"/>
+                    <StackPanel Grid.Row="2" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
+                        <Label x:Name="lblRows" Padding="20 0 0 0" FontWeight="SemiBold"/>
+                        <Label x:Name="lblColumns" Padding="15 0 0 0"/>
+                    </StackPanel>
+                </Grid>
             </TabItem>
             <TabItem Header="Query Code" x:Name="tabCode">
                 <customcontrols:CodeSpace x:Name="txtCode" IsReadOnly="True" Margin="10 10 10 10"/>
