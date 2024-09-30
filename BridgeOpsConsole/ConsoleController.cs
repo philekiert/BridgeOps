@@ -1216,9 +1216,10 @@ public class ConsoleController
 
     private int ParseNetworkSettings() // Used by the command, bypassed by BridgeOpsConsole().
     {
-        Writer.Message("View each success or failure as the file is read?");
-        ParseNetworkSettings(Writer.YesNo());
-        Writer.Message("Agent must be restarted for any config changes to take effect.");
+        //Writer.Message("View each success or failure as the file is read?");
+        //ParseNetworkSettings(Writer.YesNo());
+        //Writer.Message("Agent must be restarted for any config changes to take effect.");
+        ParseNetworkSettings(false);
 
         return 0;
     }

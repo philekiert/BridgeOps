@@ -27,6 +27,8 @@ namespace BridgeOpsClient
 
             this.mainWindow = mainWindow;
 
+            lblVersion.Content = Glo.VersionNumber;
+
             txtUsername.Focus();
         }
 

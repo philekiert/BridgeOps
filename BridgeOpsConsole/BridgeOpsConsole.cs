@@ -20,8 +20,8 @@ internal class BridgeOpsConsole
         Console.BackgroundColor = ConsoleColor.Black;
         Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.Write("\n///");
-        Writer.Message("   B R I D G E   M A N A G E R\n", ConsoleColor.White);
-        Writer.Message($"///   version {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
+        Writer.Message("   B R I D G E   M A N A G E R", ConsoleColor.White);
+        Writer.Message($"      {Glo.VersionNumber}\n", ConsoleColor.DarkGray);
 
         // Set current working directory, as some command need this.
         string? currentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;

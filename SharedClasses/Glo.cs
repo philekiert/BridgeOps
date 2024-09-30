@@ -11,6 +11,16 @@ using System.Reflection;
 
 public static class Glo
 {
+    // Version
+    public static string VersionNumber
+    {
+        get
+        {
+            Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
+            return $"v {version.Major}.{version.Minor}.{version.Build}";
+        }
+    }
+
     // Communication
     public const string PIPE_CONSOLE = "BridgeManagerAgent";
     public const int PORT_INBOUND_DEFAULT = 61_152;

@@ -337,7 +337,7 @@ namespace BridgeOpsClient
             {
                 grid.ColumnDefinitions[2].Width = new GridLength(0);
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
-                ((Border)grid.Children[4]).Background = ((Border)grid.Children[4]).Background;
+                ((Border)grid.Children[4]).Background = ((Border)grid.Children[2]).Background;
             }
         }
 

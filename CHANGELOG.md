@@ -5,7 +5,7 @@
 - Conference type permissions removed from the user account settings menu as these are now redundant.
 - 
 ### Added
-- 
+- Minor visual improvements.
 
 ## [0.5.0]  2023/09/27
 - Initial release of the application.
