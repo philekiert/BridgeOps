@@ -6,6 +6,8 @@
 ### Added
 - Minor visual improvements.
 - Status bars added to the database search area to summarise search results.
+### Adjusted
+- Organisation name field expanded in the organisation window.
 
 ## [0.5.0]  2023/09/27
 - Initial release of the application.

@@ -1805,7 +1805,7 @@ namespace BridgeOpsClient
                             }
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
-                                DisplayError("Could not carry out quick move. See error:\n\n" +
+                                DisplayError("Could not carry out move. See error:\n\n" +
                                                 sr.ReadString(stream));
                                 return false;
                             }
@@ -1814,7 +1814,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not cancel conference.");
+                        DisplayError("Could not move conference.");
                         return false;
                     }
                     finally

@@ -1566,6 +1566,29 @@ namespace SendReceiveClasses
 
             return SqlAssist.Transaction(commands.ToArray());
         }
+
+        public static string SqlCheckForRowClashes(List<int> resources, List<int> rows,
+                                            List<DateTime> starts, List<DateTime> ends)
+        {
+            StringBuilder str = new("CREATE TABLE #RowClashCheck (Resource INT, Row INT, " +
+                                    "StartTime DATETIME, EndTime DATETIME); ");
+            str.Append("INSERT INTO #RowClashCheck VALUES (");
+            List<string> inserts = new();
+            for (int i = 0; i < rows.Count; ++i)
+            {
+                inserts.Add(resources[i].ToString() + ", " + rows[i].ToString() + ", '" +
+                            SqlAssist.DateTimeToSQL(starts[i], false) + "', '" +
+                            SqlAssist.DateTimeToSQL(ends[i], false) + "'");
+            }
+            str.Append(string.Join("), (", inserts) + "); ");
+            str.Append("IF EXISTS ( SELECT 1 FROM #RowClashCheck rcc JOIN Conference c ");
+            str.Append($"ON c.{Glo.Tab.RESOURCE_ID} = rcc.Resource AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = rcc.Row " +
+                       $"AND c.{Glo.Tab.CONFERENCE_END} > rcc.StartTime " +
+                       $"AND {Glo.Tab.CONFERENCE_START} < rcc.EndTime ) ");
+            str.Append("BEGIN THROW 50000, 'Conference clash detected.', 1; END");
+
+            return str.ToString();
+        }
     }
 
     struct Resource

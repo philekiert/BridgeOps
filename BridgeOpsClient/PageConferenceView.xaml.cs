@@ -346,7 +346,7 @@ namespace BridgeOpsClient
                 verticalChange = true;
             }
 
-            if (!(verticalChange && horizontalChange) && schView.scheduleTime != schView.lastScheduleTime)
+            if (!(verticalChange && horizontalChange) && schView.scheduleTime.Ticks != schView.lastScheduleTime.Ticks)
             {
                 verticalChange = true;
                 horizontalChange = true;
@@ -427,6 +427,7 @@ namespace BridgeOpsClient
             if (verticalChange || horizontalChange) RedrawGrid();
 
             lastFrame = Environment.TickCount64;
+            schView.lastScheduleTime = schView.scheduleTime;
         }
 
         public bool resizeStart = false; // False if extending the end of the conference.
@@ -886,6 +887,11 @@ namespace BridgeOpsClient
                 }
             }
         }
+
+        private void conferenceView_Loaded(object sender, RoutedEventArgs e)
+        {
+            RedrawResources();
+        }
     }
 
     public class ScheduleRuler : Canvas
@@ -1169,8 +1175,8 @@ namespace BridgeOpsClient
         public const long ticks1Hour = 36_000_000_000;
         public const long ticks1Day = 864_000_000_000;
 
-        public DateTime lastScheduleTime = DateTime.Now;
-        public DateTime scheduleTime = DateTime.Now;
+        public DateTime lastScheduleTime = new();
+        public DateTime scheduleTime = new();
         public double lastScrollResource = 0f;
         public double scrollResource = 0f;
 
@@ -1212,6 +1218,9 @@ namespace BridgeOpsClient
             brsConferenceHover.Freeze();
             brsConferenceBorder.Freeze();
             penConferenceBorder.Freeze();
+
+            scheduleTime = DateTime.Now;
+            lastScheduleTime = scheduleTime;
         }
 
         public DateTime start = new();

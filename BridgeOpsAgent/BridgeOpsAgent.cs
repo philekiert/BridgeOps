@@ -2801,17 +2801,17 @@ internal class BridgeOpsAgent
         {
             string sessionID = sr.ReadString(stream);
             List<int>? conferenceIDs = sr.Deserialise<List<int>>(sr.ReadString(stream));
-            List<DateTime>? conferenceStarts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
-            List<DateTime>? conferenceEnds = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
-            List<int>? conferenceResources = sr.Deserialise<List<int>>(sr.ReadString(stream));
-            List<int>? conferenceResourceRows = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            List<DateTime>? starts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
+            List<DateTime>? ends = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
+            List<int>? resources = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            List<int>? resourceRows = sr.Deserialise<List<int>>(sr.ReadString(stream));
 
-            if (conferenceIDs == null || conferenceStarts == null || conferenceEnds == null ||
-                conferenceResources == null || conferenceResourceRows == null ||
-                conferenceIDs.Count != conferenceStarts.Count ||
-                conferenceIDs.Count != conferenceEnds.Count ||
-                conferenceIDs.Count != conferenceResources.Count ||
-                conferenceIDs.Count != conferenceResourceRows.Count)
+            if (conferenceIDs == null || starts == null || ends == null ||
+                resources == null || resourceRows == null ||
+                conferenceIDs.Count != starts.Count ||
+                conferenceIDs.Count != ends.Count ||
+                conferenceIDs.Count != resources.Count ||
+                conferenceIDs.Count != resourceRows.Count)
                 throw new("Conference list information was missing or corrupted, quick move cancelled.");
 
             string loginID;
@@ -2831,20 +2831,23 @@ internal class BridgeOpsAgent
                 loginID = clientSessions[sessionID].loginID.ToString();
             }
 
-            // Get the conference details.
+            // Add a command to throw and report an error if a clash is detected.
 
-            sqlConnect.Open();
-            List<string> coms = new();
+            List<string> coms = new()
+            { Conference.SqlCheckForRowClashes(resources, resourceRows, starts, ends) };
+
+            // Update all conferences.
             for (int i = 0; i < conferenceIDs.Count; ++i)
                 coms.Add("UPDATE Conference " +
-                        $"SET {Glo.Tab.CONFERENCE_START} = '{SqlAssist.DateTimeToSQL(conferenceStarts[i], false)}', " +
-                            $"{Glo.Tab.CONFERENCE_END} = '{SqlAssist.DateTimeToSQL(conferenceEnds[i], false)}', " +
-                            $"{Glo.Tab.RESOURCE_ID} = {conferenceResources[i]}, " +
-                            $"{Glo.Tab.CONFERENCE_RESOURCE_ROW} = {conferenceResourceRows[i]}, " +
+                        $"SET {Glo.Tab.CONFERENCE_START} = '{SqlAssist.DateTimeToSQL(starts[i], false)}', " +
+                            $"{Glo.Tab.CONFERENCE_END} = '{SqlAssist.DateTimeToSQL(ends[i], false)}', " +
+                            $"{Glo.Tab.RESOURCE_ID} = {resources[i]}, " +
+                            $"{Glo.Tab.CONFERENCE_RESOURCE_ROW} = {resourceRows[i]}, " +
                             $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
                             $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
                         $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
 
+            sqlConnect.Open();
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
             if (com.ExecuteNonQuery() == 0)
             {

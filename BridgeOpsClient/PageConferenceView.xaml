@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:BridgeOpsClient"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="PageConferenceView" FrameworkElement.SizeChanged="WindowResized" x:Name="conferenceView">
+      Title="PageConferenceView" FrameworkElement.SizeChanged="WindowResized" x:Name="conferenceView"
+      Loaded="conferenceView_Loaded">
 
     <Grid>
         <Grid.RowDefinitions>
