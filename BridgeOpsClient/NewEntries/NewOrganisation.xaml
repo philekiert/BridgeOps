@@ -49,9 +49,10 @@
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 4 10 4"
                               SelectionChanged="ValueChanged" Height="20" Padding="4 2 4 2"/>
                     <Label Content="Organisation Name" Grid.Row="2" Grid.Column="0" x:Name="lblName"
-                           VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtName"
-                             TextChanged="ValueChanged"/>
+                           VerticalAlignment="Top" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtName" Height="37" VerticalContentAlignment="Top"
+                             TextChanged="ValueChanged" TextWrapping="Wrap" AcceptsReturn="False"
+                             VerticalScrollBarVisibility="Auto"/>
                     <Label Content="Dial No" Grid.Row="3" Grid.Column="0" x:Name="lblDialNo"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <Grid Grid.Row="3" Grid.Column="1">

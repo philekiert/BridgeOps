@@ -145,6 +145,7 @@ namespace BridgeOpsClient
                 FontFamily = robotoMono,
                 FontSize = 21,
                 FontWeight = FontWeights.Black,
+                FontStyle = FontStyles.Normal,
                 Margin = new Thickness(-1, -3, 0, 0),
                 Text = "x"
             };

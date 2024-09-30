@@ -7,11 +7,12 @@
          mc:Ignorable="d" 
          d:DesignHeight="450" d:DesignWidth="800"
          Background="#3d4656"
-         FontFamily="/BridgeOpsClient;component/Resources/Fonts/Roboto Mono/#Roboto Mono"
+         FontFamily="pack://application:,,,/Resources/Fonts/Roboto Mono/#Roboto Mono"
          FontSize="11"
          Foreground="#eee"
          TextWrapping="NoWrap"
          ScrollViewer.HorizontalScrollBarVisibility="Auto"
          ScrollViewer.VerticalScrollBarVisibility="Auto"
+         Text="Testia"
          >
 </TextBox>
