@@ -1806,7 +1806,7 @@ namespace BridgeOpsClient
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
                                 DisplayError("Could not carry out move. See error:\n\n" +
-                                                sr.ReadString(stream));
+                                             sr.ReadString(stream));
                                 return false;
                             }
                         }

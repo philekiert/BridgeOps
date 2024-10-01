@@ -45,13 +45,13 @@ namespace BridgeOpsClient
                 btnEdit.IsEnabled = false;
                 btnAssetAdd.IsEnabled = false;
                 btnAssetRemove.IsEnabled = false;
+                txtOrgRef.IsEnabled = false;
                 ToggleFieldsEnabled(false);
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
                 btnDelete.IsEnabled = false;
 
             btnCorrectReason.IsEnabled = App.sd.admin;
-            txtOrgRef.IsEnabled = App.sd.admin || !edit;
         }
 
         public NewOrganisation() // New organisation.

@@ -31,12 +31,12 @@
             <ColumnDefinition Width="120"/>
             <ColumnDefinition Width="230"/>
         </Grid.ColumnDefinitions>
-        <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" />
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" TextChanged="ValueChanged"/>
-        <Label Content="Password" Grid.Row="1" Grid.Column="0" x:Name="lblPassword" />
-        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword"/>
-        <Label Content="Confirm Password" Grid.Row="2" Grid.Column="0" x:Name="lblPasswordConfirm" />
-        <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm"/>
+        <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" Padding="5 6 5 5"/>
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" TextChanged="ValueChanged" Height="20"/>
+        <Label Content="Password" Grid.Row="1" Grid.Column="0" x:Name="lblPassword" Padding="5 6 5 5"/>
+        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="txtPassword" Height="20"/>
+        <Label Content="Confirm Password" Grid.Row="2" Grid.Column="0" x:Name="lblPasswordConfirm" Padding="5 6 5 5"/>
+        <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm" Height="20"/>
         <Button Grid.Row="3" Content="Reset Password" Margin="5 10 10 10" x:Name="btnResetPassword"
                 Click="btnResetPassword_Click"/>
         <Label Content="Administrator" Grid.Row="4" Grid.Column="0" x:Name="lblAdministrator" />
@@ -54,7 +54,9 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
-                <!--<RowDefinition/>-->
+                <!-- Simply unhide if you ever need to use it, as we don't want to affect the order of permission 
+                     bits for any current deployment. -->
+                <RowDefinition Height="0"/>
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
@@ -84,21 +86,21 @@
             <CheckBox Grid.Row="3" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkResourcesEdit"/>
             <CheckBox Grid.Row="3" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkResourcesDelete"/>
             <CheckBox Grid.Row="3" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkResourcesAll"/>
-            <!--<Label Content="Conference Types" Grid.Row="4" Grid.Column="0" x:Name="lblConfTypes"/>
-            <CheckBox Grid.Row="4" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkConfTypesCreate"/>
-            <CheckBox Grid.Row="4" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkConfTypesEdit"/>
-            <CheckBox Grid.Row="4" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkConfTypesDelete"/>
-            <CheckBox Grid.Row="4" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkConfTypesAll"/>-->
-            <Label Content="Reports" Grid.Row="4" Grid.Column="0" x:Name="lblReports"/>
-            <CheckBox Grid.Row="4" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkReportsCreate"/>
-            <CheckBox Grid.Row="4" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkReportsEdit"/>
-            <CheckBox Grid.Row="4" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkReportsDelete"/>
-            <CheckBox Grid.Row="4" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkReportsAll"/>
-            <Label Content="User Account Management" Grid.Row="5" Grid.Column="0" x:Name="lblUserAccountManagement"/>
-            <CheckBox Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementCreate"/>
-            <CheckBox Grid.Row="5" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementEdit"/>
-            <CheckBox Grid.Row="5" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
-            <CheckBox Grid.Row="5" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementAll"/>
+            <Label Content="[unused]" Grid.Row="4" Grid.Column="0" x:Name="lblUnused"/>
+            <CheckBox Grid.Row="4" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUnusedCreate"/>
+            <CheckBox Grid.Row="4" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUnusedEdit"/>
+            <CheckBox Grid.Row="4" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUnusedDelete"/>
+            <CheckBox Grid.Row="4" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkUnusedAll"/>
+            <Label Content="Reports" Grid.Row="5" Grid.Column="0" x:Name="lblReports"/>
+            <CheckBox Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkReportsCreate"/>
+            <CheckBox Grid.Row="5" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkReportsEdit"/>
+            <CheckBox Grid.Row="5" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkReportsDelete"/>
+            <CheckBox Grid.Row="5" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkReportsAll"/>
+            <Label Content="User Account Management" Grid.Row="6" Grid.Column="0" x:Name="lblUserAccountManagement"/>
+            <CheckBox Grid.Row="6" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementCreate"/>
+            <CheckBox Grid.Row="6" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementEdit"/>
+            <CheckBox Grid.Row="6" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
+            <CheckBox Grid.Row="6" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementAll"/>
         </Grid>
         <Label Content="Enabled" Grid.Row="6" Grid.Column="0" x:Name="lblEnabled" />
         <CheckBox Grid.Row="6" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkEnabled" Click="ValueChanged"

@@ -36,13 +36,13 @@ namespace BridgeOpsClient
             if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
             {
                 btnEdit.IsEnabled = false;
+                txtAssetRef.IsEnabled = false;
                 ToggleFieldsEnabled(false);
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
                 btnDelete.IsEnabled = false;
 
             btnCorrectReason.IsEnabled = App.sd.admin;
-            txtAssetRef.IsEnabled = App.sd.admin || !edit;
         }
 
         public NewAsset()
