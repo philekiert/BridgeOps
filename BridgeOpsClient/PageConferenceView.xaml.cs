@@ -649,10 +649,6 @@ namespace BridgeOpsClient
                         }
                         else if (potentialRow >= resourceRowNames.Count && potentialRow > worstBreach)
                         {
-                            if (potentialRow == 50)
-                            {
-                                bool stopHere = true;
-                            }
                             correction = (resourceRowNames.Count - 1) - potentialRow;
                             worstBreach = potentialRow;
                         }

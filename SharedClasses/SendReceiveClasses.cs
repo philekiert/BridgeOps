@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics.Metrics;
 using System.IO.Pipes;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.PortableExecutable;
@@ -1567,28 +1568,55 @@ namespace SendReceiveClasses
             return SqlAssist.Transaction(commands.ToArray());
         }
 
-        public static string SqlCheckForRowClashes(List<int> resources, List<int> rows,
-                                            List<DateTime> starts, List<DateTime> ends)
+        // Only call from within a try catch block, and after calling sqlConnect.Open().
+        public static List<int> SqlCheckForRowClashes(List<int> resources, List<int> rows,
+                                                      List<DateTime> starts, List<DateTime> ends,
+                                                      SqlConnection sqlConnect)
         {
-            StringBuilder str = new("CREATE TABLE #RowClashCheck (Resource INT, Row INT, " +
+            // Lots of .Contains going on, so might as well be a HashSet.
+            HashSet<int> indices = new();
+
+            // This function returns a list of indices relative to the supplied lists.
+            StringBuilder str = new("CREATE TABLE #RowClashCheck (Index INT, Resource INT, Row INT, " +
                                     "StartTime DATETIME, EndTime DATETIME); ");
             str.Append("INSERT INTO #RowClashCheck VALUES (");
             List<string> inserts = new();
             for (int i = 0; i < rows.Count; ++i)
             {
-                inserts.Add(resources[i].ToString() + ", " + rows[i].ToString() + ", '" +
-                            SqlAssist.DateTimeToSQL(starts[i], false) + "', '" +
-                            SqlAssist.DateTimeToSQL(ends[i], false) + "'");
+                // First, check the the new inserts against one another, as they wouldn't be picked up on the database.
+                for (int j = i + 1; j < rows.Count; ++j)
+                {
+                    if (!indices.Contains(i) && !indices.Contains(j))
+                    {
+                        if (resources[i] == resources[j] && rows[i] == rows[j] &&
+                            ends[j] > starts[i] && starts[j] < ends[i])
+                        {
+                            indices.Add(i);
+                            indices.Add(j);
+                        }
+                    }
+                }
+                if (!indices.Contains(i))
+                    inserts.Add(i.ToString() + ", " + resources[i].ToString() + ", " + rows[i].ToString() + ", '" +
+                                SqlAssist.DateTimeToSQL(starts[i], false) + "', '" +
+                                SqlAssist.DateTimeToSQL(ends[i], false) + "'");
             }
             str.Append(string.Join("), (", inserts) + "); ");
-            str.Append("IF EXISTS ( SELECT 1 FROM #RowClashCheck rcc JOIN Conference c ");
+            str.Append($"SELECT DISTINCT rcc.Index FROM #RowClashCheck rcc JOIN Conference c ");
             str.Append($"ON c.{Glo.Tab.RESOURCE_ID} = rcc.Resource AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = rcc.Row " +
                        $"AND c.{Glo.Tab.CONFERENCE_END} > rcc.StartTime " +
-                       $"AND {Glo.Tab.CONFERENCE_START} < rcc.EndTime ) ");
-            str.Append("BEGIN THROW 50000, 'Conference clash detected.', 1; END");
+                       $"AND {Glo.Tab.CONFERENCE_START} < rcc.EndTime ;");
 
-            return str.ToString();
+            SqlDataReader reader = new SqlCommand(str.ToString(), sqlConnect).ExecuteReader();
+
+            while (reader.Read())
+                indices.Add(reader.GetInt32(0));
+
+            reader.Close();
+
+            return indices.ToList();
         }
+        //public static string SqlCheckForDialNoClashes(List<string> dialNo, )
     }
 
     struct Resource

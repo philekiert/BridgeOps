@@ -190,6 +190,7 @@ namespace BridgeOpsClient
             public CustomControls.DateTimePicker dtpConnected;
             public CustomControls.DateTimePicker dtpDisconnected;
             public Button btnOrgSummary;
+            public Border bdrHost;
             public int? connectionId;
             public int row;
             public string dialNo;
@@ -197,7 +198,7 @@ namespace BridgeOpsClient
             public string? orgName;
             public int? orgId;
 
-            public Connection()
+            public Connection(Grid grd)
             {
                 dialNo = "";
 
@@ -256,7 +257,7 @@ namespace BridgeOpsClient
                 btnOrgSummary = new()
                 {
                     Height = 24,
-                    Background = Brushes.White,
+                    Background = Brushes.Transparent,
                     BorderThickness = new(0),
                     Padding = new(6, 0,
                     6, 0),
@@ -264,8 +265,17 @@ namespace BridgeOpsClient
                     HorizontalContentAlignment = HorizontalAlignment.Left
                 };
 
-                Grid.SetColumnSpan(txtSearch, 4);
+                bdrHost = new()
+                {
+                    Background = new SolidColorBrush(Color.FromRgb(230, 232, 236)),
+                    Margin = new(5, 0, -2, 0),
+                    CornerRadius = new(4)
+                };
 
+                Grid.SetColumnSpan(txtSearch, 4);
+                Grid.SetColumnSpan(bdrHost, 6);
+
+                Grid.SetColumn(bdrHost, 0);
                 Grid.SetColumn(btnRemove, 0);
                 Grid.SetColumn(btnUp, 1);
                 Grid.SetColumn(btnDown, 1);
@@ -274,6 +284,17 @@ namespace BridgeOpsClient
                 Grid.SetColumn(dtpConnected, 3);
                 Grid.SetColumn(dtpDisconnected, 4);
                 Grid.SetColumn(btnOrgSummary, 5);
+
+                grd.RowDefinitions.Add(new() { Height = GridLength.Auto });
+                grd.Children.Add(bdrHost);
+                grd.Children.Add(btnRemove);
+                grd.Children.Add(btnUp);
+                grd.Children.Add(btnDown);
+                grd.Children.Add(txtSearch);
+                grd.Children.Add(chkIsTest);
+                grd.Children.Add(dtpConnected);
+                grd.Children.Add(dtpDisconnected);
+                grd.Children.Add(btnOrgSummary);
 
                 ToggleSearch(true);
             }
@@ -293,10 +314,14 @@ namespace BridgeOpsClient
 
                     btnOrgSummary.Content = new StackPanel()
                     { Children = { tbDialNo, tbOrgRef, tbOrgName }, Orientation = Orientation.Horizontal };
+
+                    bdrHost.Visibility = Grid.GetRow(bdrHost) == 1 ? Visibility.Visible : Visibility.Hidden;
                 }
                 else
                 {
                     btnOrgSummary.Content = tbDialNo;
+
+                    bdrHost.Visibility = Visibility.Hidden;
                 }
 
                 this.dialNo = dialNo;
@@ -341,9 +366,12 @@ namespace BridgeOpsClient
                 Grid.SetRow(dtpConnected, row);
                 Grid.SetRow(dtpDisconnected, row);
                 Grid.SetRow(btnOrgSummary, row);
+                Grid.SetRow(bdrHost, row);
 
                 btnUp.IsEnabled = row > 1;
                 btnDown.IsEnabled = row < connectionCount;
+
+                bdrHost.Visibility = row == 1 && orgRef != null ? Visibility.Visible : Visibility.Hidden;
 
                 this.row = row - 1;
             }
@@ -358,6 +386,7 @@ namespace BridgeOpsClient
                 grid.Children.Remove(dtpConnected);
                 grid.Children.Remove(dtpDisconnected);
                 grid.Children.Remove(btnOrgSummary);
+                grid.Children.Remove(bdrHost);
             }
         }
         public List<Connection> connections = new();
@@ -368,7 +397,7 @@ namespace BridgeOpsClient
                                                             Glo.Tab.CONNECTION_ROW).restriction - 1)
                 return;
 
-            Connection connection = new();
+            Connection connection = new(grdConnections);
             connection.btnRemove.Click += RemoveConnection;
             connection.btnUp.Click += btnUp_Click;
             connection.btnDown.Click += btnDown_Click;
@@ -376,16 +405,6 @@ namespace BridgeOpsClient
             connection.btnOrgSummary.Click += btnSummary_Click;
 
             connection.btnRemove.Style = (Style)FindResource("minus-button");
-
-            grdConnections.RowDefinitions.Add(new() { Height = GridLength.Auto });
-            grdConnections.Children.Add(connection.btnRemove);
-            grdConnections.Children.Add(connection.btnUp);
-            grdConnections.Children.Add(connection.btnDown);
-            grdConnections.Children.Add(connection.txtSearch);
-            grdConnections.Children.Add(connection.chkIsTest);
-            grdConnections.Children.Add(connection.dtpConnected);
-            grdConnections.Children.Add(connection.dtpDisconnected);
-            grdConnections.Children.Add(connection.btnOrgSummary);
 
             connections.Add(connection);
 

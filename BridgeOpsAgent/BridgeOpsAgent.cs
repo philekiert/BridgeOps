@@ -1603,8 +1603,8 @@ internal class BridgeOpsAgent
             string command = "";
             if (historical)
                 command = "SELECT DISTINCT " + (req.table == "Organisation" ?
-                                                Glo.Tab.ORGANISATION_REF :
-                                                Glo.Tab.ASSET_REF)
+                                                Glo.Tab.ORGANISATION_ID :
+                                                Glo.Tab.ASSET_ID)
                                                 + " FROM " + req.table + "Change";
             else
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
@@ -1621,7 +1621,7 @@ internal class BridgeOpsAgent
 
             if (historical)
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
-                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_REF : Glo.Tab.ASSET_REF) +
+                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
                           " IN (" + command + ");";
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
@@ -1633,7 +1633,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't run or return query, see error:", e);
-            SafeFail(stream);
+            SafeFail(stream, e.Message);
         }
         finally
         {
@@ -2833,8 +2833,10 @@ internal class BridgeOpsAgent
 
             // Add a command to throw and report an error if a clash is detected.
 
-            List<string> coms = new()
-            { Conference.SqlCheckForRowClashes(resources, resourceRows, starts, ends) };
+            List<int> clashIndices = Conference.SqlCheckForRowClashes(resources, resourceRows, starts, ends,
+                                                                      sqlConnect);
+
+            List<string> coms = new();
 
             // Update all conferences.
             for (int i = 0; i < conferenceIDs.Count; ++i)
