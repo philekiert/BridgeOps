@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -228,7 +229,7 @@ public class DatabaseCreator
             int n = 0; // Set to 4 to skip destruct sequence for debugging.
 #if DEBUG
             // Bypass the destruct sequence if debugging.
-            n = 5;
+            n = 4;
 #endif
             while (n < 5)
             {
@@ -285,7 +286,12 @@ public class DatabaseCreator
                     {
                         Console.WriteLine("");
                         SwitchToDatabase("master");
-                        if (SendCommandSQL("DROP DATABASE " + DATABASE_NAME))
+                        // This first command should make it so the database can still be deleted even if it's
+                        // currently in use. I can't figure out why it sometimes gets held up as I can see no sessions
+                        // are currently using it, 
+                        if (SendCommandSQL($"ALTER DATABASE[{DATABASE_NAME}] " +
+                                            "SET SINGLE_USER WITH ROLLBACK IMMEDIATE; " +
+                                            "DROP DATABASE " + DATABASE_NAME))
                         {
                             Console.WriteLine("");
                             Writer.Affirmative("Database deleted.");
