@@ -55,6 +55,15 @@ namespace BridgeOpsClient
             }
 
             InitializeComponent();
+#if !DEBUG
+            // Hide mention of resources in release build.
+            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
+            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
+
+            // Hide the conference bar buttons.
+            grdMain.RowDefinitions[1].Height = new GridLength(0);
+#endif 
+
             grdConfData.Focus();
 
             grdMain.Children.Remove(menuBar);
@@ -95,7 +104,7 @@ namespace BridgeOpsClient
             menuDatabaseNewOrganisation.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewAsset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewContact.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
-            //menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
+            menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)

@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,6 +24,10 @@ namespace BridgeOpsClient
         public ReorderColumns()
         {
             InitializeComponent();
+#if !DEBUG
+            // Remove the conference table order for release versions.
+            cmbTable.Items.RemoveAt(2);
+#endif
 
             GetEntryLists();
             ChangeTable();

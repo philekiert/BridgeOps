@@ -11,7 +11,7 @@
     <Grid x:Name="grdMain">
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
-            <RowDefinition Height="29"/> <!-- Set to 29 when adding conferencing support -->
+            <RowDefinition Height="29"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -40,8 +40,6 @@
                               Click="menuDatabaseNewAsset_Click"/>
                     <MenuItem Header="_Contact" x:Name="menuDatabaseNewContact"
                               Click="menuDatabaseNewContact_Click"/>
-                     <!--Uncomment when adding conferencing support.
-                         Make sure to uncomment references to these objects in the code-behind.-->
                     <Separator/>
                     <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click"/>

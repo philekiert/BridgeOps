@@ -8,9 +8,9 @@
 ### Added
 - Status bars added to the database search area to summarise search results.
 ### Adjusted
-- Minor visual improvements.
 - Organisation name field expanded in the organisation window.
 - Organisation and asset references no longer locked behind full admin rights for editing.
+- Minor visual improvements.
 
 
 ## 0.5.0

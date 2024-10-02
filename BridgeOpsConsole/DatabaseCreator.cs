@@ -226,6 +226,10 @@ public class DatabaseCreator
         if (Writer.YesNo())
         {
             int n = 0; // Set to 4 to skip destruct sequence for debugging.
+#if DEBUG
+            // Bypass the destruct sequence if debugging.
+            n = 5;
+#endif
             while (n < 5)
             {
                 ++n;

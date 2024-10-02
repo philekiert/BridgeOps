@@ -2833,8 +2833,22 @@ internal class BridgeOpsAgent
 
             // Add a command to throw and report an error if a clash is detected.
 
-            List<int> clashIndices = Conference.SqlCheckForRowClashes(resources, resourceRows, starts, ends,
-                                                                      sqlConnect);
+            sqlConnect.Open();
+
+            List<int> rowClashIndices = Conference.SqlCheckForRowClashes(resources, resourceRows, starts, ends,
+                                                                         sqlConnect);
+            if (rowClashIndices.Count > 0)
+                throw new("This would create a resource row clash.");
+
+            List<string> confIdStrs = conferenceIDs.Select(id => id.ToString()).ToList();
+            SqlCommand dialNoSelect = new($"SELECT n.{Glo.Tab.CONFERENCE_ID}, n.{Glo.Tab.DIAL_NO}, " +
+                                                 $"f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END} " +
+                                          $"FROM Connection n " +
+                                          $"JOIN Conference f ON {Glo.Tab.CONFERENCE_ID} = {Glo.Tab.CONFERENCE_ID} " +
+                                          $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", confIdStrs)});",
+                                          sqlConnect);
+            SqlDataReader reader = dialNoSelect.ExecuteReader();
+            //while (reader.)
 
             List<string> coms = new();
 
@@ -2849,7 +2863,6 @@ internal class BridgeOpsAgent
                             $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
                         $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
 
-            sqlConnect.Open();
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
             if (com.ExecuteNonQuery() == 0)
             {
