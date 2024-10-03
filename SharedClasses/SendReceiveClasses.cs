@@ -1568,52 +1568,40 @@ namespace SendReceiveClasses
             return SqlAssist.Transaction(commands.ToArray());
         }
 
-        // Only call from within a try catch block, and after calling sqlConnect.Open().
-        public static List<int> SqlCheckForRowClashes(List<int> resources, List<int>? confIDs, List<int> rows,
-                                                      List<DateTime> starts, List<DateTime> ends,
-                                                      SqlConnection sqlConnect)
+        public static string SqlCheckForRowClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
-            List<string> confIdStrs = new List<string>();
+            StringBuilder ids = new();
             // If the conferences are new, then confIDs will be null.
             if (confIDs == null)
-                for (int i = 0; i < rows.Count; ++i)
-                    confIdStrs.Add("NULL");
+                return ""; // Not yet implemented
             else
-                for (int i = 0; i < confIDs.Count; ++i)
-                    confIdStrs.Add(confIDs[i].ToString());
-
-            // Lots of .Contains() checks going on, so better to use a HashSet than a List.
-            HashSet<int> indices = new();
-
-            // This function returns a list of indices relative to the supplied lists.
-            StringBuilder str = new("CREATE TABLE #RowClashCheck (I INT, ConfID INT, Resource INT, Row INT, " +
-                                    "StartTime DATETIME, EndTime DATETIME); ");
-            str.Append("INSERT INTO #RowClashCheck VALUES (");
-            List<string> inserts = new();
-            for (int i = 0; i < rows.Count; ++i)
             {
-                if (!indices.Contains(i))
-                    inserts.Add(i.ToString() + ", " + confIdStrs[i] + ", " +
-                                resources[i].ToString() + ", " + rows[i].ToString() + ", '" +
-                                SqlAssist.DateTimeToSQL(starts[i], false) + "', '" +
-                                SqlAssist.DateTimeToSQL(ends[i], false) + "'");
+                for (int i = 0; i < confIDs.Count; ++i)
+                    ids.Append(confIDs[i].ToString() + ", ");
+                if (ids.Length > 2)
+                    ids.Remove(ids.Length - 2, 2);
             }
-            str.Append(string.Join("), (", inserts) + "); ");
-            str.Append($"SELECT DISTINCT rcc.I FROM #RowClashCheck rcc JOIN Conference c ");
-            str.Append($"ON c.{Glo.Tab.RESOURCE_ID} = rcc.Resource AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = rcc.Row " +
-                       $"AND c.{Glo.Tab.CONFERENCE_END} > rcc.StartTime " +
-                       $"AND c.{Glo.Tab.CONFERENCE_START} < rcc.EndTime " +
-                       $"AND c.{Glo.Tab.CONFERENCE_ID} != rcc.ConfID; ");
-            str.Append("DROP Table #RowClashCheck;");
 
-            SqlDataReader reader = new SqlCommand(str.ToString(), sqlConnect).ExecuteReader();
+            StringBuilder str = new();
+            //StringBuilder str = new("CREATE TABLE #RowClashes (ConfID INT);");
+            //str.Append("INSERT INTO #RowClashes ");
+            str.Append("WITH NewConfs AS (" +
+                      $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
+                             $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
+                             $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
+                      $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({ids.ToString()}) " +
+                      $") ");
+            str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc JOIN Conference c ");
+            str.Append($"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
+                       $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
+                       $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
+                       $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
+                       $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
 
-            while (reader.Read())
-                indices.Add(reader.GetInt32(0));
+            str.Append("IF @@ROWCOUNT > 0 BEGIN " +
+                       "THROW 50000, 'This move would result in one or more row clashes.', 1; END");
 
-            reader.Close();
-
-            return indices.ToList();
+            return str.ToString();
         }
         public static SelectResult SqlCheckForDialNoClashes(List<int> confIDs, List<string> confNames,
                                                             List<DateTime> starts, List<DateTime> ends,

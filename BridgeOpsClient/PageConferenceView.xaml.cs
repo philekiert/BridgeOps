@@ -553,8 +553,31 @@ namespace BridgeOpsClient
                     }
 
                     if (conferenceIDs.Count > 0)
-                        App.SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames, starts, ends,
-                                                           resourceIDs, resourceRows);
+                    {
+                        if (!App.SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames, starts, ends,
+                                                                resourceIDs, resourceRows))
+                        {
+                            if (wasDraggingResize)
+                                foreach (Conference c in schView.selectedConferences)
+                                {
+                                    c.start = c.resizeOriginStart;
+                                    c.end = c.resizeOriginEnd;
+                                }
+                            else if (wasDraggingMove)
+                            {
+                                foreach (Conference c in schView.selectedConferences)
+                                {
+                                    TimeSpan length = new(c.end.Ticks - c.start.Ticks);
+                                    c.start = c.moveOriginStart;
+                                    c.end = c.moveOriginStart + length;
+                                    c.resourceID = c.moveOriginResourceID;
+                                    c.resourceRow = c.moveOriginResourceRow;
+                                }
+                            }
+                            schView.selectedConferences.Clear();
+                            SearchTimeframe();
+                        }
+                    }
                 }
                 else if (schView.currentConference != null && !conferenceSelectionAffected && !dragMouseHADmoved)
                 {
