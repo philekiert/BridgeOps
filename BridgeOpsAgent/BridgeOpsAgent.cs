@@ -2801,12 +2801,13 @@ internal class BridgeOpsAgent
         {
             string sessionID = sr.ReadString(stream);
             List<int>? conferenceIDs = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            List<string>? conferenceNames = sr.Deserialise<List<string>>(sr.ReadString(stream));
             List<DateTime>? starts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
             List<DateTime>? ends = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
             List<int>? resources = sr.Deserialise<List<int>>(sr.ReadString(stream));
             List<int>? resourceRows = sr.Deserialise<List<int>>(sr.ReadString(stream));
 
-            if (conferenceIDs == null || starts == null || ends == null ||
+            if (conferenceIDs == null || conferenceNames == null || starts == null || ends == null ||
                 resources == null || resourceRows == null ||
                 conferenceIDs.Count != starts.Count ||
                 conferenceIDs.Count != ends.Count ||
@@ -2835,23 +2836,18 @@ internal class BridgeOpsAgent
 
             sqlConnect.Open();
 
-            List<int> rowClashIndices = Conference.SqlCheckForRowClashes(resources, resourceRows, starts, ends,
-                                                                         sqlConnect);
+            List<int> rowClashIndices = Conference.SqlCheckForRowClashes(resources, conferenceIDs, resourceRows,
+                                                                         starts, ends, sqlConnect);
             if (rowClashIndices.Count > 0)
                 throw new("This would create a resource row clash.");
 
-            List<string> confIdStrs = conferenceIDs.Select(id => id.ToString()).ToList();
-            SqlCommand dialNoSelect = new($"SELECT n.{Glo.Tab.CONFERENCE_ID}, n.{Glo.Tab.DIAL_NO}, " +
-                                                 $"f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END} " +
-                                          $"FROM Connection n " +
-                                          $"JOIN Conference f ON {Glo.Tab.CONFERENCE_ID} = {Glo.Tab.CONFERENCE_ID} " +
-                                          $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", confIdStrs)});",
-                                          sqlConnect);
-            SqlDataReader reader = dialNoSelect.ExecuteReader();
-            //while (reader.)
+            // Everything .ToList() as we'll be needing clones rather than the original List due to manipulation.
+            SelectResult dialNoClashes = Conference.SqlCheckForDialNoClashes(conferenceIDs.ToList(),
+                                                                             conferenceNames.ToList(),
+                                                                             starts.ToList(), ends.ToList(),
+                                                                             sqlConnect);
 
             List<string> coms = new();
-
             // Update all conferences.
             for (int i = 0; i < conferenceIDs.Count; ++i)
                 coms.Add("UPDATE Conference " +

@@ -718,11 +718,23 @@ namespace BridgeOpsClient
             {
                 lblRows.Content = "";
                 lblColumns.Content = "";
+                lblSelected.Content = "";
                 return;
             }
 
             lblRows.Content = "Rows: " + vals[0].ToString();
             lblColumns.Content = "Columns: " + vals[1].ToString();
+            dtgResults_SelectionChanged(dtgOutput, null);
+        }
+        // Updated the selected row count.
+        private void dtgResults_SelectionChanged(object sender, RoutedEventArgs? e)
+        {
+            if (sender is CustomControls.SqlDataGrid sqlDataGrid && sqlDataGrid.dtg.Items.Count > 0)
+            {
+                lblSelected.Content = "Selected: " + sqlDataGrid.dtg.SelectedItems.Count;
+                lblSelected.FontWeight = sqlDataGrid.dtg.SelectedItems.Count > 0 ? FontWeights.SemiBold :
+                                                                                   FontWeights.Normal;
+            }
         }
 
         private void btnDisplayCode_Click(object sender, RoutedEventArgs e)

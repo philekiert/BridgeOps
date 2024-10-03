@@ -36,7 +36,7 @@ namespace BridgeOpsClient
             if (!App.sd.editPermissions[Glo.PERMISSION_RECORDS])
             {
                 btnEdit.IsEnabled = false;
-                txtAssetRef.IsEnabled = false;
+                txtAssetRef.IsReadOnly = true; ;
                 ToggleFieldsEnabled(false);
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])

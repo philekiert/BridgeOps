@@ -12,6 +12,9 @@
                 <ResourceDictionary Source="Themes/Generic.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Popup animations are causing some issues with ContextMenus blinking when opening, so switch it off.-->
+            <PopupAnimation x:Key="{x:Static SystemParameters.MenuPopupAnimationKey}">None</PopupAnimation>
+
             <!-- ComboBox -->
             <Style TargetType="ComboBox">
                 <Setter Property="VerticalContentAlignment" Value="Center"/>

@@ -41,6 +41,9 @@ namespace BridgeOpsClient.CustomControls
             InitializeComponent();
             menuShowHideColumns = (ContextMenu)FindResource("contextColumns");
             tickIcon = (DataTemplate)FindResource("tickIcon");
+
+            // ContextMenu is set on Update().
+            dtg.ContextMenu = null;
         }
 
         private void dtg_Loaded(object sender, RoutedEventArgs e)
@@ -85,6 +88,8 @@ namespace BridgeOpsClient.CustomControls
 
             if (WipeCallback != null)
                 WipeCallback();
+
+            dtg.ContextMenu = null;
         }
         public void btnWipe_Click(object sender, EventArgs e) { Wipe(); }
 
@@ -211,6 +216,8 @@ namespace BridgeOpsClient.CustomControls
                 System.ComponentModel.DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty,
                     typeof(DataGridColumn)).AddValueChanged(column, dtg_ColumnResized!);
             }
+
+            dtg.ContextMenu = mnuData;
         }
 
         public Dictionary<string, int> maxLengthOverrides = new();
@@ -573,6 +580,10 @@ namespace BridgeOpsClient.CustomControls
                     dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
                 }
             }
+            else if (e.Key == Key.Escape)
+            {
+                dtg.SelectedItems.Clear();
+            }
         }
 
         private void mnuExportSpreadsheet_Click(object sender, RoutedEventArgs e)
@@ -652,6 +663,11 @@ namespace BridgeOpsClient.CustomControls
                     row.InvalidateVisual();
                 }
             }
+        }
+
+        private void mnuSelectNone_Click(object sender, RoutedEventArgs e)
+        {
+            dtg.SelectedItems.Clear();
         }
     }
 }

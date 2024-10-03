@@ -13,6 +13,5 @@
          TextWrapping="NoWrap"
          ScrollViewer.HorizontalScrollBarVisibility="Auto"
          ScrollViewer.VerticalScrollBarVisibility="Auto"
-         Text="Testia"
          >
 </TextBox>

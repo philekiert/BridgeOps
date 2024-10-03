@@ -1774,7 +1774,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendConferenceQuickMoveRequest(List<int> conferenceIDs,
+        public static bool SendConferenceQuickMoveRequest(List<int> conferenceIDs, List<string> conferenceNames,
                                                           List<DateTime> starts, List<DateTime> ends,
                                                           List<int> resourceIDs, List<int> resourceRows)
         {
@@ -1790,6 +1790,7 @@ namespace BridgeOpsClient
                             stream.WriteByte(Glo.CLIENT_CONFERENCE_QUICK_MOVE);
                             sr.WriteAndFlush(stream, sd.sessionID);
                             sr.WriteAndFlush(stream, sr.Serialise(conferenceIDs));
+                            sr.WriteAndFlush(stream, sr.Serialise(conferenceNames));
                             sr.WriteAndFlush(stream, sr.Serialise(starts));
                             sr.WriteAndFlush(stream, sr.Serialise(ends));
                             sr.WriteAndFlush(stream, sr.Serialise(resourceIDs));

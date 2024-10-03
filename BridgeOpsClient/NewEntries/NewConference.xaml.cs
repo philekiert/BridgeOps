@@ -268,8 +268,8 @@ namespace BridgeOpsClient
                 bdrHost = new()
                 {
                     Background = new SolidColorBrush(Color.FromRgb(230, 232, 236)),
-                    Margin = new(5, 0, -2, 0),
-                    CornerRadius = new(4)
+                    Margin = new(4, 0, 0, 0),
+                    CornerRadius = new(5)
                 };
 
                 Grid.SetColumnSpan(txtSearch, 4);

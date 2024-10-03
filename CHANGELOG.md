@@ -1,6 +1,15 @@
 # Changelog
 
 
+## 0.5.2
+### Fixed
+- Context menus no longer display on blank data tables.
+- Organisation and asset references are now selectable without edit permissions.
+### Added
+- Selection count now displayed in the search result status bars.
+- Push Esc to clear selection in any data table.
+
+
 ## 0.5.1
 ### Fixed
 - Conference type permissions removed from the user account settings menu as these are now redundant.

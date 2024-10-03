@@ -5,9 +5,9 @@ using System.Xml.Linq;
 using System.Reflection;
 
 // Application version
-[assembly: AssemblyVersion("0.5.1")]
-[assembly: AssemblyFileVersion("0.5.1")]
-[assembly: AssemblyInformationalVersion("0.5.1")]
+[assembly: AssemblyVersion("0.5.2")]
+[assembly: AssemblyFileVersion("0.5.2")]
+[assembly: AssemblyInformationalVersion("0.5.2")]
 
 public static class Glo
 {

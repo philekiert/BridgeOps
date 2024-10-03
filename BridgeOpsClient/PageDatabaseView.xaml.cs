@@ -286,14 +286,17 @@ namespace BridgeOpsClient
             {
                 lblRows.Content = "";
                 lblColumns.Content = "";
-                lblTable.Content = "";
                 lblColumnsSearched.Content = "";
+                lblSelected.Content = "";
+                lblTable.Content = "";
                 return;
             }
 
+            // Set all labels to updated values.
             lblRows.Content = "Rows: " + vals[0].ToString();
             lblColumns.Content = "Columns: " + vals[1].ToString();
             lblColumnsSearched.Content = vals[2] == -1 ? "Wide search" : ("Fields searched: " + vals[2].ToString());
+            dtgResults_SelectionChanged(dtgResults, null);
 
             string tableSearched = "Organisations";
             if (dtgResults.identity == 1)
@@ -304,6 +307,16 @@ namespace BridgeOpsClient
 
             // Highlight searches where more than one field was searched in case the user was not aware.
             lblColumnsSearched.FontWeight = vals[2] > 1 ? FontWeights.SemiBold : FontWeights.Normal;
+        }
+        // Updated the selected row count.
+        private void dtgResults_SelectionChanged(object sender, RoutedEventArgs? e)
+        {
+            if (sender is CustomControls.SqlDataGrid sqlDataGrid && sqlDataGrid.dtg.Items.Count > 0)
+            {
+                lblSelected.Content = "Selected: " + sqlDataGrid.dtg.SelectedItems.Count;
+                lblSelected.FontWeight = sqlDataGrid.dtg.SelectedItems.Count > 0 ? FontWeights.SemiBold :
+                                                                                   FontWeights.Normal;
+            }
         }
 
         // Highlight fields with values, and reload those values when selecting fields.

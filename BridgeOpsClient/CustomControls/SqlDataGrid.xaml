@@ -77,6 +77,8 @@
             <ContextMenu x:Name="mnuData">
                 <MenuItem x:Name="mnuSelectAll" Header="Select All" IsEnabled="False"
                           Command="ApplicationCommands.SelectAll"/>
+                <MenuItem x:Name="mnuSelectNone" Header="Select None" IsEnabled="True"
+                          Click="mnuSelectNone_Click"/>
                 <Separator/>
                 <MenuItem x:Name="mnuCopy" Header="Copy"
                           Click="mnuCopy_Click" InputGestureText="Ctrl+C"/>

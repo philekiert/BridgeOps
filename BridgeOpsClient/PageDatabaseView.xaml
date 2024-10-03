@@ -58,7 +58,8 @@
             </Grid.RowDefinitions>
             <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1" IsTabStop="False"
                                 Width="{Binding ActualWidth, ElementName=pageGrid}"
-                                Height="{Binding ActualHeight, ElementName=resultsArea}"/>
+                                Height="{Binding ActualHeight, ElementName=resultsArea}"
+                                SelectionChanged="dtgResults_SelectionChanged"/>
         </Grid>
         
         <!-- Status -->
@@ -68,6 +69,7 @@
             <Label x:Name="lblRows" Padding="20 0 0 0" FontWeight="SemiBold"/>
             <Label x:Name="lblColumns" Padding="15 0 0 0"/>
             <Label x:Name="lblColumnsSearched" Padding="15 0 0 0"/>
+            <Label x:Name="lblSelected" Padding="15 0 0 0"/>
         </StackPanel>
         <Label Grid.Row="2" x:Name="lblTable" Padding="15 0 0 0" HorizontalAlignment="Right" Margin="0 -7 20 0"
                FontWeight="SemiBold"/>

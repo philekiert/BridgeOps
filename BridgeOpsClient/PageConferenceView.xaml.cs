@@ -87,9 +87,9 @@ namespace BridgeOpsClient
                 }
             }
 
-            // This causes UpdateScrollBar() to trigger in TimerUpdate(). Can't figure out right now why just calling
-            // it from here doesn't work.
-            updateScrollBar = true;
+            UpdateScrollBar();
+            RedrawGrid();
+            RedrawResources();
         }
         public static ResourceInfo? GetResourceFromSelectedRow(int row)
         {
@@ -444,7 +444,7 @@ namespace BridgeOpsClient
             {
                 schView.selectedConferences.Clear();
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
-                int resource = schView.GetResourceFromY(e.GetPosition(schView).Y);
+                int resource = schView.GetResourceFromY(e.GetPosition(schView).Y, true);
                 if (schView.currentConference != null)
                     App.EditConference(schView.currentConference.id);
                 else if (resource != -1)
@@ -530,6 +530,7 @@ namespace BridgeOpsClient
                 if (wasDraggingConference && dragMouseHADmoved && schView.currentConference != null)
                 {
                     List<int> conferenceIDs = new();
+                    List<string> conferenceNames = new();
                     List<DateTime> starts = new();
                     List<DateTime> ends = new();
                     List<int> resourceIDs = new();
@@ -543,6 +544,7 @@ namespace BridgeOpsClient
                                                  c.resourceRow != c.moveOriginResourceRow)))
                         {
                             conferenceIDs.Add(c.id);
+                            conferenceNames.Add(c.title);
                             starts.Add(c.start);
                             ends.Add(c.end);
                             resourceIDs.Add(c.resourceID);
@@ -551,7 +553,7 @@ namespace BridgeOpsClient
                     }
 
                     if (conferenceIDs.Count > 0)
-                        App.SendConferenceQuickMoveRequest(conferenceIDs, starts, ends,
+                        App.SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames, starts, ends,
                                                            resourceIDs, resourceRows);
                 }
                 else if (schView.currentConference != null && !conferenceSelectionAffected && !dragMouseHADmoved)
@@ -632,7 +634,7 @@ namespace BridgeOpsClient
                 {
                     var dragConfs = DragConferences;
 
-                    int resourceRow = schView.GetResourceFromY(Mouse.GetPosition(schView).Y);
+                    int resourceRow = schView.GetResourceFromY(Mouse.GetPosition(schView).Y, true);
                     int resourceRowDif = resourceRow - currentAtStartOfDrag.moveOriginTotalRow;
 
                     // Make sure the row difference is legal and restrict if it isn't.
@@ -1094,7 +1096,7 @@ namespace BridgeOpsClient
                     if (yPix >= 0)
                         dc.DrawLine(penDivider, new Point(.5f, yPix), new Point(ActualWidth, yPix));
 
-                    int row = view.GetResourceFromY(yPix);
+                    int row = view.GetResourceFromY(yPix, false);
                     PageConferenceView.ResourceInfo? resource = PageConferenceView.GetResourceFromSelectedRow(row);
                     if (resource != null)
                     {
@@ -1117,7 +1119,7 @@ namespace BridgeOpsClient
                 // Highlight cursor resource.
                 if (view.cursor != null)
                 {
-                    double y = view.GetResourceFromY(view.cursor.Value.Y);
+                    double y = view.GetResourceFromY(view.cursor.Value.Y, false);
 
                     if (y >= 0)
                     {
@@ -1483,7 +1485,7 @@ namespace BridgeOpsClient
                     (conferenceView.drag == PageConferenceView.Drag.None ||
                      conferenceView.drag == PageConferenceView.Drag.Scroll))
                 {
-                    double y = GetResourceFromY(cursor.Value.Y);
+                    double y = GetResourceFromY(cursor.Value.Y, true);
                     if (y >= 0)
                     {
                         y *= zoomResourceCurrent;
@@ -1623,10 +1625,13 @@ namespace BridgeOpsClient
             return ret > 1 ? 1 : ret;
         }
 
-        public int GetResourceFromY(double y)
+        public int GetResourceFromY(double y, bool capped)
         {
             int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
-            return resource < PageConferenceView.totalCapacity ? resource : PageConferenceView.totalCapacity - 1;
+            if (capped)
+                return resource < PageConferenceView.totalCapacity ? resource : PageConferenceView.totalCapacity - 1;
+            else
+                return resource;
         }
         public double GetYfromResource(int resourceID, int resourceRow)
         {
