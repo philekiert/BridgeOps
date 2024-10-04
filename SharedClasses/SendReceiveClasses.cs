@@ -1503,7 +1503,8 @@ namespace SendReceiveClasses
                 commands.Add("DELETE FROM Connection " +
                             $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID.ToString()!} " +
                               $"AND {Glo.Tab.CONNECTION_ID} NOT IN ({string.Join(", ", connectionIDs)});");
-
+            else
+                commands.Add($"DELETE FROM Connection WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID.ToString()!};");
 
             if (connections.Count > 0)
             {
@@ -1574,13 +1575,11 @@ namespace SendReceiveClasses
             // If the conferences are new, then confIDs will be null.
             if (confIDs == null)
                 return ""; // Not yet implemented
-            else
-            {
-                for (int i = 0; i < confIDs.Count; ++i)
-                    ids.Append(confIDs[i].ToString() + ", ");
-                if (ids.Length > 2)
-                    ids.Remove(ids.Length - 2, 2);
-            }
+
+            for (int i = 0; i < confIDs.Count; ++i)
+                ids.Append(confIDs[i].ToString() + ", ");
+            if (ids.Length > 2)
+                ids.Remove(ids.Length - 2, 2);
 
             StringBuilder str = new();
             str.Append("WITH NewConfs AS (" +
@@ -1592,10 +1591,10 @@ namespace SendReceiveClasses
             str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
                        $"JOIN Conference c " +
                            $"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
-                          $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
-                          $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
-                          $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
-                          $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
+                           $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
 
             str.Append("IF @@ROWCOUNT > 0 BEGIN " +
                        "THROW 50000, 'This move would result in one or more row clashes.', 1; END");
@@ -1604,8 +1603,11 @@ namespace SendReceiveClasses
         }
         public static string SqlCheckForDialNoClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
-            StringBuilder idIn = new();
             // Build a list of IDs.
+            if (confIDs == null)
+                return ""; // Not yet implemented
+
+            StringBuilder idIn = new();
             for (int i = 0; i < confIDs.Count; ++i)
                 idIn.Append(confIDs[i].ToString() + ", ");
             if (idIn.Length > 2)
@@ -1639,6 +1641,92 @@ namespace SendReceiveClasses
                        "THROW 50000, 'This move would result in one or more dial number clashes.', 1; END");
 
             return str.ToString();
+        }
+        public static string SqlCheckForResourceOverflows(List<int>? confIDs, List<DateTime> starts, List<DateTime> ends,
+                                                          SqlConnection sqlConnect)
+        {
+            if (starts.Count != ends.Count)
+                return "";
+
+            if (confIDs == null)
+                return ""; // Not yet implemented
+
+            // Built a list of IDs.
+            StringBuilder idIn = new();
+            for (int i = 0; i < confIDs.Count; ++i)
+                idIn.Append(confIDs[i].ToString() + ", ");
+            if (idIn.Length > 2)
+                idIn.Remove(idIn.Length - 2, 2);
+
+            // Build a list of time checks.
+            List<string> whereTimes = new();
+            for (int i = 0; i < starts.Count; ++i)
+                whereTimes.Add($"(f.{Glo.Tab.CONFERENCE_END} >= '{SqlAssist.DateTimeToSQL(starts[i], false)}' AND " +
+                               $"f.{Glo.Tab.CONFERENCE_START} <= '{SqlAssist.DateTimeToSQL(ends[i], false)}')");
+
+            // Run a command to:
+            // 1) Pull a list of conferences including dial no counts.
+            // 2) Create a series of points, each adding the conferences's dial numbers at its start point start, then
+            //    subtracting them at the ends.
+            // 3) Create a list of rows that each report their current conference and connection load at the given
+            //    points, partitioned by resource ID.
+            // 4) Narrow down the list to only contain capacity overflows.
+            // 5) Report all needed information for SqlDataReader's consumption, then throw if there were errors.
+            return $@"
+WITH DialCounts AS (
+    SELECT f.Start_Time,
+           f.End_Time,
+           f.Resource_ID,
+           COUNT(n.Connection_ID) AS DialCount
+    FROM Conference f
+    LEFT JOIN Connection n ON f.Conference_ID = n.Conference_ID
+    WHERE {string.Join(" OR ", whereTimes)} 
+    GROUP BY f.Conference_ID, f.Start_Time, f.End_Time, f.Resource_ID
+),
+TimeWindows AS (
+    SELECT Start_Time AS TimePoint,
+           Resource_ID,
+		   DialCount,
+		   1 AS ConferenceCount
+    FROM DialCounts
+    UNION ALL
+    SELECT End_Time AS TimePoint,
+           Resource_ID,
+		   -DialCount,
+		   -1 AS ConferenceCount
+    FROM DialCounts
+),
+CumulativeLoad AS (
+SELECT TimePoint,
+       Resource_ID,
+	   SUM(DialCount) OVER (PARTITION BY Resource_ID ORDER BY TimePoint) AS CumulativeDialCount,
+	   SUM(ConferenceCount) OVER (PARTITION BY Resource_ID ORDER BY TimePoint) AS CumulativeConferenceCount
+FROM TimeWindows
+),
+CumulativeLoadPoints AS (
+SELECT TimePoint, cl.Resource_ID,
+	   CASE WHEN CumulativeDialCount > Connection_Capacity
+            THEN CumulativeDialCount ELSE NULL END AS CumulativeDialCount,
+	   CASE WHEN CumulativeConferenceCount > Conference_Capacity
+            THEN CumulativeConferenceCount ELSE NULL END AS CumulativeConferenceCount
+FROM CumulativeLoad cl
+JOIN Resource r ON r.Resource_ID = cl.Resource_ID
+			   AND cl.CumulativeDialCount > r.Connection_Capacity
+			   OR cl.CumulativeConferenceCount > r.Conference_Capacity
+
+)
+SELECT f.Conference_ID, f.Resource_ID, lp.TimePoint, lp.CumulativeDialCount, lp.CumulativeConferenceCount
+FROM Conference f
+JOIN CumulativeLoadPoints lp ON lp.TimePoint >= f.Start_Time 
+						    AND lp.TimePoint <= f.End_Time
+							AND lp.Resource_ID = f.Resource_ID
+WHERE f.Conference_ID IN ({idIn.ToString()});
+
+IF @@ROWCOUNT > 0
+BEGIN
+    THROW 50000, 'This move would result in one or more resource overflows.', 1;
+END
+";
         }
     }
 

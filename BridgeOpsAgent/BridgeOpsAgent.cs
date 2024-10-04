@@ -2851,6 +2851,7 @@ internal class BridgeOpsAgent
                         $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
             coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect));
             coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
+            coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, starts, ends, sqlConnect));
 
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
             if (com.ExecuteNonQuery() == 0)
