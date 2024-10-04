@@ -497,7 +497,7 @@ public class ConsoleController
 
     private int GenerateTestData()
     {
-        Writer.Message("If the Organisations.csv and Assets.csv already exist," +
+        Writer.Message("If Organisations.csv or Assets.csv already exist," +
                        "this will overwrite them. Continue?");
         if (!Writer.YesNo())
             return 0;
@@ -530,7 +530,7 @@ public class ConsoleController
             string parent = parents[r.Next(0, 4)];
             o.AppendLine($"SSA{i},{parent},{parent} SSA{i},{i},{orgNotes[r.Next(0, 4)]},1");
 
-            int assets = r.Next(0, 10);
+            int assets = r.Next(1, 10);
             for (int j = 0; j < assets; ++j)
                 a.AppendLine($"42-{assetIndex++},SSA{i},Tested and functional at installed location.");
         }

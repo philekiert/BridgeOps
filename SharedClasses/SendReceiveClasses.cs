@@ -1583,116 +1583,62 @@ namespace SendReceiveClasses
             }
 
             StringBuilder str = new();
-            //StringBuilder str = new("CREATE TABLE #RowClashes (ConfID INT);");
-            //str.Append("INSERT INTO #RowClashes ");
             str.Append("WITH NewConfs AS (" +
                       $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
                              $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
                              $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
                       $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({ids.ToString()}) " +
                       $") ");
-            str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc JOIN Conference c ");
-            str.Append($"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
-                       $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
-                       $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
-                       $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
-                       $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
+            str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
+                       $"JOIN Conference c " +
+                           $"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
+                          $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
+                          $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
+                          $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
+                          $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
 
             str.Append("IF @@ROWCOUNT > 0 BEGIN " +
                        "THROW 50000, 'This move would result in one or more row clashes.', 1; END");
 
             return str.ToString();
         }
-        public static SelectResult SqlCheckForDialNoClashes(List<int> confIDs, List<string> confNames,
-                                                            List<DateTime> starts, List<DateTime> ends,
-                                                            SqlConnection sqlConnect)
+        public static string SqlCheckForDialNoClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
-            // Time to do some weird stuff with Collections to break conferences out by individual dialNos.
-            StringBuilder ids = new();
-            Dictionary<int, List<string>> dialNosByConference = new();
-            foreach (int id in confIDs)
-            {
-                ids.Append(id.ToString() + ", ");
-                dialNosByConference.Add(id, new());
-            }
-            // Remove the trailing ", ".
-            ids.Remove(ids.Length - 2, 2);
+            StringBuilder idIn = new();
+            // Build a list of IDs.
+            for (int i = 0; i < confIDs.Count; ++i)
+                idIn.Append(confIDs[i].ToString() + ", ");
+            if (idIn.Length > 2)
+                idIn.Remove(idIn.Length - 2, 2);
 
-            string com = $"SELECT {Glo.Tab.DIAL_NO}, {Glo.Tab.CONFERENCE_ID} FROM Connection " +
-                         $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({ids.ToString()}) " +
-                         $"ORDER BY {Glo.Tab.CONFERENCE_ID};";
-            SqlDataReader reader = new SqlCommand(com, sqlConnect).ExecuteReader();
-            while (reader.Read())
-                dialNosByConference[reader.GetInt32(1)].Add(reader.GetString(0));
-            reader.Close();
+            StringBuilder str = new();
+            str.Append("WITH NewConnections AS (" +
+                      $"SELECT f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_TITLE}, n.{Glo.Tab.DIAL_NO}, " +
+                             $"f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END} " +
+                       "FROM Connection n " +
+                      $"INNER JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                      $"WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
+                      $") ");
+            str.Append($"SELECT nc.{Glo.Tab.CONFERENCE_ID}, " +
+                              $"nc.{Glo.Tab.CONFERENCE_TITLE}, " +
+                              $"nc.{Glo.Tab.CONFERENCE_START}, " +
+                              $"nc.{Glo.Tab.CONFERENCE_END}, " +
+                              $"nc.{Glo.Tab.DIAL_NO}, " +
+                              $"f.{Glo.Tab.CONFERENCE_ID}, " +
+                              $"f.{Glo.Tab.CONFERENCE_TITLE}, " +
+                              $"f.{Glo.Tab.CONFERENCE_START}, " +
+                              $"f.{Glo.Tab.CONFERENCE_END} " +
+                       $"FROM NewConnections nc " +
+                       $"JOIN Connection n ON n.{Glo.Tab.DIAL_NO} = nc.{Glo.Tab.DIAL_NO} " +
+                       $"JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                                        $"AND f.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
+                                        $"AND f.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
+                                        $"AND f.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
 
-            List<string> dialNos = new();
-            int confCount = confIDs.Count;
-            for (int i = 0; i < confCount; ++i)
-            {
-                int id = confIDs[0];
-                string name = confNames[0];
-                DateTime start = starts[0];
-                DateTime end = ends[0];
-                confIDs.RemoveAt(0);
-                confNames.RemoveAt(0);
-                starts.RemoveAt(0);
-                ends.RemoveAt(0);
-                foreach (string s in dialNosByConference[id])
-                {
-                    confIDs.Add(id);
-                    confNames.Add(name);
-                    dialNos.Add(s);
-                    starts.Add(start);
-                    ends.Add(end);
-                }
-            }
+            str.Append("IF @@ROWCOUNT > 0 BEGIN " +
+                       "THROW 50000, 'This move would result in one or more dial number clashes.', 1; END");
 
-            return SqlCheckForDialNoClashes(confIDs, confNames, dialNos, starts, ends, sqlConnect);
-        }
-        public static SelectResult SqlCheckForDialNoClashes(List<int>? confIDs, List<string> confNames,
-                                                            List<string> dialNos,
-                                                            List<DateTime> starts, List<DateTime> ends,
-                                                            SqlConnection sqlConnect)
-        {
-            for (int i = 0; i < confNames.Count; ++i)
-                confNames[i] = SqlAssist.SecureValue(confNames[i]);
-            for (int i = 0; i < dialNos.Count; ++i)
-                dialNos[i] = SqlAssist.SecureValue(dialNos[i]);
-            List<string> confIdStrs = new List<string>();
-            // If the conferences are new, then confIDs will be null.
-            if (confIDs == null)
-                for (int i = 0; i < confNames.Count; ++i)
-                    confIdStrs.Add("NULL");
-            else
-                for (int i = 0; i < confIDs.Count; ++i)
-                    confIdStrs.Add(confIDs[i].ToString());
-
-            // This function returns a list of indices relative to the supplied lists.
-            StringBuilder str = new("CREATE TABLE #DialNoClashCheck (ConfID INT, ConfName VARCHAR(MAX), " +
-                                    "DialNo VARCHAR(MAX), StartTime DATETIME, EndTime DATETIME); ");
-            str.Append("INSERT INTO #DialNoClashCheck VALUES (");
-            List<string> inserts = new();
-            for (int i = 0; i < dialNos.Count; ++i)
-            {
-                inserts.Add(confIdStrs[i] + ", '" + confNames[i] + "', '" + dialNos[i] + "', '" +
-                            SqlAssist.DateTimeToSQL(starts[i], false) + "', '" +
-                            SqlAssist.DateTimeToSQL(ends[i], false) + "'");
-            }
-            str.Append(string.Join("), (", inserts) + "); ");
-            str.Append("SELECT DISTINCT t.ConfID, t.ConfName, t.DialNo, t.StartTime, t.EndTime, " +
-                                      $"f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_TITLE}, " +
-                                      $"f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END} " +
-                       "FROM #DialNoClashCheck t " +
-                      $"JOIN Connection n ON n.{Glo.Tab.DIAL_NO} = t.DialNo " +
-                      $"JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
-                      $"WHERE t.DialNo = n.{Glo.Tab.DIAL_NO} " +
-                        $"AND f.{Glo.Tab.CONFERENCE_END} > t.StartTime " +
-                        $"AND f.{Glo.Tab.CONFERENCE_START} < t.EndTime " +
-                        $"AND t.ConfID != f.{Glo.Tab.CONFERENCE_ID}; ");
-            str.Append("DROP TABLE #DialNoClashCheck;");
-            string s = str.ToString();
-            return new SelectResult(new SqlCommand(str.ToString(), sqlConnect).ExecuteReader());
+            return str.ToString();
         }
     }
 
