@@ -2837,10 +2837,7 @@ internal class BridgeOpsAgent
             sqlConnect.Open();
 
             // Everything .ToList() as we'll be needing clones rather than the original List due to manipulation.
-            SelectResult dialNoClashes = Conference.SqlCheckForDialNoClashes(conferenceIDs.ToList(),
-                                                                             conferenceNames.ToList(),
-                                                                             starts.ToList(), ends.ToList(),
-                                                                             sqlConnect);
+            string dialNoClashes = Conference.SqlCheckForDialNoClashes(conferenceIDs.ToList(), sqlConnect);
             List<string> coms = new();
             // Update all conferences.
             for (int i = 0; i < conferenceIDs.Count; ++i)
@@ -2853,6 +2850,8 @@ internal class BridgeOpsAgent
                             $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
                         $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
             coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect));
+            coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
+            coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, starts, ends, sqlConnect));
 
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
             if (com.ExecuteNonQuery() == 0)
