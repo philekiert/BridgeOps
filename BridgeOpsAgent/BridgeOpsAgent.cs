@@ -1523,7 +1523,7 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
         }
@@ -1556,7 +1556,7 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
         }
@@ -1626,7 +1626,7 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand(command, sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
         }
@@ -1969,7 +1969,7 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
         }
@@ -1999,7 +1999,7 @@ internal class BridgeOpsAgent
 
             SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
         }
@@ -2594,10 +2594,10 @@ internal class BridgeOpsAgent
                                           $"Conference.{Glo.Tab.CONFERENCE_END}, " +
                                           $"Conference.{Glo.Tab.RESOURCE_ID}, " +
                                           $"Conference.{Glo.Tab.CONFERENCE_CANCELLED}, " +
-                                          $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW};",
+                                          $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW} ",
                                  sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             sr.WriteAndFlush(stream, sr.Serialise(result));
         }
@@ -2651,7 +2651,7 @@ internal class BridgeOpsAgent
                                  $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +
                                  $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};",
                                  sqlConnect);
-            SelectResult result = new(com.ExecuteReader());
+            SelectResult result = new(com.ExecuteReader(), false);
             List<object?> confRow = result.rows[0];
             Conference conf = new()
             {
@@ -2694,7 +2694,7 @@ internal class BridgeOpsAgent
                                                          $"Connection.{Glo.Tab.DIAL_NO} " +
                               $"WHERE Connection.{Glo.Tab.CONFERENCE_ID} = {conferenceID} " +
                               $"ORDER BY {Glo.Tab.CONNECTION_ROW};";
-            result = new(com.ExecuteReader());
+            result = new(com.ExecuteReader(), false);
 
             conf.connections = new();
             foreach (var row in result.rows)
@@ -2797,6 +2797,9 @@ internal class BridgeOpsAgent
     // Permission restricted
     private static void ClientConferenceQuickMove(NetworkStream stream, SqlConnection sqlConnect)
     {
+        SelectResult? dialNoClashes = null;
+        SelectResult? resourceOverflows = null;
+
         try
         {
             string sessionID = sr.ReadString(stream);
@@ -2806,6 +2809,9 @@ internal class BridgeOpsAgent
             List<DateTime>? ends = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
             List<int>? resources = sr.Deserialise<List<int>>(sr.ReadString(stream));
             List<int>? resourceRows = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            bool overrideDialNoClashes = stream.ReadByte() == 1;
+            bool overrideResourceOverflows = stream.ReadByte() == 1;
+
 
             if (conferenceIDs == null || conferenceNames == null || starts == null || ends == null ||
                 resources == null || resourceRows == null ||
@@ -2836,8 +2842,6 @@ internal class BridgeOpsAgent
 
             sqlConnect.Open();
 
-            // Everything .ToList() as we'll be needing clones rather than the original List due to manipulation.
-            string dialNoClashes = Conference.SqlCheckForDialNoClashes(conferenceIDs.ToList(), sqlConnect);
             List<string> coms = new();
             // Update all conferences.
             for (int i = 0; i < conferenceIDs.Count; ++i)
@@ -2849,23 +2853,51 @@ internal class BridgeOpsAgent
                             $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
                             $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
                         $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
+
+            // Check for various clashes. Row clashes cannot be bypassed, dial no and resource overflows can.
             coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect));
-            coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
-            coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, starts, ends, sqlConnect));
+            if (!overrideDialNoClashes)
+                coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
+            if (!overrideResourceOverflows)
+                coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, starts, ends, sqlConnect));
 
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
-            if (com.ExecuteNonQuery() == 0)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
-            else
+
+            SqlDataReader reader = com.ExecuteReader();
+            reader.NextResult(); // Clear the first result, as it's for the pointless row clash report.
+            if (!overrideDialNoClashes)
             {
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                dialNoClashes = new(reader, true);
+                reader.NextResult();// This is where the exception will be thrown.
             }
+            if (!overrideResourceOverflows)
+            {
+                resourceOverflows = new(reader, true);
+                reader.NextResult();// This is where the exception will be thrown.
+            }
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
         }
         catch (Exception e)
         {
-            LogError("Couldn't move conference, see error:", e);
-            SafeFail(stream, e.Message);
+            if (dialNoClashes != null)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.DIAL_CLASH_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(dialNoClashes));
+            }
+            else if (resourceOverflows != null)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.RESOURCE_OVERFLOW_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(resourceOverflows));
+            }
+            else
+            {
+                LogError("Couldn't move conference, see error:", e);
+                SafeFail(stream, e.Message);
+            }
         }
         finally
         {
