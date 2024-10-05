@@ -2584,7 +2584,7 @@ internal class BridgeOpsAgent
                                         $"MAX(CONVERT(INT, Connection.{Glo.Tab.CONNECTION_IS_TEST})) AS IsTest, " +
                                          "COUNT(*) AS ConnectionCount " +
                                   "FROM Conference " +
-                                 $"LEFT JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
+                                 $"JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
                                                          $"Connection.{Glo.Tab.CONFERENCE_ID} " +
                                  $"WHERE Conference.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
                                    $"AND Conference.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
@@ -2881,13 +2881,13 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            if (dialNoClashes != null)
+            if (dialNoClashes != null && dialNoClashes.Value.rows.Count > 0)
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
                 sr.WriteAndFlush(stream, Glo.DIAL_CLASH_WARNING);
                 sr.WriteAndFlush(stream, sr.Serialise(dialNoClashes));
             }
-            else if (resourceOverflows != null)
+            else if (resourceOverflows != null && resourceOverflows.Value.rows.Count > 0)
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
                 sr.WriteAndFlush(stream, Glo.RESOURCE_OVERFLOW_WARNING);

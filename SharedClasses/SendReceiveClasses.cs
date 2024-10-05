@@ -1619,6 +1619,8 @@ namespace SendReceiveClasses
                              $"f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END} " +
                        "FROM Connection n " +
                       $"INNER JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                                             $"AND f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
+                                             $"AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 " +
                       $"WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
                       $") ");
             str.Append($"SELECT nc.{Glo.Tab.CONFERENCE_ID}, " +
@@ -1633,6 +1635,7 @@ namespace SendReceiveClasses
                        $"FROM NewConnections nc " +
                        $"JOIN Connection n ON n.{Glo.Tab.DIAL_NO} = nc.{Glo.Tab.DIAL_NO} " +
                        $"JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                                        $"AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 " +
                                         $"AND f.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
                                         $"AND f.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
                                         $"AND f.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
@@ -1679,8 +1682,8 @@ WITH DialCounts AS (
            f.Resource_ID,
            COUNT(ISNULL(n.{Glo.Tab.CONNECTION_ID}, 0)) AS DialCount
     FROM Conference f
-    LEFT JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
-    WHERE {string.Join(" OR ", whereTimes)} 
+    JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
+    WHERE f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 AND ({string.Join(" OR ", whereTimes)})
     GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.Resource_ID
 ),
 TimeWindows AS (
@@ -1721,7 +1724,7 @@ FROM Conference f
 JOIN CumulativeLoadPoints lp ON lp.TimePoint >= f.{Glo.Tab.CONFERENCE_START} 
 						    AND lp.TimePoint <= f.{Glo.Tab.CONFERENCE_END}
 							AND lp.{Glo.Tab.RESOURCE_ID} = f.{Glo.Tab.RESOURCE_ID}
-WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()});
+WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0;
 
 IF @@ROWCOUNT > 0
 BEGIN
