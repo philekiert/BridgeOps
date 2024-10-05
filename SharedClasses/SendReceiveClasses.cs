@@ -1597,7 +1597,7 @@ namespace SendReceiveClasses
                            $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
 
             str.Append("IF @@ROWCOUNT > 0 BEGIN " +
-                       "THROW 50000, 'This move would result in one or more row clashes.', 1; END");
+                       $"THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1; END");
 
             return str.ToString();
         }
@@ -1619,6 +1619,8 @@ namespace SendReceiveClasses
                              $"f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END} " +
                        "FROM Connection n " +
                       $"INNER JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                                             $"AND f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
+                                             $"AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 " +
                       $"WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
                       $") ");
             str.Append($"SELECT nc.{Glo.Tab.CONFERENCE_ID}, " +
@@ -1633,12 +1635,13 @@ namespace SendReceiveClasses
                        $"FROM NewConnections nc " +
                        $"JOIN Connection n ON n.{Glo.Tab.DIAL_NO} = nc.{Glo.Tab.DIAL_NO} " +
                        $"JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                                        $"AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 " +
                                         $"AND f.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
                                         $"AND f.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
                                         $"AND f.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
 
             str.Append("IF @@ROWCOUNT > 0 BEGIN " +
-                       "THROW 50000, 'This move would result in one or more dial number clashes.', 1; END");
+                       $"THROW 50000, '{Glo.DIAL_CLASH_WARNING}', 1; END");
 
             return str.ToString();
         }
@@ -1674,57 +1677,58 @@ namespace SendReceiveClasses
             // 5) Report all needed information for SqlDataReader's consumption, then throw if there were errors.
             return $@"
 WITH DialCounts AS (
-    SELECT f.Start_Time,
-           f.End_Time,
+    SELECT f.{Glo.Tab.CONFERENCE_START},
+           f.{Glo.Tab.CONFERENCE_END},
            f.Resource_ID,
-           COUNT(n.Connection_ID) AS DialCount
+           COUNT(ISNULL(n.{Glo.Tab.CONNECTION_ID}, 0)) AS DialCount
     FROM Conference f
-    LEFT JOIN Connection n ON f.Conference_ID = n.Conference_ID
-    WHERE {string.Join(" OR ", whereTimes)} 
-    GROUP BY f.Conference_ID, f.Start_Time, f.End_Time, f.Resource_ID
+    JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
+    WHERE f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 AND ({string.Join(" OR ", whereTimes)})
+    GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.Resource_ID
 ),
 TimeWindows AS (
-    SELECT Start_Time AS TimePoint,
-           Resource_ID,
+    SELECT {Glo.Tab.CONFERENCE_START} AS TimePoint,
+           {Glo.Tab.RESOURCE_ID},
 		   DialCount,
 		   1 AS ConferenceCount
     FROM DialCounts
     UNION ALL
-    SELECT End_Time AS TimePoint,
-           Resource_ID,
+    SELECT {Glo.Tab.CONFERENCE_END} AS TimePoint,
+           {Glo.Tab.RESOURCE_ID},
 		   -DialCount,
 		   -1 AS ConferenceCount
     FROM DialCounts
 ),
 CumulativeLoad AS (
 SELECT TimePoint,
-       Resource_ID,
-	   SUM(DialCount) OVER (PARTITION BY Resource_ID ORDER BY TimePoint) AS CumulativeDialCount,
-	   SUM(ConferenceCount) OVER (PARTITION BY Resource_ID ORDER BY TimePoint) AS CumulativeConferenceCount
+       {Glo.Tab.RESOURCE_ID},
+	   SUM(DialCount) OVER (PARTITION BY {Glo.Tab.RESOURCE_ID} ORDER BY TimePoint) AS CumulativeDialCount,
+	   SUM(ConferenceCount) OVER (PARTITION BY {Glo.Tab.RESOURCE_ID} ORDER BY TimePoint) AS CumulativeConferenceCount
 FROM TimeWindows
 ),
 CumulativeLoadPoints AS (
-SELECT TimePoint, cl.Resource_ID,
-	   CASE WHEN CumulativeDialCount > Connection_Capacity
-            THEN CumulativeDialCount ELSE NULL END AS CumulativeDialCount,
-	   CASE WHEN CumulativeConferenceCount > Conference_Capacity
-            THEN CumulativeConferenceCount ELSE NULL END AS CumulativeConferenceCount
+SELECT TimePoint, cl.{Glo.Tab.RESOURCE_ID},
+	   CASE WHEN cl.CumulativeDialCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONNECTION}
+            THEN cl.CumulativeDialCount ELSE NULL END AS CumulativeDialCount,
+	   CASE WHEN cl.CumulativeConferenceCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE}
+            THEN cl.CumulativeConferenceCount ELSE NULL END AS CumulativeConferenceCount
 FROM CumulativeLoad cl
-JOIN Resource r ON r.Resource_ID = cl.Resource_ID
-			   AND cl.CumulativeDialCount > r.Connection_Capacity
-			   OR cl.CumulativeConferenceCount > r.Conference_Capacity
+JOIN Resource r ON r.{Glo.Tab.RESOURCE_ID} = cl.{Glo.Tab.RESOURCE_ID}
+			   AND (cl.CumulativeDialCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONNECTION}
+			   OR cl.CumulativeConferenceCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE})
 
 )
-SELECT f.Conference_ID, f.Resource_ID, lp.TimePoint, lp.CumulativeDialCount, lp.CumulativeConferenceCount
+SELECT DISTINCT f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_TITLE}, f.{Glo.Tab.RESOURCE_ID},
+                lp.TimePoint, lp.CumulativeDialCount,lp.CumulativeConferenceCount
 FROM Conference f
-JOIN CumulativeLoadPoints lp ON lp.TimePoint >= f.Start_Time 
-						    AND lp.TimePoint <= f.End_Time
-							AND lp.Resource_ID = f.Resource_ID
-WHERE f.Conference_ID IN ({idIn.ToString()});
+JOIN CumulativeLoadPoints lp ON lp.TimePoint >= f.{Glo.Tab.CONFERENCE_START} 
+						    AND lp.TimePoint <= f.{Glo.Tab.CONFERENCE_END}
+							AND lp.{Glo.Tab.RESOURCE_ID} = f.{Glo.Tab.RESOURCE_ID}
+WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0;
 
 IF @@ROWCOUNT > 0
 BEGIN
-    THROW 50000, 'This move would result in one or more resource overflows.', 1;
+    THROW 50000, '{Glo.RESOURCE_OVERFLOW_WARNING}', 1;
 END
 ";
         }
@@ -2171,7 +2175,7 @@ END
         }
 
         // This constructor will automatically get the required information from the SqlDataReader.
-        public SelectResult(SqlDataReader reader)
+        public SelectResult(SqlDataReader reader, bool keepOpen)
         {
             columnNames = new();
             columnTypes = new();
@@ -2194,7 +2198,9 @@ END
                         row.Add(reader[i]);
                 rows.Add(row);
             }
-            reader.Close();
+
+            if (!keepOpen)
+                reader.Close();
         }
     }
 
