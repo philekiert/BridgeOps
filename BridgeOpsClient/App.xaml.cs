@@ -350,6 +350,10 @@ namespace BridgeOpsClient
                     // decided it might be useful for the user to get back to the app if they accidentally clicked
                     // the button, need to copy some unsaved work, then become disconnected for some reason.
 
+                    // Sometimes logout will fail, make sure to ungrey the button anyway.
+                    if (IsLoggedIn && mainWindow != null)
+                        mainWindow.ToggleLogInOut(false);
+
                     LogIn logIn = new LogIn((MainWindow)Current.MainWindow);
                     logIn.ShowDialog();
                 }
@@ -656,11 +660,11 @@ namespace BridgeOpsClient
 #pragma warning disable CS8602
 #pragma warning disable CS8604
 #pragma warning disable CS8605
-                            PageConferenceView.resources.Add(new PageConferenceView.ResourceInfo((int)row[ids],
-                                                                                                 row[names].ToString(),
-                                                                                                 (int)row[connectionCapacities],
-                                                                                                 (int)row[conferenceCapacities],
-                                                                                                 (int)row[rowAdditional]));
+                            resources.Add((int)row[ids], new ResourceInfo((int)row[ids],
+                                                         row[names].ToString(),
+                                                         (int)row[connectionCapacities],
+                                                         (int)row[conferenceCapacities],
+                                                         (int)row[rowAdditional]));
 #pragma warning restore CS8602
 #pragma warning restore CS8604
 #pragma warning restore CS8605

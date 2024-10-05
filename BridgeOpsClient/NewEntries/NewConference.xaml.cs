@@ -103,12 +103,8 @@ namespace BridgeOpsClient
 
             // Set build the resource name for the dropdown.
             string resourceName = "";
-            foreach (PageConferenceView.ResourceInfo rInfo in PageConferenceView.resources)
-                if (rInfo.id == conf.resourceID)
-                {
-                    resourceName = rInfo.name;
-                    break;
-                }
+            if (PageConferenceView.resources.ContainsKey(conf.resourceID))
+                resourceName = PageConferenceView.resources[conf.resourceID].name;
             resourceName += " " + (conf.resourceRow + 1).ToString();
 
             cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
@@ -623,7 +619,7 @@ namespace BridgeOpsClient
                     return Abort("Must select a valid resource.");
                 --resourceRow; // Row names add 1 to the row number for user readability.
                 bool foundResource = false;
-                foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources)
+                foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources.Values)
                 {
                     if (ri.name == resourceName && resourceRow >= 0 && resourceRow < ri.rowsTotal)
                     {

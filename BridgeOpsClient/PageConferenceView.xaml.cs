@@ -2,6 +2,7 @@
 using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
@@ -45,6 +46,9 @@ namespace BridgeOpsClient
             public int SelectedRow { get { return selectedRow; } }
             public int SelectedRowTotal { get { return selectedRowTotal; } }
 
+            public List<OverflowPoint> capacityChangePoints = new();
+            public List<DateTime> overflowWarningAlternations = new();
+
             public ResourceInfo(int id, string name,
                                 int connectionCapacity, int conferenceCapacity, int rowsAdditional)
             {
@@ -59,15 +63,16 @@ namespace BridgeOpsClient
             public void SetSelectedRow(int selected, int selectedTotal)
             {
                 selectedRow = Math.Clamp(selected, 0, conferenceCapacity + rowsAdditional);
-                selectedRowTotal = Math.Clamp(selectedTotal, 0, totalCapacity);
+                selectedRowTotal = Math.Clamp(selectedTotal, 0, rowsTotal);
             }
         }
         // All resources are stored here, regardless of resources visibility (not yet implemented as of 19/12/2023).
-        public static List<ResourceInfo> resources = new();
+        public static Dictionary<int, ResourceInfo> resources = new();
         public static List<string> resourceRowNames = new();
-        // This is a list of indices, linking displayed rows to resources to allow the user customise the display.
-        public static List<int> resourcesOrder = new();
+        // This is a list of resource IDs, allowing the user to customise the display.
+        public List<int> resourcesOrder = new() { 1, 2 };
         public bool updateScrollBar = false;
+        public int totalRows = 0;
         public void SetResources()
         {
             lock (resourceRowNames)
@@ -75,14 +80,17 @@ namespace BridgeOpsClient
                 lock (resourcesOrder)
                 {
                     resourceRowNames.Clear();
-                    resourcesOrder.Clear();
-                    totalCapacity = 0;
-                    foreach (ResourceInfo ri in resources)
+                    totalRows = 0;
+                    foreach (int i in resourcesOrder)
                     {
-                        resourcesOrder.Add(resourcesOrder.Count);
-                        for (int i = 1; i <= ri.rowsTotal; ++i)
-                            resourceRowNames.Add(ri.name + " " + i);
-                        totalCapacity += ri.rowsTotal;
+                        if (!resources.ContainsKey(i))
+                            continue;
+
+                        ResourceInfo ri = resources[i];
+
+                        for (int n = 1; n <= ri.rowsTotal; ++n)
+                            resourceRowNames.Add(ri.name + " " + n);
+                        totalRows += ri.rowsTotal;
                     }
                 }
             }
@@ -91,38 +99,117 @@ namespace BridgeOpsClient
             RedrawGrid();
             RedrawResources();
         }
-        public static ResourceInfo? GetResourceFromSelectedRow(int row)
+        public ResourceInfo? GetResourceFromSelectedRow(int row)
         {
             int resourceStart = 0;
             if (row >= 0)
             {
-                for (int i = 0; i < resourcesOrder.Count; ++i)
+                foreach (int i in resourcesOrder)
                 {
-                    if (row < resourceStart + resources[resourcesOrder[i]].rowsTotal)
+                    if (!resources.ContainsKey(i))
+                        continue;
+                    if (row < resourceStart + resources[i].rowsTotal)
                     {
-                        resources[resourcesOrder[i]].SetSelectedRow(row - resourceStart, row);
-                        return resources[resourcesOrder[i]];
+                        resources[i].SetSelectedRow(row - resourceStart, row);
+                        return resources[i];
                     }
                     else
-                        resourceStart += resources[resourcesOrder[i]].rowsTotal;
+                        resourceStart += resources[i].rowsTotal;
                 }
             }
             return null;
         }
-        public static int GetResourceRowInView(int resourceID, int resourceRow)
+        public int GetResourceRowInView(int resourceID, int resourceRow)
         {
             int rowsSoFar = 0;
-            foreach (ResourceInfo r in resources)
+            foreach (int i in resourcesOrder)
             {
-                if (r.id == resourceID)
+                if (!resources.ContainsKey(i))
+                    continue;
+                if (resources[i].id == resourceID)
                     return rowsSoFar + resourceRow;
                 else
-                    rowsSoFar += r.rowsTotal;
+                    rowsSoFar += resources[i].rowsTotal;
             }
             return 0;
         }
 
-        public static int totalCapacity = 0;
+        // Used for creating the overflow warning graphics in Render().
+        public static object overflowCalculationLock = new();
+        public void UpdateOverflowPoints()
+        {
+            if (conferenceView == null)
+                return;
+
+            lock (overflowCalculationLock)
+                lock (resources)
+                {
+                    foreach (ResourceInfo ri in resources.Values)
+                    {
+                        ri.capacityChangePoints.Clear();
+                        ri.overflowWarningAlternations.Clear();
+                    }
+
+                    // First, calculate resource change points.
+                    lock (conferences)
+                    {
+                        foreach (var kvp in conferences)
+                        {
+
+                            Conference c = kvp.Value;
+                            if (c.cancelled || !resources.ContainsKey(c.resourceID))
+                                continue;
+
+                            ResourceInfo ri = resources[c.resourceID];
+                            ri.capacityChangePoints.Add(new(c.start, c.connectionCount, 1, c.resourceID));
+                            ri.capacityChangePoints.Add(new(c.end, -c.connectionCount, -1, c.resourceID));
+                        }
+                    }
+
+                    foreach (ResourceInfo ri in resources.Values)
+                    {
+                        ri.capacityChangePoints = ri.capacityChangePoints.OrderBy(e => e.point).ToList();
+
+                        // Build up a running list of points at which the warning switches on and off.
+                        int currentConnections = 0;
+                        int currentConferences = 0;
+                        bool on = false;
+                        foreach (OverflowPoint point in ri.capacityChangePoints)
+                        {
+                            currentConnections += point.change;
+                            currentConferences += point.confAdd;
+
+                            if (!on && (currentConnections > ri.connectionCapacity ||
+                                        currentConferences > ri.conferenceCapacity))
+                            {
+                                ri.overflowWarningAlternations.Add(point.point);
+                                on = true;
+                            }
+                            else if (on && (currentConnections <= ri.connectionCapacity &&
+                                            currentConferences <= ri.conferenceCapacity))
+                            {
+                                ri.overflowWarningAlternations.Add(point.point);
+                                on = false;
+                            }
+                        }
+                    }
+                }
+        }
+        public struct OverflowPoint
+        {
+            public DateTime point;
+            public int change;
+            public int confAdd; // +1 if starting, -1 if ending.
+            public int resourceID;
+            public OverflowPoint(DateTime point, int change, int confAdd, int resourceID)
+            {
+                this.point = point;
+                this.change = change;
+                this.confAdd = confAdd;
+                this.resourceID = resourceID;
+            }
+        }
+
         float smoothZoomSpeed = .25f;
 
         public PageConferenceView()
@@ -139,6 +226,7 @@ namespace BridgeOpsClient
             schRuler.view = schView;
             schRuler.res = schResources;
 
+            schResources.conferenceView = this;
             schView.conferenceView = this;
 
             MainWindow.pageConferenceViews.Add(this);
@@ -211,15 +299,20 @@ namespace BridgeOpsClient
                     {
                         // Copy any meaningful data over, then update the reference in the dictionary.
                         Conference dc = conferences[c.id];
-                        dc.start = c.start;
-                        dc.end = c.end;
-                        dc.resourceID = c.resourceID;
-                        dc.resourceRow = c.resourceRow;
-                        dc.moveOriginResourceID = c.moveOriginResourceID;
-                        dc.moveOriginResourceRow = c.moveOriginResourceRow;
-                        dc.moveOriginStart = c.moveOriginStart;
-                        dc.resizeOriginStart = c.resizeOriginStart;
-                        dc.resizeOriginEnd = c.resizeOriginEnd;
+                        if (drag == Drag.Move || drag == Drag.Resize)
+                        {
+                            // Only retain this information if the user is current dragging to prevent conferences
+                            // jumping around.
+                            dc.start = c.start;
+                            dc.end = c.end;
+                            dc.resourceID = c.resourceID;
+                            dc.resourceRow = c.resourceRow;
+                            dc.moveOriginResourceID = c.moveOriginResourceID;
+                            dc.moveOriginResourceRow = c.moveOriginResourceRow;
+                            dc.moveOriginStart = c.moveOriginStart;
+                            dc.resizeOriginStart = c.resizeOriginStart;
+                            dc.resizeOriginEnd = c.resizeOriginEnd;
+                        }
                         conferencesToAddToSelection.Add(dc);
                         conferencesToRemoveFromSelection.Add(c);
                     }
@@ -232,7 +325,7 @@ namespace BridgeOpsClient
                     schView.selectedConferences.Add(c);
             }
 
-
+            UpdateOverflowPoints();
             searchTimeframeThreadQueued = false;
         }
 
@@ -460,7 +553,7 @@ namespace BridgeOpsClient
                 drag = Drag.Scroll;
 
                 // Select conferences
-                if (schView.currentConference != null)
+                if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] && schView.currentConference != null)
                 {
                     if (!CtrlDown() && !DragConferences.Contains(schView.currentConference))
                     {
@@ -574,8 +667,9 @@ namespace BridgeOpsClient
                                     c.resourceRow = c.moveOriginResourceRow;
                                 }
                             }
-                            schView.selectedConferences.Clear();
+                            //schView.selectedConferences.Clear();
                             SearchTimeframe();
+                            // schView.UpdateOverflowPoints(); will be called by SearchtimeFrame().
                         }
                     }
                 }
@@ -700,7 +794,8 @@ namespace BridgeOpsClient
                         c.end = newConfStart + confLength;
 
                         // Apply the new resource.
-                        ResourceInfo? ri = GetResourceFromSelectedRow(c.moveOriginResourceRow + resourceRowDif);
+                        int rowInView = GetResourceRowInView(c.moveOriginResourceID, c.moveOriginResourceRow);
+                        ResourceInfo? ri = GetResourceFromSelectedRow(rowInView + resourceRowDif);
                         if (ri != null)
                         {
                             c.resourceID = ri.id;
@@ -708,6 +803,8 @@ namespace BridgeOpsClient
                         }
                     }
                 }
+
+                UpdateOverflowPoints();
             }
         }
 
@@ -1073,6 +1170,8 @@ namespace BridgeOpsClient
 
     public class ScheduleResources : Canvas
     {
+        public PageConferenceView? conferenceView;
+
         public ScheduleView? view;
 
         Typeface segoeUI = new Typeface("Segoe UI");
@@ -1097,7 +1196,7 @@ namespace BridgeOpsClient
         // public members from ScheduleView.
         protected override void OnRender(DrawingContext dc)
         {
-            if (view != null)
+            if (view != null && conferenceView != null)
             {
                 // Background
                 dc.DrawRectangle(Brushes.White,
@@ -1120,7 +1219,7 @@ namespace BridgeOpsClient
                         dc.DrawLine(penDivider, new Point(.5f, yPix), new Point(ActualWidth, yPix));
 
                     int row = view.GetResourceFromY(yPix, false);
-                    PageConferenceView.ResourceInfo? resource = PageConferenceView.GetResourceFromSelectedRow(row);
+                    PageConferenceView.ResourceInfo? resource = conferenceView.GetResourceFromSelectedRow(row);
                     if (resource != null)
                     {
                         FormattedText formattedText = new(resource.name + " " + (resource.SelectedRow + 1).ToString(),
@@ -1142,7 +1241,7 @@ namespace BridgeOpsClient
                 // Highlight cursor resource.
                 if (view.cursor != null)
                 {
-                    double y = view.GetResourceFromY(view.cursor.Value.Y, false);
+                    double y = view.GetResourceFromY(view.cursor.Value.Y, true);
 
                     if (y >= 0)
                     {
@@ -1211,6 +1310,7 @@ namespace BridgeOpsClient
         Brush brsConference;
         Brush brsConferenceHover;
         Brush brsConferenceBorder;
+        Brush brsOverflow;
         Pen penConferenceBorder;
         Pen penStylus;
         Pen penStylusFade;
@@ -1230,6 +1330,7 @@ namespace BridgeOpsClient
             clrConference.A = 255;
             brsConferenceBorder = new SolidColorBrush(clrConference);
             penConferenceBorder = new Pen(brsConferenceBorder, 1);
+            brsOverflow = new SolidColorBrush(Color.FromArgb(50, 166, 65, 85));
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
@@ -1239,6 +1340,7 @@ namespace BridgeOpsClient
             brsConferenceHover.Freeze();
             brsConferenceBorder.Freeze();
             penConferenceBorder.Freeze();
+            brsOverflow.Freeze();
 
             scheduleTime = DateTime.Now;
             lastScheduleTime = scheduleTime;
@@ -1358,6 +1460,47 @@ namespace BridgeOpsClient
                     incrementTicks = ticks5Min;
                 }
 
+                // Draw any conference overflow warnings beneath the grid lines.
+                lock (PageConferenceView.resources)
+                {
+                    foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources.Values)
+                    {
+                        double startY = GetYfromResource(ri.id, 0);
+                        double endY = GetYfromResource(ri.id, ri.rowsTotal);
+
+                        // Skip if out of frame.
+                        if (endY > 0 && startY < ActualHeight)
+                        {
+                            // Only draw as far as necessary.
+                            if (startY < 0)
+                                startY = 0;
+                            if (endY > ActualHeight)
+                                endY = ActualHeight;
+
+                            for (int i = 0; i < ri.overflowWarningAlternations.Count; i += 2)
+                            {
+                                DateTime s = ri.overflowWarningAlternations[i];
+                                DateTime e = ri.overflowWarningAlternations[i + 1];
+
+                                // Skip if out of frame.
+                                if (e > start && s < end)
+                                {
+                                    // Only draw as far as necessary.
+                                    if (s < start)
+                                        s = start;
+                                    if (e > end)
+                                        e = end;
+
+                                    double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                                    double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                                    Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);
+                                    dc.DrawRectangle(brsOverflow, null, r);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Get the start time, rounded down to the nearest increment.
                 DateTime t = start.AddTicks(-(start.Ticks % incrementTicks));
 
@@ -1404,7 +1547,7 @@ namespace BridgeOpsClient
                 //dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
                 //                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
 
-                // Draw conferences
+                // Draw conferences.
                 bool resizeCursorSet = false;
                 bool isMouseOverConference = false;
 
@@ -1450,7 +1593,8 @@ namespace BridgeOpsClient
 
                                 if ((cursorPoint.X < area.Left + 5 || cursorPoint.X > area.Right - 5) && !dragMove)
                                 {
-                                    Cursor = Cursors.SizeWE;
+                                    if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+                                        Cursor = Cursors.SizeWE;
                                     resizeCursorSet = true;
                                     if (!conferenceView.dragMouseHasMoved)
                                         conferenceView.resizeStart = cursorPoint.X < area.Left + 5;
@@ -1585,8 +1729,8 @@ namespace BridgeOpsClient
 
         public void EnforceResourceScrollLimits()
         {
-            if (scrollResource > 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight)
-                scrollResource = 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight;
+            if (scrollResource > 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight)
+                scrollResource = 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight;
             if (scrollResource < 0) scrollResource = 0;
         }
 
@@ -1618,8 +1762,8 @@ namespace BridgeOpsClient
         public double DisplayResourceScroll()
         {
             double scroll = scrollResource;
-            if (scroll > 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight)
-                scroll = 1 + (zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight;
+            if (scroll > 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight)
+                scroll = 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight;
             if (scroll < 0) scroll = 0;
             return (int)scroll;
         }
@@ -1628,7 +1772,7 @@ namespace BridgeOpsClient
         {
             // This method calculates how far down lines should be drawn in case of the screen not being filled with
             // resource rows.
-            double maxLineDepth = PageConferenceView.totalCapacity * zoomResourceDisplay + .5f;
+            double maxLineDepth = conferenceView!.totalRows * zoomResourceDisplay + .5f;
             if (maxLineDepth > ActualHeight)
                 maxLineDepth = ActualHeight;
             return maxLineDepth;
@@ -1636,15 +1780,18 @@ namespace BridgeOpsClient
 
         public double ScrollMax()
         {
-            return ((zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight) + 1;
+            if (conferenceView == null) return 1;
+            return ((zoomResourceCurrent * conferenceView.totalRows) - ActualHeight) + 1;
         }
         public double ScrollPercent()
         {
-            return scrollResource / (((zoomResourceCurrent * PageConferenceView.totalCapacity) - ActualHeight) + 1);
+            if (conferenceView == null) return 0;
+            return scrollResource / (((zoomResourceCurrent * conferenceView.totalRows) - ActualHeight) + 1);
         }
         public double ViewPercent()
         {
-            double ret = ActualHeight / ((zoomResourceCurrent * PageConferenceView.totalCapacity) + 1);
+            if (conferenceView == null) return 0;
+            double ret = ActualHeight / ((zoomResourceCurrent * conferenceView.totalRows) + 1);
             return ret > 1 ? 1 : ret;
         }
 
@@ -1652,13 +1799,13 @@ namespace BridgeOpsClient
         {
             int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
             if (capped)
-                return resource < PageConferenceView.totalCapacity ? resource : PageConferenceView.totalCapacity - 1;
+                return resource < conferenceView!.totalRows ? resource : conferenceView!.totalRows - 1;
             else
                 return resource;
         }
         public double GetYfromResource(int resourceID, int resourceRow)
         {
-            double row = PageConferenceView.GetResourceRowInView(resourceID, resourceRow);
+            double row = conferenceView!.GetResourceRowInView(resourceID, resourceRow);
             double y = row * zoomResourceCurrent;
             return y - DisplayResourceScroll();
         }
