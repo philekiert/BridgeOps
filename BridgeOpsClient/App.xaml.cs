@@ -227,7 +227,7 @@ namespace BridgeOpsClient
         public static UserSettings us = new UserSettings();
         public static object streamLock = new();
 
-        public static BridgeOpsClient.MainWindow? mainWindow = null;
+        public static MainWindow? mainWindow = null;
 
         private void ApplicationExit(object sender, EventArgs e)
         {
@@ -1780,7 +1780,8 @@ namespace BridgeOpsClient
 
         public static bool SendConferenceQuickMoveRequest(List<int> conferenceIDs, List<string> conferenceNames,
                                                           List<DateTime> starts, List<DateTime> ends,
-                                                          List<int> resourceIDs, List<int> resourceRows)
+                                                          List<int> resourceIDs, List<int> resourceRows,
+                                                          bool overrideDialNoClashes, bool overrideResourceOverflows)
         {
             lock (streamLock)
             {
@@ -1799,19 +1800,45 @@ namespace BridgeOpsClient
                             sr.WriteAndFlush(stream, sr.Serialise(ends));
                             sr.WriteAndFlush(stream, sr.Serialise(resourceIDs));
                             sr.WriteAndFlush(stream, sr.Serialise(resourceRows));
+                            stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
+                            stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                             int response = stream.ReadByte();
                             if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                            {
                                 return true;
-                            }
                             if (response == Glo.CLIENT_SESSION_INVALID)
-                            {
                                 return SessionInvalidated();
-                            }
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
-                                DisplayError("Could not carry out move. See error:\n\n" +
-                                             sr.ReadString(stream));
+                                string reason = sr.ReadString(stream);
+
+                                // If there was an overridable clash, ask first and then re-run the request if the
+                                // user desires.
+                                if (reason == Glo.DIAL_CLASH_WARNING)
+                                    if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
+                                                    "to proceed regardless?", "Dial Number Clash",
+                                                    DialogWindows.DialogBox.Buttons.YesNo))
+                                    {
+                                        SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                        stream.Close();
+                                        return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,
+                                                                              starts, ends, resourceIDs, resourceRows,
+                                                                              true, overrideResourceOverflows);
+                                    }
+                                    else return false;
+                                else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
+                                    if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
+                                                    "to proceed regardless?", "Resource Overflow",
+                                                    DialogWindows.DialogBox.Buttons.YesNo))
+                                    {
+                                        SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                        stream.Close();
+                                        return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,
+                                                                              starts, ends, resourceIDs, resourceRows,
+                                                                              overrideDialNoClashes, true);
+                                    }
+                                    else return false;
+                                else
+                                    DisplayError("Could not carry out move. See error:\n\n" + reason);
                                 return false;
                             }
                         }

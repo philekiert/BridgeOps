@@ -326,6 +326,7 @@ namespace BridgeOpsClient
             }
 
             UpdateOverflowPoints();
+            queueGridRedrawFromOtherThread = true;
             searchTimeframeThreadQueued = false;
         }
 
@@ -368,6 +369,8 @@ namespace BridgeOpsClient
         {
             RedrawGrid();
         }
+
+        static bool queueGridRedrawFromOtherThread = false;
 
         long lastFrame = 0;
         void TimerUpdate(object? sender, EventArgs e)
@@ -517,7 +520,11 @@ namespace BridgeOpsClient
 
             if (verticalChange) RedrawResources();
             if (horizontalChange) RedrawRuler();
-            if (verticalChange || horizontalChange) RedrawGrid();
+            if (verticalChange || horizontalChange || queueGridRedrawFromOtherThread)
+            {
+                queueGridRedrawFromOtherThread = false;
+                RedrawGrid();
+            }
 
             lastFrame = Environment.TickCount64;
             schView.lastScheduleTime = schView.scheduleTime;
@@ -648,7 +655,7 @@ namespace BridgeOpsClient
                     if (conferenceIDs.Count > 0)
                     {
                         if (!App.SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames, starts, ends,
-                                                                resourceIDs, resourceRows))
+                                                                resourceIDs, resourceRows, false, false))
                         {
                             if (wasDraggingResize)
                                 foreach (Conference c in schView.selectedConferences)

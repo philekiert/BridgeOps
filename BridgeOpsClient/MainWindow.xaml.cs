@@ -178,7 +178,11 @@ namespace BridgeOpsClient
             if (App.IsLoggedIn)
                 App.LogOut();
             else
+            {
                 App.DisplayError("Not logged in.");
+                // Just to be safe:
+                ToggleLogInOut(false);
+            }
         }
 
         private void menuChangePassword_Click(object sender, RoutedEventArgs e)
