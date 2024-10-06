@@ -882,8 +882,6 @@ internal class BridgeOpsAgent
                     ClientConferenceViewSearch(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT)
                     ClientConferenceSelect(stream, sqlConnect);
-                else if (fncByte == Glo.CLIENT_CONFERENCE_CANCEL)
-                    ClientConferenceCancel(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_QUICK_MOVE)
                     ClientConferenceQuickMove(stream, sqlConnect);
                 else
@@ -2722,69 +2720,6 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Couldn't load conference, see error:", e);
-            SafeFail(stream, e.Message);
-        }
-        finally
-        {
-            if (sqlConnect.State == ConnectionState.Open)
-                sqlConnect.Close();
-        }
-    }
-
-    // Permission restricted.
-    private static void ClientConferenceCancel(NetworkStream stream, SqlConnection sqlConnect)
-    {
-        try
-        {
-            string sessionID = sr.ReadString(stream);
-            string conferenceID = sr.ReadString(stream);
-            bool uncancel = stream.ReadByte() == 1;
-            if (!int.TryParse(conferenceID, out _))
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
-                SafeFail(stream, "Conference ID was not an integer.");
-                return;
-            }
-
-            string loginID;
-            lock (clientSessions)
-            {
-                if (!clientSessions.ContainsKey(sessionID))
-                {
-                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
-                    return;
-                }
-                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_CONFERENCES,
-                                                                       Glo.PERMISSION_EDIT))
-                {
-                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
-                    return;
-                }
-                loginID = clientSessions[sessionID].loginID.ToString();
-            }
-
-            // Get the conference details.
-
-            sqlConnect.Open();
-            SqlCommand com = new($"UPDATE Conference " +
-                                 $"SET {Glo.Tab.CONFERENCE_CANCELLED} = {(uncancel ? "0" : "1")}, " +
-                                 $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
-                                 $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
-                                 $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};", sqlConnect);
-            if (com.ExecuteNonQuery() == 0)
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
-                sr.WriteAndFlush(stream, "Conference could not be found in the database.");
-            }
-            else
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
-            }
-        }
-        catch (Exception e)
-        {
-            LogError("Couldn't cancel conference, see error:", e);
             SafeFail(stream, e.Message);
         }
         finally

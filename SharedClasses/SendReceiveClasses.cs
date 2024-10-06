@@ -1430,7 +1430,7 @@ namespace SendReceiveClasses
                                                                          createLoginID.ToString(),
                                                                          SqlAssist.DateTimeToSQL(DateTime.Now,
                                                                                                  false, true),
-                                                                         "0",
+                                                                         cancelled == true ? "1" : "0",
                                                                          notes == null ? "NULL" : notes))
             };
 

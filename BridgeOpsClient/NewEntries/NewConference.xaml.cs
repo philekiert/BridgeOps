@@ -669,6 +669,7 @@ namespace BridgeOpsClient
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
             conference.conferenceID = conferenceIdNullable;
+            conference.cancelled = cancelled;
 
             // Note that when making an update, the creation login is ignored by Conference.SqlUpdate.
             if (edit)
@@ -733,8 +734,12 @@ namespace BridgeOpsClient
                 App.DisplayError("Could not determine conference ID to cancel.");
             else
             {
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+                                        "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
+                                        new() { cancelled ? "0" : "1" }, new() { false },
+                                        Glo.Tab.CONFERENCE_ID, new() { id }, false);
                 // Error message displayed by the below function if it doesn't succeed.
-                if (App.SendConferenceCancelRequest(confID, cancelled))
+                if (App.SendUpdate(req))
                     Close();
             }
         }
