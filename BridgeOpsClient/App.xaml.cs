@@ -10,6 +10,8 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Bibliography;
+using Irony;
 using SendReceiveClasses;
 using static BridgeOpsClient.PageConferenceView;
 using CR = ColumnRecord;
@@ -1012,6 +1014,13 @@ namespace BridgeOpsClient
 
         public static bool SendUpdate(UpdateRequest req)
         {
+            return SendUpdate(req, new(), new(), false, false);
+        }
+        public static bool SendUpdate(UpdateRequest req,
+                                      // Only in use for Conference updates:
+                                      List<DateTime> confStarts, List<DateTime> confEnds,
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows)
+        {
             // Carry out soft duplicate checks if needed.
             try
             {
@@ -1033,7 +1042,7 @@ namespace BridgeOpsClient
                     }
                 }
 
-                // If the number of IDs is > 1, then obviously it will inttroduce duplicates, no need to trouble
+                // If the number of IDs is > 1, then obviously it will introduce duplicates, no need to trouble
                 // the server.
                 if (tablesToSend.Count > 0)
                 {
@@ -1071,6 +1080,13 @@ namespace BridgeOpsClient
                     {
                         stream.WriteByte(Glo.CLIENT_UPDATE);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
+                        if (req.table == "Conference")
+                        {
+                            sr.WriteAndFlush(stream, sr.Serialise(confStarts));
+                            sr.WriteAndFlush(stream, sr.Serialise(confEnds));
+                            stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
+                            stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
+                        }
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             return true;
@@ -1088,7 +1104,38 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError(ErrorConcat("Could not update record. See Error:", sr.ReadString(stream)));
+                            string reason = sr.ReadString(stream);
+
+                            // If there was an overridable clash, ask first and then re-run the request if the
+                            // user desires.
+                            if (reason == Glo.DIAL_CLASH_WARNING)
+                            {
+                                SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
+                                                "to proceed regardless?", "Dial Number Clash",
+                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                {
+                                    stream.Close();
+                                    return SendUpdate(req, confStarts, confEnds, true, overrideResourceOverflows);
+                                }
+                                else return false;
+                            }
+                            else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
+                            {
+                                SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
+                                                "to proceed regardless?", "Resource Overflow",
+                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                {
+                                    stream.Close();
+                                    return SendUpdate(req, confStarts, confEnds, overrideDialNoClashes, true);
+                                }
+                                else return false;
+                            }
+                            else
+                                DisplayError(ErrorConcat("Could not update record. See Error:",
+                                                         sr.ReadString(stream)));
+                            return false;
                         }
                         else throw new Exception();
                     }
@@ -1769,29 +1816,33 @@ namespace BridgeOpsClient
                                 // If there was an overridable clash, ask first and then re-run the request if the
                                 // user desires.
                                 if (reason == Glo.DIAL_CLASH_WARNING)
+                                {
+                                    SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                     if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
                                                     "to proceed regardless?", "Dial Number Clash",
                                                     DialogWindows.DialogBox.Buttons.YesNo))
                                     {
-                                        SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               true, overrideResourceOverflows);
                                     }
                                     else return false;
+                                }
                                 else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
+                                {
+                                    SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                     if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
                                                     "to proceed regardless?", "Resource Overflow",
                                                     DialogWindows.DialogBox.Buttons.YesNo))
                                     {
-                                        SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               overrideDialNoClashes, true);
                                     }
                                     else return false;
+                                }
                                 else
                                     DisplayError("Could not carry out move. See error:\n\n" + reason);
                                 return false;

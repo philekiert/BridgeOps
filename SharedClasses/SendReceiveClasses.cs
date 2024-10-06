@@ -1430,7 +1430,7 @@ namespace SendReceiveClasses
                                                                          createLoginID.ToString(),
                                                                          SqlAssist.DateTimeToSQL(DateTime.Now,
                                                                                                  false, true),
-                                                                         cancelled == true ? "1" : "0",
+                                                                         "0",
                                                                          notes == null ? "NULL" : notes))
             };
 
@@ -1676,15 +1676,35 @@ namespace SendReceiveClasses
             // 4) Narrow down the list to only contain capacity overflows.
             // 5) Report all needed information for SqlDataReader's consumption, then throw if there were errors.
             return $@"
+
+WITH ConferenceTimes AS (
+    SELECT {Glo.Tab.CONFERENCE_ID}, {Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END}
+    FROM Conference
+    WHERE {Glo.Tab.CONFERENCE_ID} IN (SELECT {Glo.Tab.CONFERENCE_ID} FROM @ConferenceIDs)
+),
+DialCounts AS (
+    SELECT f.{Glo.Tab.CONFERENCE_START},
+           f.{Glo.Tab.CONFERENCE_END},
+           f.{Glo.Tab.RESOURCE_ID},
+           COUNT(ISNULL(n.Connection_ID, 0)) AS DialCount
+    FROM Conference f
+    JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
+    JOIN ConferenceTimes ct ON f.{Glo.Tab.CONFERENCE_ID} = ct.{Glo.Tab.CONFERENCE_ID}
+    WHERE f.Cancelled = 0 
+      AND ((f.{Glo.Tab.CONFERENCE_END} >= ct.{Glo.Tab.CONFERENCE_START} AND f.{Glo.Tab.CONFERENCE_START} <= ct.{Glo.Tab.CONFERENCE_END}))
+    GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.{Glo.Tab.RESOURCE_ID}
+),
+
+
 WITH DialCounts AS (
     SELECT f.{Glo.Tab.CONFERENCE_START},
            f.{Glo.Tab.CONFERENCE_END},
-           f.Resource_ID,
+           f.{Glo.Tab.RESOURCE_ID},
            COUNT(ISNULL(n.{Glo.Tab.CONNECTION_ID}, 0)) AS DialCount
     FROM Conference f
     JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
     WHERE f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 AND ({string.Join(" OR ", whereTimes)})
-    GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.Resource_ID
+    GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.{Glo.Tab.RESOURCE_ID}
 ),
 TimeWindows AS (
     SELECT {Glo.Tab.CONFERENCE_START} AS TimePoint,
@@ -2255,6 +2275,10 @@ END
 
         public string SqlUpdate()
         {
+            return SqlUpdate(true);
+        }
+        public string SqlUpdate(bool inTransaction)
+        {
             Prepare();
 
             SqlAssist.AddQuotes(values, columnsNeedQuotes);
@@ -2309,7 +2333,7 @@ END
                         );
             }
 
-            if (commands.Count > 1)
+            if (commands.Count > 1 && inTransaction)
                 return SqlAssist.Transaction(commands.ToArray());
             else
                 return commands[0];

@@ -739,7 +739,7 @@ namespace BridgeOpsClient
                                         new() { cancelled ? "0" : "1" }, new() { false },
                                         Glo.Tab.CONFERENCE_ID, new() { id }, false);
                 // Error message displayed by the below function if it doesn't succeed.
-                if (App.SendUpdate(req))
+                if (App.SendUpdate(req, new() { (DateTime)dtpStart.GetDateTime()! }, new() { (DateTime)dtpEnd.GetDateTime()! }, false, false))
                     Close();
             }
         }

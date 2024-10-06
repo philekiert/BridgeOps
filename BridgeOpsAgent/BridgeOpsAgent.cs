@@ -1809,10 +1809,26 @@ internal class BridgeOpsAgent
     // Permission restricted.
     private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect)
     {
+        // Only used for Conference updates.
+        SelectResult? dialNoClashes = null;
+        SelectResult? resourceOverflows = null;
+        bool overrideDialNoClashes = true;
+        bool overrideResourceOverflows = true;
+        List<DateTime>? confStarts = null;
+        List<DateTime>? confEnds = null;
+
         try
         {
             sqlConnect.Open();
             UpdateRequest req = sr.Deserialise<UpdateRequest>(sr.ReadString(stream));
+            if (req.table == "Conference")
+            {
+                confStarts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
+                confEnds = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
+                overrideDialNoClashes = stream.ReadByte() == 1;
+                overrideResourceOverflows = stream.ReadByte() == 1;
+            }
+
             if (!CheckSessionValidity(req.sessionID, columnRecordID))
             {
                 stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
@@ -1829,23 +1845,75 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlUpdate(), sqlConnect);
+            // If conferences are being upgraded, we may need to check for clashes and overflows.
+            if (req.table == "Conference")
+            {
+                List<string> coms = new() { req.SqlUpdate() };
 
-            if (com.ExecuteNonQuery() == 0)
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
+                int iOut;
+                List<int> confIdInts = new();
+                foreach (string s in req.ids)
+                    if (int.TryParse(s, out iOut))
+                        confIdInts.Add(iOut);
+                    else
+                        throw new("Could not convert all conference IDs to integers.");
+
+                if (!overrideDialNoClashes)
+                    coms.Add(Conference.SqlCheckForDialNoClashes(confIdInts, sqlConnect));
+                if (!overrideResourceOverflows)
+                    coms.Add(Conference.SqlCheckForResourceOverflows(confIdInts, confStarts!, confEnds!, sqlConnect));
+
+                SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
+
+                SqlDataReader reader = com.ExecuteReader();
+                if (!overrideDialNoClashes)
+                {
+                    dialNoClashes = new(reader, true);
+                    reader.NextResult();// This is where the exception will be thrown.
+                }
+                if (!overrideResourceOverflows)
+                {
+                    resourceOverflows = new(reader, true);
+                    reader.NextResult();// This is where the exception will be thrown.
+                }
+
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            }
+            // Otherwise, proceed normally. Change records for assets and organisations are handled in req.SqlUpdate().
             else
             {
-                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                if (req.table == "Resource")
-                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-                else if (req.table == "Conference")
-                    SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                if (new SqlCommand(req.SqlUpdate(), sqlConnect).ExecuteNonQuery() == 0)
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
+                else
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                    if (req.table == "Resource")
+                        SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                    else if (req.table == "Conference")
+                        SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                }
             }
         }
         catch (Exception e)
         {
-            LogError("Couldn't delete record, see error:", e);
-            SafeFail(stream, e.Message);
+            if (dialNoClashes != null && dialNoClashes.Value.rows.Count > 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.DIAL_CLASH_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(dialNoClashes));
+            }
+            else if (resourceOverflows != null && resourceOverflows.Value.rows.Count > 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.RESOURCE_OVERFLOW_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(resourceOverflows));
+            }
+            else
+            {
+                LogError("Couldn't delete record, see error:", e);
+                SafeFail(stream, e.Message);
+            }
         }
         finally
         {
