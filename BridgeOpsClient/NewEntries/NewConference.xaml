@@ -8,7 +8,8 @@
         mc:Ignorable="d"
         Title="New Conference" ResizeMode="CanResize"
         UseLayoutRounding="True" MinHeight="500" MinWidth="850" Width="850"
-        Closed="Window_Closed" ContentRendered="Window_ContentRendered">
+        Closed="Window_Closed" ContentRendered="Window_ContentRendered"
+        KeyDown="CustomWindow_KeyDown">
     <Grid x:Name="grdMain">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="500"/>

@@ -1814,8 +1814,6 @@ internal class BridgeOpsAgent
         SelectResult? resourceOverflows = null;
         bool overrideDialNoClashes = true;
         bool overrideResourceOverflows = true;
-        List<DateTime>? confStarts = null;
-        List<DateTime>? confEnds = null;
 
         try
         {
@@ -1823,8 +1821,6 @@ internal class BridgeOpsAgent
             UpdateRequest req = sr.Deserialise<UpdateRequest>(sr.ReadString(stream));
             if (req.table == "Conference")
             {
-                confStarts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
-                confEnds = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
                 overrideDialNoClashes = stream.ReadByte() == 1;
                 overrideResourceOverflows = stream.ReadByte() == 1;
             }
@@ -1861,7 +1857,7 @@ internal class BridgeOpsAgent
                 if (!overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(confIdInts, sqlConnect));
                 if (!overrideResourceOverflows)
-                    coms.Add(Conference.SqlCheckForResourceOverflows(confIdInts, confStarts!, confEnds!, sqlConnect));
+                    coms.Add(Conference.SqlCheckForResourceOverflows(confIdInts, sqlConnect));
 
                 SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
@@ -2648,9 +2644,9 @@ internal class BridgeOpsAgent
                                         $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
                                         $"Conference.{Glo.Tab.CONFERENCE_CANCELLED}, " +
                                         $"MAX(CONVERT(INT, Connection.{Glo.Tab.CONNECTION_IS_TEST})) AS IsTest, " +
-                                         "COUNT(*) AS ConnectionCount " +
+                                        $"COUNT({Glo.Tab.CONNECTION_ID}) AS ConnectionCount " +
                                   "FROM Conference " +
-                                 $"JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
+                                 $"LEFT JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
                                                          $"Connection.{Glo.Tab.CONFERENCE_ID} " +
                                  $"WHERE Conference.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
                                    $"AND Conference.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
@@ -2862,7 +2858,7 @@ internal class BridgeOpsAgent
             if (!overrideDialNoClashes)
                 coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
             if (!overrideResourceOverflows)
-                coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, starts, ends, sqlConnect));
+                coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, sqlConnect));
 
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 

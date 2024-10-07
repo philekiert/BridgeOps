@@ -555,51 +555,63 @@ namespace BridgeOpsClient
             }
 
             // Drag
-            else if (e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Middle)
+            else
             {
-                drag = Drag.Scroll;
-
-                // Select conferences
-                if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] && schView.currentConference != null)
+                if (e.ChangedButton == MouseButton.Middle)
                 {
-                    if (!CtrlDown() && !DragConferences.Contains(schView.currentConference))
-                    {
-                        schView.selectedConferences = new() { schView.currentConference };
-                        conferenceSelectionAffected = true;
-                    }
-                    else if (!schView.selectedConferences.Contains(schView.currentConference))
-                    {
-                        schView.selectedConferences.Add(schView.currentConference);
-                        conferenceSelectionAffected = true;
-                    }
-
-                    var dragConfs = DragConferences;
-                    if (schView.Cursor == Cursors.SizeWE)
-                    {
-                        drag = Drag.Resize;
-                        currentAtStartOfDrag = schView.currentConference;
-                        foreach (Conference c in dragConfs)
-                        {
-                            c.resizeOriginStart = c.start;
-                            c.resizeOriginEnd = c.end;
-                        }
-                    }
-                    else if (schView.currentConference != null)
-                    {
-                        drag = Drag.Move;
-                        currentAtStartOfDrag = schView.currentConference;
-                        moveOriginCursor = schView.GetDateTimeFromX(e.GetPosition(schView).X);
-                        foreach (Conference c in dragConfs)
-                        {
-                            c.moveOriginStart = c.start;
-                            c.moveOriginResourceID = c.resourceID;
-                            c.moveOriginResourceRow = c.resourceRow;
-                            c.moveOriginTotalRow = GetResourceRowInView(c.resourceID, c.resourceRow);
-                        }
-                    }
+                    drag = Drag.Scroll;
+                    ((IInputElement)sender).CaptureMouse();
                 }
+                else if (e.ChangedButton == MouseButton.Left)
+                {
+                    // Start with Drag.Scroll and adjust if needed.
+                    drag = Drag.Scroll;
 
-                ((IInputElement)sender).CaptureMouse();
+                    // Select conferences
+                    if (schView.currentConference != null)
+                    {
+                        if (!CtrlDown() && !DragConferences.Contains(schView.currentConference))
+                        {
+                            schView.selectedConferences = new() { schView.currentConference };
+                            conferenceSelectionAffected = true;
+                        }
+                        else if (!schView.selectedConferences.Contains(schView.currentConference))
+                        {
+                            schView.selectedConferences.Add(schView.currentConference);
+                            conferenceSelectionAffected = true;
+                        }
+
+                        if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+                        {
+                            var dragConfs = DragConferences;
+                            if (schView.Cursor == Cursors.SizeWE)
+                            {
+                                drag = Drag.Resize;
+                                currentAtStartOfDrag = schView.currentConference;
+                                foreach (Conference c in dragConfs)
+                                {
+                                    c.resizeOriginStart = c.start;
+                                    c.resizeOriginEnd = c.end;
+                                }
+                            }
+                            else if (schView.currentConference != null)
+                            {
+                                drag = Drag.Move;
+                                currentAtStartOfDrag = schView.currentConference;
+                                moveOriginCursor = schView.GetDateTimeFromX(e.GetPosition(schView).X);
+                                foreach (Conference c in dragConfs)
+                                {
+                                    c.moveOriginStart = c.start;
+                                    c.moveOriginResourceID = c.resourceID;
+                                    c.moveOriginResourceRow = c.resourceRow;
+                                    c.moveOriginTotalRow = GetResourceRowInView(c.resourceID, c.resourceRow);
+                                }
+                            }
+                        }
+                    }
+
+                    ((IInputElement)sender).CaptureMouse();
+                }
             }
         }
 

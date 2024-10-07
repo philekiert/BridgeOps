@@ -1645,12 +1645,9 @@ namespace SendReceiveClasses
 
             return str.ToString();
         }
-        public static string SqlCheckForResourceOverflows(List<int>? confIDs, List<DateTime> starts, List<DateTime> ends,
+        public static string SqlCheckForResourceOverflows(List<int>? confIDs,
                                                           SqlConnection sqlConnect)
         {
-            if (starts.Count != ends.Count)
-                return "";
-
             if (confIDs == null)
                 return ""; // Not yet implemented
 
@@ -1661,12 +1658,6 @@ namespace SendReceiveClasses
             if (idIn.Length > 2)
                 idIn.Remove(idIn.Length - 2, 2);
 
-            // Build a list of time checks.
-            List<string> whereTimes = new();
-            for (int i = 0; i < starts.Count; ++i)
-                whereTimes.Add($"(f.{Glo.Tab.CONFERENCE_END} >= '{SqlAssist.DateTimeToSQL(starts[i], false)}' AND " +
-                               $"f.{Glo.Tab.CONFERENCE_START} <= '{SqlAssist.DateTimeToSQL(ends[i], false)}')");
-
             // Run a command to:
             // 1) Pull a list of conferences including dial no counts.
             // 2) Create a series of points, each adding the conferences's dial numbers at its start point start, then
@@ -1676,34 +1667,22 @@ namespace SendReceiveClasses
             // 4) Narrow down the list to only contain capacity overflows.
             // 5) Report all needed information for SqlDataReader's consumption, then throw if there were errors.
             return $@"
-
 WITH ConferenceTimes AS (
-    SELECT {Glo.Tab.CONFERENCE_ID}, {Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END}
-    FROM Conference
-    WHERE {Glo.Tab.CONFERENCE_ID} IN (SELECT {Glo.Tab.CONFERENCE_ID} FROM @ConferenceIDs)
+    SELECT DISTINCT f.{Glo.Tab.CONFERENCE_ID}
+    FROM Conference c
+    JOIN Conference f ON c.{Glo.Tab.CONFERENCE_ID} IN ({idIn})
+                     AND (f.{Glo.Tab.CONFERENCE_END} >= c.{Glo.Tab.CONFERENCE_START}
+                     AND f.{Glo.Tab.CONFERENCE_START} <= c.{Glo.Tab.CONFERENCE_END})
 ),
 DialCounts AS (
     SELECT f.{Glo.Tab.CONFERENCE_START},
            f.{Glo.Tab.CONFERENCE_END},
            f.{Glo.Tab.RESOURCE_ID},
-           COUNT(ISNULL(n.Connection_ID, 0)) AS DialCount
+           COUNT({Glo.Tab.CONNECTION_ID}) AS DialCount
     FROM Conference f
-    JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
+    LEFT JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
     JOIN ConferenceTimes ct ON f.{Glo.Tab.CONFERENCE_ID} = ct.{Glo.Tab.CONFERENCE_ID}
-    WHERE f.Cancelled = 0 
-      AND ((f.{Glo.Tab.CONFERENCE_END} >= ct.{Glo.Tab.CONFERENCE_START} AND f.{Glo.Tab.CONFERENCE_START} <= ct.{Glo.Tab.CONFERENCE_END}))
-    GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.{Glo.Tab.RESOURCE_ID}
-),
-
-
-WITH DialCounts AS (
-    SELECT f.{Glo.Tab.CONFERENCE_START},
-           f.{Glo.Tab.CONFERENCE_END},
-           f.{Glo.Tab.RESOURCE_ID},
-           COUNT(ISNULL(n.{Glo.Tab.CONNECTION_ID}, 0)) AS DialCount
-    FROM Conference f
-    JOIN Connection n ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID}
-    WHERE f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 AND ({string.Join(" OR ", whereTimes)})
+    WHERE f.{Glo.Tab.CONFERENCE_CANCELLED} = 0
     GROUP BY f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_START}, f.{Glo.Tab.CONFERENCE_END}, f.{Glo.Tab.RESOURCE_ID}
 ),
 TimeWindows AS (
@@ -1720,7 +1699,7 @@ TimeWindows AS (
     FROM DialCounts
 ),
 CumulativeLoad AS (
-SELECT TimePoint,
+SELECT DISTINCT TimePoint,
        {Glo.Tab.RESOURCE_ID},
 	   SUM(DialCount) OVER (PARTITION BY {Glo.Tab.RESOURCE_ID} ORDER BY TimePoint) AS CumulativeDialCount,
 	   SUM(ConferenceCount) OVER (PARTITION BY {Glo.Tab.RESOURCE_ID} ORDER BY TimePoint) AS CumulativeConferenceCount

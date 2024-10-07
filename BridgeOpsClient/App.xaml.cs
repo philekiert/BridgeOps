@@ -1014,11 +1014,10 @@ namespace BridgeOpsClient
 
         public static bool SendUpdate(UpdateRequest req)
         {
-            return SendUpdate(req, new(), new(), false, false);
+            return SendUpdate(req, false, false);
         }
         public static bool SendUpdate(UpdateRequest req,
                                       // Only in use for Conference updates:
-                                      List<DateTime> confStarts, List<DateTime> confEnds,
                                       bool overrideDialNoClashes, bool overrideResourceOverflows)
         {
             // Carry out soft duplicate checks if needed.
@@ -1082,8 +1081,6 @@ namespace BridgeOpsClient
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         if (req.table == "Conference")
                         {
-                            sr.WriteAndFlush(stream, sr.Serialise(confStarts));
-                            sr.WriteAndFlush(stream, sr.Serialise(confEnds));
                             stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                         }
@@ -1116,7 +1113,7 @@ namespace BridgeOpsClient
                                                 DialogWindows.DialogBox.Buttons.YesNo))
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, confStarts, confEnds, true, overrideResourceOverflows);
+                                    return SendUpdate(req, true, overrideResourceOverflows);
                                 }
                                 else return false;
                             }
@@ -1128,7 +1125,7 @@ namespace BridgeOpsClient
                                                 DialogWindows.DialogBox.Buttons.YesNo))
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, confStarts, confEnds, overrideDialNoClashes, true);
+                                    return SendUpdate(req, overrideDialNoClashes, true);
                                 }
                                 else return false;
                             }

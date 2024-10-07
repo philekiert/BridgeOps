@@ -739,9 +739,19 @@ namespace BridgeOpsClient
                                         new() { cancelled ? "0" : "1" }, new() { false },
                                         Glo.Tab.CONFERENCE_ID, new() { id }, false);
                 // Error message displayed by the below function if it doesn't succeed.
-                if (App.SendUpdate(req, new() { (DateTime)dtpStart.GetDateTime()! }, new() { (DateTime)dtpEnd.GetDateTime()! }, false, false))
+                if (App.SendUpdate(req, false, false))
                     Close();
             }
+        }
+
+        private void CustomWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            foreach (Connection c in connections)
+                if (Keyboard.FocusedElement == c.txtSearch)
+                    return;
+
+            if (e.Key == Key.Escape)
+                Close();
         }
     }
 }
