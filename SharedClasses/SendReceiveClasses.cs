@@ -1404,34 +1404,35 @@ namespace SendReceiveClasses
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
         }
 
-        public string SqlInsert()
+        public string SqlInsert() { return SqlUpdate(true); }
+        public string SqlInsert(bool asTransaction, bool captureIDs)
         {
             Prepare();
 
             List<string> commands = new()
             {
-                SqlAssist.InsertInto("Conference",
-                                     SqlAssist.ColConcat(additionalCols, Glo.Tab.RESOURCE_ID,
-                                                                         Glo.Tab.CONFERENCE_RESOURCE_ROW,
-                                                                         Glo.Tab.CONFERENCE_TITLE,
-                                                                         Glo.Tab.CONFERENCE_START,
-                                                                         Glo.Tab.CONFERENCE_END,
-                                                                         Glo.Tab.CONFERENCE_CREATION_LOGIN,
-                                                                         Glo.Tab.CONFERENCE_CREATION_TIME,
-                                                                         Glo.Tab.CONFERENCE_CANCELLED,
-                                                                         "Notes"),
-                                     SqlAssist.ValConcat(additionalVals, resourceID.ToString(),
-                                                                         resourceRow.ToString(),
-                                                                         title,
-                                                                         SqlAssist.DateTimeToSQL((DateTime)start!,
-                                                                                                 false, true),
-                                                                         SqlAssist.DateTimeToSQL((DateTime)end!,
-                                                                                                 false, true),
-                                                                         createLoginID.ToString(),
-                                                                         SqlAssist.DateTimeToSQL(DateTime.Now,
-                                                                                                 false, true),
-                                                                         "0",
-                                                                         notes == null ? "NULL" : notes))
+                "INSERT INTO Conference (" + SqlAssist.ColConcat(additionalCols, Glo.Tab.RESOURCE_ID,
+                                                                 Glo.Tab.CONFERENCE_RESOURCE_ROW,
+                                                                 Glo.Tab.CONFERENCE_TITLE,
+                                                                 Glo.Tab.CONFERENCE_START,
+                                                                 Glo.Tab.CONFERENCE_END,
+                                                                 Glo.Tab.CONFERENCE_CREATION_LOGIN,
+                                                                 Glo.Tab.CONFERENCE_CREATION_TIME,
+                                                                 Glo.Tab.CONFERENCE_CANCELLED,
+                                                                 "Notes") + ") " +
+                $"OUTPUT INSERTED.{Glo.Tab.CONFERENCE_ID} INTO #IDs VALUES (" +
+                SqlAssist.ValConcat(additionalVals, resourceID.ToString(),
+                                    resourceRow.ToString(),
+                                    title,
+                                    SqlAssist.DateTimeToSQL((DateTime)start!,
+                                                            false, true),
+                                    SqlAssist.DateTimeToSQL((DateTime)end!,
+                                                            false, true),
+                                    createLoginID.ToString(),
+                                    SqlAssist.DateTimeToSQL(DateTime.Now,
+                                                            false, true),
+                                    "0",
+                                    notes == null ? "NULL" : notes) + ");"
             };
 
             if (connections.Count > 0)
@@ -1464,8 +1465,10 @@ namespace SendReceiveClasses
                 }
             }
 
-
-            return SqlAssist.Transaction(commands.ToArray());
+            if (asTransaction)
+                return SqlAssist.Transaction(commands.ToArray());
+            else
+                return string.Join(" ", commands);
         }
 
         public string SqlUpdate() { return SqlUpdate(true); }
@@ -1574,22 +1577,24 @@ namespace SendReceiveClasses
 
         public static string SqlCheckForRowClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
-            StringBuilder ids = new();
-            // If the conferences are new, then confIDs will be null.
+            StringBuilder idIn = new();
+            // Build a list of IDs.
             if (confIDs == null)
-                return ""; // Not yet implemented
-
-            for (int i = 0; i < confIDs.Count; ++i)
-                ids.Append(confIDs[i].ToString() + ", ");
-            if (ids.Length > 2)
-                ids.Remove(ids.Length - 2, 2);
+                idIn.Append("SELECT ID FROM #IDs");
+            else
+            {
+                for (int i = 0; i < confIDs.Count; ++i)
+                    idIn.Append(confIDs[i].ToString() + ", ");
+                if (idIn.Length > 2)
+                    idIn.Remove(idIn.Length - 2, 2);
+            }
 
             StringBuilder str = new();
             str.Append("WITH NewConfs AS (" +
                       $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
                              $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
                              $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
-                      $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({ids.ToString()}) " +
+                      $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
                       $") ");
             str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
                        $"JOIN Conference c " +
@@ -1606,15 +1611,17 @@ namespace SendReceiveClasses
         }
         public static string SqlCheckForDialNoClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
+            StringBuilder idIn = new();
             // Build a list of IDs.
             if (confIDs == null)
-                return ""; // Not yet implemented
-
-            StringBuilder idIn = new();
-            for (int i = 0; i < confIDs.Count; ++i)
-                idIn.Append(confIDs[i].ToString() + ", ");
-            if (idIn.Length > 2)
-                idIn.Remove(idIn.Length - 2, 2);
+                idIn.Append("SELECT ID FROM #IDs");
+            else
+            {
+                for (int i = 0; i < confIDs.Count; ++i)
+                    idIn.Append(confIDs[i].ToString() + ", ");
+                if (idIn.Length > 2)
+                    idIn.Remove(idIn.Length - 2, 2);
+            }
 
             StringBuilder str = new();
             str.Append("WITH NewConnections AS (" +
@@ -1651,15 +1658,17 @@ namespace SendReceiveClasses
         public static string SqlCheckForResourceOverflows(List<int>? confIDs,
                                                           SqlConnection sqlConnect)
         {
-            if (confIDs == null)
-                return ""; // Not yet implemented
-
-            // Built a list of IDs.
             StringBuilder idIn = new();
-            for (int i = 0; i < confIDs.Count; ++i)
-                idIn.Append(confIDs[i].ToString() + ", ");
-            if (idIn.Length > 2)
-                idIn.Remove(idIn.Length - 2, 2);
+            // Build a list of IDs.
+            if (confIDs == null)
+                idIn.Append("SELECT ID FROM #IDs");
+            else
+            {
+                for (int i = 0; i < confIDs.Count; ++i)
+                    idIn.Append(confIDs[i].ToString() + ", ");
+                if (idIn.Length > 2)
+                    idIn.Remove(idIn.Length - 2, 2);
+            }
 
             // Run a command to:
             // 1) Pull a list of conferences including dial no counts.

@@ -1303,6 +1303,12 @@ internal class BridgeOpsAgent
     // Permission restricted.
     private static void ClientNewInsert(NetworkStream stream, SqlConnection sqlConnect, int target)
     {
+        // Only used for Conference updates.
+        SelectResult? dialNoClashes = null;
+        SelectResult? resourceOverflows = null;
+        bool overrideDialNoClashes = true;
+        bool overrideResourceOverflows = true;
+
         try
         {
             sqlConnect.Open();
@@ -1341,10 +1347,12 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_CONFERENCE)
                 {
                     Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    overrideDialNoClashes = stream.ReadByte() == 1;
+                    overrideResourceOverflows = stream.ReadByte() == 1;
                     if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES,
                         create, out permission))
-                        com.CommandText = newRow.SqlInsert();
+                        com.CommandText = newRow.SqlInsert(false, true);
                 }
                 else if (target == Glo.CLIENT_NEW_RESOURCE)
                 {
@@ -1394,6 +1402,42 @@ internal class BridgeOpsAgent
                     sr.WriteAndFlush(stream, idStr == null ? "" : idStr);
                 }
             }
+            // Conferences also differ in that we may need to run clash and overflow checks.
+            else if (target == Glo.CLIENT_NEW_CONFERENCE)
+            {
+                List<string> coms = new()
+                {
+                    "CREATE TABLE #IDs (ID INT); ", // Temp table used for storing IDs of all inserts.
+                    com.CommandText
+                };
+
+                coms.Add(Conference.SqlCheckForRowClashes(null, sqlConnect));
+                if (!overrideDialNoClashes)
+                    coms.Add(Conference.SqlCheckForDialNoClashes(null, sqlConnect));
+                if (!overrideResourceOverflows)
+                    coms.Add(Conference.SqlCheckForResourceOverflows(null, sqlConnect));
+
+                // Drop the temp ID table.
+                coms.Add("DROP TABLE #IDs;");
+
+                com.CommandText = SqlAssist.Transaction(coms.ToArray());
+
+                SqlDataReader reader = com.ExecuteReader();
+                reader.NextResult();
+                if (!overrideDialNoClashes)
+                {
+                    dialNoClashes = new(reader, true);
+                    reader.NextResult();// This is where the exception will be thrown.
+                }
+                if (!overrideResourceOverflows)
+                {
+                    resourceOverflows = new(reader, true);
+                    reader.NextResult();// This is where the exception will be thrown.
+                }
+
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            }
             else
             {
                 if (com.ExecuteNonQuery() == 0)
@@ -1410,13 +1454,30 @@ internal class BridgeOpsAgent
         }
         catch (Exception e)
         {
-            LogError("Couldn't create new contact. See error:", e);
             if (e.Message.Contains("FOREIGN KEY"))
                 SafeFail(stream, Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY);
             else if (e.Message.Contains("PRIMARY KEY"))
                 SafeFail(stream, "Record ID already exists.");
             else
-                SafeFail(stream, e.Message);
+            {
+                if (dialNoClashes != null && dialNoClashes.Value.rows.Count > 0)
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                    sr.WriteAndFlush(stream, Glo.DIAL_CLASH_WARNING);
+                    sr.WriteAndFlush(stream, sr.Serialise(dialNoClashes));
+                }
+                else if (resourceOverflows != null && resourceOverflows.Value.rows.Count > 0)
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                    sr.WriteAndFlush(stream, Glo.RESOURCE_OVERFLOW_WARNING);
+                    sr.WriteAndFlush(stream, sr.Serialise(resourceOverflows));
+                }
+                else
+                {
+                    LogError("Couldn't insert new row. See error:", e);
+                    SafeFail(stream, e.Message);
+                }
+            }
         }
         finally
         {
@@ -1801,6 +1862,7 @@ internal class BridgeOpsAgent
             {
                 List<string> coms = new() { com.CommandText };
 
+                coms.Add(Conference.SqlCheckForRowClashes(new() { confID }, sqlConnect));
                 if (!overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(new() { confID }, sqlConnect));
                 if (!overrideResourceOverflows)
@@ -1809,6 +1871,7 @@ internal class BridgeOpsAgent
                 com.CommandText = SqlAssist.Transaction(coms.ToArray());
 
                 SqlDataReader reader = com.ExecuteReader();
+                reader.NextResult();
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -1909,6 +1972,7 @@ internal class BridgeOpsAgent
                     else
                         throw new("Could not convert all conference IDs to integers.");
 
+                coms.Add(Conference.SqlCheckForRowClashes(confIdInts, sqlConnect));
                 if (!overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(confIdInts, sqlConnect));
                 if (!overrideResourceOverflows)
@@ -1917,6 +1981,7 @@ internal class BridgeOpsAgent
                 SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
                 SqlDataReader reader = com.ExecuteReader();
+                reader.NextResult();
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);

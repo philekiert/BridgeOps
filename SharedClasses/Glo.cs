@@ -30,8 +30,8 @@ public static class Glo
     public static string NL = Environment.NewLine;
     public static string DNL = Environment.NewLine + Environment.NewLine;
 
-    public static string ROW_CLASH_WARNING = "This move would result in one or more row clashes.";
-    public static string DIAL_CLASH_WARNING = "This move would result in one or more dial number clashes.";
+    public static string ROW_CLASH_WARNING = "This would result in one or more row clashes.";
+    public static string DIAL_CLASH_WARNING = "This would result in one or more dial number clashes.";
     public static string RESOURCE_OVERFLOW_WARNING = "This move would result in one or more resource overflows.";
 
     // Files and Folder Traversal

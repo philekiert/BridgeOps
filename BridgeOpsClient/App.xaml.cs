@@ -765,9 +765,20 @@ namespace BridgeOpsClient
 
         public static bool SendInsert(byte fncByte, object toSerialise)
         {
-            return SendInsert(fncByte, toSerialise, out _);
+            return SendInsert(fncByte, toSerialise, false, false, out _);
         }
+        public static bool SendInsert(byte fncByte, object toSerialise,
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows)
+        {
+            return SendInsert(fncByte, toSerialise, overrideDialNoClashes, overrideResourceOverflows, out _);
+        }
+
         public static bool SendInsert(byte fncByte, object toSerialise, out string returnID)
+        {
+            return SendInsert(fncByte, toSerialise, false, false, out returnID);
+        }
+        public static bool SendInsert(byte fncByte, object toSerialise,
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows, out string returnID)
         {
             // Carry out soft duplicate checks if needed.
             try
@@ -849,6 +860,11 @@ namespace BridgeOpsClient
                     {
                         stream.WriteByte(fncByte);
                         sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
+                        if (fncByte == Glo.CLIENT_NEW_CONFERENCE)
+                        {
+                            stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
+                            stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
+                        }
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
@@ -875,7 +891,37 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError("Could not insert new record. See error:\n\n" + sr.ReadString(stream));
+                            string reason = sr.ReadString(stream);
+                            // If there was an overridable clash, ask first and then re-run the request if the
+                            // user desires.
+                            if (reason == Glo.DIAL_CLASH_WARNING)
+                            {
+                                returnID = "";
+                                SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
+                                                "to proceed regardless?", "Dial Number Clash",
+                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                {
+                                    stream.Close();
+                                    return SendInsert(fncByte, toSerialise, true, overrideResourceOverflows);
+                                }
+                                else return false;
+                            }
+                            else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
+                            {
+                                returnID = "";
+                                SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
+                                                "to proceed regardless?", "Resource Overflow",
+                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                {
+                                    stream.Close();
+                                    return SendInsert(fncByte, toSerialise, overrideDialNoClashes, true);
+                                }
+                                else return false;
+                            }
+                            else
+                                DisplayError(ErrorConcat("Could not insert new record.", reason));
                         }
                     }
                     returnID = "";
@@ -984,8 +1030,11 @@ namespace BridgeOpsClient
                     {
                         stream.WriteByte(fncByte);
                         sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
-                        stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
-                        stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
+                        if (fncByte == Glo.CLIENT_UPDATE_CONFERENCE)
+                        {
+                            stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
+                            stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
+                        }
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             return true;
@@ -1028,8 +1077,7 @@ namespace BridgeOpsClient
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not update record. See Error:",
-                                                         sr.ReadString(stream)));
+                                DisplayError(ErrorConcat("Could not update record. See Error:", reason));
                             return false;
                         }
                     }
@@ -1163,8 +1211,7 @@ namespace BridgeOpsClient
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not update record. See Error:",
-                                                         sr.ReadString(stream)));
+                                DisplayError(ErrorConcat("Could not update record. See Error:", reason));
                             return false;
                         }
                         else throw new Exception();
