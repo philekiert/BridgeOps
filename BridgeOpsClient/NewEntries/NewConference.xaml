@@ -144,7 +144,7 @@
                 <Button x:Name="btnSave" Grid.Column="0" Content="Save"
                         Margin="10 10 5 15" Height="24" Width="46" Style="{StaticResource primary-button}" Click="btnSave_Click"/>
                 <Button x:Name="btnCancel" Grid.Column="1" Content="Cancel" Click="btnCancel_Click"
-                        Margin="5 10 5 15" Height="24" Width="52" IsEnabled="False"/>
+                        Margin="5 10 5 15" Height="24" Width="52"/>
                 <Button x:Name="btnDelete" Grid.Column="2" Content="Delete"
                         Margin="5 10 5 15" Height="24" Width="50" IsEnabled="False" Click="btnDelete_Click"/>
             </Grid>

@@ -10,7 +10,6 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
-using DocumentFormat.OpenXml.Bibliography;
 using Irony;
 using SendReceiveClasses;
 using static BridgeOpsClient.PageConferenceView;
@@ -895,6 +894,9 @@ namespace BridgeOpsClient
         }
 
         public static bool SendUpdate(byte fncByte, object toSerialise)
+        { return SendUpdate(fncByte, toSerialise, false, false); }
+        public static bool SendUpdate(byte fncByte, object toSerialise,
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows)
         {
             // Carry out soft duplicate checks if needed.
             try
@@ -982,6 +984,8 @@ namespace BridgeOpsClient
                     {
                         stream.WriteByte(fncByte);
                         sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
+                        stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
+                        stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             return true;
@@ -995,7 +999,38 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError(ErrorConcat("Could not update record. See Error:", sr.ReadString(stream)));
+                            string reason = sr.ReadString(stream);
+
+                            // If there was an overridable clash, ask first and then re-run the request if the
+                            // user desires.
+                            if (reason == Glo.DIAL_CLASH_WARNING)
+                            {
+                                SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
+                                                "to proceed regardless?", "Dial Number Clash",
+                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                {
+                                    stream.Close();
+                                    return SendUpdate(fncByte, toSerialise, true, overrideResourceOverflows);
+                                }
+                                else return false;
+                            }
+                            else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
+                            {
+                                SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
+                                                "to proceed regardless?", "Resource Overflow",
+                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                {
+                                    stream.Close();
+                                    return SendUpdate(fncByte, toSerialise, overrideDialNoClashes, true);
+                                }
+                                else return false;
+                            }
+                            else
+                                DisplayError(ErrorConcat("Could not update record. See Error:",
+                                                         sr.ReadString(stream)));
+                            return false;
                         }
                     }
                     return false;
@@ -1013,9 +1048,7 @@ namespace BridgeOpsClient
         }
 
         public static bool SendUpdate(UpdateRequest req)
-        {
-            return SendUpdate(req, false, false);
-        }
+        { return SendUpdate(req, false, false); }
         public static bool SendUpdate(UpdateRequest req,
                                       // Only in use for Conference updates:
                                       bool overrideDialNoClashes, bool overrideResourceOverflows)

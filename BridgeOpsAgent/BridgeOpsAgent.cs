@@ -1700,6 +1700,13 @@ internal class BridgeOpsAgent
     // Permission restricted.
     private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect, int target)
     {
+        // Only used for Conference updates.
+        SelectResult? dialNoClashes = null;
+        SelectResult? resourceOverflows = null;
+        bool overrideDialNoClashes = true;
+        bool overrideResourceOverflows = true;
+        int confID = 0;
+
         try
         {
             sqlConnect.Open();
@@ -1744,10 +1751,13 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
                 {
                     Conference update = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    overrideDialNoClashes = stream.ReadByte() == 1;
+                    overrideResourceOverflows = stream.ReadByte() == 1;
+                    confID = (int)update.conferenceID!;
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_CONFERENCES, edit,
                         out permission))
-                        com.CommandText = update.SqlUpdate();
+                        com.CommandText = update.SqlUpdate(false);
                 }
                 else if (target == Glo.CLIENT_UPDATE_RESOURCE)
                 {
@@ -1786,17 +1796,62 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            com.ExecuteNonQuery();
-            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            if (target == Glo.CLIENT_UPDATE_RESOURCE)
-                SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-            else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
+            // If it's a conference, we'll need to run clash and overflow checks.
+            if (target == Glo.CLIENT_UPDATE_CONFERENCE)
+            {
+                List<string> coms = new() { com.CommandText };
+
+                if (!overrideDialNoClashes)
+                    coms.Add(Conference.SqlCheckForDialNoClashes(new() { confID }, sqlConnect));
+                if (!overrideResourceOverflows)
+                    coms.Add(Conference.SqlCheckForResourceOverflows(new() { confID }, sqlConnect));
+
+                com.CommandText = SqlAssist.Transaction(coms.ToArray());
+
+                SqlDataReader reader = com.ExecuteReader();
+                if (!overrideDialNoClashes)
+                {
+                    dialNoClashes = new(reader, true);
+                    reader.NextResult();// This is where the exception will be thrown.
+                }
+                if (!overrideResourceOverflows)
+                {
+                    resourceOverflows = new(reader, true);
+                    reader.NextResult();// This is where the exception will be thrown.
+                }
+
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            }
+            // Otherwise, proceed normally.
+            else
+            {
+                com.ExecuteNonQuery();
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                // If resources were updated, clients need to know to pull a fresh batch.
+                if (target == Glo.CLIENT_UPDATE_RESOURCE)
+                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+            }
         }
         catch (Exception e)
         {
-            LogError("Couldn't run update, see error:", e);
-            SafeFail(stream, e.Message);
+            if (dialNoClashes != null && dialNoClashes.Value.rows.Count > 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.DIAL_CLASH_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(dialNoClashes));
+            }
+            else if (resourceOverflows != null && resourceOverflows.Value.rows.Count > 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.RESOURCE_OVERFLOW_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(resourceOverflows));
+            }
+            else
+            {
+                LogError("Couldn't run update, see error:", e);
+                SafeFail(stream, e.Message);
+            }
         }
         finally
         {
@@ -1907,7 +1962,7 @@ internal class BridgeOpsAgent
             }
             else
             {
-                LogError("Couldn't delete record, see error:", e);
+                LogError("Couldn't update record, see error:", e);
                 SafeFail(stream, e.Message);
             }
         }

@@ -143,7 +143,6 @@ namespace BridgeOpsClient
             if (!App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 btnSave.IsEnabled = false;
-                btnCancel.IsEnabled = false;
                 btnAddConnection.IsEnabled = false;
                 txtTitle.IsReadOnly = true;
                 dtpStart.ToggleEnabled(false);
@@ -160,10 +159,7 @@ namespace BridgeOpsClient
                 ditConference.ToggleFieldsEnabled(false);
             }
             else
-            {
                 btnSave.IsEnabled = true;
-                btnCancel.IsEnabled = true;
-            }
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -700,7 +696,7 @@ namespace BridgeOpsClient
                     SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.conference, c).type));
 
             if (edit)
-                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference);
+                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference, false, false);
             else
                 return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
         }
@@ -729,19 +725,9 @@ namespace BridgeOpsClient
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-            int confID;
-            if (!int.TryParse(id, out confID))
-                App.DisplayError("Could not determine conference ID to cancel.");
-            else
-            {
-                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
-                                        "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
-                                        new() { cancelled ? "0" : "1" }, new() { false },
-                                        Glo.Tab.CONFERENCE_ID, new() { id }, false);
-                // Error message displayed by the below function if it doesn't succeed.
-                if (App.SendUpdate(req, false, false))
-                    Close();
-            }
+            if (App.DisplayQuestion("Are you sure? Any unsaved changes will be lost.", "Close Conference",
+                                    DialogWindows.DialogBox.Buttons.YesNo))
+                Close();
         }
 
         private void CustomWindow_KeyDown(object sender, KeyEventArgs e)

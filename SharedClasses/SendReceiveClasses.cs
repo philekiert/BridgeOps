@@ -1468,7 +1468,8 @@ namespace SendReceiveClasses
             return SqlAssist.Transaction(commands.ToArray());
         }
 
-        public string SqlUpdate()
+        public string SqlUpdate() { return SqlUpdate(true); }
+        public string SqlUpdate(bool asTransaction)
         {
             Prepare();
 
@@ -1565,8 +1566,10 @@ namespace SendReceiveClasses
                 }
             }
 
-
-            return SqlAssist.Transaction(commands.ToArray());
+            if (asTransaction)
+                return SqlAssist.Transaction(commands.ToArray());
+            else
+                return string.Join(" ", commands);
         }
 
         public static string SqlCheckForRowClashes(List<int>? confIDs, SqlConnection sqlConnect)
