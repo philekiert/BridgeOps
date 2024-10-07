@@ -69,6 +69,26 @@ namespace BridgeOpsClient
             catch { return false; }
         }
 
+        public static bool DialNoClashConfirm(SelectResult selectResult)
+        {
+            try
+            {
+                ConvertUnknownJsonObjectsToRespectiveTypes(selectResult.columnTypes, selectResult.rows);
+                DialogWindows.DialogBox dialog = new(Glo.DIAL_CLASH_WARNING + "Do you wish to proceed?", "Dial Clash",
+                                                 DialogWindows.DialogBox.Buttons.YesNo,
+                                                 selectResult.columnNames, selectResult.rows);
+                dialog.ShowDialog();
+                return dialog.ShowDialog() == true;
+            }
+            catch { return false; }
+
+
+        }
+        public static bool ResourceOverflowConfirm(SelectResult selectRes)
+        {
+            return false;
+        }
+
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
         public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action";
 
@@ -1895,9 +1915,7 @@ namespace BridgeOpsClient
                                 if (reason == Glo.DIAL_CLASH_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                    if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
-                                                    "to proceed regardless?", "Dial Number Clash",
-                                                    DialogWindows.DialogBox.Buttons.YesNo))
+                                    if (DialNoClashConfirm(res))
                                     {
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,

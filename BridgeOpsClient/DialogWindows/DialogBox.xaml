@@ -3,14 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BridgeOpsClient"
-        mc:Ignorable="d"
+        xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
+                    mc:Ignorable="d"
         ResizeMode="NoResize"
-        Title="" MaxHeight="400" MinWidth="250" Width="250" MaxWidth="400" KeyDown="Window_KeyDown"
+        Title="" MaxHeight="800" MinWidth="250" Width="250" MaxWidth="400" KeyDown="Window_KeyDown"
         SizeToContent="Height" UseLayoutRounding="True" WindowStartupLocation="CenterScreen">
-    <Grid>
+    <Grid x:Name="grdMain">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="0"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -19,10 +20,11 @@
         </Grid.ColumnDefinitions>
         <TextBox x:Name="txtMessage" IsReadOnly="True" Grid.Row="0" Text="This is a test." Margin="10 15 10 10"
                  BorderThickness="0" AcceptsReturn="True" MaxHeight="400" TextWrapping="Wrap" Grid.ColumnSpan="2"/>
-        <Button x:Name="btnOkay" Grid.Row="1" Grid.Column="0" Content="OK" HorizontalAlignment="Center" Height="24"
+        <customcontrols:SqlDataGrid Grid.Row="1" Grid.ColumnSpan="2" MaxHeight="400" x:Name="dtg"/>
+        <Button x:Name="btnOkay" Grid.Row="2" Grid.Column="0" Content="OK" HorizontalAlignment="Center" Height="24"
                 Padding="6 2 6 2" MinWidth="80" Margin="10 10 10 10" Style="{StaticResource primary-button}"
                 Click="btnOkay_Click" Grid.ColumnSpan="2"/>
-        <Button x:Name="btnCancel" Grid.Row="1" Grid.Column="1" Content="Cancel" HorizontalAlignment="Left"
+        <Button x:Name="btnCancel" Grid.Row="2" Grid.Column="1" Content="Cancel" HorizontalAlignment="Left"
                 Height="24" Padding="6 2 6 2" MinWidth="80" Margin="10 10 10 10" Click="btnCancel_Click"
                 Visibility="Hidden"/>
     </Grid>

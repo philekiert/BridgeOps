@@ -49,6 +49,16 @@ namespace BridgeOpsClient.DialogWindows
             btnCancel.Visibility = Visibility.Visible;
             btnOkay.HorizontalAlignment = HorizontalAlignment.Right;
         }
+        public DialogBox(string message, string title, Buttons buttons,
+                         List<string?> colNames, List<List<object?>> rows) : this(message, title, buttons)
+        {
+            grdMain.RowDefinitions[1].Height = GridLength.Auto;
+            dtg.MinHeight = 50;
+            dtg.Update(colNames, rows);
+            MinWidth = 220;
+            Width = 220;
+            MaxWidth = 220;
+        }
 
         private void Set(bool isTrue)
         {

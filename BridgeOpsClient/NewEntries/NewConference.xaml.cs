@@ -253,14 +253,14 @@ namespace BridgeOpsClient
                     BorderThickness = new(0),
                     Padding = new(6, 0,
                     6, 0),
-                    Margin = new Thickness(-1, 5, 5, 5),
+                    Margin = new Thickness(-1, 5, 10, 5),
                     HorizontalContentAlignment = HorizontalAlignment.Left
                 };
 
                 bdrHost = new()
                 {
                     Background = new SolidColorBrush(Color.FromRgb(230, 232, 236)),
-                    Margin = new(4, 0, 0, 0),
+                    Margin = new(4, 0, 5, 0),
                     CornerRadius = new(5)
                 };
 
