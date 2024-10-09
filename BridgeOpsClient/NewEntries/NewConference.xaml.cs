@@ -431,6 +431,13 @@ namespace BridgeOpsClient
                 int index = Grid.GetRow(txt) - 1;
                 Connection connection = connections[index];
 
+                foreach (Connection c in connections)
+                    if (c.dialNo == connection.txtSearch.Text)
+                    {
+                        App.DisplayError("Cannot add duplicate dial numbers to a conference.", "Duplicate Dial No");
+                        return;
+                    }
+
                 if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                 {
                     connection.ToggleSearch(false);

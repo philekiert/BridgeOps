@@ -7,15 +7,15 @@
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="New Contact" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        Closed="Window_Closed" UseLayoutRounding="True" Loaded="Window_Loaded">
+        Closed="Window_Closed" UseLayoutRounding="True">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <custom:DataInputTable x:Name="ditContact" Grid.Row="0" Margin="10 15 10 10" MaxHeight="500"/>
+        <custom:DataInputTable x:Name="ditContact" Grid.Row="0" Margin="10 15 10 10"/>
         <Label Grid.Row="1" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left" VerticalAlignment="Top"
                Margin="5,0,10,0" Height="26" FontWeight="SemiBold"/>
         <TextBox x:Name="txtNotes" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top"

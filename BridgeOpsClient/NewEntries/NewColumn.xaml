@@ -16,7 +16,6 @@
             </Style>
             <Style TargetType="ComboBox">
                 <Setter Property="Margin" Value="10 5 10 5"/>
-                <Setter Property="Height" Value="20"/>
             </Style>
             <Style TargetType="Label">
                 <Setter Property="VerticalAlignment" Value="Center"/>

@@ -515,6 +515,7 @@ namespace SendReceiveClasses
                             reAddKeys = true;
                             commands.Add("DROP INDEX u_OrgDialNo ON Organisation;");
                             commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType};");
+                            commands.Add("ALTER TABLE Connection DROP CONSTRAINT u_ConnectionConfIDDialNo;");
                         }
                     }
                     else if (table == "Asset")
@@ -560,6 +561,14 @@ namespace SendReceiveClasses
                             commands.Add("ALTER TABLE Login DROP CONSTRAINT u_Username;");
                         }
                     }
+                    else if (table == "Conference")
+                    {
+                        if (column == Glo.Tab.CONFERENCE_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Login DROP CONSTRAINT u_ConnectionConfIDDialNo;");
+                        }
+                    }
 
                     commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType};");
 
@@ -591,6 +600,7 @@ namespace SendReceiveClasses
                             else if (column == Glo.Tab.DIAL_NO)
                             {
                                 commands.Add("CREATE UNIQUE INDEX u_OrgDialNo ON Organisation (Dial_No) WHERE Dial_No IS NOT NULL;");
+                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT u_ConnectionConfIDDialNo UNIQUE (Conference_ID, Dial_No);");
                             }
                         }
                         else if (table == "Asset")
@@ -630,6 +640,13 @@ namespace SendReceiveClasses
                             else if (column == Glo.Tab.LOGIN_USERNAME)
                             {
                                 commands.Add("ALTER TABLE Login ADD CONSTRAINT u_Username UNIQUE (Username);");
+                            }
+                        }
+                        else if (table == "Conference")
+                        {
+                            if (column == Glo.Tab.CONFERENCE_ID)
+                            {
+                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT u_ConnectionConfIDDialNo UNIQUE (Conference_ID, Dial_No);");
                             }
                         }
                     }

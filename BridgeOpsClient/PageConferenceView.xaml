@@ -13,6 +13,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition/>
+            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" VerticalAlignment="Top">
             <Grid.Resources>
@@ -76,29 +77,21 @@
                 <Canvas Background="White"/>
                 <local:ScheduleResources Grid.Row="1" x:Name="schResources"/>
             </Grid>
-            <Grid Grid.Column="1" Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="44"/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <local:ScheduleRuler Grid.Row="0" x:Name="schRuler"/>
-                <local:ScheduleView x:Name="schView" Grid.Row="1" Background="White"
-                                    MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
-                                    MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
-                                    PreviewMouseWheel="schView_PreviewMouseWheel"
-                                    KeyDown="schView_PreviewKeyDown"
-                                    Focusable="True"/>
-            </Grid>
-            <Grid Grid.Column="2" Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="44"/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <ScrollBar x:Name="scrollBar" Grid.Row="1"
+            <local:ScheduleRuler Grid.Row="0" x:Name="schRuler" Grid.Column="1" VerticalAlignment="Top" Height="44"/>
+            <local:ScheduleView  x:Name="schView" Grid.Row="1" Grid.Column="1" Background="White"
+                                 MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
+                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
+                                 PreviewMouseWheel="schView_PreviewMouseWheel"
+                                 KeyDown="schView_PreviewKeyDown"
+                                 Focusable="True" Margin="0 44 0 0"/>
+            <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
-                           SizeChanged="scrollBar_SizeChanged"/>
-            </Grid>
+                           SizeChanged="scrollBar_SizeChanged" Margin="0 44 0 0"/>
             <GridSplitter Grid.Column="0" Width="5"/>
         </Grid>
+        <Border Grid.Row="2" Grid.ColumnSpan="2" BorderThickness="0 1 1 0" Margin="0 -1 0 0"
+                Background="{StaticResource brushStatusBar}" BorderBrush="{StaticResource brushStatusBarBorder}"
+                CornerRadius="0 0 5 5"/>
+        <StackPanel x:Name="stkStatus" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal"/>
     </Grid>
 </Page>

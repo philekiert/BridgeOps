@@ -437,7 +437,7 @@ public class DatabaseCreator
             asset += ", CONSTRAINT pk_AssetID PRIMARY KEY (Asset_ID)" +
                      ", CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE );" +
                      " CREATE UNIQUE INDEX u_assetRef ON Asset (Asset_Reference) WHERE Asset_Reference IS NOT NULL;"; // Needs adding separately due to the WHERE clause.
-            resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID) " +
+            resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID)" +
                         ", CONSTRAINT u_ResourceName UNIQUE (Resource_Name) );";
             //conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
@@ -452,7 +452,8 @@ public class DatabaseCreator
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
             //          ", CONSTRAINT fk_DialNoOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE CASCADE );";
             connections += ", CONSTRAINT pk_ConnID PRIMARY KEY (Connection_ID)" +
-                           ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
+                           ", CONSTRAINT fk_ConnectionConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
+                           ", CONSTRAINT u_ConnectionConfIDDialNo UNIQUE (Conference_ID, Dial_No) );";
             //conferencesByDay += ", CONSTRAINT pk_Date_ConfID PRIMARY KEY (Date, Conference_ID)" +
             //                    ", CONSTRAINT fk_ConfbyDay_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
             organisationChange += ", CONSTRAINT pk_OrgID_ChangeID PRIMARY KEY (Organisation_ID, Change_ID)" +
@@ -479,7 +480,6 @@ public class DatabaseCreator
             junctionConfResource += ", CONSTRAINT pk_jncConfRes_ConfID_ResID PRIMARY KEY (Conference_ID, Resource_ID)" +
                                     ", CONSTRAINT fk_jncConfRes_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE" +
                                     ", CONSTRAINT fk_jncConfRes_ResID FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID) ON DELETE CASCADE );";
-
 
             // Create tables
             Writer.Message("\nCreating Organisation table...");

@@ -24,6 +24,8 @@
     <Color x:Key="colorNegativeBackground">#F45</Color>
     <Color x:Key="colorDerynsPurpleBar">#7d579c</Color>
     <Color x:Key="colorDerynsPurpleBarBorder">#5d4270</Color>
+    <Color x:Key="colorStatusBar">#edeeef</Color>
+    <Color x:Key="colorStatusBarBorder">#ccc</Color>
     <SolidColorBrush x:Key="brushTitleBar" Color="{StaticResource colorTitleBar}"/>
     <SolidColorBrush x:Key="brushTitleBarBorder" Color="{StaticResource colorTitleBarBorder}"/>
     <SolidColorBrush x:Key="brushMinimise" Color="{StaticResource colorMinimise}"/>
@@ -45,6 +47,8 @@
     <SolidColorBrush x:Key="brushNegativeBackground" Color="{StaticResource colorNegativeBackground}"/>
     <SolidColorBrush x:Key="brushDerynsPurpleBar" Color="{StaticResource colorDerynsPurpleBar}"/>
     <SolidColorBrush x:Key="brushDerynsPurpleBarBorder" Color="{StaticResource colorDerynsPurpleBarBorder}"/>
+    <SolidColorBrush x:Key="brushStatusBar" Color="{StaticResource colorStatusBar}"/>
+    <SolidColorBrush x:Key="brushStatusBarBorder" Color="{StaticResource colorStatusBarBorder}"/>
 
     <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose-->
 

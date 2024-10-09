@@ -151,15 +151,23 @@ namespace BridgeOpsClient.CustomControls
 
                     header.Header = ColumnRecord.GetPrintName(s, col);
                     header.IsReadOnly = true;
-                    if (col.type == "DATE")
+                    if (col.type != null && col.type.ToUpper() == "DATE")
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy}";
                     }
-                    else if (col.type == "DATETIME")
+                    else if ((col.type != null && col.type.ToUpper() == "DATETIME") ||
+                        (rows.Count > 1 && rows[0].Count > 0 && rows[0][count] is DateTime))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy HH:mm}";
+                    }
+                    else if ((col.type != null &&
+                              (col.type.ToUpper() == "TIMESPAN" || col.type.ToUpper() == "TIME")) ||
+                             (rows.Count > 1 && rows[0].Count > 0 && rows[0][count] is TimeSpan))
+                    {
+                        header.Binding = new Binding(string.Format("items[{0}]", count));
+                        header.Binding.StringFormat = "{0:hh\\:mm}";
                     }
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
@@ -582,7 +590,10 @@ namespace BridgeOpsClient.CustomControls
             }
             else if (e.Key == Key.Escape)
             {
-                dtg.SelectedItems.Clear();
+                if (dtg.SelectionMode == DataGridSelectionMode.Extended)
+                    dtg.SelectedItems.Clear();
+                else
+                    dtg.SelectedItem = null;
             }
         }
 
@@ -667,7 +678,10 @@ namespace BridgeOpsClient.CustomControls
 
         private void mnuSelectNone_Click(object sender, RoutedEventArgs e)
         {
-            dtg.SelectedItems.Clear();
+            if (dtg.SelectionMode == DataGridSelectionMode.Extended)
+                dtg.SelectedItems.Clear();
+            else
+                dtg.SelectedItem = null;
         }
     }
 }

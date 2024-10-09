@@ -69,16 +69,17 @@ namespace BridgeOpsClient
             catch { return false; }
         }
 
-        public static bool DialNoClashConfirm(SelectResult selectResult)
+        public static bool DialNoClashConfirm(SelectResult selectRes)
         {
             try
             {
-                ConvertUnknownJsonObjectsToRespectiveTypes(selectResult.columnTypes, selectResult.rows);
-                DialogWindows.DialogBox dialog = new(Glo.DIAL_CLASH_WARNING + "Do you wish to proceed?", "Dial Clash",
+                ConvertUnknownJsonObjectsToRespectiveTypes(selectRes.columnTypes, selectRes.rows);
+                DialogWindows.DialogBox dialog = new(Glo.DIAL_CLASH_WARNING + " Do you wish to proceed?",
+                                                     "Dial Clash",
                                                  DialogWindows.DialogBox.Buttons.YesNo,
-                                                 selectResult.columnNames, selectResult.rows);
+                                                 selectRes.columnNames, selectRes.rows);
                 dialog.ShowDialog();
-                return dialog.ShowDialog() == true;
+                return dialog.DialogResult == true;
             }
             catch { return false; }
 
@@ -86,7 +87,27 @@ namespace BridgeOpsClient
         }
         public static bool ResourceOverflowConfirm(SelectResult selectRes)
         {
-            return false;
+            try
+            {
+                ConvertUnknownJsonObjectsToRespectiveTypes(selectRes.columnTypes, selectRes.rows);
+                selectRes.columnNames[3] = "Some Time Around";
+                selectRes.columnNames[4] = "Dial No Count";
+                selectRes.columnNames[5] = "Conference Count";
+                foreach (var row in selectRes.rows)
+                {
+                    if (row[4] == null)
+                        row[4] = "-";
+                    else if (row[5] == null)
+                        row[5] = "-";
+                }
+                DialogWindows.DialogBox dialog = new(Glo.RESOURCE_OVERFLOW_WARNING + " Do you wish to proceed?",
+                                                     "Resource Overflow",
+                                                 DialogWindows.DialogBox.Buttons.YesNo,
+                                                 selectRes.columnNames, selectRes.rows);
+                dialog.ShowDialog();
+                return dialog.DialogResult == true;
+            }
+            catch { return false; }
         }
 
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
@@ -918,9 +939,7 @@ namespace BridgeOpsClient
                             {
                                 returnID = "";
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
-                                                "to proceed regardless?", "Dial Number Clash",
-                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise, true, overrideResourceOverflows);
@@ -931,9 +950,7 @@ namespace BridgeOpsClient
                             {
                                 returnID = "";
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
-                                                "to proceed regardless?", "Resource Overflow",
-                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise, overrideDialNoClashes, true);
@@ -1075,9 +1092,7 @@ namespace BridgeOpsClient
                             if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
-                                                "to proceed regardless?", "Dial Number Clash",
-                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise, true, overrideResourceOverflows);
@@ -1087,9 +1102,7 @@ namespace BridgeOpsClient
                             else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
-                                                "to proceed regardless?", "Resource Overflow",
-                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise, overrideDialNoClashes, true);
@@ -1209,9 +1222,7 @@ namespace BridgeOpsClient
                             if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DisplayQuestion(Glo.DIAL_CLASH_WARNING + "\n\nWould you like " +
-                                                "to proceed regardless?", "Dial Number Clash",
-                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
                                     return SendUpdate(req, true, overrideResourceOverflows);
@@ -1221,9 +1232,7 @@ namespace BridgeOpsClient
                             else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
-                                                "to proceed regardless?", "Resource Overflow",
-                                                DialogWindows.DialogBox.Buttons.YesNo))
+                                if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
                                     return SendUpdate(req, overrideDialNoClashes, true);
@@ -1927,9 +1936,7 @@ namespace BridgeOpsClient
                                 else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                    if (DisplayQuestion(Glo.RESOURCE_OVERFLOW_WARNING + "\n\nWould you like " +
-                                                    "to proceed regardless?", "Resource Overflow",
-                                                    DialogWindows.DialogBox.Buttons.YesNo))
+                                    if (ResourceOverflowConfirm(res))
                                     {
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,

@@ -49,8 +49,14 @@ namespace BridgeOpsClient.CustomControls
         public void SetTime(long ticks) { SetTime(new TimeSpan(ticks)); }
         public void SetTime(TimeSpan timeSpan)
         {
-            txtHour.Text = timeSpan.Hours.ToString();
-            txtMinute.Text = timeSpan.Minutes.ToString();
+            if (timeSpan.Hours < 10)
+                txtHour.Text = "0" + timeSpan.Hours.ToString();
+            else
+                txtHour.Text = timeSpan.Hours.ToString();
+            if (timeSpan.Minutes < 10)
+                txtMinute.Text = "0" + timeSpan.Minutes.ToString();
+            else
+                txtMinute.Text = timeSpan.Minutes.ToString();
         }
 
         private void txtMinutes_TextChanged(object sender, TextChangedEventArgs e)

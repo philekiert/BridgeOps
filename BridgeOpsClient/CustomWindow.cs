@@ -340,6 +340,25 @@ namespace BridgeOpsClient
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
                 ((Border)grid.Children[4]).Background = ((Border)grid.Children[2]).Background;
             }
+
+            // Ensure that the window sits comfortably in the screen.
+            double screenHeight = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Height;
+            double screenWidth = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Width;
+
+            if (MaxHeight > screenHeight)
+                MaxHeight = screenHeight;
+            if (MaxWidth > screenWidth)
+                MaxWidth = screenWidth;
+
+            if (Top + ActualHeight > screenHeight)
+                // No idea why + 6, maybe it's the difference between the standard WPF title bar and mine.
+                Top = screenHeight - (ActualHeight + 6);
+            if (Top < 0)
+                Top = 0;
+            if (Left + ActualWidth > screenWidth)
+                Left = screenWidth - ActualWidth;
+            if (Left < 0)
+                Left = 0;
         }
 
         private void CustomWindow_Activated(object? sender, EventArgs e)

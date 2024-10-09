@@ -648,11 +648,13 @@ namespace BridgeOpsClient
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            double screenHeight = SystemParameters.PrimaryScreenHeight;
-            if (Top + Height > screenHeight)
-                Top = screenHeight - Height;
-            if (Top < 0)
-                Top = 0;
+            // CustomWindow.Window_Loaded() already handles this, but this window needs a little more attention as the
+            // screen width is variable between tabs, being far wider on the relations and change tabs.
+            double screenWidth = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Width;
+            if (Left + 920 > screenWidth)
+                Left = screenWidth - 920;
+            if (Left < 0)
+                Left = 0;
         }
     }
 }

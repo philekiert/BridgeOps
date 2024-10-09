@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 0.5.3
+### Fixed
+- Stopped the program crashing when trying to clear selection from data tables where only single-row selection is enabled.
+- Set DateTime objects to display correctly in the query builder results table.
+
+
 ## 0.5.2
 ### Fixed
 - Context menus no longer display on blank data tables.

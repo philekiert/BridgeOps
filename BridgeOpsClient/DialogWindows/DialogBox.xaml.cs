@@ -52,12 +52,17 @@ namespace BridgeOpsClient.DialogWindows
         public DialogBox(string message, string title, Buttons buttons,
                          List<string?> colNames, List<List<object?>> rows) : this(message, title, buttons)
         {
-            grdMain.RowDefinitions[1].Height = GridLength.Auto;
-            dtg.MinHeight = 50;
+            grdMain.RowDefinitions[1].Height = new GridLength(1, GridUnitType.Star);
+
+            // Restrict window height here to limit how far dtg can expand.
+            dtg.MaxHeight = 500;
             dtg.Update(colNames, rows);
-            MinWidth = 220;
-            Width = 220;
-            MaxWidth = 220;
+
+            MinWidth = 600;
+            Width = 800;
+            MaxWidth = double.PositiveInfinity;
+            MinHeight = 250;
+            ResizeMode = ResizeMode.CanResize;
         }
 
         private void Set(bool isTrue)
@@ -83,6 +88,21 @@ namespace BridgeOpsClient.DialogWindows
                 Set(true);
                 Close();
             }
+        }
+
+        private void CustomWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // The max height has been restricted if dtg is being displayed in order for the window not too expand
+            // outside the bounds of the window, so once the window has loaded, release the max height. Then the
+            // user can maximise if they wish.
+            if (grdMain.RowDefinitions[1].Height == new GridLength(1, GridUnitType.Star))
+            {
+                dtg.MaxHeight = double.PositiveInfinity;
+            }
+        }
+
+        private void CustomWindow_ContentRendered(object sender, EventArgs e)
+        {
         }
     }
 }

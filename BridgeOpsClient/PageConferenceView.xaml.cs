@@ -134,6 +134,30 @@ namespace BridgeOpsClient
             return 0;
         }
 
+        public enum StatusBarContext { None, Overflow }
+        public StatusBarContext statusBarContext = StatusBarContext.None;
+        public void SetStatusBar() { stkStatus.Children.Clear(); statusBarContext = StatusBarContext.None; }
+        public void SetStatusBar(StatusBarContext context, string message, bool bold, bool alignLeft)
+        { SetStatusBar(context, new List<string>() { message }, new() { bold } ); }
+        public void SetStatusBar(StatusBarContext context, List<string> messages, List<bool> bold)
+        {
+            stkStatus.Children.Clear();
+            if (messages.Count != bold.Count)
+                return;
+            for (int i = 0; i < messages.Count; ++i)
+            {
+                Label label = new()
+                {
+                    Margin = new(10, 0, 0, 0),
+                    Padding = new(0),
+                    FontWeight = bold[i] ? FontWeights.Bold : FontWeights.Normal,
+                };
+                label.Content = messages[i];
+                stkStatus.Children.Add(label);
+            }
+            statusBarContext = context;
+        }
+
         // Used for creating the overflow warning graphics in Render().
         public static object overflowCalculationLock = new();
         public void UpdateOverflowPoints()
@@ -1330,6 +1354,7 @@ namespace BridgeOpsClient
         Brush brsConferenceHover;
         Brush brsConferenceBorder;
         Brush brsOverflow;
+        Brush brsOverflowCheck;
         Pen penConferenceBorder;
         Pen penStylus;
         Pen penStylusFade;
@@ -1350,6 +1375,7 @@ namespace BridgeOpsClient
             brsConferenceBorder = new SolidColorBrush(clrConference);
             penConferenceBorder = new Pen(brsConferenceBorder, 1);
             brsOverflow = new SolidColorBrush(Color.FromArgb(50, 166, 65, 85));
+            brsOverflowCheck = new SolidColorBrush(Color.FromArgb(50, 105, 111, 135));
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
@@ -1479,6 +1505,10 @@ namespace BridgeOpsClient
                     incrementTicks = ticks5Min;
                 }
 
+                bool drawCursor = cursor != null &&
+                                  (conferenceView.drag == PageConferenceView.Drag.None ||
+                                   conferenceView.drag == PageConferenceView.Drag.Scroll);
+
                 // Draw any conference overflow warnings beneath the grid lines.
                 lock (PageConferenceView.resources)
                 {
@@ -1515,6 +1545,81 @@ namespace BridgeOpsClient
                                     Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);
                                     dc.DrawRectangle(brsOverflow, null, r);
                                 }
+                            }
+
+                            // Draw the capacity highlight overlay, regardless of overflow.
+                            if (drawCursor && Keyboard.IsKeyDown(Key.O))
+                            {
+                                double yPos = GetResourceFromY(cursor!.Value.Y, true);
+                                if (yPos > GetYfromResource(ri.id, 0) && yPos < GetYfromResource(ri.id, ri.rowsTotal))
+                                {
+                                    DateTime xDT = GetDateTimeFromX(cursor!.Value.X, zoomTimeDisplay);
+
+                                    int connections = 0;
+                                    int confs = 0;
+
+                                    for (int i = 0; i < ri.capacityChangePoints.Count - 1; ++i)
+                                    {
+                                        PageConferenceView.OverflowPoint op = ri.capacityChangePoints[i];
+                                        DateTime s = ri.capacityChangePoints[i].point;
+                                        DateTime e = ri.capacityChangePoints[i + 1].point;
+
+                                        // If the first change point is after the start of the screen or if the last
+                                        // is before the end of the screen, there will be regions at the beginning and
+                                        // end of the schedule that don't show a capacity of 0. Force this.
+                                        if (i == 0 && xDT < s)
+                                        {
+                                            e = s;
+                                            s = start;
+                                        }
+                                        else if (i == ri.capacityChangePoints.Count - 2 && xDT > e)
+                                        {
+                                            s = e;
+                                            e = end;
+                                            connections = 0;
+                                            confs = 0;
+                                        }
+                                        else
+                                        {
+                                            connections += op.change;
+                                            confs += op.confAdd;
+                                        }
+
+                                        if (xDT >= s && xDT < e)
+                                        {
+                                            // Only draw as far as necessary.
+                                            if (s < start)
+                                                s = start;
+                                            if (e > end)
+                                                e = end;
+
+                                            double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                                            double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                                            Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);
+                                            dc.DrawRectangle(brsOverflowCheck, null, r);
+
+                                            List<string> statusMessages = new()
+                                            {
+                                                $"Connections: {connections}/{ri.connectionCapacity}",
+                                                $"Conferences: {confs}/{ri.conferenceCapacity}"
+                                            };
+                                            List<bool> bold = new()
+                                            {
+                                                connections > ri.connectionCapacity,
+                                                confs > ri.conferenceCapacity
+                                            };
+                                            conferenceView.SetStatusBar(PageConferenceView.StatusBarContext.Overflow,
+                                                                        statusMessages, bold);
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (conferenceView.statusBarContext == PageConferenceView.StatusBarContext.Overflow)
+                                    conferenceView.SetStatusBar();
                             }
                         }
                     }
@@ -1667,11 +1772,9 @@ namespace BridgeOpsClient
                     currentConference = null;
 
                 // Draw the cursor.
-                if (cursor != null &&
-                    (conferenceView.drag == PageConferenceView.Drag.None ||
-                     conferenceView.drag == PageConferenceView.Drag.Scroll))
+                if (drawCursor)
                 {
-                    double y = GetResourceFromY(cursor.Value.Y, true);
+                    double y = GetResourceFromY(cursor!.Value.Y, true);
                     if (y >= 0)
                     {
                         y *= zoomResourceCurrent;
