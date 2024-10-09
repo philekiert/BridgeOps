@@ -360,12 +360,12 @@ namespace BridgeOpsClient
                 Grid.SetRow(btnOrgSummary, row);
                 Grid.SetRow(bdrHost, row);
 
-                btnUp.IsEnabled = row > 1;
-                btnDown.IsEnabled = row < connectionCount;
+                btnUp.IsEnabled = row > 0;
+                btnDown.IsEnabled = row < connectionCount - 1;
 
-                bdrHost.Visibility = row == 1 && orgRef != null ? Visibility.Visible : Visibility.Hidden;
+                bdrHost.Visibility = row == 0 && orgRef != null ? Visibility.Visible : Visibility.Hidden;
 
-                this.row = row - 1;
+                this.row = row;
             }
 
             public void Remove(Grid grid)
@@ -408,7 +408,7 @@ namespace BridgeOpsClient
 
         private void RemoveConnection(object sender, EventArgs e)
         {
-            int index = Grid.GetRow((Button)sender) - 1;
+            int index = Grid.GetRow((Button)sender);
 
             connections[index].Remove(grdConnections);
             connections.RemoveAt(index);
@@ -421,14 +421,14 @@ namespace BridgeOpsClient
         private void ResetConnectionGridRows()
         {
             for (int i = 0; i < connections.Count;)
-                connections[i].SetRow(++i, connections.Count);
+                connections[i].SetRow(i++, connections.Count);
         }
 
         private void SearchSite(object sender, EventArgs e)
         {
             if (sender is TextBox txt && txt.Text.Length > 0)
             {
-                int index = Grid.GetRow(txt) - 1;
+                int index = Grid.GetRow(txt);
                 Connection connection = connections[index];
 
                 foreach (Connection c in connections)
@@ -490,7 +490,7 @@ namespace BridgeOpsClient
             }
             else if (e.Key == Key.Escape)
             {
-                Connection connection = connections[Grid.GetRow((TextBox)sender) - 1];
+                Connection connection = connections[Grid.GetRow((TextBox)sender)];
                 if (connection.dialNo != "")
                     connection.ToggleSearch(false);
             }
@@ -521,7 +521,7 @@ namespace BridgeOpsClient
 
         private void btnSummary_Click(object sender, EventArgs e)
         {
-            int index = Grid.GetRow((UIElement)sender) - 1;
+            int index = Grid.GetRow((UIElement)sender);
             Connection connection = connections[index];
 
             // If the user lacks edit permissions and can't make changes anyway, just load the organisation.
@@ -540,7 +540,7 @@ namespace BridgeOpsClient
 
         private void btnUp_Click(object sender, EventArgs e)
         {
-            int index = Grid.GetRow((Button)sender) - 1;
+            int index = Grid.GetRow((Button)sender);
             if (index <= 0)
                 return;
             Connection move = connections[index];
@@ -551,7 +551,7 @@ namespace BridgeOpsClient
 
         private void btnDown_Click(object sender, EventArgs e)
         {
-            int index = Grid.GetRow((Button)sender) - 1;
+            int index = Grid.GetRow((Button)sender);
             if (index >= connections.Count - 1)
                 return;
             Connection move = connections[index];
