@@ -568,6 +568,10 @@ namespace BridgeOpsClient
                 c.ToggleDateVisible(!singleDay);
             if (singleDay)
             {
+                grdHeaders.ColumnDefinitions[3].Width = new GridLength(72);
+                grdHeaders.ColumnDefinitions[4].Width = new GridLength(85);
+                grdHeaders.ColumnDefinitions[3].MaxWidth = 72;
+                grdHeaders.ColumnDefinitions[4].MaxWidth = 85;
                 grdConnections.ColumnDefinitions[3].Width = new GridLength(72);
                 grdConnections.ColumnDefinitions[4].Width = new GridLength(85);
                 grdConnections.ColumnDefinitions[3].MaxWidth = 72;
@@ -577,10 +581,14 @@ namespace BridgeOpsClient
             {
                 if (Width < 1000) // Widen the window or the user will certainly need to scroll to read site names.
                     Width = 1000;
-                grdConnections.ColumnDefinitions[3].Width = new GridLength(175);
-                grdConnections.ColumnDefinitions[4].Width = new GridLength(175);
-                grdConnections.ColumnDefinitions[3].MaxWidth = 175;
-                grdConnections.ColumnDefinitions[4].MaxWidth = 175;
+                grdHeaders.ColumnDefinitions[3].Width = new GridLength(175);
+                grdHeaders.ColumnDefinitions[4].Width = new GridLength(175);
+                grdHeaders.ColumnDefinitions[3].MaxWidth = 175;
+                grdHeaders.ColumnDefinitions[4].MaxWidth = 175;
+                grdConnections.ColumnDefinitions[3].Width = new GridLength(72);
+                grdConnections.ColumnDefinitions[4].Width = new GridLength(85);
+                grdConnections.ColumnDefinitions[3].MaxWidth = 72;
+                grdConnections.ColumnDefinitions[4].MaxWidth = 85;
             }
         }
 
