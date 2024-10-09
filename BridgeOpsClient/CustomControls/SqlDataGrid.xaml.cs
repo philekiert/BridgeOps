@@ -133,7 +133,8 @@ namespace BridgeOpsClient.CustomControls
                         header.MaxWidth = maxLengthOverrides[s];
                 }
                 else
-                    header.MaxWidth = 256;
+                    // See dtg_LayoutUpdated() for explanation.
+                    header.MaxWidth = 250;
 
                 if (s == null)
                     header.Header = "";
@@ -203,6 +204,7 @@ namespace BridgeOpsClient.CustomControls
                         {
                             if ((string)col.Header == order[i])
                             {
+                                col.MaxWidth = double.PositiveInfinity;
                                 col.Width = widths[i];
                                 if (canHideColumns)
                                     if (hidden[i]) col.Visibility = Visibility.Hidden;
@@ -682,6 +684,19 @@ namespace BridgeOpsClient.CustomControls
                 dtg.SelectedItems.Clear();
             else
                 dtg.SelectedItem = null;
+        }
+
+        private void dtg_LayoutUpdated(object sender, EventArgs e)
+        {
+            // If the the MaxWidth is still 250 here, it means that it didn't have a custom width applied from the
+            // user's settings, and needed capping to 250 in order to stop it expanding indefinitely.
+            foreach (DataGridColumn col in dtg.Columns)
+                if (col.MaxWidth == 250)
+                {
+                    if (col.ActualWidth == 250)
+                        col.Width = 250;
+                    col.MaxWidth = float.PositiveInfinity;
+                }
         }
     }
 }

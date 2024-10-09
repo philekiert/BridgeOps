@@ -20,7 +20,8 @@
               MouseLeftButtonDown="dtg_MouseLeftButtonDown"
               ColumnReordered="dtg_ColumnReordered"
               KeyDown="dtg_KeyDown" IsTabStop="False" UseLayoutRounding="True"
-              CanUserDeleteRows="False" CanUserAddRows="False">
+              CanUserDeleteRows="False" CanUserAddRows="False"
+              LayoutUpdated="dtg_LayoutUpdated">
         <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
                 <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>

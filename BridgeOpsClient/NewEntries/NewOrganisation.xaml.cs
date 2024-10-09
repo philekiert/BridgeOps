@@ -650,7 +650,21 @@ namespace BridgeOpsClient
         {
             // CustomWindow.Window_Loaded() already handles this, but this window needs a little more attention as the
             // screen width is variable between tabs, being far wider on the relations and change tabs.
+            // As this window is not resizable currently, we also want to live a little bit of wiggle room so that
+            // dragging the window around while keeping the buttons visible isn't too annoying.
+            double screenHeight = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Height;
             double screenWidth = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Width;
+
+            if (MaxHeight > screenHeight - 120)
+                MaxHeight = screenHeight - 120;
+            if (MaxWidth > screenWidth - 120)
+                MaxWidth = screenWidth - 120;
+
+            if (Top + ActualHeight > screenHeight)
+                // No idea why + 6, maybe it's the difference between the standard WPF title bar and mine.
+                Top = screenHeight - (ActualHeight + 6);
+            if (Top < 0)
+                Top = 0;
             if (Left + 920 > screenWidth)
                 Left = screenWidth - 920;
             if (Left < 0)

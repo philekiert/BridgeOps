@@ -388,12 +388,65 @@ namespace BridgeOpsClient
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // CustomWindow.Window_Loaded() already handles this, but this window needs a little more attention as the
-            // screen width is variable between tabs, being far wider on the relations and change tabs.
+            // screen width is variable between tabs, being far wider on the change tab.
+            // As this window is not resizable currently, we also want to live a little bit of wiggle room so that
+            // dragging the window around while keeping the buttons visible isn't too annoying.
+            double screenHeight = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Height;
             double screenWidth = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Width;
+
+            if (MaxHeight > screenHeight - 120)
+                MaxHeight = screenHeight - 120;
+            if (MaxWidth > screenWidth - 120)
+                MaxWidth = screenWidth - 120;
+
+            if (Top + ActualHeight > screenHeight)
+                // No idea why + 6, maybe it's the difference between the standard WPF title bar and mine.
+                Top = screenHeight - (ActualHeight + 6);
+            if (Top < 0)
+                Top = 0;
             if (Left + 920 > screenWidth)
                 Left = screenWidth - 920;
             if (Left < 0)
                 Left = 0;
+        }
+
+        private void btnOpenOrganisation_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (cmbOrgRef.Text == "")
+                    throw new("No organisation has been selected.");
+
+                List<List<object?>> rows = new();
+                if (App.Select("Organisation", new() { Glo.Tab.ORGANISATION_ID },
+                                               new() { Glo.Tab.ORGANISATION_REF },
+                                               new() { cmbOrgRef.Text },
+                                               new() { Conditional.Equals },
+                                               out _, out rows, false, false) &&
+                    rows.Count > 0 && rows[0].Count > 0)
+                {
+                    if (rows[0][0] is int i)
+                    {
+                        App.EditOrganisation(i.ToString());
+                        return;
+                    }
+                }
+                throw new("Could not discern organisation from reference.");
+            }
+            catch (Exception ex)
+            {
+                App.DisplayError(ex.Message);
+                return;
+            }
+        }
+
+        private void cmbOrgRef_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            btnOpenOrganisation.IsEnabled = cmbOrgRef.SelectedIndex >= 0 &&
+                                            cmbOrgRef.Items[cmbOrgRef.SelectedIndex] is string s &&
+                                            s != "";
+
+            AnyInteraction();
         }
     }
 }
