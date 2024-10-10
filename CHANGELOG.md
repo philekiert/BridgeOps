@@ -3,13 +3,14 @@
 
 ## 0.5.3
 ### Added
-- Added a button to asset windows to open the currently selected organisation reference.
+- Added a button to the asset window to open the currently selected organisation reference.
 ### Adjusted
 - Record windows slightly restructured for improved window positioning and better visibility of their data tables.
 - Uncapped the maximum width for columns in data tables.
+- Client network settings are now stored in "Documents/Bridge Manager" rather than Windows' built-in settings to allow the network config to carry across between versions.
 ### Fixed
 - Stopped the program crashing when trying to clear selection from data tables where only single-row selection is enabled.
-- Set DateTime objects to display correctly in the query builder results table.
+- DateTime objects now display correctly in the query builder results table.
 - Changing the organisation reference in an asset now correctly un-greys out the save button when editing.
 
 
