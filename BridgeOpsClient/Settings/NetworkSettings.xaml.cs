@@ -20,9 +20,9 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
-            txtIPAddress.Text = Properties.Settings.Default.serverAddress;
-            txtPortOutbound.Text = Properties.Settings.Default.portOutbound.ToString();
-            txtPortInbound.Text = Properties.Settings.Default.portInbound.ToString();
+            txtIPAddress.Text = App.sd.ServerIP.ToString();
+            txtPortInbound.Text = App.sd.portInbound.ToString();
+            txtPortOutbound.Text = App.sd.portOutbound.ToString();
 
             txtIPAddress.Focus();
         }
@@ -52,11 +52,9 @@ namespace BridgeOpsClient
                 return;
             }
 
-            Properties.Settings.Default.serverAddress = txtIPAddress.Text;
-            Properties.Settings.Default.portOutbound = outbound;
-            Properties.Settings.Default.portInbound = inbound;
-
-            Properties.Settings.Default.Save();
+            System.IO.File.WriteAllText(App.networkConfigFile, txtIPAddress.Text + ";" +
+                                                               inbound.ToString() + ";" +
+                                                               outbound.ToString());
 
             App.sd.SetServerIP(txtIPAddress.Text);
             App.sd.portOutbound = outbound;
@@ -67,11 +65,11 @@ namespace BridgeOpsClient
 
         // Field default resets. The way of getting the default values doesn't seem ideal, but it works.
         private void btnIPDefault_Click(object sender, RoutedEventArgs e)
-        { txtIPAddress.Text = (string)Properties.Settings.Default.Properties["serverAddress"].DefaultValue; }
+        { txtIPAddress.Text = "127.0.0.1"; }
         private void btnOutboundDefault_Click(object sender, RoutedEventArgs e)
-        { txtPortOutbound.Text = (string)Properties.Settings.Default.Properties["portOutbound"].DefaultValue; }
+        { txtPortOutbound.Text = Glo.PORT_OUTBOUND_DEFAULT.ToString(); }
         private void btnInboundDefault_Click(object sender, RoutedEventArgs e)
-        { txtPortInbound.Text = (string)Properties.Settings.Default.Properties["portInbound"].DefaultValue; }
+        { txtPortInbound.Text = Glo.PORT_OUTBOUND_DEFAULT.ToString(); }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {

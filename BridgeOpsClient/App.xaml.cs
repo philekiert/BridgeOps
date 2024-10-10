@@ -127,6 +127,9 @@ namespace BridgeOpsClient
             }
         }
 
+        public static string documentsFolder = "";
+        public static string networkConfigFile = "";
+
         public App()
         {
             // Set current working directory.
@@ -137,12 +140,24 @@ namespace BridgeOpsClient
             else
                 Environment.CurrentDirectory = currentDir;
 
+            documentsFolder = Glo.Fun.ApplicationFolder();
+            networkConfigFile = Path.Combine(documentsFolder, Glo.CONFIG_NETWORK_CLIENT);
+
             // Apply network settings.
             try
             {
-                sd.SetServerIP(BridgeOpsClient.Properties.Settings.Default.serverAddress);
-                sd.portInbound = BridgeOpsClient.Properties.Settings.Default.portInbound;
-                sd.portOutbound = BridgeOpsClient.Properties.Settings.Default.portOutbound;
+                // Check for Bridge Manager folder, and generate if needed.
+                Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder());
+                if (!File.Exists(networkConfigFile))
+                    File.WriteAllText(networkConfigFile, "127.0.0.1;" +
+                                                         Glo.PORT_INBOUND_DEFAULT.ToString() + ";" +
+                                                         Glo.PORT_OUTBOUND_DEFAULT.ToString());
+                string[] networkSettings = File.ReadAllText(networkConfigFile).Split(';');
+
+                sd.SetServerIP(networkSettings[0]);
+                if (!int.TryParse(networkSettings[1], out sd.portInbound) ||
+                    !int.TryParse(networkSettings[2], out sd.portOutbound))
+                    throw new();
                 try
                 {
                     sd.InitialiseListener();
@@ -159,10 +174,10 @@ namespace BridgeOpsClient
             catch
             {
                 DisplayError("Something went wrong when applying the network settings. " +
-                                "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).");
+                             "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).");
                 sd.SetServerIP("127.0.0.1");
-                sd.portInbound = 52343;
-                sd.portOutbound = 52344;
+                sd.portInbound = Glo.PORT_INBOUND_DEFAULT;
+                sd.portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
             }
 
             foreach (Window win in Application.Current.Windows)

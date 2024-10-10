@@ -53,6 +53,7 @@ public static class Glo
     public const string CONFIG_TYPE_OVERRIDES = "type-overrides.txt";
     public const string CONFIG_COLUMN_ADDITIONS = "column-additions.txt";
     public const string CONFIG_NETWORK = "network-config.txt";
+    public const string CONFIG_NETWORK_CLIENT = "server";
     public const string CONFIG_SQL_SERVER_NAME = "sql-server-name.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
