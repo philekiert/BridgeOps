@@ -158,14 +158,14 @@ namespace BridgeOpsClient.CustomControls
                         header.Binding.StringFormat = "{0:dd/MM/yyyy}";
                     }
                     else if ((col.type != null && col.type.ToUpper() == "DATETIME") ||
-                        (rows.Count > 1 && rows[0].Count > 0 && rows[0][count] is DateTime))
+                        (rows.Count > 0 && rows[0].Count > 0 && rows[0][count] is DateTime))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy HH:mm}";
                     }
                     else if ((col.type != null &&
                               (col.type.ToUpper() == "TIMESPAN" || col.type.ToUpper() == "TIME")) ||
-                             (rows.Count > 1 && rows[0].Count > 0 && rows[0][count] is TimeSpan))
+                             (rows.Count > 0 && rows[0].Count > 0 && rows[0][count] is TimeSpan))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:hh\\:mm}";

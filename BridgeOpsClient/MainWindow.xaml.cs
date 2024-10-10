@@ -335,5 +335,19 @@ namespace BridgeOpsClient
             SelectBuilder selectBuilder = new();
             selectBuilder.Show();
         }
+
+        private void CustomWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(sender is TextBox) && !(sender is ComboBox) && !(sender is DataGrid))
+                foreach (var view in pageConferenceViews)
+                    view.RedrawGrid();
+        }
+
+        private void CustomWindow_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (!(sender is TextBox) && !(sender is ComboBox) && !(sender is DataGrid))
+                foreach (var view in pageConferenceViews)
+                    view.RedrawGrid();
+        }
     }
 }

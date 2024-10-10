@@ -1736,6 +1736,7 @@ FROM TimeWindows
 ),
 CumulativeLoadPoints AS (
 SELECT TimePoint, cl.{Glo.Tab.RESOURCE_ID},
+                  r.{Glo.Tab.RESOURCE_NAME},
 	   CASE WHEN cl.CumulativeDialCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONNECTION}
             THEN cl.CumulativeDialCount ELSE NULL END AS CumulativeDialCount,
 	   CASE WHEN cl.CumulativeConferenceCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE}
@@ -1746,7 +1747,7 @@ JOIN Resource r ON r.{Glo.Tab.RESOURCE_ID} = cl.{Glo.Tab.RESOURCE_ID}
 			   OR cl.CumulativeConferenceCount > r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE})
 
 )
-SELECT DISTINCT f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_TITLE}, f.{Glo.Tab.RESOURCE_ID},
+SELECT DISTINCT f.{Glo.Tab.CONFERENCE_ID}, f.{Glo.Tab.CONFERENCE_TITLE}, lp.{Glo.Tab.RESOURCE_NAME},
                 lp.TimePoint, lp.CumulativeDialCount,lp.CumulativeConferenceCount
 FROM Conference f
 JOIN CumulativeLoadPoints lp ON lp.TimePoint >= f.{Glo.Tab.CONFERENCE_START} 

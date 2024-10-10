@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
         Title="Bridge Manager" Height="700" Width="800"
-        Closed="Window_Closed">
+        Closed="Window_Closed"
+                    KeyDown="CustomWindow_KeyDown" KeyUp="CustomWindow_KeyUp">
     <Grid x:Name="grdMain">
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>

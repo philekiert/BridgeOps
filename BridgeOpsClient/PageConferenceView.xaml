@@ -82,7 +82,7 @@
                                  MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
                                  MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
                                  PreviewMouseWheel="schView_PreviewMouseWheel"
-                                 KeyDown="schView_PreviewKeyDown"
+                                 KeyDown="schView_KeyDown"
                                  Focusable="True" Margin="0 44 0 0"/>
             <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"

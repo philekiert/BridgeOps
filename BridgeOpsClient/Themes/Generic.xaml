@@ -3,6 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:BridgeOpsClient">
 
+    <!-- Components -->
     <Color x:Key="colorTitleBar">#eee</Color>
     <Color x:Key="colorTitleBarBorder">#ccc</Color>
     <Color x:Key="colorMinimise">#e2e2e2</Color>
@@ -50,7 +51,17 @@
     <SolidColorBrush x:Key="brushStatusBar" Color="{StaticResource colorStatusBar}"/>
     <SolidColorBrush x:Key="brushStatusBarBorder" Color="{StaticResource colorStatusBarBorder}"/>
 
-    <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose-->
+    <!-- Conferencing -->
+    <Color x:Key="colorConference">#43B7E2</Color>
+    <Color x:Key="colorConferenceCancelled">#E6607D</Color>
+    <Color x:Key="colorConferenceTest">#484b6a</Color>
+    <Color x:Key="colorConferenceEnded">#7BE085</Color>
+    <SolidColorBrush x:Key="brushConference" Color="{StaticResource colorConference}"/>
+    <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConferenceCancelled}"/>
+    <SolidColorBrush x:Key="brushConferenceTest" Color="{StaticResource colorConferenceTest}"/>
+    <SolidColorBrush x:Key="brushConferenceEnded" Color="{StaticResource colorConferenceEnded}"/>
+
+    <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose -->
 
     <Style TargetType="Button" x:Key="primary-button">
         <Setter Property="Background" Value="{StaticResource brushPrimaryButton}"/>

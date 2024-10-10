@@ -134,12 +134,12 @@ namespace BridgeOpsClient
             return 0;
         }
 
-        public enum StatusBarContext { None, Overflow }
-        public StatusBarContext statusBarContext = StatusBarContext.None;
-        public void SetStatusBar() { stkStatus.Children.Clear(); statusBarContext = StatusBarContext.None; }
-        public void SetStatusBar(StatusBarContext context, string message, bool bold, bool alignLeft)
-        { SetStatusBar(context, new List<string>() { message }, new() { bold } ); }
-        public void SetStatusBar(StatusBarContext context, List<string> messages, List<bool> bold)
+        public enum StatusContext { None, Overflow }
+        public StatusContext statusBarContext = StatusContext.None;
+        public void SetStatusBar() { stkStatus.Children.Clear(); statusBarContext = StatusContext.None; }
+        public void SetStatusBar(StatusContext context, string message, bool bold, bool alignLeft)
+        { SetStatus(context, new List<string>() { message }, new() { bold }); }
+        public void SetStatus(StatusContext context, List<string> messages, List<bool> bold)
         {
             stkStatus.Children.Clear();
             if (messages.Count != bold.Count)
@@ -362,7 +362,7 @@ namespace BridgeOpsClient
         {
             schResources.InvalidateVisual();
         }
-        void RedrawGrid()
+        public void RedrawGrid()
         {
             schView.InvalidateVisual();
         }
@@ -568,7 +568,7 @@ namespace BridgeOpsClient
             {
                 schView.selectedConferences.Clear();
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(e.GetPosition(schView).X));
-                int resource = schView.GetResourceFromY(e.GetPosition(schView).Y, true);
+                int resource = schView.GetRowFromY(e.GetPosition(schView).Y, true);
                 if (schView.currentConference != null)
                     App.EditConference(schView.currentConference.id);
                 else if (resource != -1)
@@ -794,7 +794,7 @@ namespace BridgeOpsClient
                 {
                     var dragConfs = DragConferences;
 
-                    int resourceRow = schView.GetResourceFromY(Mouse.GetPosition(schView).Y, true);
+                    int resourceRow = schView.GetRowFromY(Mouse.GetPosition(schView).Y, true);
                     int resourceRowDif = resourceRow - currentAtStartOfDrag.moveOriginTotalRow;
 
                     // Make sure the row difference is legal and restrict if it isn't.
@@ -846,9 +846,9 @@ namespace BridgeOpsClient
                         }
                     }
                 }
-
-                UpdateOverflowPoints();
             }
+
+            UpdateOverflowPoints();
         }
 
         double lastX = 0;
@@ -990,33 +990,21 @@ namespace BridgeOpsClient
             UpdateScrollBar();
         }
 
-        private void schView_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void schView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
             {
                 if (drag == Drag.Move)
                 {
-                    Conference? conf = schView.currentConference;
-                    if (conf != null)
+                    if (schView.currentConference != null)
                     {
-                        if (schView.selectedConferences.Count == 0)
+                        foreach (Conference c in DragConferences)
                         {
-                            TimeSpan confLength = new(conf.end.Ticks - conf.start.Ticks);
-                            conf.start = conf.moveOriginStart;
-                            conf.end = conf.start + confLength;
-                            conf.resourceID = conf.moveOriginResourceID;
-                            conf.resourceRow = conf.moveOriginResourceRow;
-                        }
-                        else
-                        {
-                            foreach (Conference c in schView.selectedConferences)
-                            {
-                                TimeSpan confLength = new(conf.end.Ticks - conf.start.Ticks);
-                                c.start = c.moveOriginStart;
-                                c.end = c.start + confLength;
-                                c.resourceID = c.moveOriginResourceID;
-                                c.resourceRow = c.moveOriginResourceRow;
-                            }
+                            TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
+                            c.start = c.moveOriginStart;
+                            c.end = c.start + confLength;
+                            c.resourceID = c.moveOriginResourceID;
+                            c.resourceRow = c.moveOriginResourceRow;
                         }
                     }
                     dragMouseHasMoved = false;
@@ -1261,7 +1249,7 @@ namespace BridgeOpsClient
                     if (yPix >= 0)
                         dc.DrawLine(penDivider, new Point(.5f, yPix), new Point(ActualWidth, yPix));
 
-                    int row = view.GetResourceFromY(yPix, false);
+                    int row = view.GetRowFromY(yPix, false);
                     PageConferenceView.ResourceInfo? resource = conferenceView.GetResourceFromSelectedRow(row);
                     if (resource != null)
                     {
@@ -1284,7 +1272,7 @@ namespace BridgeOpsClient
                 // Highlight cursor resource.
                 if (view.cursor != null)
                 {
-                    double y = view.GetResourceFromY(view.cursor.Value.Y, true);
+                    double y = view.GetRowFromY(view.cursor.Value.Y, true);
 
                     if (y >= 0)
                     {
@@ -1351,11 +1339,23 @@ namespace BridgeOpsClient
         Brush brsStylus;
         LinearGradientBrush brsStylusFade;
         Brush brsConference;
-        Brush brsConferenceHover;
         Brush brsConferenceBorder;
+        Brush brsConferenceSolid;
+        Brush brsConferenceCancelled;
+        Brush brsConferenceCancelledBorder;
+        Brush brsConferenceCancelledSolid;
+        Brush brsConferenceTest;
+        Brush brsConferenceTestBorder;
+        Brush brsConferenceTestSolid;
+        Brush brsConferenceEnded;
+        Brush brsConferenceEndedBorder;
+        Brush brsConferenceEndedSolid;
         Brush brsOverflow;
         Brush brsOverflowCheck;
         Pen penConferenceBorder;
+        Pen penConferenceCancelledBorder;
+        Pen penConferenceTestBorder;
+        Pen penConferenceEndedBorder;
         Pen penStylus;
         Pen penStylusFade;
         public ScheduleView()
@@ -1366,25 +1366,70 @@ namespace BridgeOpsClient
             penCursor = new Pen(brsCursor, 1.4);
             brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
             brsStylusFade = new LinearGradientBrush(Color.FromArgb(100, 0, 0, 0), Color.FromArgb(0, 0, 0, 0), 90);
-            Color clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorPrimaryButton"];
-            clrConference.A = 100;
+            Color clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConference"];
+            Color clrCancelled = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCancelled"];
+            Color clrTest = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceTest"];
+            Color clrEnded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceEnded"];
+            brsConferenceSolid = new SolidColorBrush(clrConference);
+            brsConferenceBorder = new SolidColorBrush(Color.FromRgb((byte)(clrConference.R * .5f),
+                                                                    (byte)(clrConference.G * .5f),
+                                                                    (byte)(clrConference.B * .5f)));
+            clrConference.A = 150;
             brsConference = new SolidColorBrush(clrConference);
-            clrConference.A = 200;
-            brsConferenceHover = new SolidColorBrush(clrConference);
-            clrConference.A = 255;
-            brsConferenceBorder = new SolidColorBrush(clrConference);
+
+            brsConferenceCancelledSolid = new SolidColorBrush(clrCancelled);
+            brsConferenceCancelledBorder = new SolidColorBrush(Color.FromRgb((byte)(clrCancelled.R * .5f),
+                                                                             (byte)(clrCancelled.G * .5f),
+                                                                             (byte)(clrCancelled.B * .5f)));
+            clrCancelled.A = 150;
+            brsConferenceCancelled = new SolidColorBrush(clrCancelled);
+
+            brsConferenceTestSolid = new SolidColorBrush(clrTest);
+            brsConferenceTestBorder = new SolidColorBrush(Color.FromRgb((byte)(clrTest.R * .5f),
+                                                                        (byte)(clrTest.G * .5f),
+                                                                        (byte)(clrTest.B * .5f)));
+            clrTest.A = 210;
+            brsConferenceTest = new SolidColorBrush(clrTest);
+
+            brsConferenceEndedSolid = new SolidColorBrush(clrEnded);
+            brsConferenceEndedBorder = new SolidColorBrush(Color.FromRgb((byte)(clrEnded.R * .5f),
+                                                                         (byte)(clrEnded.G * .5f),
+                                                                         (byte)(clrEnded.B * .5f)));
+            clrEnded.A = 150;
+            brsConferenceEnded = new SolidColorBrush(clrEnded);
+
             penConferenceBorder = new Pen(brsConferenceBorder, 1);
+            penConferenceCancelledBorder = new Pen(brsConferenceCancelledBorder, 1);
+            penConferenceTestBorder = new Pen(brsConferenceTestBorder, 1);
+            penConferenceEndedBorder = new Pen(brsConferenceEndedBorder, 1);
             brsOverflow = new SolidColorBrush(Color.FromArgb(50, 166, 65, 85));
-            brsOverflowCheck = new SolidColorBrush(Color.FromArgb(50, 105, 111, 135));
+            brsOverflowCheck = new SolidColorBrush(Color.FromArgb(50, 100, 104, 110));
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
             penStylus.Freeze();
             brsStylusFade.Freeze();
+
             brsConference.Freeze();
-            brsConferenceHover.Freeze();
+            brsConferenceSolid.Freeze();
             brsConferenceBorder.Freeze();
             penConferenceBorder.Freeze();
+
+            brsConferenceCancelled.Freeze();
+            brsConferenceCancelledSolid.Freeze();
+            brsConferenceCancelledBorder.Freeze();
+            penConferenceCancelledBorder.Freeze();
+
+            brsConferenceTest.Freeze();
+            brsConferenceTestSolid.Freeze();
+            brsConferenceTestBorder.Freeze();
+            penConferenceTestBorder.Freeze();
+
+            brsConferenceEnded.Freeze();
+            brsConferenceEndedSolid.Freeze();
+            brsConferenceEndedBorder.Freeze();
+            penConferenceEndedBorder.Freeze();
+
             brsOverflow.Freeze();
 
             scheduleTime = DateTime.Now;
@@ -1550,75 +1595,89 @@ namespace BridgeOpsClient
                             // Draw the capacity highlight overlay, regardless of overflow.
                             if (drawCursor && Keyboard.IsKeyDown(Key.O))
                             {
-                                double yPos = GetResourceFromY(cursor!.Value.Y, true);
-                                if (yPos > GetYfromResource(ri.id, 0) && yPos < GetYfromResource(ri.id, ri.rowsTotal))
+                                int hoveredRow = GetRowFromY(cursor!.Value.Y, true);
+                                int resourceTopRow = GetRowFromY(GetYfromResource(ri.id, 0), true);
+                                int resourceBottomRow = GetRowFromY(GetYfromResource(ri.id, ri.rowsTotal), true);
+                                if (hoveredRow >= resourceTopRow && hoveredRow < resourceBottomRow)
                                 {
                                     DateTime xDT = GetDateTimeFromX(cursor!.Value.X, zoomTimeDisplay);
 
                                     int connections = 0;
                                     int confs = 0;
 
-                                    for (int i = 0; i < ri.capacityChangePoints.Count - 1; ++i)
+                                    // If completely empty, still draw a big rectangle and some 0s.
+                                    if (ri.capacityChangePoints.Count == 0)
                                     {
-                                        PageConferenceView.OverflowPoint op = ri.capacityChangePoints[i];
-                                        DateTime s = ri.capacityChangePoints[i].point;
-                                        DateTime e = ri.capacityChangePoints[i + 1].point;
+                                        Rect r = new(0, startY, ActualWidth, endY - startY);
+                                        dc.DrawRectangle(brsOverflowCheck, null, r);
+                                        conferenceView.SetStatus(PageConferenceView.StatusContext.Overflow,
+                                                                 new() { "Connections: 0", "Conferences: 0" }, 
+                                                                 new() { false, false });
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < ri.capacityChangePoints.Count - 1; ++i)
+                                        {
+                                            PageConferenceView.OverflowPoint op = ri.capacityChangePoints[i];
+                                            DateTime s = ri.capacityChangePoints[i].point;
+                                            DateTime e = ri.capacityChangePoints[i + 1].point;
 
-                                        // If the first change point is after the start of the screen or if the last
-                                        // is before the end of the screen, there will be regions at the beginning and
-                                        // end of the schedule that don't show a capacity of 0. Force this.
-                                        if (i == 0 && xDT < s)
-                                        {
-                                            e = s;
-                                            s = start;
-                                        }
-                                        else if (i == ri.capacityChangePoints.Count - 2 && xDT > e)
-                                        {
-                                            s = e;
-                                            e = end;
-                                            connections = 0;
-                                            confs = 0;
-                                        }
-                                        else
-                                        {
-                                            connections += op.change;
-                                            confs += op.confAdd;
-                                        }
-
-                                        if (xDT >= s && xDT < e)
-                                        {
-                                            // Only draw as far as necessary.
-                                            if (s < start)
+                                            // If the first change point is after the start of the screen or if the last
+                                            // is before the end of the screen, there will be regions at the beginning and
+                                            // end of the schedule that don't show a capacity of 0. Force this.
+                                            if (i == 0 && xDT < s)
+                                            {
+                                                e = s;
                                                 s = start;
-                                            if (e > end)
+                                            }
+                                            else if (i == ri.capacityChangePoints.Count - 2 && xDT > e)
+                                            {
+                                                s = e;
                                                 e = end;
-
-                                            double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
-                                            double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
-                                            Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);
-                                            dc.DrawRectangle(brsOverflowCheck, null, r);
-
-                                            List<string> statusMessages = new()
+                                                connections = 0;
+                                                confs = 0;
+                                            }
+                                            else
                                             {
-                                                $"Connections: {connections}/{ri.connectionCapacity}",
-                                                $"Conferences: {confs}/{ri.conferenceCapacity}"
-                                            };
-                                            List<bool> bold = new()
-                                            {
-                                                connections > ri.connectionCapacity,
-                                                confs > ri.conferenceCapacity
-                                            };
-                                            conferenceView.SetStatusBar(PageConferenceView.StatusBarContext.Overflow,
-                                                                        statusMessages, bold);
+                                                connections += op.change;
+                                                confs += op.confAdd;
+                                            }
 
-                                            break;
+                                            if (xDT >= s && xDT < e)
+                                            {
+                                                // Only draw as far as necessary.
+                                                if (s < start)
+                                                    s = start;
+                                                if (e > end)
+                                                    e = end;
+
+                                                double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                                                double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                                                Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);
+                                                dc.DrawRectangle(brsOverflowCheck, null, r);
+
+                                                List<string> statusMessages = new()
+                                                {
+                                                    $"Connections: {connections}/{ri.connectionCapacity}",
+                                                    $"Conferences: {confs}/{ri.conferenceCapacity}"
+                                                };
+                                                List<bool> bold = new()
+                                                {
+                                                    connections > ri.connectionCapacity,
+                                                    confs > ri.conferenceCapacity
+                                                };
+                                                conferenceView.SetStatus(PageConferenceView.StatusContext.Overflow,
+                                                                         statusMessages, bold);
+
+                                                break;
+                                            }
                                         }
                                     }
                                 }
                             }
                             else
                             {
-                                if (conferenceView.statusBarContext == PageConferenceView.StatusBarContext.Overflow)
+                                if (conferenceView.statusBarContext == PageConferenceView.StatusContext.Overflow)
                                     conferenceView.SetStatusBar();
                             }
                         }
@@ -1686,6 +1745,28 @@ namespace BridgeOpsClient
                         PageConferenceView.Conference conference = kvp.Value;
                         if (conference.end > start && conference.start < end)
                         {
+                            // Assemble the correct paint set :)
+                            Brush textBrush = Brushes.Black;
+                            Brush brush = brsConference;
+                            Brush brushSolid = brsConferenceSolid;
+                            Pen border = penConferenceBorder;
+                            Pen borderSelected = new Pen(brsConferenceBorder, 2);
+                            if (conference.test)
+                            {
+                                textBrush = Brushes.White;
+                                brush = brsConferenceTest;
+                                brushSolid = brsConferenceTestSolid;
+                                border = penConferenceTestBorder;
+                                borderSelected.Brush = brsConferenceTestBorder;
+                            }
+                            if (conference.cancelled)
+                            {
+                                brush = brsConferenceCancelled;
+                                brushSolid = brsConferenceCancelledSolid;
+                                border = penConferenceCancelledBorder;
+                                borderSelected.Brush = brsConferenceCancelledBorder;
+                            }
+
                             double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
                                                                zoomTimeDisplay);
                             double endX = GetXfromDateTime(conference.end < end ? conference.end : end,
@@ -1711,9 +1792,12 @@ namespace BridgeOpsClient
                                 currentConference = conference;
                                 isMouseOverConference = true;
                                 if (selectedConferences.Contains(conference))
-                                    dc.DrawRectangle(brsConferenceHover, new Pen(Brushes.Red, 3), area);
+                                    // Reduce the size of the rect slightly for drawing so the pen is on the inside.
+                                    dc.DrawRectangle(brushSolid, borderSelected,
+                                                     new Rect(area.X + .5d, area.Y + .5d,
+                                                     area.Width - 1, area.Height - 1));
                                 else
-                                    dc.DrawRectangle(brsConferenceHover, penConferenceBorder, area);
+                                    dc.DrawRectangle(brushSolid, border, area);
 
                                 if ((cursorPoint.X < area.Left + 5 || cursorPoint.X > area.Right - 5) && !dragMove)
                                 {
@@ -1725,9 +1809,12 @@ namespace BridgeOpsClient
                                 }
                             }
                             else if (selectedConferences.Contains(conference))
-                                dc.DrawRectangle(brsConferenceHover, new Pen(Brushes.Red, 3), area);
+                                // Reduce the size of the rect slightly for drawing so the pen is on the inside.
+                                dc.DrawRectangle(brushSolid, borderSelected,
+                                    new Rect(area.X + .5d, area.Y + .5d,
+                                             area.Width - 1, area.Height - 1));
                             else
-                                dc.DrawRectangle(brsConference, penConferenceBorder, area);
+                                dc.DrawRectangle(brush, border, area);
 
                             if (area.Width > 8)
                             {
@@ -1737,7 +1824,7 @@ namespace BridgeOpsClient
                                                           FlowDirection.LeftToRight,
                                                           segoeUISemiBold,
                                                           12,
-                                                          Brushes.Black,
+                                                          textBrush,
                                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                                 Geometry clipGeometry = new RectangleGeometry(area);
@@ -1754,7 +1841,7 @@ namespace BridgeOpsClient
                                                              FlowDirection.LeftToRight,
                                                              segoeUI,
                                                              12,
-                                                             Brushes.Black,
+                                                             textBrush,
                                                              VisualTreeHelper.GetDpi(this).PixelsPerDip);
                                     dc.DrawText(time, new(startX + 4, startY + 21));
                                 }
@@ -1774,7 +1861,7 @@ namespace BridgeOpsClient
                 // Draw the cursor.
                 if (drawCursor)
                 {
-                    double y = GetResourceFromY(cursor!.Value.Y, true);
+                    double y = GetRowFromY(cursor!.Value.Y, true);
                     if (y >= 0)
                     {
                         y *= zoomResourceCurrent;
@@ -1917,7 +2004,7 @@ namespace BridgeOpsClient
             return ret > 1 ? 1 : ret;
         }
 
-        public int GetResourceFromY(double y, bool capped)
+        public int GetRowFromY(double y, bool capped)
         {
             int resource = (int)((y + DisplayResourceScroll()) / zoomResourceCurrent);
             if (capped)
