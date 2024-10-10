@@ -1,6 +1,6 @@
 # Changelog
-
-
+  
+  
 ## 0.5.3
 ### Added
 - Added a button to the asset window to open the currently selected organisation reference.
@@ -12,8 +12,8 @@
 - Stopped the program crashing when trying to clear selection from data tables where only single-row selection is enabled.
 - DateTime objects now display correctly in the query builder results table.
 - Changing the organisation reference in an asset now correctly un-greys out the save button when editing.
-
-
+  
+  
 ## 0.5.2
 ### Added
 - Selection count now displayed in the search result status bars.
@@ -21,8 +21,8 @@
 ### Fixed
 - Context menus no longer display on blank data tables.
 - Organisation and asset references are now selectable without edit permissions.
-
-
+  
+  
 ## 0.5.1
 ### Added
 - Status bars added to the database search area to summarise search results.
@@ -33,7 +33,7 @@
 ### Fixed
 - Conference type permissions removed from the user account settings menu as these are now redundant.
 - Fixed a bug causing historical searches to return erroneous results.
-
-
+  
+  
 ## 0.5.0
 - Initial release of the application.

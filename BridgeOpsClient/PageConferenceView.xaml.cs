@@ -820,17 +820,26 @@ namespace BridgeOpsClient
                     // Record the desired time for the primarily selected conference, and the difference to move all
                     // the others by.
                     DateTime time = schView.GetDateTimeFromX(Mouse.GetPosition(schView).X);
+                    if (CtrlDown())
+                        time = schView.SnapDateTime(time, schView.zoomTimeMaximum);
+                    else
+                        time = schView.SnapDateTime(time);
+
+                    // This code is a bit confusing, but it makes it so only the primarily selected conference snaps
+                    // and all other conferences follow it. Otherwise, each conference individually snaps, providing
+                    // in much less control and utility.
                     TimeSpan cursorDifference = new(moveOriginCursor.Ticks - time.Ticks);
+                    DateTime snappedDestination = currentAtStartOfDrag.moveOriginStart - cursorDifference;
+                    // Snap to grid unless ctrl is pressed, then snap to 5 mins.
+                    if (CtrlDown())
+                        snappedDestination = schView.SnapDateTime(snappedDestination, schView.zoomTimeMaximum);
+                    else
+                        snappedDestination = schView.SnapDateTime(snappedDestination);
+                    cursorDifference = new(currentAtStartOfDrag.moveOriginStart.Ticks - snappedDestination.Ticks);
 
                     foreach (Conference c in dragConfs)
                     {
                         DateTime newConfStart = c.moveOriginStart - cursorDifference;
-
-                        // Snap to grid unless ctrl is pressed, then snap to 5 mins.
-                        if (CtrlDown())
-                            newConfStart = schView.SnapDateTime(newConfStart, schView.zoomTimeMaximum);
-                        else
-                            newConfStart = schView.SnapDateTime(newConfStart);
 
                         TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
                         c.start = newConfStart;
@@ -1340,15 +1349,19 @@ namespace BridgeOpsClient
         LinearGradientBrush brsStylusFade;
         Brush brsConference;
         Brush brsConferenceBorder;
+        Brush brsConferenceHover;
         Brush brsConferenceSolid;
         Brush brsConferenceCancelled;
         Brush brsConferenceCancelledBorder;
+        Brush brsConferenceCancelledHover;
         Brush brsConferenceCancelledSolid;
         Brush brsConferenceTest;
         Brush brsConferenceTestBorder;
+        Brush brsConferenceTestHover;
         Brush brsConferenceTestSolid;
         Brush brsConferenceEnded;
         Brush brsConferenceEndedBorder;
+        Brush brsConferenceEndedHover;
         Brush brsConferenceEndedSolid;
         Brush brsOverflow;
         Brush brsOverflowCheck;
@@ -1374,6 +1387,8 @@ namespace BridgeOpsClient
             brsConferenceBorder = new SolidColorBrush(Color.FromRgb((byte)(clrConference.R * .5f),
                                                                     (byte)(clrConference.G * .5f),
                                                                     (byte)(clrConference.B * .5f)));
+            clrConference.A = 200;
+            brsConferenceHover = new SolidColorBrush(clrConference);
             clrConference.A = 150;
             brsConference = new SolidColorBrush(clrConference);
 
@@ -1381,6 +1396,8 @@ namespace BridgeOpsClient
             brsConferenceCancelledBorder = new SolidColorBrush(Color.FromRgb((byte)(clrCancelled.R * .5f),
                                                                              (byte)(clrCancelled.G * .5f),
                                                                              (byte)(clrCancelled.B * .5f)));
+            clrCancelled.A = 200;
+            brsConferenceCancelledHover = new SolidColorBrush(clrCancelled);
             clrCancelled.A = 150;
             brsConferenceCancelled = new SolidColorBrush(clrCancelled);
 
@@ -1388,6 +1405,8 @@ namespace BridgeOpsClient
             brsConferenceTestBorder = new SolidColorBrush(Color.FromRgb((byte)(clrTest.R * .5f),
                                                                         (byte)(clrTest.G * .5f),
                                                                         (byte)(clrTest.B * .5f)));
+            clrTest.A = 200;
+            brsConferenceTestHover = new SolidColorBrush(clrTest);
             clrTest.A = 210;
             brsConferenceTest = new SolidColorBrush(clrTest);
 
@@ -1395,6 +1414,8 @@ namespace BridgeOpsClient
             brsConferenceEndedBorder = new SolidColorBrush(Color.FromRgb((byte)(clrEnded.R * .5f),
                                                                          (byte)(clrEnded.G * .5f),
                                                                          (byte)(clrEnded.B * .5f)));
+            clrEnded.A = 200;
+            brsConferenceEndedHover = new SolidColorBrush(clrEnded);
             clrEnded.A = 150;
             brsConferenceEnded = new SolidColorBrush(clrEnded);
 
@@ -1411,21 +1432,25 @@ namespace BridgeOpsClient
             brsStylusFade.Freeze();
 
             brsConference.Freeze();
+            brsConferenceHover.Freeze();
             brsConferenceSolid.Freeze();
             brsConferenceBorder.Freeze();
             penConferenceBorder.Freeze();
 
             brsConferenceCancelled.Freeze();
+            brsConferenceCancelledHover.Freeze();
             brsConferenceCancelledSolid.Freeze();
             brsConferenceCancelledBorder.Freeze();
             penConferenceCancelledBorder.Freeze();
 
             brsConferenceTest.Freeze();
+            brsConferenceTestHover.Freeze();
             brsConferenceTestSolid.Freeze();
             brsConferenceTestBorder.Freeze();
             penConferenceTestBorder.Freeze();
 
             brsConferenceEnded.Freeze();
+            brsConferenceEndedHover.Freeze();
             brsConferenceEndedSolid.Freeze();
             brsConferenceEndedBorder.Freeze();
             penConferenceEndedBorder.Freeze();
@@ -1748,6 +1773,7 @@ namespace BridgeOpsClient
                             // Assemble the correct paint set :)
                             Brush textBrush = Brushes.Black;
                             Brush brush = brsConference;
+                            Brush brushHover = brsConferenceHover;
                             Brush brushSolid = brsConferenceSolid;
                             Pen border = penConferenceBorder;
                             Pen borderSelected = new Pen(brsConferenceBorder, 2);
@@ -1755,6 +1781,7 @@ namespace BridgeOpsClient
                             {
                                 textBrush = Brushes.White;
                                 brush = brsConferenceTest;
+                                brushHover = brsConferenceTestHover;
                                 brushSolid = brsConferenceTestSolid;
                                 border = penConferenceTestBorder;
                                 borderSelected.Brush = brsConferenceTestBorder;
@@ -1762,6 +1789,7 @@ namespace BridgeOpsClient
                             if (conference.cancelled)
                             {
                                 brush = brsConferenceCancelled;
+                                brushHover = brsConferenceCancelledHover;
                                 brushSolid = brsConferenceCancelledSolid;
                                 border = penConferenceCancelledBorder;
                                 borderSelected.Brush = brsConferenceCancelledBorder;
@@ -1797,7 +1825,7 @@ namespace BridgeOpsClient
                                                      new Rect(area.X + .5d, area.Y + .5d,
                                                      area.Width - 1, area.Height - 1));
                                 else
-                                    dc.DrawRectangle(brushSolid, border, area);
+                                    dc.DrawRectangle(brushHover, border, area);
 
                                 if ((cursorPoint.X < area.Left + 5 || cursorPoint.X > area.Right - 5) && !dragMove)
                                 {
@@ -1830,7 +1858,7 @@ namespace BridgeOpsClient
                                 Geometry clipGeometry = new RectangleGeometry(area);
                                 dc.PushClip(clipGeometry);
 
-                                dc.DrawText(title, new(startX + 4, startY + 3));
+                                dc.DrawText(title, new(startX + 4, startY + 2));
 
                                 // Draw start and end time.
                                 if (area.Height > 25)
