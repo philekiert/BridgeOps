@@ -4,6 +4,7 @@
 ## 0.5.3
 ### Added
 - Added a button to the asset window to open the currently selected organisation reference.
+- Added an icon.
 ### Adjusted
 - Record windows slightly restructured for improved window positioning and better visibility of their data tables.
 - Uncapped the maximum width for columns in data tables.

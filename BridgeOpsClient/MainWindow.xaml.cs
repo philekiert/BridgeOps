@@ -68,7 +68,8 @@ namespace BridgeOpsClient
 
             grdMain.Children.Remove(menuBar);
             grdMain.RowDefinitions[0].Height = new(0);
-            AssignMenuBar(menuBar, 1);
+            AssignMenuBar(menuBar, 0);
+            SetIcon("/Resources/Icons/x20TitleBarIcon.png");
 
             frameConf.Content = new PageConferenceView();
             pageDatabase = new PageDatabase(this);

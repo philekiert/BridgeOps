@@ -397,6 +397,7 @@ namespace BridgeOpsClient
         static bool queueGridRedrawFromOtherThread = false;
 
         long lastFrame = 0;
+        DateTime lastUpdate = DateTime.Now;
         void TimerUpdate(object? sender, EventArgs e)
         {
             if (updateScrollBar)
@@ -412,6 +413,10 @@ namespace BridgeOpsClient
             // the schedule view will be affected by both.
             bool horizontalChange = false;
             bool verticalChange = false;
+
+            // Update horizontally every second or two to account for the stylus moving.
+            if ((DateTime.Now - lastUpdate).Seconds > 1)
+                horizontalChange = true;
 
             if (schView.zoomTimeCurrent != schView.zoomTime)
             {
@@ -1371,10 +1376,24 @@ namespace BridgeOpsClient
         Pen penConferenceEndedBorder;
         Pen penStylus;
         Pen penStylusFade;
+
+        PathGeometry symbolPlay = new();
+
         public ScheduleView()
         {
             ClipToBounds = true;
 
+            // Create a play symbol for active conferences.
+            Point p1 = new Point(0, 0);
+            Point p2 = new Point(0, 10d);
+            Point p3 = new Point(7.33d, 5d);
+            PathFigure pathPlay = new PathFigure { StartPoint = p1 };
+            pathPlay.Segments.Add(new LineSegment(p2, true));
+            pathPlay.Segments.Add(new LineSegment(p3, true));
+            pathPlay.IsClosed = true;
+            symbolPlay.Figures.Add(pathPlay);
+
+            // Prepare colors, brushes and pens.
             brsCursor = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
             penCursor = new Pen(brsCursor, 1.4);
             brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
@@ -1424,7 +1443,7 @@ namespace BridgeOpsClient
             penConferenceTestBorder = new Pen(brsConferenceTestBorder, 1);
             penConferenceEndedBorder = new Pen(brsConferenceEndedBorder, 1);
             brsOverflow = new SolidColorBrush(Color.FromArgb(50, 166, 65, 85));
-            brsOverflowCheck = new SolidColorBrush(Color.FromArgb(50, 100, 104, 110));
+            brsOverflowCheck = new SolidColorBrush(Color.FromArgb(50, 100, 100, 100));
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
@@ -1501,6 +1520,8 @@ namespace BridgeOpsClient
 
             if (ActualWidth > 0)
             {
+                DateTime now = DateTime.Now;
+
                 // Background
                 dc.DrawRectangle(Brushes.White, new Pen(Brushes.LightGray, 1),
                                  new Rect(0d, .5d, ActualWidth - .5d, ActualHeight - .5d));
@@ -1636,7 +1657,7 @@ namespace BridgeOpsClient
                                         Rect r = new(0, startY, ActualWidth, endY - startY);
                                         dc.DrawRectangle(brsOverflowCheck, null, r);
                                         conferenceView.SetStatus(PageConferenceView.StatusContext.Overflow,
-                                                                 new() { "Connections: 0", "Conferences: 0" }, 
+                                                                 new() { "Connections: 0", "Conferences: 0" },
                                                                  new() { false, false });
                                     }
                                     else
@@ -1755,6 +1776,10 @@ namespace BridgeOpsClient
                 //dc.DrawLine(penStylus, new Point((int)(ActualWidth * .5d) + .5d, -3d),
                 //                       new Point((int)(ActualWidth * .5d) + .5d, 4d));
 
+                // Draw the time.
+                double timeX = (int)GetXfromDateTime(now, zoomTimeDisplay) + .5d;
+                dc.DrawLine(penScheduleLineDay, new(timeX, 0d), new(timeX, ActualHeight));
+
                 // Draw conferences.
                 bool resizeCursorSet = false;
                 bool isMouseOverConference = false;
@@ -1794,6 +1819,14 @@ namespace BridgeOpsClient
                                 border = penConferenceCancelledBorder;
                                 borderSelected.Brush = brsConferenceCancelledBorder;
                             }
+                            if (conference.end < now && !conference.test && !conference.cancelled)
+                            {
+                                brush = brsConferenceEnded;
+                                brushHover = brsConferenceEndedHover;
+                                brushSolid = brsConferenceEndedSolid;
+                                border = penConferenceEndedBorder;
+                                borderSelected.Brush = brsConferenceEndedBorder;
+                            }
 
                             double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
                                                                zoomTimeDisplay);
@@ -1814,16 +1847,20 @@ namespace BridgeOpsClient
 
                             bool dragMove = conferenceView.drag == PageConferenceView.Drag.Move;
                             bool dragResize = conferenceView.drag == PageConferenceView.Drag.Resize;
+                            bool thickBorder = false; // Needed to figure out some spacing below.
                             if (area.Contains(cursorPoint) ||
                                 ((dragMove || dragResize) && conference == currentConference))
                             {
                                 currentConference = conference;
                                 isMouseOverConference = true;
                                 if (selectedConferences.Contains(conference))
+                                {
                                     // Reduce the size of the rect slightly for drawing so the pen is on the inside.
                                     dc.DrawRectangle(brushSolid, borderSelected,
                                                      new Rect(area.X + .5d, area.Y + .5d,
                                                      area.Width - 1, area.Height - 1));
+                                    thickBorder = true;
+                                }
                                 else
                                     dc.DrawRectangle(brushHover, border, area);
 
@@ -1837,12 +1874,39 @@ namespace BridgeOpsClient
                                 }
                             }
                             else if (selectedConferences.Contains(conference))
+                            {
                                 // Reduce the size of the rect slightly for drawing so the pen is on the inside.
                                 dc.DrawRectangle(brushSolid, borderSelected,
                                     new Rect(area.X + .5d, area.Y + .5d,
                                              area.Width - 1, area.Height - 1));
+                                thickBorder = true;
+                            }
                             else
                                 dc.DrawRectangle(brush, border, area);
+
+                            Geometry clipGeometry = new RectangleGeometry(new(area.Left, area.Top,
+                                                                              area.Width - .5d, area.Height));
+                            dc.PushClip(clipGeometry);
+
+                            // If the conference is currently running, indicate this.
+                            if (conference.start < now && conference.end > now)
+                            {
+                                Rect iconTray;
+                                if (thickBorder)
+                                    iconTray = new Rect(area.Left + 1.5d, area.Top + 1.5d, 14d, area.Height - 3d);
+                                else
+                                    iconTray = new Rect(area.Left + .5d, area.Top + .5d, 14d, area.Height - 1d);
+
+                                dc.DrawRectangle(brsConferenceCancelledSolid, null, iconTray);
+
+                                // Draw the play symbol.
+                                PathGeometry play = symbolPlay.Clone();
+                                TranslateTransform translateTransform = new(startX + 4.5d, startY + 5d);
+                                play.Transform = translateTransform;
+                                dc.DrawGeometry(Brushes.White, null, play);
+
+                                startX += 14d; // Adjust start for drawing text.
+                            }
 
                             if (area.Width > 8)
                             {
@@ -1855,10 +1919,7 @@ namespace BridgeOpsClient
                                                           textBrush,
                                                           VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-                                Geometry clipGeometry = new RectangleGeometry(area);
-                                dc.PushClip(clipGeometry);
-
-                                dc.DrawText(title, new(startX + 4, startY + 2));
+                                dc.DrawText(title, new(startX + 5, startY + 2));
 
                                 // Draw start and end time.
                                 if (area.Height > 25)
@@ -1871,11 +1932,11 @@ namespace BridgeOpsClient
                                                              12,
                                                              textBrush,
                                                              VisualTreeHelper.GetDpi(this).PixelsPerDip);
-                                    dc.DrawText(time, new(startX + 4, startY + 21));
+                                    dc.DrawText(time, new(startX + 5, startY + zoomResourceSensitivity));
                                 }
-
-                                dc.Pop();
                             }
+
+                            dc.Pop();
                         }
                     }
                 }

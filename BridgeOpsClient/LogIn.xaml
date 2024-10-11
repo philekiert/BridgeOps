@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
-        Title="Bridge Manager" WindowStartupLocation="CenterScreen" SizeToContent="Height" Width="210"
+        Title="Bridge Manager" WindowStartupLocation="CenterScreen" SizeToContent="Height" Width="250"
         ResizeMode="CanMinimize"
         Loaded="Window_Loaded"
         KeyDown="Window_KeyDown" KeyUp="CustomWindow_KeyUp"
@@ -31,15 +31,17 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" Grid.Column="1" Content="Username" Height="30" HorizontalAlignment="Stretch"
-               VerticalAlignment="Center" Margin="0,35,0,0" FontSize="14" FontWeight="SemiBold" Padding="0 10 0 0"/>
+        <Image Grid.ColumnSpan="3" Source="/Resources/Icons/BridgeManager.ico" HorizontalAlignment="Center"
+               Width="64" VerticalAlignment="Center" Margin="0 0 0 15"/>
+        <Label Grid.Row="0" Grid.Column="1" Content="Username" Height="30" HorizontalAlignment="Center"
+               VerticalAlignment="Center" Margin="0,116,0,0" FontSize="14" FontWeight="SemiBold" Padding="0 10 0 0"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtUsername" HorizontalAlignment="Center" Margin="0,10,0,0"
                  VerticalAlignment="Center" Width="150" Height="20"/>
-        <Label Grid.Row="2" Grid.Column="1" Content="Password" Height="30" HorizontalAlignment="Stretch"
+        <Label Grid.Row="2" Grid.Column="1" Content="Password" Height="30" HorizontalAlignment="Center"
                VerticalAlignment="Center" Margin="0,20,0,0" FontSize="14" FontWeight="SemiBold" Padding="0 10 0 0"/>
         <PasswordBox Grid.Row="3" Grid.Column="1" x:Name="pwdPassword" HorizontalAlignment="Center" Margin="0,10,0,0"
                  VerticalAlignment="Center" Width="150" Height="20"/>
-        <Button Grid.Row="4" Grid.Column="1" x:Name="btnLogIn" Content="Log in" HorizontalAlignment="Left"
+        <Button Grid.Row="4" Grid.Column="1" x:Name="btnLogIn" Content="Log in" HorizontalAlignment="Center"
                 Margin="0,40,0,32" Padding="10 1 10 1" VerticalAlignment="Center" Click="btnLogIn_Click"
                 Style="{StaticResource primary-button}" Height="24"/>
         <Label Grid.Row="5" Grid.ColumnSpan="3" Content="v#.#.#" Foreground="Gray" HorizontalAlignment="Right"

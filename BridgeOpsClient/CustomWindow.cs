@@ -7,6 +7,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Shell;
 using System.Windows.Threading;
@@ -111,6 +112,13 @@ namespace BridgeOpsClient
             };
             grid.Children.Add(titleBar);
 
+            StackPanel titleBarContentArea = new()
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            titleBar.Child = titleBarContentArea;
+
             menuBar = new()
             {
                 Height = titleBarHeight,
@@ -207,6 +215,9 @@ namespace BridgeOpsClient
             grid.Children.Add(maximiseButton);
             grid.Children.Add(closeButton);
 
+            Image icon = new();
+
+
             TextBlock title = new()
             {
                 Foreground = Brushes.Black,
@@ -216,7 +227,8 @@ namespace BridgeOpsClient
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            titleBar.Child = title;
+            titleBarContentArea.Children.Add(icon);
+            titleBarContentArea.Children.Add(title);
 
             Content = windowBorder;
 
@@ -259,6 +271,18 @@ namespace BridgeOpsClient
             WindowChrome.SetIsHitTestVisibleInChrome(menuBar, false);
             foreach (IInputElement iie in menu.Items)
                 WindowChrome.SetIsHitTestVisibleInChrome(iie, true);
+        }
+        public void SetIcon(string resourcePath)
+        {
+            // Create a new BitmapImage
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri("pack://application:,,," + resourcePath);
+            bitmap.EndInit();
+
+            ((Image)((StackPanel)titleBar.Child).Children[0]).Source = bitmap;
+            ((Image)((StackPanel)titleBar.Child).Children[0]).Width = 20;
+            ((Image)((StackPanel)titleBar.Child).Children[0]).Margin = new Thickness(6, 0, 0, 0);
         }
 
         private void Button_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
@@ -331,7 +355,7 @@ namespace BridgeOpsClient
             Content = windowBorder;
 
             // Carry out some other tasks after load to take advantage of properties set in XAML.
-            ((TextBlock)titleBar.Child).Text = Title;
+            ((TextBlock)((StackPanel)titleBar.Child).Children[1]).Text = Title;
             if (ResizeMode == ResizeMode.CanMinimize)
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
             if (ResizeMode == ResizeMode.NoResize)

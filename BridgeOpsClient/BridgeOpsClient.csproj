@@ -12,11 +12,13 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <AssemblyName>Bridge Manager</AssemblyName>
+    <ApplicationIcon>Resources\Icons\BridgeManager.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
+    <None Remove="Resources\Icons\x20TitleBarIcon.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,8 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Icons\BridgeManager.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
     <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
+    <Resource Include="Resources\Icons\x20TitleBarIcon.png" />
   </ItemGroup>
 
   <ItemGroup>
