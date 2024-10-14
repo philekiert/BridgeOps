@@ -480,6 +480,7 @@ namespace BridgeOpsClient
 
             if (!verticalChange && schView.scrollResource != schView.lastScrollResource)
             {
+                schView.lastScrollResource = schView.scrollResource;
                 verticalChange = true;
                 // Without a horizontal update here, it sometimes doesn't update when scrolling vertically and
                 // horizontally at the same time. I can't figure out why, and to be honest it kind of makes having the
@@ -731,6 +732,9 @@ namespace BridgeOpsClient
                 }
                 else if (!dragMouseHADmoved && schView.currentConference == null)
                     schView.selectedConferences.Clear();
+
+                if (e.ChangedButton == MouseButton.Middle)
+                    RedrawResources(); // Bring back the highlight.
             }
 
             conferenceSelectionAffected = false;
@@ -894,6 +898,7 @@ namespace BridgeOpsClient
             else
             {
                 schView.SetCursor((int)e.GetPosition(schView).X, (int)e.GetPosition(schView).Y);
+                RedrawResources(); // Highlight needs updating.
                 cursorMoved = true;
             }
             lastX = newX;
@@ -1679,7 +1684,7 @@ namespace BridgeOpsClient
                                 int hoveredRow = GetRowFromY(cursor!.Value.Y, true);
                                 int resourceTopRow = GetRowFromY(GetYfromResource(ri.id, 0), true);
                                 int resourceBottomRow = GetRowFromY(GetYfromResource(ri.id, ri.rowsTotal), true);
-                                if (hoveredRow >= resourceTopRow && hoveredRow < resourceBottomRow)
+                                if (hoveredRow >= resourceTopRow && hoveredRow <= resourceBottomRow)
                                 {
                                     DateTime xDT = GetDateTimeFromX(cursor!.Value.X, zoomTimeDisplay);
 
@@ -2090,6 +2095,9 @@ namespace BridgeOpsClient
             if (scrollResource > 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight)
                 scrollResource = 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight;
             if (scrollResource < 0) scrollResource = 0;
+            if (lastScrollResource > 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight)
+                lastScrollResource = 1 + (zoomResourceCurrent * conferenceView!.totalRows) - ActualHeight;
+            if (lastScrollResource < 0) lastScrollResource = 0;
         }
 
         //   H E L P E R   F U N C T I O N S
