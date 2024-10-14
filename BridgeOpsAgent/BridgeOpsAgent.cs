@@ -2324,7 +2324,7 @@ internal class BridgeOpsAgent
             string orderUpdateCommand = "";
 
             string column = req.column;
-            // Protect integral tables and columns (could be structured better, but I've tried to keep it readable).
+            // Protect core tables and columns (could be structured better, but I've tried to keep it readable).
             if (req.intent == TableModification.Intent.Removal ||
                 (req.intent == TableModification.Intent.Modification && req.columnType != null))
             {

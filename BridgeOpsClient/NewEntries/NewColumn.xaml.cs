@@ -20,7 +20,7 @@ namespace BridgeOpsClient
     {
         ColumnRecord.Column columnDetails;
         bool edit = false;
-        bool integral = false; // Tracks whether or not this column can be edited save for type and friendly name.
+        bool core = false; // Tracks whether or not this column can be edited save for type and friendly name.
 
         // Add
         public NewColumn()
@@ -38,14 +38,14 @@ namespace BridgeOpsClient
             btnAdd.Content = "Edit";
 
             edit = true;
-            integral = !Glo.Fun.ColumnRemovalAllowed(table, column);
+            core = !Glo.Fun.ColumnRemovalAllowed(table, column);
 
             this.columnDetails = columnDetails;
             cmbTable.Text = table;
             cmbTable.IsEnabled = false;
             txtColumnName.Text = column;
-            txtColumnName.IsEnabled = !integral;
-            txtFriendlyName.IsEnabled = integral;
+            txtColumnName.IsEnabled = !core;
+            txtFriendlyName.IsEnabled = core;
             txtFriendlyName.Text = columnDetails.friendlyName;
             txtLimit.Text = columnDetails.restriction.ToString();
             txtAllowed.Text = string.Join("\r\n", columnDetails.allowed);
@@ -57,7 +57,7 @@ namespace BridgeOpsClient
             else
                 cmbType.Text = columnDetails.type == "BIT" ? "BOOLEAN" : columnDetails.type;
 
-            if (integral) // If integral to the database's structure, not as in integer
+            if (core) // If core to the database's structure, not as in integer
             {
                 // Soft duplicates are only allowed for added columns.
                 chkSoftDuplicate.IsEnabled = false;
@@ -138,7 +138,7 @@ namespace BridgeOpsClient
                 case "VARCHAR":
                     txtLimit.IsEnabled = true;
                     txtLimit.Text = "";
-                    txtAllowed.IsEnabled = !integral;
+                    txtAllowed.IsEnabled = !core;
                     if (columnDetails.type == "VARCHAR" && columnDetails.restriction <= 65535)
                         txtLimit.Text = columnDetails.restriction.ToString();
                     break;
@@ -201,7 +201,7 @@ namespace BridgeOpsClient
                         cmbType.Text != originalType || varcharMaxChanged ? cmbType.Text : null,
                         allowed, chkUnique.IsChecked == true);
 
-                if (!integral)
+                if (!core)
                     mod.softDuplicateCheck = chkSoftDuplicate.IsChecked == true;
 
                 VARCHAR(ref mod);

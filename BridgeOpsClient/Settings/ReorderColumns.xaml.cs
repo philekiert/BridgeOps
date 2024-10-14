@@ -41,9 +41,9 @@ namespace BridgeOpsClient
             public int displayIndex;
             public string name;
             public string Name { get { return name; } }
-            public enum Kind { column, header, integral }
+            public enum Kind { column, header, core }
             public Kind kind;
-            public bool Greyed { get { return kind == Kind.integral; } }
+            public bool Greyed { get { return kind == Kind.core; } }
             public bool Header { get { return kind == Kind.header && name != ""; } }
             public bool Footer { get { return kind == Kind.header && name == ""; } }
             public Entry(int index, int displayIndex, string name, Kind kind)
@@ -110,7 +110,7 @@ namespace BridgeOpsClient
                 {
                     string printName = ColumnRecord.GetPrintName(de);
                     Entry.Kind type = Glo.Fun.ColumnRemovalAllowed(table[n], (string)de.Key) ? Entry.Kind.column :
-                                                                                               Entry.Kind.integral;
+                                                                                               Entry.Kind.core;
                     entryLists[n].Add(new Entry(i, 0, printName, type));
                     entryListOriginals[n].Add(new Entry(i, 0, printName, type));
                     ++i;
