@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
-using SendReceiveClasses;
+﻿using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -1358,11 +1357,9 @@ namespace BridgeOpsClient
         Brush brsConferenceBorder;
         Brush brsConferenceHover;
         Brush brsConferenceSolid;
-        Brush brsConferenceCancelled;
-        Brush brsConferenceCancelledBorder;
-        Brush brsConferenceCancelledHover;
-        Brush brsConferenceCancelledSolid;
         Brush brsConferenceTest;
+        Brush brsConferenceCancelled;
+        Brush brsConferenceCancelledHover;
         Brush brsConferenceTestBorder;
         Brush brsConferenceTestHover;
         Brush brsConferenceTestSolid;
@@ -1370,10 +1367,19 @@ namespace BridgeOpsClient
         Brush brsConferenceEndedBorder;
         Brush brsConferenceEndedHover;
         Brush brsConferenceEndedSolid;
+        Brush brsConferenceFailed;
+        Brush brsConferenceFailedBorder;
+        Brush brsConferenceFailedHover;
+        Brush brsConferenceFailedSolid;
+        Brush brsConferenceDegraded;
+        Brush brsConferenceDegradedBorder;
+        Brush brsConferenceDegradedHover;
+        Brush brsConferenceDegradedSolid;
         Brush brsOverflow;
         Brush brsOverflowCheck;
         Pen penConferenceBorder;
-        Pen penConferenceCancelledBorder;
+        Pen penConferenceDegradedBorder;
+        Pen penConferenceFailedBorder;
         Pen penConferenceTestBorder;
         Pen penConferenceEndedBorder;
         Pen penStylus;
@@ -1401,9 +1407,12 @@ namespace BridgeOpsClient
             brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
             brsStylusFade = new LinearGradientBrush(Color.FromArgb(100, 0, 0, 0), Color.FromArgb(0, 0, 0, 0), 90);
             Color clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConference"];
-            Color clrCancelled = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCancelled"];
+            Color clrFailed = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceFailed"];
             Color clrTest = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceTest"];
             Color clrEnded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceEnded"];
+            Color clrDegraded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceDegraded"];
+
+            // Conference
             brsConferenceSolid = new SolidColorBrush(clrConference);
             brsConferenceBorder = new SolidColorBrush(Color.FromRgb((byte)(clrConference.R * .5f),
                                                                     (byte)(clrConference.G * .5f),
@@ -1412,16 +1421,32 @@ namespace BridgeOpsClient
             brsConferenceHover = new SolidColorBrush(clrConference);
             clrConference.A = 150;
             brsConference = new SolidColorBrush(clrConference);
+            clrConference.A = 100;
+            brsConferenceCancelledHover = new SolidColorBrush(clrConference);
+            clrConference.A = 50;
+            brsConferenceCancelled = new SolidColorBrush(clrConference);
 
-            brsConferenceCancelledSolid = new SolidColorBrush(clrCancelled);
-            brsConferenceCancelledBorder = new SolidColorBrush(Color.FromRgb((byte)(clrCancelled.R * .5f),
-                                                                             (byte)(clrCancelled.G * .5f),
-                                                                             (byte)(clrCancelled.B * .5f)));
-            clrCancelled.A = 200;
-            brsConferenceCancelledHover = new SolidColorBrush(clrCancelled);
-            clrCancelled.A = 150;
-            brsConferenceCancelled = new SolidColorBrush(clrCancelled);
+            // Failed
+            brsConferenceFailedSolid = new SolidColorBrush(clrFailed);
+            brsConferenceFailedBorder = new SolidColorBrush(Color.FromRgb((byte)(clrFailed.R * .5f),
+                                                                             (byte)(clrFailed.G * .5f),
+                                                                             (byte)(clrFailed.B * .5f)));
+            clrFailed.A = 200;
+            brsConferenceFailedHover = new SolidColorBrush(clrFailed);
+            clrFailed.A = 150;
+            brsConferenceFailed = new SolidColorBrush(clrFailed);
 
+            // Degraded
+            brsConferenceDegradedSolid = new SolidColorBrush(clrDegraded);
+            brsConferenceDegradedBorder = new SolidColorBrush(Color.FromRgb((byte)(clrDegraded.R * .5f),
+                                                                             (byte)(clrDegraded.G * .5f),
+                                                                             (byte)(clrDegraded.B * .5f)));
+            clrDegraded.A = 200;
+            brsConferenceDegradedHover = new SolidColorBrush(clrDegraded);
+            clrDegraded.A = 150;
+            brsConferenceDegraded = new SolidColorBrush(clrDegraded);
+
+            // Test
             brsConferenceTestSolid = new SolidColorBrush(clrTest);
             brsConferenceTestBorder = new SolidColorBrush(Color.FromRgb((byte)(clrTest.R * .5f),
                                                                         (byte)(clrTest.G * .5f),
@@ -1431,6 +1456,7 @@ namespace BridgeOpsClient
             clrTest.A = 210;
             brsConferenceTest = new SolidColorBrush(clrTest);
 
+            // Ended
             brsConferenceEndedSolid = new SolidColorBrush(clrEnded);
             brsConferenceEndedBorder = new SolidColorBrush(Color.FromRgb((byte)(clrEnded.R * .5f),
                                                                          (byte)(clrEnded.G * .5f),
@@ -1441,7 +1467,8 @@ namespace BridgeOpsClient
             brsConferenceEnded = new SolidColorBrush(clrEnded);
 
             penConferenceBorder = new Pen(brsConferenceBorder, 1);
-            penConferenceCancelledBorder = new Pen(brsConferenceCancelledBorder, 1);
+            penConferenceDegradedBorder = new Pen(brsConferenceDegradedBorder, 1);
+            penConferenceFailedBorder = new Pen(brsConferenceFailedBorder, 1);
             penConferenceTestBorder = new Pen(brsConferenceTestBorder, 1);
             penConferenceEndedBorder = new Pen(brsConferenceEndedBorder, 1);
             brsOverflow = new SolidColorBrush(Color.FromArgb(50, 166, 65, 85));
@@ -1458,11 +1485,17 @@ namespace BridgeOpsClient
             brsConferenceBorder.Freeze();
             penConferenceBorder.Freeze();
 
-            brsConferenceCancelled.Freeze();
-            brsConferenceCancelledHover.Freeze();
-            brsConferenceCancelledSolid.Freeze();
-            brsConferenceCancelledBorder.Freeze();
-            penConferenceCancelledBorder.Freeze();
+            brsConferenceFailed.Freeze();
+            brsConferenceFailedHover.Freeze();
+            brsConferenceFailedSolid.Freeze();
+            brsConferenceFailedBorder.Freeze();
+            penConferenceFailedBorder.Freeze();
+
+            brsConferenceDegraded.Freeze();
+            brsConferenceDegradedHover.Freeze();
+            brsConferenceDegradedSolid.Freeze();
+            brsConferenceDegradedBorder.Freeze();
+            penConferenceDegradedBorder.Freeze();
 
             brsConferenceTest.Freeze();
             brsConferenceTestHover.Freeze();
@@ -1806,7 +1839,6 @@ namespace BridgeOpsClient
                             Pen borderSelected = new Pen(brsConferenceBorder, 2);
                             if (conference.test)
                             {
-                                textBrush = Brushes.White;
                                 brush = brsConferenceTest;
                                 brushHover = brsConferenceTestHover;
                                 brushSolid = brsConferenceTestSolid;
@@ -1817,17 +1849,36 @@ namespace BridgeOpsClient
                             {
                                 brush = brsConferenceCancelled;
                                 brushHover = brsConferenceCancelledHover;
-                                brushSolid = brsConferenceCancelledSolid;
-                                border = penConferenceCancelledBorder;
-                                borderSelected.Brush = brsConferenceCancelledBorder;
+                                brushSolid = brsConferenceSolid;
+                                border = penConferenceBorder;
+                                borderSelected.Brush = brsConferenceBorder;
                             }
                             if (conference.end < now && !conference.test && !conference.cancelled)
                             {
-                                brush = brsConferenceEnded;
-                                brushHover = brsConferenceEndedHover;
-                                brushSolid = brsConferenceEndedSolid;
-                                border = penConferenceEndedBorder;
-                                borderSelected.Brush = brsConferenceEndedBorder;
+                                if (conference.closure == "Succeeded" && !conference.hasUnclosedConnection)
+                                {
+                                    brush = brsConferenceEnded;
+                                    brushHover = brsConferenceEndedHover;
+                                    brushSolid = brsConferenceEndedSolid;
+                                    border = penConferenceEndedBorder;
+                                    borderSelected.Brush = brsConferenceEndedBorder;
+                                }
+                                else if (conference.closure == "Degraded" && !conference.hasUnclosedConnection)
+                                {
+                                    brush = brsConferenceDegraded;
+                                    brushHover = brsConferenceDegradedHover;
+                                    brushSolid = brsConferenceDegradedSolid;
+                                    border = penConferenceDegradedBorder;
+                                    borderSelected.Brush = brsConferenceDegradedBorder;
+                                }
+                                else if (conference.closure == "Failed")
+                                {
+                                    brush = brsConferenceFailed;
+                                    brushHover = brsConferenceFailedHover;
+                                    brushSolid = brsConferenceFailedSolid;
+                                    border = penConferenceFailedBorder;
+                                    borderSelected.Brush = brsConferenceFailedBorder;
+                                }
                             }
 
                             double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
@@ -1862,9 +1913,13 @@ namespace BridgeOpsClient
                                                      new Rect(area.X + .5d, area.Y + .5d,
                                                      area.Width - 1, area.Height - 1));
                                     thickBorder = true;
+                                    textBrush = PrintBrushFromLuminance(brushSolid);
                                 }
                                 else
+                                {
                                     dc.DrawRectangle(brushHover, border, area);
+                                    textBrush = PrintBrushFromLuminance(brushHover);
+                                }
 
                                 if ((cursorPoint.X < area.Left + 5 || cursorPoint.X > area.Right - 5) && !dragMove)
                                 {
@@ -1884,7 +1939,10 @@ namespace BridgeOpsClient
                                 thickBorder = true;
                             }
                             else
+                            {
                                 dc.DrawRectangle(brush, border, area);
+                                textBrush = PrintBrushFromLuminance(brush);
+                            }
 
                             Geometry clipGeometry = new RectangleGeometry(new(area.Left, area.Top,
                                                                               area.Width - .5d, area.Height));
@@ -1899,13 +1957,13 @@ namespace BridgeOpsClient
                                 else
                                     iconTray = new Rect(area.Left + .5d, area.Top + .5d, 14d, area.Height - 1d);
 
-                                dc.DrawRectangle(brsConferenceCancelledSolid, null, iconTray);
+                                dc.DrawRectangle(brushSolid, null, iconTray);
 
                                 // Draw the play symbol.
                                 PathGeometry play = symbolPlay.Clone();
                                 TranslateTransform translateTransform = new(startX + 4.5d, startY + 5d);
                                 play.Transform = translateTransform;
-                                dc.DrawGeometry(Brushes.White, null, play);
+                                dc.DrawGeometry(PrintBrushFromLuminance(brushSolid), null, play);
 
                                 startX += 14d; // Adjust start for drawing text.
                             }
@@ -2159,5 +2217,18 @@ namespace BridgeOpsClient
 
             return canvasMid + relativePixels;
         }
+
+        public static Color PrintColorFromLuminance(Color c)
+        {
+            // The following assumes a background colour of white.
+            Color colorBetween = Color.FromRgb((byte)(c.R + (255 - c.R) * (1d - (c.A / 255d))),
+                                               (byte)(c.G + (255 - c.G) * (1d - (c.A / 255d))),
+                                               (byte)(c.B + (255 - c.B) * (1d - (c.A / 255d))));
+            return 0.2126d * (colorBetween.R / 255d) +
+                   0.7152d * (colorBetween.G / 255d) +
+                   0.0722d * (colorBetween.B / 255d) > .5d ? Colors.Black : Colors.White;
+        }
+        public static SolidColorBrush PrintBrushFromLuminance(Brush b)
+        { return new SolidColorBrush(PrintColorFromLuminance(((SolidColorBrush)b).Color)); }
     }
 }

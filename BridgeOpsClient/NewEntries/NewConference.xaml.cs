@@ -130,7 +130,7 @@ namespace BridgeOpsClient
                 if (connection.connected != null)
                     connections[i].dtpConnected.SetDateTime((DateTime)connection.connected);
                 if (connection.disconnected != null)
-                    connections[i].dtpConnected.SetDateTime((DateTime)connection.disconnected);
+                    connections[i].dtpDisconnected.SetDateTime((DateTime)connection.disconnected);
                 if (connection.isManaged && connection.orgReference != null)
                     connections[i].ApplySite(connection.dialNo, connection.orgReference,
                                              connection.orgName, connection.orgId);
@@ -676,10 +676,13 @@ namespace BridgeOpsClient
 
                 // If the date pickers aren't visible and times are set, automatically set them to the day of the
                 // conference.
-                if (confC.connected != null && !c.dtpConnected.DateVisible && c.dtpConnected.GetTime() != null)
-                    confC.connected = dtpStart.GetDate() + ((DateTime)confC.connected!).TimeOfDay;
-                if (confC.disconnected != null && !c.dtpDisconnected.DateVisible && c.dtpDisconnected.GetTime() != null)
-                    confC.disconnected = dtpStart.GetDate() + ((DateTime)confC.disconnected!).TimeOfDay;
+                if (!c.dtpConnected.DateVisible && c.dtpConnected.GetTime() != null)
+                    confC.connected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpConnected.GetTime()!.Value.Ticks);
+                if (!c.dtpDisconnected.DateVisible && c.dtpDisconnected.GetTime() != null)
+                    confC.disconnected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpDisconnected.GetTime()!.Value.Ticks);
+
+                if (confC.connected != null && confC.disconnected != null && confC.connected > confC.disconnected)
+                    return Abort("Connection times must be before disconnection times.");
 
                 conferenceConnections.Add(confC);
             }
