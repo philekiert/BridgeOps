@@ -315,7 +315,7 @@ namespace BridgeOpsClient
                     btnOrgSummary.Content = new StackPanel()
                     { Children = { tbDialNo, tbOrgRef, tbOrgName }, Orientation = Orientation.Horizontal };
 
-                    bdrHost.Visibility = Grid.GetRow(bdrHost) == 1 ? Visibility.Visible : Visibility.Hidden;
+                    bdrHost.Visibility = Grid.GetRow(bdrHost) == 0 ? Visibility.Visible : Visibility.Hidden;
                 }
                 else
                 {
@@ -440,7 +440,7 @@ namespace BridgeOpsClient
                 Connection connection = connections[index];
 
                 foreach (Connection c in connections)
-                    if (c.dialNo == connection.txtSearch.Text)
+                    if (c.dialNo == connection.txtSearch.Text && c != connection)
                     {
                         App.DisplayError("Cannot add duplicate dial numbers to a conference.", "Duplicate Dial No");
                         return;
