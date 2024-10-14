@@ -190,6 +190,7 @@ public static class Glo
         public const string CONFERENCE_START = "Start_Time";
         public const string CONFERENCE_END = "End_Time";
         public const string CONFERENCE_CANCELLED = "Cancelled";
+        public const string CONFERENCE_CLOSURE = "Closure";
         public const string CONFERENCE_CREATION_LOGIN = "Creation_Login_ID";
         public const string CONFERENCE_CREATION_TIME = "Creation_Time";
         public const string CONFERENCE_EDIT_LOGIN = "Edit_Login_ID";
@@ -201,7 +202,6 @@ public static class Glo
         public const string CONNECTION_TIME_TO = "Disconnection_Time";
         public const string CONNECTION_ROW = "Row";
         public const string CONNECTION_IS_TEST = "Is_Test";
-
         public const string RESOURCE_ID = "Resource_ID";
         public const string RESOURCE_NAME = "Resource_Name";
         public const string RESOURCE_CAPACITY_CONNECTION = "Connection_Capacity";
@@ -227,7 +227,7 @@ public static class Glo
         public const int ORGANISATION_STATIC_COUNT = 7;
         public const int ASSET_STATIC_COUNT = 4;
         public const int CONTACT_STATIC_COUNT = 2;
-        public const int CONFERENCE_STATIC_COUNT = 12;
+        public const int CONFERENCE_STATIC_COUNT = 13;
 
         public const string NOTES = "Notes";
     }
@@ -292,6 +292,7 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_START ||
                      column == Glo.Tab.CONFERENCE_END ||
                      column == Glo.Tab.CONFERENCE_CANCELLED ||
+                     column == Glo.Tab.CONFERENCE_CLOSURE ||
                      column == Glo.Tab.ORGANISATION_REF ||
                      column == Glo.Tab.RECURRENCE_ID ||
                      column == Glo.Tab.CONFERENCE_CREATION_LOGIN ||

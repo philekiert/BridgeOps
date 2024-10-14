@@ -185,8 +185,8 @@ namespace BridgeOpsClient
                                 continue;
 
                             ResourceInfo ri = resources[c.resourceID];
-                            ri.capacityChangePoints.Add(new(c.start, c.connectionCount, 1, c.resourceID));
-                            ri.capacityChangePoints.Add(new(c.end, -c.connectionCount, -1, c.resourceID));
+                            ri.capacityChangePoints.Add(new(c.start, c.dialNos.Count, 1, c.resourceID));
+                            ri.capacityChangePoints.Add(new(c.end, -c.dialNos.Count, -1, c.resourceID));
                         }
                     }
 
@@ -265,8 +265,10 @@ namespace BridgeOpsClient
             public int resourceID;
             public int resourceRow;
             public bool cancelled;
-            public bool test;
-            public int connectionCount;
+            public string closure = "";
+            public bool test = false;
+            public List<string> dialNos = new();
+            public bool hasUnclosedConnection = false;
 
             // Used only for dragging.
             public DateTime resizeOriginStart = new(); // The time the conference started at when dragging to resize.

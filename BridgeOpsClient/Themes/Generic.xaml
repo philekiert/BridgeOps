@@ -53,13 +53,13 @@
 
     <!-- Conferencing -->
     <Color x:Key="colorConference">#86AEEA</Color>
-    <Color x:Key="colorConferenceCancelled">#DC5774</Color>
     <Color x:Key="colorConferenceTest">#484b6a</Color>
     <Color x:Key="colorConferenceEnded">#8BD469</Color>
+    <Color x:Key="colorConferenceCancelled">#DC5774</Color>
     <SolidColorBrush x:Key="brushConference" Color="{StaticResource colorConference}"/>
-    <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConferenceCancelled}"/>
     <SolidColorBrush x:Key="brushConferenceTest" Color="{StaticResource colorConferenceTest}"/>
     <SolidColorBrush x:Key="brushConferenceEnded" Color="{StaticResource colorConferenceEnded}"/>
+    <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConferenceCancelled}"/>
 
     <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose -->
 

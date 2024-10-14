@@ -1355,6 +1355,7 @@ namespace SendReceiveClasses
         public string? title;
         public DateTime? start;
         public DateTime? end;
+        public string? closure;
         public bool? cancelled;
         public int? createLoginID;
         public DateTime? createTime;
@@ -1389,6 +1390,7 @@ namespace SendReceiveClasses
             this.title = title;
             this.start = start;
             this.end = end;
+            this.closure = null;
             cancelled = null;
             this.createLoginID = createLoginID;
             createTime = null;
@@ -1414,6 +1416,8 @@ namespace SendReceiveClasses
             // Make sure the columns and values are safe, then add quotes where needed.
             if (title != null)
                 title = SqlAssist.AddQuotes(SqlAssist.SecureValue(title));
+            if (closure != null)
+                closure = SqlAssist.AddQuotes(SqlAssist.SecureValue(closure));
             if (notes != null)
                 notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
             SqlAssist.SecureColumn(additionalCols);
@@ -1435,6 +1439,7 @@ namespace SendReceiveClasses
                                                                  Glo.Tab.CONFERENCE_END,
                                                                  Glo.Tab.CONFERENCE_CREATION_LOGIN,
                                                                  Glo.Tab.CONFERENCE_CREATION_TIME,
+                                                                 Glo.Tab.CONFERENCE_CLOSURE,
                                                                  Glo.Tab.CONFERENCE_CANCELLED,
                                                                  "Notes") + ") " +
                 $"OUTPUT INSERTED.{Glo.Tab.CONFERENCE_ID} INTO #IDs VALUES (" +
@@ -1448,6 +1453,7 @@ namespace SendReceiveClasses
                                     createLoginID.ToString(),
                                     SqlAssist.DateTimeToSQL(DateTime.Now,
                                                             false, true),
+                                    closure,
                                     "0",
                                     notes == null ? "NULL" : notes) + ");"
             };
@@ -1502,6 +1508,7 @@ namespace SendReceiveClasses
                 SqlAssist.Setter(Glo.Tab.CONFERENCE_END, SqlAssist.DateTimeToSQL((DateTime)end!, false, true)),
                 SqlAssist.Setter(Glo.Tab.CONFERENCE_EDIT_LOGIN, editLoginID.ToString()),
                 SqlAssist.Setter(Glo.Tab.CONFERENCE_EDIT_TIME, SqlAssist.DateTimeToSQL(DateTime.Now, false, true)),
+                SqlAssist.Setter(Glo.Tab.CONFERENCE_CLOSURE, closure),
                 SqlAssist.Setter(Glo.Tab.CONFERENCE_CANCELLED, cancelled == true ? "1" : "0"),
                 SqlAssist.Setter(Glo.Tab.NOTES, notes == null ? "NULL" : notes)
             };

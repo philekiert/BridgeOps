@@ -1859,19 +1859,30 @@ namespace BridgeOpsClient
                                 SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
                                 conferences.Clear();
+                                PageConferenceView.Conference? c = null;
                                 foreach (List<object?> row in result.rows)
                                 {
-                                    PageConferenceView.Conference conference = new();
-                                    conference.id = (int)row[0]!;
-                                    conference.title = (string)row[1]!;
-                                    conference.start = (DateTime)row[2]!;
-                                    conference.end = (DateTime)row[3]!;
-                                    conference.resourceID = (int)row[4]!;
-                                    conference.resourceRow = (int)row[5]!;
-                                    conference.cancelled = (bool)row[6]!;
-                                    conference.test = row[7] != null && (int)row[7]! == 1;
-                                    conference.connectionCount = (int)row[8]!;
-                                    conferences.Add(conference.id, conference);
+                                    if (c == null || (int)row[0]! != c.id)
+                                    {
+                                        c = new();
+                                        c.id = (int)row[0]!;
+                                        conferences.Add(c.id, c);
+                                        c.title = (string)row[1]!;
+                                        c.start = (DateTime)row[2]!;
+                                        c.end = (DateTime)row[3]!;
+                                        c.resourceID = (int)row[4]!;
+                                        c.resourceRow = (int)row[5]!;
+                                        c.cancelled = (bool)row[6]!;
+                                        c.closure = (string)row[7]!;
+                                    }
+                                    if (row[8] != null)
+                                    {
+                                        c.dialNos.Add((string)row[8]!);
+                                        if ((bool?)row[9] == true)
+                                            c.test = true;
+                                        if ((bool?)row[10] == false)
+                                            c.hasUnclosedConnection = true;
+                                    }
                                 }
                                 return true;
                             }

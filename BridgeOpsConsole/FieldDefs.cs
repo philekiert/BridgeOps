@@ -146,6 +146,7 @@ public class FieldDefs
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
         defs.Add("Conference Cancelled", new Definition(10, Glo.Tab.CONFERENCE_CANCELLED, "BIT", false, false, false));
+        defs.Add("Conference Closure", new Definition(10, Glo.Tab.CONFERENCE_CLOSURE, "VARCHAR(10)", false, false, false));
         defs.Add("Conference Creation Login ID", new Definition(10, Glo.Tab.CONFERENCE_CREATION_LOGIN, typeLoginID, false, false, false));
         defs.Add("Conference Creation Time", new Definition(10, Glo.Tab.CONFERENCE_CREATION_TIME, "DATETIME", false, false, false));
         defs.Add("Conference Edit Login ID", new Definition(10, Glo.Tab.CONFERENCE_EDIT_LOGIN, typeLoginID, false, false, false));

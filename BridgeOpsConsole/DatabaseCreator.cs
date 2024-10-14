@@ -531,6 +531,9 @@ public class DatabaseCreator
             SendCommandSQL("CREATE TRIGGER trg_deleteConnDialNo ON Organisation " +
                            "AFTER DELETE AS UPDATE Connection SET Is_Managed = 0 WHERE Dial_No IN (SELECT Dial_No FROM DELETED);"); // Doesnt matter if we catch unmanaged connections in this.
 
+            Writer.Message("\nApplying conference closure options...");
+            SendCommandSQL("ALTER TABLE Conference ADD CONSTRAINT chk_ConferenceClosure CHECK (Closure IN ('Succeeded', 'Degraded', 'Failed'));");
+
             Writer.Message("\nApplying column additions...");
             foreach (ColumnAddition addition in columnAdditions)
             {

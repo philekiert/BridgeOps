@@ -243,6 +243,7 @@ namespace BridgeOpsClient
                                                                                Glo.Tab.CONFERENCE_START,
                                                                                Glo.Tab.CONFERENCE_RESOURCE_ROW,
                                                                                Glo.Tab.RESOURCE_ID,
+                                                                               Glo.Tab.CONFERENCE_CLOSURE,
                                                                                Glo.Tab.CONFERENCE_CREATION_LOGIN,
                                                                                Glo.Tab.CONFERENCE_CREATION_TIME,
                                                                                Glo.Tab.CONFERENCE_EDIT_LOGIN,

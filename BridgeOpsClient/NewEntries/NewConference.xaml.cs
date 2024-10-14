@@ -2,6 +2,7 @@
 using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -25,12 +26,24 @@ namespace BridgeOpsClient
         bool edit = false;
         bool cancelled = false;
 
-        public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start)
+        public NewConference()
         {
             MaxHeight = 400;
 
             InitializeComponent();
 
+            // Get the closure options. Currently these are static, but there are plans to add options later on and I
+            // have built the feature to accommodate that when the time comes.
+            ColumnRecord.Column col = (ColumnRecord.Column)ColumnRecord.conference[Glo.Tab.CONFERENCE_CLOSURE]!;
+            cmbClosure.Items.Add("");
+            foreach (string s in col.allowed)
+                cmbClosure.Items.Add(s);
+
+            cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
+        }
+
+        public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start) : this()
+        {
             // No idea why App.sd.username isn't accessible from here, but we have to pass it in.
             lblCreatedBy.Content = "Created by " + App.sd.username;
 
@@ -43,7 +56,6 @@ namespace BridgeOpsClient
             dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
             // Populate available resources and select whichever one the user clicked on in the schedule view.
-            cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
             if (resource == null)
                 App.DisplayError("Could not determine resource from selected row, please set manually.");
             else
@@ -55,13 +67,8 @@ namespace BridgeOpsClient
             btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
         }
 
-        public NewConference(Conference conf)
+        public NewConference(Conference conf) : this()
         {
-            // Updated after load. This is to make sure the scrollviewer doesn't expand to fill the whole screen.
-            MaxHeight = 400;
-
-            InitializeComponent();
-
             StringBuilder str = new("Created by ");
             str.Append(conf.createdUsername == null ? "[user deleted]" : conf.createdUsername);
             str.Append(" on ");
@@ -90,6 +97,8 @@ namespace BridgeOpsClient
                 grdMain.RowDefinitions[0].Height = new(20);
             }
 
+            cmbClosure.Text = conf.closure;
+
             // Apply conference start and end times.
             if (conf.start != null)
                 dtpStart.SetDateTime((DateTime)conf.start);
@@ -107,7 +116,6 @@ namespace BridgeOpsClient
                 resourceName = PageConferenceView.resources[conf.resourceID].name;
             resourceName += " " + (conf.resourceRow + 1).ToString();
 
-            cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
             cmbResource.Text = resourceName;
             if (cmbResource.SelectedIndex == -1)
                 App.DisplayError("Could not determine resource name from conference record.");
@@ -585,10 +593,10 @@ namespace BridgeOpsClient
                 grdHeaders.ColumnDefinitions[4].Width = new GridLength(175);
                 grdHeaders.ColumnDefinitions[3].MaxWidth = 175;
                 grdHeaders.ColumnDefinitions[4].MaxWidth = 175;
-                grdConnections.ColumnDefinitions[3].Width = new GridLength(72);
-                grdConnections.ColumnDefinitions[4].Width = new GridLength(85);
-                grdConnections.ColumnDefinitions[3].MaxWidth = 72;
-                grdConnections.ColumnDefinitions[4].MaxWidth = 85;
+                grdConnections.ColumnDefinitions[3].Width = new GridLength(175);
+                grdConnections.ColumnDefinitions[4].Width = new GridLength(175);
+                grdConnections.ColumnDefinitions[3].MaxWidth = 175;
+                grdConnections.ColumnDefinitions[4].MaxWidth = 175;
             }
         }
 
@@ -680,6 +688,7 @@ namespace BridgeOpsClient
                                         resourceID, resourceRow, txtTitle.Text, (DateTime)start, (DateTime)end,
                                         App.sd.loginID, txtNotes.Text, new(), new(), new(), conferenceConnections);
             conference.conferenceID = conferenceIdNullable;
+            conference.closure = cmbClosure.Text == "" ? null : cmbClosure.Text;
             conference.cancelled = cancelled;
 
             // Note that when making an update, the creation login is ignored by Conference.SqlUpdate.

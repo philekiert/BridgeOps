@@ -2756,27 +2756,28 @@ internal class BridgeOpsAgent
                 }
             }
 
-            SqlCommand com = new($"SELECT Conference.{Glo.Tab.CONFERENCE_ID}, " +
-                                        $"Conference.{Glo.Tab.CONFERENCE_TITLE}, " +
-                                        $"Conference.{Glo.Tab.CONFERENCE_START}, " +
-                                        $"Conference.{Glo.Tab.CONFERENCE_END}, " +
-                                        $"Conference.{Glo.Tab.RESOURCE_ID}, " +
-                                        $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
-                                        $"Conference.{Glo.Tab.CONFERENCE_CANCELLED}, " +
-                                        $"MAX(CONVERT(INT, Connection.{Glo.Tab.CONNECTION_IS_TEST})) AS IsTest, " +
-                                        $"COUNT({Glo.Tab.CONNECTION_ID}) AS ConnectionCount " +
-                                  "FROM Conference " +
-                                 $"LEFT JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = " +
-                                                         $"Connection.{Glo.Tab.CONFERENCE_ID} " +
-                                 $"WHERE Conference.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
-                                   $"AND Conference.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
-                                 $"GROUP BY Conference.{Glo.Tab.CONFERENCE_ID}, " +
-                                          $"Conference.{Glo.Tab.CONFERENCE_TITLE}, " +
-                                          $"Conference.{Glo.Tab.CONFERENCE_START}, " +
-                                          $"Conference.{Glo.Tab.CONFERENCE_END}, " +
-                                          $"Conference.{Glo.Tab.RESOURCE_ID}, " +
-                                          $"Conference.{Glo.Tab.CONFERENCE_CANCELLED}, " +
-                                          $"Conference.{Glo.Tab.CONFERENCE_RESOURCE_ROW} ",
+            SqlCommand com = new($"SELECT f.{Glo.Tab.CONFERENCE_ID}, " +
+                                        $"f.{Glo.Tab.CONFERENCE_TITLE}, " +
+                                        $"f.{Glo.Tab.CONFERENCE_START}, " +
+                                        $"f.{Glo.Tab.CONFERENCE_END}, " +
+                                        $"f.{Glo.Tab.RESOURCE_ID}, " +
+                                        $"f.{Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
+                                        $"f.{Glo.Tab.CONFERENCE_CANCELLED}, " +
+                                        $"f.{Glo.Tab.CONFERENCE_CLOSURE}, " +
+                                        $"n.{Glo.Tab.DIAL_NO}, " +
+                                        $"n.{Glo.Tab.CONNECTION_IS_TEST}, " +
+                                        // If connection has been start and closed or neither:
+                                        $"CASE WHEN (n.{Glo.Tab.CONNECTION_TIME_FROM} IS NULL " +
+                                               $"AND n.{Glo.Tab.CONNECTION_TIME_TO} IS NULL) " +
+                                               $"OR (n.{Glo.Tab.CONNECTION_TIME_FROM} IS NOT NULL " +
+                                               $"AND n.{Glo.Tab.CONNECTION_TIME_TO} IS NOT NULL) " +
+                                              "THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END " +
+                                  "FROM Conference AS f " +
+                                 $"LEFT JOIN Connection AS n ON f.{Glo.Tab.CONFERENCE_ID} = " +
+                                                              $"n.{Glo.Tab.CONFERENCE_ID} " +
+                                 $"WHERE f.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
+                                   $"AND f.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
+                                 $"ORDER BY f.{Glo.Tab.CONFERENCE_ID};",
                                  sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
@@ -2846,11 +2847,12 @@ internal class BridgeOpsAgent
                 start = (DateTime)confRow[4]!,
                 end = (DateTime)confRow[5]!,
                 cancelled = (bool?)confRow[6]!,
-                createLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[7]),
-                createTime = (DateTime?)confRow[8]!,
-                editLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[9]),
-                editTime = (DateTime?)confRow[10]!,
-                notes = (string?)confRow[11]!,
+                closure = (string?)confRow[7],
+                createLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[8]),
+                createTime = (DateTime?)confRow[9]!,
+                editLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[10]),
+                editTime = (DateTime?)confRow[11]!,
+                notes = (string?)confRow[12]!,
                 additionalValTypes = new(),
                 additionalValObjects = new(),
                 // Additional columns were sandwiched before these, so count back from the end.
