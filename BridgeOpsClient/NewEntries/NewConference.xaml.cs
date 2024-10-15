@@ -140,6 +140,8 @@ namespace BridgeOpsClient
                 connections[i].connectionId = connection.connectionID;
             }
 
+            UpdateConnectionIndicators();
+
             // Set up the data input table.
             ditConference.headers = ColumnRecord.conferenceHeaders;
             ditConference.Initialise(ColumnRecord.orderedConference, "Conference");
@@ -190,7 +192,7 @@ namespace BridgeOpsClient
             public CustomControls.DateTimePicker dtpConnected;
             public CustomControls.DateTimePicker dtpDisconnected;
             public Button btnOrgSummary;
-            public Border bdrHost;
+            public Border bdrIndicator;
             public int? connectionId;
             public int row;
             public string dialNo;
@@ -265,17 +267,18 @@ namespace BridgeOpsClient
                     HorizontalContentAlignment = HorizontalAlignment.Left
                 };
 
-                bdrHost = new()
+                bdrIndicator = new()
                 {
-                    Background = new SolidColorBrush(Color.FromRgb(230, 232, 236)),
+                    Background = (Brush)Application.Current.TryFindResource("brushConferenceCheck"),
                     Margin = new(4, 0, 5, 0),
-                    CornerRadius = new(5)
+                    CornerRadius = new(7)
                 };
+                ToolTipService.SetInitialShowDelay(bdrIndicator, 200);
 
                 Grid.SetColumnSpan(txtSearch, 4);
-                Grid.SetColumnSpan(bdrHost, 6);
+                Grid.SetColumnSpan(bdrIndicator, 6);
 
-                Grid.SetColumn(bdrHost, 0);
+                Grid.SetColumn(bdrIndicator, 0);
                 Grid.SetColumn(btnRemove, 0);
                 Grid.SetColumn(btnUp, 1);
                 Grid.SetColumn(btnDown, 1);
@@ -286,7 +289,7 @@ namespace BridgeOpsClient
                 Grid.SetColumn(btnOrgSummary, 5);
 
                 grd.RowDefinitions.Add(new() { Height = GridLength.Auto });
-                grd.Children.Add(bdrHost);
+                grd.Children.Add(bdrIndicator);
                 grd.Children.Add(btnRemove);
                 grd.Children.Add(btnUp);
                 grd.Children.Add(btnDown);
@@ -315,19 +318,63 @@ namespace BridgeOpsClient
                     btnOrgSummary.Content = new StackPanel()
                     { Children = { tbDialNo, tbOrgRef, tbOrgName }, Orientation = Orientation.Horizontal };
 
-                    bdrHost.Visibility = Grid.GetRow(bdrHost) == 0 ? Visibility.Visible : Visibility.Hidden;
+                    bdrIndicator.Visibility = Grid.GetRow(bdrIndicator) == 0 ? Visibility.Visible : Visibility.Hidden;
                 }
                 else
                 {
                     btnOrgSummary.Content = tbDialNo;
 
-                    bdrHost.Visibility = Visibility.Hidden;
+                    bdrIndicator.Visibility = Visibility.Hidden;
                 }
 
                 this.dialNo = dialNo;
                 this.orgRef = orgRef;
                 this.orgName = orgName;
                 this.orgId = orgId;
+
+
+            }
+
+            public void UpdateConnectionIndicator(DateTime? confStart, DateTime? confEnd, string id)
+            {
+                bdrIndicator.ToolTip = null;
+
+                if (txtSearch.IsVisible)
+                {
+                    bdrIndicator.Visibility = Visibility.Hidden;
+                    return;
+                }
+
+                // Add a border for the host.
+                bdrIndicator.Visibility = Grid.GetRow(bdrIndicator) == 0 ? Visibility.Visible : Visibility.Hidden;
+                bdrIndicator.Background = (Brush)Application.Current.TryFindResource("brushConferenceCheck");
+
+                // Add borders if the dial number clashes with another conference.
+                if (confStart != null && confEnd != null)
+                    foreach (PageConferenceView.Conference c in PageConferenceView.conferences.Values)
+                        if (c.end > confStart && c.start < confEnd && c.id.ToString() != id)
+                        {
+                            // Print only the required information, and usually dates will not be necessary.
+                            string s = "";
+                            if (c.start.Date == c.end.Date)
+                                if (confStart.Value.Date == confEnd.Value.Date) // Must be the same as c.start and c.end.
+                                    s = $"{c.start.ToString("HH:mm")} - {c.end.ToString("HH:mm")}";
+                                else
+                                    s = $"{c.start.ToString("dd/MM/yyyy HH:mm")} - {c.end.ToString("HH:mm")}";
+                            else
+                                s = $"{c.start.ToString("dd/MM/yyyy HH:mm")} - {c.end.ToString("dd/MM/yyyy HH:mm")}";
+                            s += "  " + c.title;
+
+                            if (c.dialNos.Contains(dialNo))
+                            {
+                                if (bdrIndicator.ToolTip != null)
+                                    bdrIndicator.ToolTip += "\n" + s;
+                                else
+                                    bdrIndicator.ToolTip = s;
+                                bdrIndicator.Visibility = Visibility.Visible;
+                                bdrIndicator.Background = (Brush)Application.Current.TryFindResource("brushConferenceWarning");
+                            }
+                        }
             }
 
             public void ToggleSearch(bool search)
@@ -366,12 +413,10 @@ namespace BridgeOpsClient
                 Grid.SetRow(dtpConnected, row);
                 Grid.SetRow(dtpDisconnected, row);
                 Grid.SetRow(btnOrgSummary, row);
-                Grid.SetRow(bdrHost, row);
+                Grid.SetRow(bdrIndicator, row);
 
                 btnUp.IsEnabled = row > 0;
                 btnDown.IsEnabled = row < connectionCount - 1;
-
-                bdrHost.Visibility = row == 0 && orgRef != null ? Visibility.Visible : Visibility.Hidden;
 
                 this.row = row;
             }
@@ -386,7 +431,7 @@ namespace BridgeOpsClient
                 grid.Children.Remove(dtpConnected);
                 grid.Children.Remove(dtpDisconnected);
                 grid.Children.Remove(btnOrgSummary);
-                grid.Children.Remove(bdrHost);
+                grid.Children.Remove(bdrIndicator);
             }
         }
         public List<Connection> connections = new();
@@ -430,6 +475,8 @@ namespace BridgeOpsClient
         {
             for (int i = 0; i < connections.Count;)
                 connections[i].SetRow(i++, connections.Count);
+
+            UpdateConnectionIndicators();
         }
 
         private void SearchSite(object sender, EventArgs e)
@@ -486,7 +533,6 @@ namespace BridgeOpsClient
                     connection.ToggleSearch(false);
                     connection.ApplySite(d, r, n, i);
                 }
-
             }
         }
 
@@ -495,12 +541,14 @@ namespace BridgeOpsClient
             if (e.Key == Key.Enter)
             {
                 SearchSite(sender, e);
+                UpdateConnectionIndicators();
             }
             else if (e.Key == Key.Escape)
             {
                 Connection connection = connections[Grid.GetRow((TextBox)sender)];
                 if (connection.dialNo != "")
                     connection.ToggleSearch(false);
+                UpdateConnectionIndicators();
             }
             else
                 return;
@@ -544,6 +592,8 @@ namespace BridgeOpsClient
                 connection.ToggleSearch(true);
                 connection.txtSearch.Focus();
             }
+
+            UpdateConnectionIndicators();
         }
 
         private void btnUp_Click(object sender, EventArgs e)
@@ -587,8 +637,8 @@ namespace BridgeOpsClient
             }
             else
             {
-                if (Width < 1000) // Widen the window or the user will certainly need to scroll to read site names.
-                    Width = 1000;
+                if (Width < 1100) // Widen the window or the user will certainly need to scroll to read site names.
+                    Width = 1100;
                 grdHeaders.ColumnDefinitions[3].Width = new GridLength(175);
                 grdHeaders.ColumnDefinitions[4].Width = new GridLength(175);
                 grdHeaders.ColumnDefinitions[3].MaxWidth = 175;
@@ -598,6 +648,14 @@ namespace BridgeOpsClient
                 grdConnections.ColumnDefinitions[3].MaxWidth = 175;
                 grdConnections.ColumnDefinitions[4].MaxWidth = 175;
             }
+        }
+
+        private void UpdateConnectionIndicators()
+        {
+            DateTime? start = dtpStart.GetDateTime();
+            DateTime? end = dtpEnd.GetDateTime();
+            foreach (Connection c in connections)
+                c.UpdateConnectionIndicator(start, end, id);
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)

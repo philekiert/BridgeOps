@@ -1655,7 +1655,6 @@ namespace SendReceiveClasses
                       $"INNER JOIN Conference f ON f.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
                                              $"AND f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
                                              $"AND f.{Glo.Tab.CONFERENCE_CANCELLED} = 0 " +
-                      $"WHERE f.{Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
                       $") ");
             str.Append($"SELECT nc.{Glo.Tab.CONFERENCE_ID}, " +
                               $"nc.{Glo.Tab.CONFERENCE_TITLE}, " +

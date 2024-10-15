@@ -4,7 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:BridgeOpsClient"
-      mc:Ignorable="d" 
+      mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800"
       Title="PageConferenceView" FrameworkElement.SizeChanged="WindowResized" x:Name="conferenceView"
       Loaded="conferenceView_Loaded">
@@ -83,7 +83,8 @@
                                  MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
                                  PreviewMouseWheel="schView_PreviewMouseWheel"
                                  KeyDown="schView_KeyDown"
-                                 Focusable="True" Margin="0 44 0 0"/>
+                                 Focusable="True" Margin="0 44 0 0">
+            </local:ScheduleView>
             <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
                            SizeChanged="scrollBar_SizeChanged" Margin="0 44 0 0"/>

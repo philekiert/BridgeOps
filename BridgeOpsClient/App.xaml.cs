@@ -150,8 +150,8 @@ namespace BridgeOpsClient
                 Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder());
                 if (!File.Exists(networkConfigFile))
                     File.WriteAllText(networkConfigFile, "127.0.0.1;" +
-                                                         Glo.PORT_INBOUND_DEFAULT.ToString() + ";" +
-                                                         Glo.PORT_OUTBOUND_DEFAULT.ToString());
+                                                         Glo.PORT_OUTBOUND_DEFAULT.ToString() + ";" +
+                                                         Glo.PORT_INBOUND_DEFAULT.ToString());
                 string[] networkSettings = File.ReadAllText(networkConfigFile).Split(';');
 
                 sd.SetServerIP(networkSettings[0]);

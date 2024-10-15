@@ -23,6 +23,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xaml;
+using static BridgeOpsClient.PageConferenceView;
+using static System.Windows.Forms.AxHost;
 
 namespace BridgeOpsClient
 {
@@ -133,9 +135,9 @@ namespace BridgeOpsClient
             return 0;
         }
 
-        public enum StatusContext { None, Overflow }
+        public enum StatusContext { None, Overflow, Clash }
         public StatusContext statusBarContext = StatusContext.None;
-        public void SetStatusBar() { stkStatus.Children.Clear(); statusBarContext = StatusContext.None; }
+        public void SetStatus() { stkStatus.Children.Clear(); statusBarContext = StatusContext.None; }
         public void SetStatusBar(StatusContext context, string message, bool bold, bool alignLeft)
         { SetStatus(context, new List<string>() { message }, new() { bold }); }
         public void SetStatus(StatusContext context, List<string> messages, List<bool> bold)
@@ -232,6 +234,74 @@ namespace BridgeOpsClient
                 this.resourceID = resourceID;
             }
         }
+        public static HashSet<int> clashIDs = new();
+        public static List<DateTime> clashRegionAlternations = new();
+        struct ClashPoint
+        {
+            public DateTime point;
+            public int dif;
+            public ClashPoint (DateTime point, int dif)
+            { this.point = point; this.dif = dif; }
+        }
+        public void UpdateClashIDs()
+        {
+            lock (clashIDs)
+                lock (conferences)
+                {
+                    clashIDs.Clear();
+                    clashRegionAlternations.Clear();
+
+                    List<ClashPoint> points = new();
+
+                    HashSet<int> checkedIDs = new();
+                    foreach (Conference conf in conferences.Values)
+                    {
+                        bool addedConf = clashIDs.Contains(conf.id);
+                        foreach (Conference compare in conferences.Values)
+                        {
+                            bool addedCompare = clashIDs.Contains(compare.id);
+                            if (addedConf && addedCompare || conf == compare)
+                                continue;
+
+                            if (conf.end <= compare.start || conf.start >= compare.end)
+                                continue;
+
+                            foreach (string s in conf.dialNos)
+                                if (compare.dialNos.Contains(s))
+                                {
+                                    if (!addedConf)
+                                    {
+                                        points.Add(new(conf.start, 1));
+                                        points.Add(new(conf.end, -1));
+                                        addedConf = true;
+                                        clashIDs.Add(conf.id);
+                                    }
+                                    if (!addedCompare)
+                                    {
+                                        points.Add(new(compare.start, 1));
+                                        points.Add(new(compare.end, -1));
+                                        addedCompare = true;
+                                        clashIDs.Add(compare.id);
+                                    }
+                                    break;
+                                }
+
+                            checkedIDs.Add(conf.id);
+                        }
+                    }
+
+                    int ongoing = 0;
+                    points = points.OrderBy(p => p.point).ToList();
+                    foreach (ClashPoint p in points)
+                    {
+                        ongoing += p.dif;
+                        if (ongoing == 1 && p.dif == 1)
+                            clashRegionAlternations.Add(p.point);
+                        else if (ongoing == 0)
+                            clashRegionAlternations.Add(p.point);
+                    }
+                }
+        }
 
         float smoothZoomSpeed = .25f;
 
@@ -266,7 +336,7 @@ namespace BridgeOpsClient
             public bool cancelled;
             public string closure = "";
             public bool test = false;
-            public List<string> dialNos = new();
+            public HashSet<string> dialNos = new();
             public bool hasUnclosedConnection = false;
 
             // Used only for dragging.
@@ -277,8 +347,8 @@ namespace BridgeOpsClient
             public int moveOriginResourceRow = new(); // ^^
             public int moveOriginTotalRow = 0;
         }
-        public Dictionary<int, Conference> conferences = new();
-        public Dictionary<int, Conference> conferencesUpdate = new();
+        public static Dictionary<int, Conference> conferences = new();
+        public static Dictionary<int, Conference> conferencesUpdate = new();
 
         object conferenceSearchLock = new();
         object conferenceSearchThreadLock = new();
@@ -351,6 +421,7 @@ namespace BridgeOpsClient
             }
 
             UpdateOverflowPoints();
+            UpdateClashIDs();
             queueGridRedrawFromOtherThread = true;
             searchTimeframeThreadQueued = false;
         }
@@ -399,8 +470,11 @@ namespace BridgeOpsClient
 
         long lastFrame = 0;
         DateTime lastUpdate = DateTime.Now;
+        long totalFrames = 0;
         void TimerUpdate(object? sender, EventArgs e)
         {
+            ++totalFrames;
+
             if (updateScrollBar)
             {
                 UpdateScrollBar();
@@ -717,7 +791,6 @@ namespace BridgeOpsClient
                                     c.resourceRow = c.moveOriginResourceRow;
                                 }
                             }
-                            //schView.selectedConferences.Clear();
                             SearchTimeframe();
                             // schView.UpdateOverflowPoints(); will be called by SearchtimeFrame().
                         }
@@ -868,6 +941,7 @@ namespace BridgeOpsClient
             }
 
             UpdateOverflowPoints();
+            UpdateClashIDs();
         }
 
         double lastX = 0;
@@ -1416,6 +1490,8 @@ namespace BridgeOpsClient
             Color clrTest = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceTest"];
             Color clrEnded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceEnded"];
             Color clrDegraded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceDegraded"];
+            Color clrOverflow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWarning"];
+            Color clrOverflowCheck = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCheck"];
 
             // Conference
             brsConferenceSolid = new SolidColorBrush(clrConference);
@@ -1476,8 +1552,8 @@ namespace BridgeOpsClient
             penConferenceFailedBorder = new Pen(brsConferenceFailedBorder, 1);
             penConferenceTestBorder = new Pen(brsConferenceTestBorder, 1);
             penConferenceEndedBorder = new Pen(brsConferenceEndedBorder, 1);
-            brsOverflow = new SolidColorBrush(Color.FromArgb(50, 166, 65, 85));
-            brsOverflowCheck = new SolidColorBrush(Color.FromArgb(50, 100, 100, 100));
+            brsOverflow = new SolidColorBrush(clrOverflow);
+            brsOverflowCheck = new SolidColorBrush(clrOverflowCheck);
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
@@ -1640,7 +1716,9 @@ namespace BridgeOpsClient
                                   (conferenceView.drag == PageConferenceView.Drag.None ||
                                    conferenceView.drag == PageConferenceView.Drag.Scroll);
 
+
                 // Draw any conference overflow warnings beneath the grid lines.
+
                 lock (PageConferenceView.resources)
                 {
                     foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources.Values)
@@ -1679,7 +1757,7 @@ namespace BridgeOpsClient
                             }
 
                             // Draw the capacity highlight overlay, regardless of overflow.
-                            if (drawCursor && Keyboard.IsKeyDown(Key.O))
+                            if (drawCursor && (Keyboard.IsKeyDown(Key.R)))
                             {
                                 int hoveredRow = GetRowFromY(cursor!.Value.Y, true);
                                 int resourceTopRow = GetRowFromY(GetYfromResource(ri.id, 0), true);
@@ -1697,7 +1775,7 @@ namespace BridgeOpsClient
                                         Rect r = new(0, startY, ActualWidth, endY - startY);
                                         dc.DrawRectangle(brsOverflowCheck, null, r);
                                         conferenceView.SetStatus(PageConferenceView.StatusContext.Overflow,
-                                                                 new() { "Connections: 0", "Conferences: 0" },
+                                                                 new() { "Connections:  0", "Conferences:  0" },
                                                                  new() { false, false });
                                     }
                                     else
@@ -1742,19 +1820,19 @@ namespace BridgeOpsClient
                                                 Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);
                                                 dc.DrawRectangle(brsOverflowCheck, null, r);
 
+                                                // Write messages to status bar.
                                                 List<string> statusMessages = new()
-                                                {
-                                                    $"Connections: {connections}/{ri.connectionCapacity}",
-                                                    $"Conferences: {confs}/{ri.conferenceCapacity}"
-                                                };
+                                                    {
+                                                        $"Connections:  {connections}/{ri.connectionCapacity}",
+                                                        $"Conferences:  {confs}/{ri.conferenceCapacity}"
+                                                    };
                                                 List<bool> bold = new()
-                                                {
-                                                    connections > ri.connectionCapacity,
-                                                    confs > ri.conferenceCapacity
-                                                };
-                                                conferenceView.SetStatus(PageConferenceView.StatusContext.Overflow,
+                                                    {
+                                                        connections > ri.connectionCapacity,
+                                                        confs > ri.conferenceCapacity
+                                                    };
+                                                conferenceView.SetStatus(StatusContext.Overflow,
                                                                          statusMessages, bold);
-
                                                 break;
                                             }
                                         }
@@ -1764,8 +1842,30 @@ namespace BridgeOpsClient
                             else
                             {
                                 if (conferenceView.statusBarContext == PageConferenceView.StatusContext.Overflow)
-                                    conferenceView.SetStatusBar();
+                                    conferenceView.SetStatus();
                             }
+                        }
+                    }
+
+                    // Draw any dial number clash regions while we're here.
+                    for (int i = 0; i < clashRegionAlternations.Count; i += 2)
+                    {
+                        DateTime s = clashRegionAlternations[i];
+                        DateTime e = clashRegionAlternations[i + 1];
+
+                        // Skip if out of frame.
+                        if (e > start && s < end)
+                        {
+                            // Only draw as far as necessary.
+                            if (s < start)
+                                s = start;
+                            if (e > end)
+                                e = end;
+
+                            double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                            double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                            Rect r = new(startPoint, 0, endPoint - startPoint, ActualHeight);
+                            dc.DrawRectangle(brsOverflow, null, r);
                         }
                     }
                 }
@@ -1824,187 +1924,200 @@ namespace BridgeOpsClient
                 bool resizeCursorSet = false;
                 bool isMouseOverConference = false;
 
-                lock (conferenceView.conferences)
-                {
-                    Point cursorPoint = new();
-                    if (cursor != null)
-                        cursorPoint = cursor.Value;
+                bool dDown = Keyboard.IsKeyDown(Key.D);
 
-                    foreach (var kvp in conferenceView.conferences)
+                lock (conferences)
+                    lock (clashIDs)
                     {
-                        PageConferenceView.Conference conference = kvp.Value;
-                        if (conference.end > start && conference.start < end)
+                        Point cursorPoint = new();
+                        if (cursor != null)
+                            cursorPoint = cursor.Value;
+
+                        foreach (var kvp in conferences)
                         {
-                            // Assemble the correct paint set :)
-                            Brush textBrush = Brushes.Black;
-                            Brush brush = brsConference;
-                            Brush brushHover = brsConferenceHover;
-                            Brush brushSolid = brsConferenceSolid;
-                            Pen border = penConferenceBorder;
-                            Pen borderSelected = new Pen(brsConferenceBorder, 2);
-                            if (conference.test)
+                            PageConferenceView.Conference conference = kvp.Value;
+                            if (conference.end > start && conference.start < end)
                             {
-                                brush = brsConferenceTest;
-                                brushHover = brsConferenceTestHover;
-                                brushSolid = brsConferenceTestSolid;
-                                border = penConferenceTestBorder;
-                                borderSelected.Brush = brsConferenceTestBorder;
-                            }
-                            if (conference.cancelled)
-                            {
-                                brush = brsConferenceCancelled;
-                                brushHover = brsConferenceCancelledHover;
-                                brushSolid = brsConferenceSolid;
-                                border = penConferenceBorder;
-                                borderSelected.Brush = brsConferenceBorder;
-                            }
-                            if (conference.end < now && !conference.test && !conference.cancelled)
-                            {
-                                if (conference.closure == "Succeeded" && !conference.hasUnclosedConnection)
+                                // Assemble the correct paint set :)
+                                Brush textBrush = Brushes.Black;
+                                Brush brush = brsConference;
+                                Brush brushHover = brsConferenceHover;
+                                Brush brushSolid = brsConferenceSolid;
+                                Pen border = penConferenceBorder;
+                                Pen borderSelected = new Pen(brsConferenceBorder, 2);
+                                if (conference.test)
                                 {
-                                    brush = brsConferenceEnded;
-                                    brushHover = brsConferenceEndedHover;
-                                    brushSolid = brsConferenceEndedSolid;
-                                    border = penConferenceEndedBorder;
-                                    borderSelected.Brush = brsConferenceEndedBorder;
+                                    brush = brsConferenceTest;
+                                    brushHover = brsConferenceTestHover;
+                                    brushSolid = brsConferenceTestSolid;
+                                    border = penConferenceTestBorder;
+                                    borderSelected.Brush = brsConferenceTestBorder;
                                 }
-                                else if (conference.closure == "Degraded" && !conference.hasUnclosedConnection)
+                                if (conference.cancelled)
                                 {
-                                    brush = brsConferenceDegraded;
-                                    brushHover = brsConferenceDegradedHover;
-                                    brushSolid = brsConferenceDegradedSolid;
-                                    border = penConferenceDegradedBorder;
-                                    borderSelected.Brush = brsConferenceDegradedBorder;
+                                    brush = brsConferenceCancelled;
+                                    brushHover = brsConferenceCancelledHover;
+                                    brushSolid = brsConferenceSolid;
+                                    border = penConferenceBorder;
+                                    borderSelected.Brush = brsConferenceBorder;
                                 }
-                                else if (conference.closure == "Failed")
+                                if (conference.end < now && !conference.test && !conference.cancelled)
                                 {
-                                    brush = brsConferenceFailed;
-                                    brushHover = brsConferenceFailedHover;
-                                    brushSolid = brsConferenceFailedSolid;
-                                    border = penConferenceFailedBorder;
-                                    borderSelected.Brush = brsConferenceFailedBorder;
+                                    if (conference.closure == "Succeeded" && !conference.hasUnclosedConnection)
+                                    {
+                                        brush = brsConferenceEnded;
+                                        brushHover = brsConferenceEndedHover;
+                                        brushSolid = brsConferenceEndedSolid;
+                                        border = penConferenceEndedBorder;
+                                        borderSelected.Brush = brsConferenceEndedBorder;
+                                    }
+                                    else if (conference.closure == "Degraded" && !conference.hasUnclosedConnection)
+                                    {
+                                        brush = brsConferenceDegraded;
+                                        brushHover = brsConferenceDegradedHover;
+                                        brushSolid = brsConferenceDegradedSolid;
+                                        border = penConferenceDegradedBorder;
+                                        borderSelected.Brush = brsConferenceDegradedBorder;
+                                    }
+                                    else if (conference.closure == "Failed" ||
+                                             // Temporary, really one of these need their own colour.
+                                             (dDown && clashIDs.Contains(conference.id)))
+                                    {
+                                        brush = brsConferenceFailed;
+                                        brushHover = brsConferenceFailedHover;
+                                        brushSolid = brsConferenceFailedSolid;
+                                        border = penConferenceFailedBorder;
+                                        borderSelected.Brush = brsConferenceFailedBorder;
+                                    }
                                 }
-                            }
 
-                            double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
-                                                               zoomTimeDisplay);
-                            double endX = GetXfromDateTime(conference.end < end ? conference.end : end,
-                                                             zoomTimeDisplay);
-                            startX = startX < 0 ? (int)(startX - 1) : (int)startX;
-                            endX = endX < 0 ? (int)(endX - 1) : (int)endX;
+                                double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
+                                                                   zoomTimeDisplay);
+                                double endX = GetXfromDateTime(conference.end < end ? conference.end : end,
+                                                                 zoomTimeDisplay);
+                                startX = startX < 0 ? (int)(startX - 1) : (int)startX;
+                                endX = endX < 0 ? (int)(endX - 1) : (int)endX;
 
-                            // Never end need to start before -1, and never any need to proceed if end < 0.
-                            if (startX < -1)
-                                startX = -1;
-                            if (endX < 0)
-                                continue;
+                                // Never end need to start before -1, and never any need to proceed if end < 0.
+                                if (startX < -1)
+                                    startX = -1;
+                                if (endX < 0)
+                                    continue;
 
-                            int startY = (int)GetYfromResource(conference.resourceID, conference.resourceRow);
-                            Rect area = new Rect(startX + .5, startY + .5,
-                                                 ((int)endX - startX), (int)zoomResourceDisplay);
+                                int startY = (int)GetYfromResource(conference.resourceID, conference.resourceRow);
+                                Rect area = new Rect(startX + .5, startY + .5,
+                                                     ((int)endX - startX), (int)zoomResourceDisplay);
 
-                            bool dragMove = conferenceView.drag == PageConferenceView.Drag.Move;
-                            bool dragResize = conferenceView.drag == PageConferenceView.Drag.Resize;
-                            bool thickBorder = false; // Needed to figure out some spacing below.
-                            if (area.Contains(cursorPoint) ||
-                                ((dragMove || dragResize) && conference == currentConference))
-                            {
-                                currentConference = conference;
-                                isMouseOverConference = true;
-                                if (selectedConferences.Contains(conference))
+                                bool dragMove = conferenceView.drag == PageConferenceView.Drag.Move;
+                                bool dragResize = conferenceView.drag == PageConferenceView.Drag.Resize;
+                                bool thickBorder = false; // Needed to figure out some spacing below.
+                                if (area.Contains(cursorPoint) ||
+                                    ((dragMove || dragResize) && conference == currentConference))
+                                {
+                                    currentConference = conference;
+
+                                    isMouseOverConference = true;
+                                    if (selectedConferences.Contains(conference))
+                                    {
+                                        // Reduce the size slightly for drawing so the pen is on the inside.
+                                        dc.DrawRectangle(brushSolid, borderSelected,
+                                                         new Rect(area.X + .5d, area.Y + .5d,
+                                                         area.Width - 1, area.Height - 1));
+                                        thickBorder = true;
+                                        textBrush = PrintBrushFromLuminance(brushSolid);
+                                    }
+                                    else
+                                    {
+                                        dc.DrawRectangle(brushHover, border, area);
+                                        textBrush = PrintBrushFromLuminance(brushHover);
+                                    }
+
+                                    if ((cursorPoint.X < area.Left + 5 || cursorPoint.X > area.Right - 5) && !dragMove)
+                                    {
+                                        if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+                                            Cursor = Cursors.SizeWE;
+                                        resizeCursorSet = true;
+                                        if (!conferenceView.dragMouseHasMoved)
+                                            conferenceView.resizeStart = cursorPoint.X < area.Left + 5;
+                                    }
+                                }
+                                else if (selectedConferences.Contains(conference))
                                 {
                                     // Reduce the size of the rect slightly for drawing so the pen is on the inside.
                                     dc.DrawRectangle(brushSolid, borderSelected,
-                                                     new Rect(area.X + .5d, area.Y + .5d,
-                                                     area.Width - 1, area.Height - 1));
+                                        new Rect(area.X + .5d, area.Y + .5d,
+                                                 area.Width - 1, area.Height - 1));
                                     thickBorder = true;
-                                    textBrush = PrintBrushFromLuminance(brushSolid);
                                 }
                                 else
                                 {
-                                    dc.DrawRectangle(brushHover, border, area);
-                                    textBrush = PrintBrushFromLuminance(brushHover);
+                                    dc.DrawRectangle(brush, border, area);
+                                    textBrush = PrintBrushFromLuminance(brush);
                                 }
 
-                                if ((cursorPoint.X < area.Left + 5 || cursorPoint.X > area.Right - 5) && !dragMove)
+                                Geometry clipGeometry = new RectangleGeometry(new(area.Left, area.Top,
+                                                                                  area.Width - .5d, area.Height));
+                                dc.PushClip(clipGeometry);
+
+                                // If the conference is currently running, indicate this.
+                                if (conference.start < now && conference.end > now)
                                 {
-                                    if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
-                                        Cursor = Cursors.SizeWE;
-                                    resizeCursorSet = true;
-                                    if (!conferenceView.dragMouseHasMoved)
-                                        conferenceView.resizeStart = cursorPoint.X < area.Left + 5;
+                                    Rect iconTray;
+                                    if (thickBorder)
+                                        iconTray = new Rect(area.Left + 1.5d, area.Top + 1.5d, 14d, area.Height - 3d);
+                                    else
+                                        iconTray = new Rect(area.Left + .5d, area.Top + .5d, 14d, area.Height - 1d);
+
+                                    dc.DrawRectangle(brushSolid, null, iconTray);
+
+                                    // Draw the play symbol.
+                                    PathGeometry play = symbolPlay.Clone();
+                                    TranslateTransform translateTransform = new(startX + 4.5d, startY + 5d);
+                                    play.Transform = translateTransform;
+                                    dc.DrawGeometry(PrintBrushFromLuminance(brushSolid), null, play);
+
+                                    startX += 14d; // Adjust start for drawing text.
                                 }
-                            }
-                            else if (selectedConferences.Contains(conference))
-                            {
-                                // Reduce the size of the rect slightly for drawing so the pen is on the inside.
-                                dc.DrawRectangle(brushSolid, borderSelected,
-                                    new Rect(area.X + .5d, area.Y + .5d,
-                                             area.Width - 1, area.Height - 1));
-                                thickBorder = true;
-                            }
-                            else
-                            {
-                                dc.DrawRectangle(brush, border, area);
-                                textBrush = PrintBrushFromLuminance(brush);
-                            }
 
-                            Geometry clipGeometry = new RectangleGeometry(new(area.Left, area.Top,
-                                                                              area.Width - .5d, area.Height));
-                            dc.PushClip(clipGeometry);
-
-                            // If the conference is currently running, indicate this.
-                            if (conference.start < now && conference.end > now)
-                            {
-                                Rect iconTray;
-                                if (thickBorder)
-                                    iconTray = new Rect(area.Left + 1.5d, area.Top + 1.5d, 14d, area.Height - 3d);
-                                else
-                                    iconTray = new Rect(area.Left + .5d, area.Top + .5d, 14d, area.Height - 1d);
-
-                                dc.DrawRectangle(brushSolid, null, iconTray);
-
-                                // Draw the play symbol.
-                                PathGeometry play = symbolPlay.Clone();
-                                TranslateTransform translateTransform = new(startX + 4.5d, startY + 5d);
-                                play.Transform = translateTransform;
-                                dc.DrawGeometry(PrintBrushFromLuminance(brushSolid), null, play);
-
-                                startX += 14d; // Adjust start for drawing text.
-                            }
-
-                            if (area.Width > 8)
-                            {
-                                // Draw title.
-                                FormattedText title = new(conference.title,
-                                                          CultureInfo.CurrentCulture,
-                                                          FlowDirection.LeftToRight,
-                                                          segoeUISemiBold,
-                                                          12,
-                                                          textBrush,
-                                                          VisualTreeHelper.GetDpi(this).PixelsPerDip);
-
-                                dc.DrawText(title, new(startX + 5, startY + 2));
-
-                                // Draw start and end time.
-                                if (area.Height > 25)
+                                if (area.Width > 8)
                                 {
-                                    FormattedText time = new(conference.start.ToString("HH:mm") + " - " +
-                                                             conference.end.ToString("HH:mm"),
-                                                             CultureInfo.CurrentCulture,
-                                                             FlowDirection.LeftToRight,
-                                                             segoeUI,
-                                                             12,
-                                                             textBrush,
-                                                             VisualTreeHelper.GetDpi(this).PixelsPerDip);
-                                    dc.DrawText(time, new(startX + 5, startY + zoomResourceSensitivity));
-                                }
-                            }
+                                    // Draw title.
+                                    FormattedText title = new(conference.title,
+                                                              CultureInfo.CurrentCulture,
+                                                              FlowDirection.LeftToRight,
+                                                              segoeUISemiBold,
+                                                              12,
+                                                              textBrush,
+                                                              VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-                            dc.Pop();
+                                    dc.DrawText(title, new(startX + 5, startY + 2));
+
+                                    // Draw start and end time.
+                                    if (area.Height > 25)
+                                    {
+                                        FormattedText time = new(conference.start.ToString("HH:mm") + " - " +
+                                                                 conference.end.ToString("HH:mm"),
+                                                                 CultureInfo.CurrentCulture,
+                                                                 FlowDirection.LeftToRight,
+                                                                 segoeUI,
+                                                                 12,
+                                                                 textBrush,
+                                                                 VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                                        dc.DrawText(time, new(startX + 5, startY + zoomResourceSensitivity));
+                                    }
+                                }
+
+                                dc.Pop();
+                            }
+                        }
+
+                        // While we're here, draw warnings for dial clashes too.
+                        int clashesOngoing = 0;
+                        foreach (int i in clashIDs)
+                        {
+
                         }
                     }
-                }
 
                 // Don't forget the current conference or switch off the resize cursor while we're dragging it.
                 if (!resizeCursorSet && conferenceView.drag != PageConferenceView.Drag.Resize)
@@ -2032,6 +2145,44 @@ namespace BridgeOpsClient
                                         new LineGeometry(new Point(x, y * .6d), new Point(x, 0d)));
                     }
                 }
+
+                // Draw the dial clash tooltip.
+                if (cursor != null && Keyboard.IsKeyDown(Key.D) && currentConference != null)
+                {
+                    PageConferenceView.Conference cc = currentConference;
+                    HashSet<string> clashingDialNos = new();
+                    foreach (PageConferenceView.Conference c in conferences.Values)
+                        if (cc.end > c.start && cc.start < c.end && cc.id != c.id)
+                            foreach (string s in c.dialNos)
+                                if (cc.dialNos.Contains(s) && !clashingDialNos.Contains(s))
+                                    clashingDialNos.Add(s);
+
+                    List<string> status = new();
+                    List<bool> bold = new();
+
+                    // First add the clashes in bold.
+                    if (clashingDialNos.Count > 0)
+                    {
+                        status.Add("Clashes:  " + string.Join(", ", clashingDialNos));
+                        bold.Add(true);
+                    }
+
+                    // Then add the rest as normal.
+                    List<string> notClashing = new();
+                    foreach (string s in cc.dialNos)
+                        if (!clashingDialNos.Contains(s))
+                            notClashing.Add(s);
+                    if (notClashing.Count > 0)
+                    {
+                        status.Add((clashingDialNos.Count > 0 ? "Others:  " : "Dial Nos:  ") +
+                                   string.Join(", ", notClashing));
+                        bold.Add(false);
+                    }
+
+                    conferenceView.SetStatus(StatusContext.Clash, status, bold);
+                }
+                else if (conferenceView.statusBarContext == StatusContext.Clash)
+                    conferenceView.SetStatus();
             }
         }
 

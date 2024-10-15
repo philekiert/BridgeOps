@@ -67,7 +67,7 @@ namespace BridgeOpsClient
         private void btnIPDefault_Click(object sender, RoutedEventArgs e)
         { txtIPAddress.Text = "127.0.0.1"; }
         private void btnOutboundDefault_Click(object sender, RoutedEventArgs e)
-        { txtPortOutbound.Text = Glo.PORT_OUTBOUND_DEFAULT.ToString(); }
+        { txtPortOutbound.Text = Glo.PORT_INBOUND_DEFAULT.ToString(); }
         private void btnInboundDefault_Click(object sender, RoutedEventArgs e)
         { txtPortInbound.Text = Glo.PORT_OUTBOUND_DEFAULT.ToString(); }
 

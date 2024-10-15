@@ -21,13 +21,12 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        
+
         <!--   C O N F E R E N C E   C A N C E L L E D   W A R N I N G -->
 
         <Label Grid.ColumnSpan="3" Content="C A N C E L L E D"
                Background="{StaticResource brushNegativeBackground}" Foreground="White" FontWeight="SemiBold"
                Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="-5 0 0 0"/>
-        
 
 
         <!--   C O N N E C T I O N S   &   N O T E S   -->
@@ -53,8 +52,8 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Button x:Name="btnAddConnection" Grid.Row="0" Margin="10 10 0 5" Padding="0 -2 0 0"
-                            HorizontalAlignment="Left" VerticalAlignment="Top"
-                            Style="{StaticResource plus-button}" Click="btnAddConnection_Click"/>
+                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                        Style="{StaticResource plus-button}" Click="btnAddConnection_Click"/>
                 <Label Grid.Column="2" Margin="0 8 0 0" Content="Test" FontWeight="SemiBold"/>
                 <Label Grid.Column="3" Margin="0 8 0 0" Content="Connected" FontWeight="SemiBold"/>
                 <Label Grid.Column="4" Margin="0 8 0 0" Content="Disconnected" FontWeight="SemiBold"/>

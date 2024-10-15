@@ -2,6 +2,8 @@
   
   
 ## 0.5.4
+### Fixed
+- The default ports in the network settings are now the correct way around.
   
   
 ## 0.5.3
