@@ -2058,7 +2058,11 @@ namespace BridgeOpsClient
 
                 // Draw the time.
                 double timeX = (int)GetXfromDateTime(now, zoomTimeDisplay) + .5d;
-                dc.DrawLine(penScheduleLineDay, new(timeX, 0d), new(timeX, ActualHeight));
+                {
+                    Pen penTime = penScheduleLineDay.Clone();
+                    penTime.DashStyle = new DashStyle(new double[] { 3, 6 }, 0);
+                    dc.DrawLine(penTime, new(timeX, 0d), new(timeX, ActualHeight));
+                }
 
                 // Draw conferences.
                 bool resizeCursorSet = false;

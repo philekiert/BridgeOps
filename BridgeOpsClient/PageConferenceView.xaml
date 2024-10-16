@@ -78,13 +78,12 @@
                 <local:ScheduleResources Grid.Row="1" x:Name="schResources"/>
             </Grid>
             <local:ScheduleRuler Grid.Row="0" x:Name="schRuler" Grid.Column="1" VerticalAlignment="Top" Height="44"/>
-            <local:ScheduleView  x:Name="schView" Grid.Row="1" Grid.Column="1" Background="White"
+            <local:ScheduleView  x:Name="schView" Background="White"
                                  MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
                                  MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
                                  PreviewMouseWheel="schView_PreviewMouseWheel"
                                  KeyDown="schView_KeyDown"
-                                 Focusable="True" Margin="0 44 0 0">
-            </local:ScheduleView>
+                                 Focusable="True" Margin="90,44,10,0" Grid.ColumnSpan="2"/>
             <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
                            SizeChanged="scrollBar_SizeChanged" Margin="0 44 0 0"/>
