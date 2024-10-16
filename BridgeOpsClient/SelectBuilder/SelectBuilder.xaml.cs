@@ -17,6 +17,10 @@ using ClosedXML.Excel;
 using System.Text.Json.Nodes;
 using System.Net.Sockets;
 using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using DocumentFormat.OpenXml.Bibliography;
+using System.IO;
+using System.Xml;
+using System.Windows.Markup;
 
 namespace BridgeOpsClient
 {
@@ -34,9 +38,15 @@ namespace BridgeOpsClient
             btnAddPreset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_REPORTS];
         }
 
-        private PageSelectBuilder AddTab()
+        private PageSelectBuilder AddTab() { return AddTab(false); }
+        private PageSelectBuilder AddTab(bool copy)
         {
-            PageSelectBuilder pageSelectBuilder = new();
+            PageSelectBuilder pageSelectBuilder;
+            if (copy)
+                pageSelectBuilder = CloneBuilderTab(GetBuilder((TabItem)tabControl.SelectedItem));
+            else
+                pageSelectBuilder = new();
+
             Frame frame = new() { Content = pageSelectBuilder };
             TabItem tabItem = new()
             {
@@ -56,7 +66,10 @@ namespace BridgeOpsClient
 
         private void btnAddTab_Click(object sender, RoutedEventArgs e)
         {
-            AddTab();
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                AddTab(true);
+            else
+                AddTab();
             if (tabControl.Items.Count > 1)
                 btnRemoveTab.IsEnabled = true;
 
@@ -192,6 +205,57 @@ namespace BridgeOpsClient
             }
 
             return nameObject.txtName.Text;
+        }
+
+        private PageSelectBuilder CloneBuilderTab(PageSelectBuilder old)
+        {
+            PageSelectBuilder clone = new();
+
+            clone.cmbTable.SelectedIndex = old.cmbTable.SelectedIndex;
+            clone.chkDistinct.IsEnabled = old.chkDistinct.IsEnabled;
+            for (int i = 0; i < old.joins.Count; ++i)
+            {
+                PageSelectBuilderJoin oldJoin = old.Join(i);
+                PageSelectBuilderJoin newJoin = clone.AddJoin();
+                newJoin.cmbTable.SelectedIndex = oldJoin.cmbTable.SelectedIndex;
+                newJoin.cmbColumn1.SelectedIndex = oldJoin.cmbColumn1.SelectedIndex;
+                newJoin.cmbColumn2.SelectedIndex = oldJoin.cmbColumn2.SelectedIndex;
+                newJoin.cmbType.SelectedIndex = oldJoin.cmbType.SelectedIndex;
+            }
+            for (int i = 0; i < old.columns.Count; ++i)
+            {
+                PageSelectBuilderColumn oldCol = old.Column(i);
+                PageSelectBuilderColumn newCol = clone.AddColumn();
+                newCol.cmbColumn.SelectedIndex = oldCol.cmbColumn.SelectedIndex;
+                newCol.txtAlias.Text = oldCol.txtAlias.Text;
+
+            }
+            for (int i = 0; i < old.wheres.Count; ++i)
+            {
+                PageSelectBuilderWhere oldWhere = old.Where(i);
+                PageSelectBuilderWhere newWhere = clone.AddWhere();
+                newWhere.cmbAndOr.SelectedIndex = oldWhere.cmbAndOr.SelectedIndex;
+                newWhere.cmbColumn.SelectedIndex = oldWhere.cmbColumn.SelectedIndex;
+                newWhere.cmbOperator.SelectedIndex = oldWhere.cmbOperator.SelectedIndex;
+                newWhere.txtValue.Text = oldWhere.txtValue.Text;
+                newWhere.numValue.Text = oldWhere.numValue.Text;
+                newWhere.dtmValue.datePicker.SelectedDate = oldWhere.dtmValue.datePicker.SelectedDate;
+                newWhere.dtmValue.timePicker.txtHour.Text = oldWhere.dtmValue.timePicker.txtHour.Text;
+                newWhere.dtmValue.timePicker.txtMinute.Text = oldWhere.dtmValue.timePicker.txtMinute.Text;
+                newWhere.timValue.txtHour.Text = oldWhere.timValue.txtHour.Text;
+                newWhere.timValue.txtMinute.Text = oldWhere.timValue.txtMinute.Text;
+                newWhere.datValue.SelectedDate = oldWhere.datValue.SelectedDate;
+                newWhere.chkValue.IsChecked = oldWhere.chkValue.IsChecked;
+            }
+            for (int i = 0; i < old.orderBys.Count; ++i)
+            {
+                PageSelectBuilderOrderBy oldOrderBy = old.OrderBy(i);
+                PageSelectBuilderOrderBy newOrderBy = clone.AddOrderBy();
+                oldOrderBy.cmbOrderBy.SelectedIndex = newOrderBy.cmbOrderBy.SelectedIndex;
+                oldOrderBy.cmbAscDesc.SelectedIndex = newOrderBy.cmbAscDesc.SelectedIndex;
+            }
+
+            return clone;
         }
 
         private void ApplyLoadedPreset(string jsonString)

@@ -2243,9 +2243,12 @@ namespace BridgeOpsClient
                                 if (area.Contains(cursorPoint) ||
                                     ((dragMove || dragResize) && conference == currentConference))
                                 {
+                                    // Record this for switching off the status further down  if needed.
                                     cursorOverConference = true;
                                     lastCurrentConferenceID = conference.id;
                                     currentConference = conference;
+
+                                    // Add
                                     string times;
                                     if (conference.start.Date == conference.end.Date)
                                         times = conference.start.ToString("hh:mm") + " - " +
@@ -2255,8 +2258,10 @@ namespace BridgeOpsClient
                                                 conference.end.ToString("dd/MM/yyyy hh:mm");
                                     if (conferenceView.statusBarContext == StatusContext.None)
                                         conferenceView.SetStatus(StatusContext.None,
-                                                                 new() { conference.title, times },
-                                                                 new() { false, false });
+                                            new() { conference.title,
+                                                    times,
+                                                    "Dial Count: " + conference.dialNos.Count.ToString()},
+                                            new() { false, false, false });
 
                                     isMouseOverConference = true;
                                     if (selectedConferences.Contains(conference) ||
@@ -2303,8 +2308,8 @@ namespace BridgeOpsClient
                                     area.Width >= .5d ? area.Width - .5d : area.Width, area.Height));
                                 dc.PushClip(clipGeometry);
 
-                                // If the conference is currently running, indicate this.
-                                if (conference.start < now && conference.end > now)
+                                // If the conference is currently running and is not cancelled, indicate this.
+                                if (conference.start < now && conference.end > now && !conference.cancelled)
                                 {
                                     Rect iconTray;
                                     if (thickBorder)

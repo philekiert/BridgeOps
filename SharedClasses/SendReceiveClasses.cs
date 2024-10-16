@@ -2130,7 +2130,7 @@ END
             {
                 str.Append("WHERE ");
                 if (addBrackets)
-                    for (int i = 0; i < whereColumns.Count; ++i)
+                    for (int i = 0; i < whereColumns.Count - 1; ++i)
                         str.Append('(');
                 for (int i = 0; i < whereColumns.Count; ++i)
                 {
@@ -2140,7 +2140,7 @@ END
                     if (whereValues[i] != null)
                         str.Append(whereValueTypesNeedQuotes[i] ?
                                    " " + SqlAssist.AddQuotes(whereValues[i]!) : " " + whereValues[i]);
-                    str.Append(addBrackets ? ")\n" : "\n");
+                    str.Append(addBrackets && i != 0 ? ")\n" : "\n");
                 }
             }
 
@@ -2692,7 +2692,7 @@ END
         }
 
         private static HashSet<string> joinTypes = new() { "INNER", "LEFT", "RIGHT", "LEFT OUTER", "RIGHT OUTER", "FULL OUTER" };
-        private static HashSet<string> operators = new() { "=", "<", ">", "<=", ">=", "LIKE", "IS NULL", "IS NOT NULL" };
+        private static HashSet<string> operators = new() { "=", "!=", "<", ">", "<=", ">=", "LIKE", "NOT LIKE", "IS NULL", "IS NOT NULL" };
         public static bool CheckJoinTypes(List<string> toCheck)
         {
             foreach (string s in toCheck)

@@ -102,7 +102,8 @@ namespace BridgeOpsClient
             type = ((ColumnRecord.Column)dictionary[column]!).type;
 
             if (ColumnRecord.IsTypeString(type))
-                cmbOperator.ItemsSource = new List<string>() { "=", "LIKE", "IS NULL", "IS NOT NULL" };
+                cmbOperator.ItemsSource = new List<string>() { "!=", "=", "LIKE", "NOT LIKE",
+                                                               "IS NULL", "IS NOT NULL" };
             else if (type == "BIT" || type.Contains("BOOL"))
                 cmbOperator.ItemsSource = new List<string>() { "=", "IS NULL", "IS NOT NULL" };
             else // if int
