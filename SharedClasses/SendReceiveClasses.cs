@@ -2309,6 +2309,15 @@ END
             List<string> setters = new();
             for (int i = 0; i < columns.Count; ++i)
                 setters.Add(SqlAssist.Setter(columns[i], values[i]));
+
+            // If the table is Conference, we need to record the edit information.
+            if (table == "Conference")
+            {
+                setters.Add(SqlAssist.Setter(Glo.Tab.CONFERENCE_EDIT_LOGIN, loginID.ToString()));
+                setters.Add(SqlAssist.Setter(Glo.Tab.CONFERENCE_EDIT_TIME,
+                                             SqlAssist.DateTimeToSQL(DateTime.Now, false, true)));
+            }
+
             str.Append(string.Join(", ", setters));
             str.Append(" WHERE ");
             List<string> wheres = new();

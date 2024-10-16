@@ -66,7 +66,7 @@
         <Grid Grid.Row="1" x:Name="grdScheduleView">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100" MinWidth="5" MaxWidth="300"/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0" Background="White">
@@ -78,16 +78,25 @@
                 <local:ScheduleResources Grid.Row="1" x:Name="schResources"/>
             </Grid>
             <local:ScheduleRuler Grid.Row="0" x:Name="schRuler" Grid.Column="1" VerticalAlignment="Top" Height="44"/>
-            <local:ScheduleView  x:Name="schView" Background="White"
-                                 MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
-                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
-                                 PreviewMouseWheel="schView_PreviewMouseWheel"
-                                 KeyDown="schView_KeyDown"
-                                 Focusable="True" Margin="90,44,10,0" Grid.ColumnSpan="2"/>
+            <GridSplitter Grid.Column="0" Width="5"/>
+            <local:ScheduleView Grid.Column="1" x:Name="schView" Background="White"
+                                MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
+                                MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
+                                PreviewMouseWheel="schView_PreviewMouseWheel"
+                                KeyDown="schView_KeyDown"
+                                Focusable="True" Margin="0,44,0,0"
+                                ContextMenuOpening="mnuSchedule_ContextMenuOpening">
+                <Canvas.ContextMenu>
+                    <ContextMenu x:Name="mnuSchedule">
+                        <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
+                        <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"/>
+                    </ContextMenu>
+                </Canvas.ContextMenu>
+            </local:ScheduleView>
+
             <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
                            SizeChanged="scrollBar_SizeChanged" Margin="0 44 0 0"/>
-            <GridSplitter Grid.Column="0" Width="5"/>
         </Grid>
         <Border Grid.Row="2" Grid.ColumnSpan="2" BorderThickness="0 1 1 0" Margin="0 -1 0 0"
                 Background="{StaticResource brushStatusBar}" BorderBrush="{StaticResource brushStatusBarBorder}"

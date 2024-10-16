@@ -314,6 +314,9 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
+            mnuScheduleCancel.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+
             SetResources();
 
             tmrRender.Tick += TimerUpdate;
@@ -893,10 +896,13 @@ namespace BridgeOpsClient
         {
             get
             {
-                if (schView.selectedConferences.Count == 0)
-                    return schView.currentConference == null ? new() : new() { schView.currentConference };
-                else
-                    return schView.selectedConferences;
+                lock (schView.selectedConferences)
+                {
+                    if (schView.selectedConferences.Count == 0)
+                        return schView.currentConference == null ? new() : new() { schView.currentConference };
+                    else
+                        return schView.selectedConferences;
+                }
             }
         }
 
@@ -1274,6 +1280,80 @@ namespace BridgeOpsClient
         private void conferenceView_Loaded(object sender, RoutedEventArgs e)
         {
             RedrawResources();
+        }
+
+        private void mnuSchedule_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (schView.currentConference == null)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            // Set button to "Uncancel" only if all selected conferences are cancelled.
+            lock (conferences)
+            {
+                mnuScheduleCancel.Header = "Uncancel";
+                List<Conference> toCheck = DragConferences;
+                foreach (Conference c in toCheck)
+                {
+                    if (!c.cancelled)
+                    {
+                        mnuScheduleCancel.Header = "Cancel";
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void mnuScheduleDelete_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                List<string> ids = new();
+                lock (conferences)
+                    lock (schView.selectedConferences)
+                    {
+                        List<Conference> confs = DragConferences;
+                        foreach (Conference c in DragConferences)
+                            ids.Add(c.id.ToString());
+                        if (ids.Count == 0)
+                            ids.Add(schView.lastCurrentConferenceID.ToString());
+                    }
+                // Clear the selection, as this will cause the program to hold onto these references even though they
+                // won't be returned next time frame search.
+                schView.selectedConferences.Clear();
+                if (App.DeleteConfirm(ids.Count > 1))
+                    App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false);
+            }
+            catch { } // No catch required due to intended inactivity on a conference disappearing and error
+                      // messages in App.Update().
+        }
+
+        private void mnuScheduleCancel_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                bool uncancel = mnuScheduleCancel.Header.ToString() == "Uncancel";
+
+                List<string> ids = new();
+                lock (conferences)
+                    lock (schView.selectedConferences)
+                    {
+                        List<Conference> confs = DragConferences;
+                        foreach (Conference c in DragConferences)
+                            ids.Add(c.id.ToString());
+                        if (ids.Count == 0)
+                            ids.Add(schView.lastCurrentConferenceID.ToString());
+                    }
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+                                        "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
+                                        new() { uncancel ? "0" : "1" },
+                                        new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
+                App.SendUpdate(req);
+            }
+            catch { } // No catch required due to intended inactivity on a conference disappearing and error
+                      // messages in App.Update().
         }
     }
 
@@ -1767,6 +1847,10 @@ namespace BridgeOpsClient
 
         // currentConference represents the currently hovered over conference, selectedConferences is for multi-select.
         public PageConferenceView.Conference? currentConference = null;
+        // Sometimes, right clicking on a conference without first making a selection will cause  currentConference to
+        // be set to null, leading some button functions to fail. Always select the conference on a right click, if not
+        // already selected.
+        public int lastCurrentConferenceID = -1;
         public List<PageConferenceView.Conference> selectedConferences = new();
 
         protected override void OnRender(DrawingContext dc)
@@ -2073,6 +2157,7 @@ namespace BridgeOpsClient
                 lock (conferences)
                     lock (clashIDs)
                     {
+                        bool cursorOverConference = false;
                         Point cursorPoint = new();
                         if (cursor != null)
                             cursorPoint = cursor.Value;
@@ -2158,7 +2243,20 @@ namespace BridgeOpsClient
                                 if (area.Contains(cursorPoint) ||
                                     ((dragMove || dragResize) && conference == currentConference))
                                 {
+                                    cursorOverConference = true;
+                                    lastCurrentConferenceID = conference.id;
                                     currentConference = conference;
+                                    string times;
+                                    if (conference.start.Date == conference.end.Date)
+                                        times = conference.start.ToString("hh:mm") + " - " +
+                                                conference.end.ToString("hh:mm");
+                                    else
+                                        times = conference.start.ToString("dd/MM/yyyy hh:mm") + " - " +
+                                                conference.end.ToString("dd/MM/yyyy hh:mm");
+                                    if (conferenceView.statusBarContext == StatusContext.None)
+                                        conferenceView.SetStatus(StatusContext.None,
+                                                                 new() { conference.title, times },
+                                                                 new() { false, false });
 
                                     isMouseOverConference = true;
                                     if (selectedConferences.Contains(conference) ||
@@ -2256,7 +2354,11 @@ namespace BridgeOpsClient
                                 dc.Pop();
                             }
                         }
+
+                        if (!cursorOverConference && conferenceView.statusBarContext == StatusContext.None)
+                            conferenceView.SetStatus();
                     }
+
 
                 // Don't forget the current conference or switch off the resize cursor while we're dragging it.
                 if (!resizeCursorSet && conferenceView.drag != PageConferenceView.Drag.Resize)

@@ -62,7 +62,7 @@ namespace BridgeOpsClient
             try
             {
                 return DisplayQuestion("Are you sure? It will be impossible to recover " +
-                                  $"{(multiple ? "these items." : "this item")}",
+                                  $"{(multiple ? "these items." : "this item.")}",
                                    "Confirm Deletion",
                                    DialogWindows.DialogBox.Buttons.YesNo);
             }
