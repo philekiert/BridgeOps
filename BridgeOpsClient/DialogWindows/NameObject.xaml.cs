@@ -22,9 +22,10 @@ namespace BridgeOpsClient.DialogWindows
         {
             InitializeComponent();
             Title = title;
+            txtName.Focus();
         }
 
-        private void btnSubmit_Click(object sender, RoutedEventArgs e)
+        private void btnSubmit_Click(object? sender, RoutedEventArgs? e)
         {
             if (!CheckLegal())
                 return;
@@ -51,6 +52,12 @@ namespace BridgeOpsClient.DialogWindows
                     return false;
             }
             return true;
+        }
+
+        private void CustomWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                btnSubmit_Click(null, null);
         }
     }
 }

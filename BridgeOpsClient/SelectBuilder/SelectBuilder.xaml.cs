@@ -307,6 +307,7 @@ namespace BridgeOpsClient
                         where.cmbColumn.Text = GetFriendlyName(whereObj["Column"].GetValue<string>(), true);
                         where.cmbOperator.Text = whereObj["Operator"].GetValue<string>();
                         where.txtValue.Text = whereObj["ValueText"].GetValue<string>();
+                        where.cmbValue.Text = whereObj["ValueAllowed"].GetValue<string>();
                         where.numValue.Text = whereObj["ValueNumber"].GetValue<string>();
                         if (whereObj["ValueDateTime"] != null)
                             where.dtmValue.SetDateTime(whereObj["ValueDateTime"].GetValue<DateTime>());
@@ -389,6 +390,7 @@ namespace BridgeOpsClient
                     jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
                     jsonWhere["Operator"] = where.cmbOperator.Text;
                     jsonWhere["ValueText"] = where.txtValue.Text;
+                    jsonWhere["ValueAllowed"] = where.cmbValue.Text;
                     jsonWhere["ValueNumber"] = where.numValue.Text;
                     jsonWhere["ValueDateTime"] = where.dtmValue.GetDateTime();
                     jsonWhere["ValueDate"] = where.datValue.SelectedDate;

@@ -91,23 +91,35 @@ namespace BridgeOpsClient
                 return;
             }
 
-            string column = ColumnRecord.ReversePrintName(newColumn.Substring(newColumn.IndexOf('.') + 1), dictionary);
+            string columnName = ColumnRecord.ReversePrintName(newColumn.Substring(newColumn.IndexOf('.') + 1),
+                                                              dictionary);
 
-            if (column == "")
+            if (columnName == "")
             {
                 SwitchValuesOff();
                 return;
             }
 
-            type = ((ColumnRecord.Column)dictionary[column]!).type;
+            ColumnRecord.Column column = (ColumnRecord.Column)dictionary[columnName]!;
+            type = column.type;
+
+            cmbValue.ItemsSource = null;
 
             if (ColumnRecord.IsTypeString(type))
-                cmbOperator.ItemsSource = new List<string>() { "!=", "=", "LIKE", "NOT LIKE",
+            {
+                cmbOperator.ItemsSource = new List<string>() { "=", "!=", "LIKE", "NOT LIKE",
                                                                "IS NULL", "IS NOT NULL" };
+                if (column.allowed.Length > 0)
+                {
+                    cmbValue.ItemsSource = column.allowed;
+                    cmbValue.SelectedIndex = 0;
+                }
+            }
             else if (type == "BIT" || type.Contains("BOOL"))
                 cmbOperator.ItemsSource = new List<string>() { "=", "IS NULL", "IS NOT NULL" };
             else // if int
-                cmbOperator.ItemsSource = new List<string>() { "=", "<", ">", "<=", ">=", "IS NULL", "IS NOT NULL" };
+                cmbOperator.ItemsSource = new List<string>() { "=", "!=", "<", ">", "<=", ">=",
+                                                               "IS NULL", "IS NOT NULL" };
             cmbOperator.SelectedIndex = 0;
 
             cmbOperator_SelectionChanged(sender, e);
@@ -123,7 +135,11 @@ namespace BridgeOpsClient
             if (ColumnRecord.IsTypeInt(type))
                 numValue.SetMinMaxToType(type);
 
-            txtValue.Visibility = ColumnRecord.IsTypeString(type) && !operatorText.Contains("NULL") ?
+            txtValue.Visibility = ColumnRecord.IsTypeString(type) && !operatorText.Contains("NULL") &&
+                                  ((operatorText != "=" && operatorText != "!=") || cmbValue.Items.Count == 0) ?
+                                  Visibility.Visible : Visibility.Collapsed;
+            cmbValue.Visibility = ColumnRecord.IsTypeString(type) && !operatorText.Contains("NULL") &&
+                                  (operatorText == "=" || operatorText == "!=") && cmbValue.Items.Count > 0 ?
                                   Visibility.Visible : Visibility.Collapsed;
             numValue.Visibility = ColumnRecord.IsTypeInt(type) && !operatorText.Contains("NULL") ?
                                   Visibility.Visible : Visibility.Collapsed;

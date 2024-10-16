@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d"
         Title="Name Object" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterScreen" KeyDown="CustomWindow_KeyDown">
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
