@@ -88,6 +88,8 @@
                                 ContextMenuOpening="mnuSchedule_ContextMenuOpening">
                 <Canvas.ContextMenu>
                     <ContextMenu x:Name="mnuSchedule">
+                        <MenuItem x:Name="mnuScheduleCopy" Header="Copy" Click="mnuScheduleCopy_Click"/>
+                        <Separator/>
                         <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
                         <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"/>
                     </ContextMenu>
