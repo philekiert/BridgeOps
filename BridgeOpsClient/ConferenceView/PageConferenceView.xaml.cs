@@ -30,7 +30,7 @@ namespace BridgeOpsClient
 {
     public partial class PageConferenceView : Page
     {
-        DispatcherTimer tmrRender = new DispatcherTimer(DispatcherPriority.Render);
+        DispatcherTimer tmrRender = new (DispatcherPriority.Render);
 
         public class ResourceInfo
         {
@@ -378,7 +378,7 @@ namespace BridgeOpsClient
             {
                 searchStart = start;
                 searchEnd = end;
-                Thread searchThread = new Thread(SearchTimeFrameThread);
+                Thread searchThread = new(SearchTimeFrameThread);
                 searchThread.Start();
             }
         }
@@ -1369,9 +1369,9 @@ namespace BridgeOpsClient
         public ScheduleView? view;
         public ScheduleResources? res;
 
-        Typeface segoeUI = new Typeface("Segoe UI");
-        Typeface segoeUISemiBold = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold,
-                                                FontStretches.Normal);
+        Typeface segoeUI = new("Segoe UI");
+        Typeface segoeUISemiBold = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold,
+                                       FontStretches.Normal);
 
         // OnRender() has some repeated code from ScheduleView, but I have kept the draw code for the ruler separate
         // due to not wanting to redraw the ruler unless we have to. The function still makes use of some public
@@ -1388,11 +1388,11 @@ namespace BridgeOpsClient
                 int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 60);
                 int viewHalfDays = (int)(viewHalfHours / 24);
 
-                TimeSpan half = new TimeSpan(0, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+                TimeSpan half = new(0, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
 
                 DateTime start = view.scheduleTime - half;
                 // Overshoot so text doesn't cut disappear early when scrolling.
-                DateTime end = view.scheduleTime + half.Add(new TimeSpan(1, 0, 0));
+                DateTime end = view.scheduleTime + half.Add(new(1, 0, 0));
 
                 double incrementX = zoomTimeDisplay;
                 long incrementTicks = ScheduleView.ticks1Hour;
@@ -1524,7 +1524,7 @@ namespace BridgeOpsClient
 
         public ScheduleView? view;
 
-        Typeface segoeUI = new Typeface("Segoe UI");
+        Typeface segoeUI = new("Segoe UI");
 
         Brush brsHighlight;
         Brush brsDivider;

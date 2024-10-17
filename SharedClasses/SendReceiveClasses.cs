@@ -27,8 +27,8 @@ namespace SendReceiveClasses
         public static int portInbound;  // Should be the same for all instances.
         public static int portOutbound; // Should be the same for all isntances.
 
-        static JsonSerializerOptions jsonOpts = new JsonSerializerOptions();
-        static UnicodeEncoding unicodeEncoding = new UnicodeEncoding();
+        static readonly JsonSerializerOptions jsonOpts = new();
+        static readonly UnicodeEncoding unicodeEncoding = new();
 
         public SendReceive()
         {
@@ -57,7 +57,7 @@ namespace SendReceiveClasses
         public byte[] PrepareBytes(string send)
         {
             byte[] sendBytes = unicodeEncoding.GetBytes(send);
-            List<byte> lB = new List<byte>();
+            List<byte> lB = new();
             lB.AddRange(BitConverter.GetBytes(sendBytes.Length));
             lB.AddRange(sendBytes);
             return lB.ToArray();
@@ -135,7 +135,7 @@ namespace SendReceiveClasses
         {
             try
             {
-                TcpClient client = new TcpClient();
+                TcpClient client = new();
                 client.Connect(ep);
                 NetworkStream stream = client.GetStream();
                 stream.ReadTimeout = 30000;
@@ -165,7 +165,7 @@ namespace SendReceiveClasses
     class ConnectedClients
     {
         // Bits of information like IP, login name, etc.
-        public List<ConnectedClient> connectedClients = new List<ConnectedClient>();
+        public List<ConnectedClient> connectedClients = new();
 
         public void Add(string ip, string username)
         {
@@ -2225,7 +2225,7 @@ END
             rows = new();
             while (reader.Read())
             {
-                List<object?> row = new List<object?>();
+                List<object?> row = new();
                 for (int i = 0; i < reader.FieldCount; i++)
                     if (reader.IsDBNull(i))
                         row.Add(null);
@@ -2691,8 +2691,10 @@ END
             }
         }
 
-        private static HashSet<string> joinTypes = new() { "INNER", "LEFT", "RIGHT", "LEFT OUTER", "RIGHT OUTER", "FULL OUTER" };
-        private static HashSet<string> operators = new() { "=", "!=", "<", ">", "<=", ">=", "LIKE", "NOT LIKE", "IS NULL", "IS NOT NULL" };
+        private static readonly HashSet<string> joinTypes = new() { "INNER", "LEFT", "RIGHT", "LEFT OUTER",
+                                                                    "RIGHT OUTER", "FULL OUTER" };
+        private static readonly HashSet<string> operators = new() { "=", "!=", "<", ">", "<=", ">=",
+                                                                    "LIKE", "NOT LIKE", "IS NULL", "IS NOT NULL" };
         public static bool CheckJoinTypes(List<string> toCheck)
         {
             foreach (string s in toCheck)

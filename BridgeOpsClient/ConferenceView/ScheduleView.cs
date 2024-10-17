@@ -17,9 +17,9 @@ namespace BridgeOpsClient
     {
         public PageConferenceView? conferenceView;
 
-        Typeface segoeUI = new Typeface("Segoe UI");
-        Typeface segoeUISemiBold = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold,
-                                                FontStretches.Normal);
+        Typeface segoeUI = new("Segoe UI");
+        Typeface segoeUISemiBold = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold,
+                                       FontStretches.Normal);
 
         public double gridHeight = 0;
 
@@ -96,10 +96,10 @@ namespace BridgeOpsClient
             ClipToBounds = true;
 
             // Create a play symbol for active conferences.
-            Point p1 = new Point(0, 0);
-            Point p2 = new Point(0, 10d);
-            Point p3 = new Point(7.33d, 5d);
-            PathFigure pathPlay = new PathFigure { StartPoint = p1 };
+            Point p1 = new(0, 0);
+            Point p2 = new(0, 10d);
+            Point p3 = new(7.33d, 5d);
+            PathFigure pathPlay = new() { StartPoint = p1 };
             pathPlay.Segments.Add(new LineSegment(p2, true));
             pathPlay.Segments.Add(new LineSegment(p3, true));
             pathPlay.IsClosed = true;
@@ -233,7 +233,7 @@ namespace BridgeOpsClient
             int viewHalfSeconds = (int)((viewHalfMinutes - (int)viewHalfMinutes) * 1000);
             int viewHalfDays = (int)(viewHalfHours / 24);
 
-            TimeSpan half = new TimeSpan(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
+            TimeSpan half = new(viewHalfDays, (int)viewHalfHours, (int)viewHalfMinutes, viewHalfSeconds);
 
             start = scheduleTime - half;
             end = scheduleTime + half;
@@ -298,11 +298,11 @@ namespace BridgeOpsClient
                                                                                0, 0, 0));
                 Brush brsScheduleLineDay = new SolidColorBrush(Color.FromArgb(120, 0, 0, 0));
 
-                Pen penScheduleLineFive = new Pen(brsScheduleLineFive, 1d);
-                Pen penScheduleLineQuarter = new Pen(brsScheduleLineQuarter, 1d);
-                Pen penScheduleLineHour = new Pen(brsScheduleLineHour, 1d);
-                Pen penScheduleLineDay = new Pen(brsScheduleLineDay, 1.4d);
-                Pen penScheduleResource = new Pen(brsScheduleLineDay, 1d);
+                Pen penScheduleLineFive = new(brsScheduleLineFive, 1d);
+                Pen penScheduleLineQuarter = new(brsScheduleLineQuarter, 1d);
+                Pen penScheduleLineHour = new(brsScheduleLineHour, 1d);
+                Pen penScheduleLineDay = new(brsScheduleLineDay, 1.4d);
+                Pen penScheduleResource = new(brsScheduleLineDay, 1d);
 
 
                 // Freez()ing Pens increases draw speed dramatically. Freez()ing the Brushes helps a bit, but Freez()ing
@@ -578,7 +578,7 @@ namespace BridgeOpsClient
                                 Brush brushHover = brsConferenceHover;
                                 Brush brushSolid = brsConferenceSolid;
                                 Pen border = penConferenceBorder;
-                                Pen borderSelected = new Pen(brsConferenceBorder, 2);
+                                Pen borderSelected = new(brsConferenceBorder, 2);
                                 if (conference.test)
                                 {
                                     brush = brsConferenceTest;
@@ -652,8 +652,8 @@ namespace BridgeOpsClient
                                 if (endX < 0)
                                     continue;
 
-                                Rect area = new Rect(startX + .5, startY + .5,
-                                                     ((int)endX - startX), (int)zoomResourceDisplay);
+                                Rect area = new(startX + .5, startY + .5,
+                                                ((int)endX - startX), (int)zoomResourceDisplay);
 
                                 bool dragMove = conferenceView.drag == PageConferenceView.Drag.Move;
                                 bool dragResize = conferenceView.drag == PageConferenceView.Drag.Resize;
@@ -1031,7 +1031,7 @@ namespace BridgeOpsClient
         public DateTime GetDateTimeFromX(double x, double zoom)
         {
             x -= ActualWidth * .5d;
-            TimeSpan dif = new TimeSpan((long)(36_000_000_000d * (x / zoom)));
+            TimeSpan dif = new((long)(36_000_000_000d * (x / zoom)));
             return scheduleTime + dif;
         }
         public double GetXfromDateTime(DateTime dt, double zoom)

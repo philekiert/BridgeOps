@@ -222,7 +222,7 @@ namespace BridgeOpsClient
                 }
             }
         }
-        private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+        private static AutoResetEvent autoResetEvent = new(false);
         private static void HandleServerListenAccept(IAsyncResult result)
         {
             if (result.AsyncState != null)
@@ -279,9 +279,9 @@ namespace BridgeOpsClient
             }
         }
 
-        public static SendReceive sr = new SendReceive();
-        public static SessionDetails sd = new SessionDetails();
-        public static UserSettings us = new UserSettings();
+        public static SendReceive sr = new();
+        public static SessionDetails sd = new();
+        public static UserSettings us = new();
         public static object streamLock = new();
 
         public static MainWindow? mainWindow = null;
@@ -295,7 +295,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                LoginRequest loginReq = new LoginRequest(username, password);
+                LoginRequest loginReq = new(username, password);
                 string send = sr.Serialise(loginReq);
 
                 us = new UserSettings();
@@ -411,7 +411,7 @@ namespace BridgeOpsClient
                     if (IsLoggedIn && mainWindow != null)
                         mainWindow.ToggleLogInOut(false);
 
-                    LogIn logIn = new LogIn((MainWindow)Current.MainWindow);
+                    LogIn logIn = new((MainWindow)Current.MainWindow);
                     logIn.ShowDialog();
                 }
 
@@ -531,7 +531,7 @@ namespace BridgeOpsClient
                     // We expect data for every field. If the count is different, the operation must have failed.
                     if (rows[0].Count == ColumnRecord.asset.Count)
                     {
-                        NewAsset asset = new NewAsset(idInt);
+                        NewAsset asset = new(idInt);
                         asset.cmbOrgRef.ItemsSource = organisationList;
                         asset.PopulateExistingData(rows[0]);
                         asset.Show();
@@ -563,7 +563,7 @@ namespace BridgeOpsClient
                     // We expect data for every field. If the count is different, the operation must have failed.
                     if (rows[0].Count == ColumnRecord.contact.Count)
                     {
-                        NewContact contact = new NewContact(id);
+                        NewContact contact = new(id);
                         contact.Populate(rows[0]);
                         contact.Show();
                     }
@@ -1285,8 +1285,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        DeleteRequest req = new DeleteRequest(sd.sessionID, ColumnRecord.columnRecordID, sd.loginID,
-                                                              table, column, ids, isString);
+                        DeleteRequest req = new(sd.sessionID, ColumnRecord.columnRecordID, sd.loginID,
+                                                table, column, ids, isString);
 
                         stream.WriteByte(Glo.CLIENT_DELETE);
                         sr.WriteAndFlush(stream, sr.Serialise(req));
@@ -1390,8 +1390,8 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        PrimaryColumnSelect pcs = new PrimaryColumnSelect(sd.sessionID, ColumnRecord.columnRecordID,
-                                                                          table, column);
+                        PrimaryColumnSelect pcs = new(sd.sessionID, ColumnRecord.columnRecordID,
+                                                      table, column);
                         stream.WriteByte(Glo.CLIENT_SELECT_COLUMN_PRIMARY);
                         sr.WriteAndFlush(stream, sr.Serialise(pcs));
                         int response = stream.ReadByte();

@@ -24,8 +24,7 @@ using System.Collections;
 
 internal class BridgeOpsAgent
 {
-    static UnicodeEncoding unicodeEncoding = new UnicodeEncoding();
-    static SendReceive sr = new SendReceive();
+    static readonly SendReceive sr = new();
 
     // int is fine for column version - you'd have to make one update every second for over 130 years with no power
     // outages or other agent restarts to exhaust all possible values.
@@ -89,7 +88,7 @@ internal class BridgeOpsAgent
                 return true;
             }
         }
-        private object streamLock = new();
+        private readonly object streamLock = new();
 
         public void CloseStream()
         {
@@ -203,7 +202,7 @@ internal class BridgeOpsAgent
             return sent;
         }
     }
-    static Dictionary<string, ClientSession> clientSessions = new Dictionary<string, ClientSession>();
+    static readonly Dictionary<string, ClientSession> clientSessions = new();
     static bool CheckSessionValidity(string id, int crID)
     {
         lock (clientSessions)
@@ -234,7 +233,7 @@ internal class BridgeOpsAgent
     }
 
     // Multiple threads may try to access this at once, so hold them up if necessary.
-    static object logErrorLock = new();
+    static readonly object logErrorLock = new();
     private static void LogError(string context, Exception? e)
     {
         lock (logErrorLock)
@@ -319,9 +318,9 @@ internal class BridgeOpsAgent
 
         return valuesSet;
     }
-    private static IPAddress thisIP = new IPAddress(new byte[] { 0, 0, 0, 0 });
-    private static IPEndPoint thisEP = new IPEndPoint(thisIP, portInbound);
-    private static TcpListener listener = new TcpListener(thisEP);
+    private readonly static IPAddress thisIP = new(new byte[] { 0, 0, 0, 0 });
+    private readonly static IPEndPoint thisEP = new(thisIP, portInbound);
+    private static readonly TcpListener listener = new(thisEP);
 
     static bool updatingColumnRecord = false;
     // This function has a prior implementation in DatabaseCreator, need to reduce that to just this one at some point.
@@ -367,7 +366,7 @@ internal class BridgeOpsAgent
                                      "AND con.parent_object_id = col.object_id;", sqlConnect);
 
             reader = sqlCommand.ExecuteReader(CommandBehavior.Default);
-            Dictionary<string, string[]> checkConstraints = new Dictionary<string, string[]>();
+            Dictionary<string, string[]> checkConstraints = new();
 
             while (reader.Read())
             {
@@ -402,7 +401,7 @@ internal class BridgeOpsAgent
                                               "TABLE_NAME != 'ConferenceOrder';", sqlConnect);
             reader = sqlCommand.ExecuteReader();
 
-            List<string[]> columns = new List<string[]>();
+            List<string[]> columns = new();
             while (reader.Read())
             {
                 string length = "";
@@ -641,13 +640,13 @@ internal class BridgeOpsAgent
                 LogError($"Unable to locate \"BridgeManager/{Glo.CONFIG_SQL_SERVER_NAME}\". " +
                          $"Connecting using default SLQ Server instance name: {sqlServerName}.");
 
-            SqlConnection sqlConnect = new SqlConnection(ConnectionString);
+            SqlConnection sqlConnect = new(ConnectionString);
 
             try
             {
                 sqlConnect.Open();
                 // Send a pointless but minimal query just to make sure we have a working connection.
-                SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 Username FROM Login;", sqlConnect);
+                SqlCommand sqlCommand = new("SELECT TOP 1 Username FROM Login;", sqlConnect);
                 sqlCommand.ExecuteNonQuery();
 
                 // If we got this far in the try/catch, we're in business.
@@ -676,19 +675,19 @@ internal class BridgeOpsAgent
         LoadNetworkConfig();
 
         // Start the thread responsible for nudging SQL Server. Remove this at some point.
-        Thread sqlNudgeThr = new Thread(SqlServerNudge);
+        Thread sqlNudgeThr = new(SqlServerNudge);
         sqlNudgeThr.Start();
 
         // Start the thread responsible for nudging clients to see if they're still there.
-        Thread clientNudgeThr = new Thread(ClientNudge);
+        Thread clientNudgeThr = new(ClientNudge);
         clientNudgeThr.Start();
 
         // Start the thread responsible for handling requests from the server console.
-        Thread bridgeOpsConsoleRequestsThr = new Thread(BridgeOpsConsoleRequests);
+        Thread bridgeOpsConsoleRequestsThr = new(BridgeOpsConsoleRequests);
         bridgeOpsConsoleRequestsThr.Start();
 
         // Start the thread responsible for handling requests from the clients.
-        Thread bridgeOpsLocalClientRequestsThr = new Thread(BridgeOpsClientRequests);
+        Thread bridgeOpsLocalClientRequestsThr = new(BridgeOpsClientRequests);
         bridgeOpsLocalClientRequestsThr.Start();
     }
 
@@ -700,7 +699,7 @@ internal class BridgeOpsAgent
         // If the database is inactive for more than a few minutes, we see a very slight delay to the next query. This
         // causes logins to fail for some inexplicable reason when developing on one machine.
 
-        SqlConnection sqlConnect = new SqlConnection(ConnectionString);
+        SqlConnection sqlConnect = new(ConnectionString);
         while (true)
         {
             Thread.Sleep(120_000); // Sleep for two minutes.
@@ -708,7 +707,7 @@ internal class BridgeOpsAgent
             {
                 sqlConnect.Open();
                 // Carry out the most lightweight query I can think of.
-                SqlCommand com = new SqlCommand("SELECT TOP 1 Login_ID FROM Login;", sqlConnect);
+                SqlCommand com = new("SELECT TOP 1 Login_ID FROM Login;", sqlConnect);
                 com.ExecuteNonQuery();
             }
             catch (Exception e)
@@ -731,7 +730,7 @@ internal class BridgeOpsAgent
             {
                 foreach (var kvp in clientSessions)
                 {
-                    Thread clientNudgeThread = new Thread(kvp.Value.SendNudge);
+                    Thread clientNudgeThread = new(kvp.Value.SendNudge);
                     clientNudgeThread.Start();
                 }
             }
@@ -796,11 +795,11 @@ internal class BridgeOpsAgent
             autoResetEvent.Reset();
         }
     }
-    private static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+    private static readonly AutoResetEvent autoResetEvent = new(false);
     private static void HandleClientListenAccept(IAsyncResult result)
     {
         // I believe each thread will need its own dedicated SqlConnection object.
-        SqlConnection sqlConnect = new SqlConnection(ConnectionString);
+        SqlConnection sqlConnect = new(ConnectionString);
 
         if (result.AsyncState != null)
         {
@@ -909,7 +908,7 @@ internal class BridgeOpsAgent
     {
         lock (clientSessions)
         {
-            ConnectedClients connectedClients = new ConnectedClients();
+            ConnectedClients connectedClients = new();
             foreach (KeyValuePair<string, ClientSession> client in clientSessions)
                 connectedClients.Add(client.Value.ipString, client.Value.username);
 
@@ -1022,7 +1021,7 @@ internal class BridgeOpsAgent
             sqlConnect.Open();
 
             string settings = "";
-            SqlCommand command = new SqlCommand($"SELECT {Glo.Tab.LOGIN_VIEW_SETTINGS} FROM Login " +
+            SqlCommand command = new($"SELECT {Glo.Tab.LOGIN_VIEW_SETTINGS} FROM Login " +
                                                 $"WHERE {Glo.Tab.LOGIN_ID} = {loginID}", sqlConnect);
             SqlDataReader reader = command.ExecuteReader();
             reader.Read();
@@ -1045,7 +1044,7 @@ internal class BridgeOpsAgent
     {
         string credentials = sr.ReadString(stream);
         LoginRequest loginReq = sr.Deserialise<LoginRequest>(credentials);
-        Random rnd = new Random();
+        Random rnd = new();
 
         if (ep == null)
         {
@@ -1312,7 +1311,7 @@ internal class BridgeOpsAgent
         try
         {
             sqlConnect.Open();
-            SqlCommand com = new SqlCommand("", sqlConnect);
+            SqlCommand com = new("", sqlConnect);
 
             bool sessionValid = false;
             bool permission = false;
@@ -1387,7 +1386,7 @@ internal class BridgeOpsAgent
             // Contact inserts work slightly differently, as we need to get the ID back out.
             if (target == Glo.CLIENT_NEW_CONTACT)
             {
-                SqlParameter id = new SqlParameter("@ID", SqlDbType.Int);
+                SqlParameter id = new("@ID", SqlDbType.Int);
                 id.Direction = ParameterDirection.Output;
                 com.Parameters.Add(id);
 
@@ -1505,7 +1504,7 @@ internal class BridgeOpsAgent
                 pcs.column.Contains('\'') || pcs.column.Contains(';'))
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
 
-            SqlCommand com = new SqlCommand("SELECT " + pcs.column + " FROM " + pcs.table + ";", sqlConnect);
+            SqlCommand com = new("SELECT " + pcs.column + " FROM " + pcs.table + ";", sqlConnect);
             SqlDataReader reader = com.ExecuteReader();
             StringBuilder result = new();
             while (reader.Read())
@@ -1580,7 +1579,7 @@ internal class BridgeOpsAgent
                           " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_REF : Glo.Tab.ASSET_REF) +
                           " IN (" + command + ");";
 
-            SqlCommand com = new SqlCommand(command, sqlConnect);
+            SqlCommand com = new(command, sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -1613,7 +1612,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+            SqlCommand com = new(req.SqlSelect(), sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -1683,7 +1682,7 @@ internal class BridgeOpsAgent
                           " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
                           " IN (" + command + ");";
 
-            SqlCommand com = new SqlCommand(command, sqlConnect);
+            SqlCommand com = new(command, sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -1771,7 +1770,7 @@ internal class BridgeOpsAgent
         try
         {
             sqlConnect.Open();
-            SqlCommand com = new SqlCommand("", sqlConnect);
+            SqlCommand com = new("", sqlConnect);
 
             bool sessionValid = false;
             bool permission = false;
@@ -2062,7 +2061,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlDelete(), sqlConnect);
+            SqlCommand com = new(req.SqlDelete(), sqlConnect);
 
             // Organisation deletions can be really heavy if a lot of assets will be affected and the deletion count
             // is upwards of 1000.
@@ -2149,7 +2148,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+            SqlCommand com = new(req.SqlSelect(), sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -2179,7 +2178,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+            SqlCommand com = new(req.SqlSelect(), sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -2214,7 +2213,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            SqlCommand com = new SqlCommand(req.SqlSelect(), sqlConnect);
+            SqlCommand com = new(req.SqlSelect(), sqlConnect);
 
             SqlDataReader reader = com.ExecuteReader();
 
@@ -2360,17 +2359,17 @@ internal class BridgeOpsAgent
 
                     // We'll need to make a transaction with both the removal and order change, so create the second
                     // command here.
-                    ColumnOrdering colOrder = new ColumnOrdering("", 0, ColumnRecord.organisationOrder,
-                                                                        ColumnRecord.assetOrder,
-                                                                        ColumnRecord.contactOrder,
-                                                                        ColumnRecord.conferenceOrder);
+                    ColumnOrdering colOrder = new("", 0, ColumnRecord.organisationOrder,
+                                                         ColumnRecord.assetOrder,
+                                                         ColumnRecord.contactOrder,
+                                                         ColumnRecord.conferenceOrder);
                     orderUpdateCommand = colOrder.SqlCommand();
                 }
 
                 // If the column contains any data (either present or historic), require confirmation.
 
                 bool dataPresent = false;
-                SqlCommand comDataPresent = new SqlCommand($"SELECT TOP 1 {column} FROM {table} " +
+                SqlCommand comDataPresent = new($"SELECT TOP 1 {column} FROM {table} " +
                                                            $"WHERE {column} IS NOT NULL",
                                                            sqlConnect);
                 SqlDataReader reader = comDataPresent.ExecuteReader();
@@ -2378,7 +2377,7 @@ internal class BridgeOpsAgent
                 reader.Close();
                 if (!dataPresent && (table == "Organisation" || table == "Asset"))
                 {
-                    comDataPresent = new SqlCommand($"SELECT TOP 1 {column} FROM {table}Change " +
+                    comDataPresent = new($"SELECT TOP 1 {column} FROM {table}Change " +
                                                     $"WHERE {column} IS NOT NULL",
                                                     sqlConnect);
                     reader = comDataPresent.ExecuteReader();
@@ -2514,7 +2513,7 @@ internal class BridgeOpsAgent
             CheckStartingOrderValues(req.contactOrder, Glo.Tab.CONTACT_STATIC_COUNT);
             CheckStartingOrderValues(req.conferenceOrder, Glo.Tab.CONFERENCE_STATIC_COUNT);
 
-            SqlCommand sqlCommand = new SqlCommand(req.SqlCommand(), sqlConnect);
+            SqlCommand sqlCommand = new(req.SqlCommand(), sqlConnect);
             if (sqlCommand.ExecuteNonQuery() != 4)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             else
@@ -2544,7 +2543,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    static object selectBuilderPresetFileLock = new();
+    static readonly object selectBuilderPresetFileLock = new();
 
     // Permission restricted.
     private static void ClientSaveSelectBuilderPreset(NetworkStream stream)
