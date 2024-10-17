@@ -2227,13 +2227,26 @@ namespace BridgeOpsClient
                                 startX = startX < 0 ? (int)(startX - 1) : (int)startX;
                                 endX = endX < 0 ? (int)(endX - 1) : (int)endX;
 
+                                // If the conferences are off-screen, indicate this and skip the rest.
+                                int startY = (int)GetYfromResource(conference.resourceID, conference.resourceRow);
+                                if (startY >= ActualHeight - 4)
+                                {
+                                    dc.DrawRectangle(brushHover, null,
+                                                     new Rect(startX, ActualHeight - 5, endX - startX, 5));
+                                    continue;
+                                }
+                                else if (startY + zoomResourceDisplay < 4)
+                                {
+                                    dc.DrawRectangle(brushHover, null, new Rect(startX, 0, endX - startX, 5));
+                                    continue;
+                                }
+
                                 // Never end need to start before -1, and never any need to proceed if end < 0.
                                 if (startX < -1)
                                     startX = -1;
                                 if (endX < 0)
                                     continue;
 
-                                int startY = (int)GetYfromResource(conference.resourceID, conference.resourceRow);
                                 Rect area = new Rect(startX + .5, startY + .5,
                                                      ((int)endX - startX), (int)zoomResourceDisplay);
 
