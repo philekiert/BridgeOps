@@ -1477,8 +1477,24 @@ namespace BridgeOpsClient
                       // messages in App.Update().
         }
 
+        public static List<SendReceiveClasses.Conference> copiedConferences = new();
         private void mnuScheduleCopy_Click(object sender, RoutedEventArgs e)
         {
+            copiedConferences.Clear();
+            try
+            {
+                List<string> confIDs = new();
+                lock (conferenceListLock)
+                {
+                    foreach (Conference c in SelectedConferences)
+                        confIDs.Add(c.id.ToString());
+                    if (confIDs.Count == 0)
+                        confIDs.Add(schView.lastCurrentConferenceID.ToString());
+                }
+                if (App.SendConferenceSelectRequest(confIDs, out copiedConferences) && copiedConferences.Count == 0)
+                    throw new();
+            }
+            catch { App.DisplayError("Due to an unknown error, conference could not be copied."); }
         }
 
         private bool draggingGhosts = false;

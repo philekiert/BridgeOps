@@ -11,6 +11,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Irony;
 using SendReceiveClasses;
 using static BridgeOpsClient.PageConferenceView;
@@ -581,53 +582,24 @@ namespace BridgeOpsClient
 
         public static bool EditConference(int id)
         {
-            lock (streamLock)
+            List<SendReceiveClasses.Conference> confs;
+            if (SendConferenceSelectRequest(new() { id.ToString() }, out confs))
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                if (confs.Count == 0)
                 {
-                    try
-                    {
-                        if (stream != null)
-                        {
-                            stream.WriteByte(Glo.CLIENT_CONFERENCE_SELECT);
-                            sr.WriteAndFlush(stream, sd.sessionID);
-                            sr.WriteAndFlush(stream, id.ToString());
-                            sr.WriteAndFlush(stream, ColumnRecord.columnRecordID.ToString());
-                            int response = stream.ReadByte();
-                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
-                            {
-                                SendReceiveClasses.Conference conference =
-                                    sr.Deserialise<SendReceiveClasses.Conference>(sr.ReadString(stream));
-                                ConvertUnknownJsonObjectsToRespectiveTypes(conference.additionalValTypes,
-                                                                           new() { conference.additionalValObjects });
-                                NewConference newConf = new(conference);
-                                newConf.ShowDialog();
-                                return true;
-                            }
-                            if (response == Glo.CLIENT_SESSION_INVALID)
-                            {
-                                return SessionInvalidated();
-                            }
-                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
-                            {
-                                DisplayError("The conference could not be loaded. See error:\n\n" +
-                                                sr.ReadString(stream));
-                                return false;
-                            }
-                        }
-                        throw new Exception();
-                    }
-                    catch
-                    {
-                        DisplayError("Could not run or return conference query.");
-                        return false;
-                    }
-                    finally
-                    {
-                        if (stream != null) stream.Close();
-                    }
+                    DisplayError("It appears this conference no longer exists. Perhaps the archives are incomplete?");
+                    return false;
+                }
+                else
+                {
+                    NewConference newConf = new(confs[0]);
+                    newConf.ShowDialog();
+                    return true;
                 }
             }
+            else
+                // An error will display if SendConferenceSelectRequest() fails.
+                return false;   
         }
 
         static bool columnRecordPulInProgress = false;
@@ -1840,7 +1812,7 @@ namespace BridgeOpsClient
         }
 
         public static bool SendConferenceViewSearchRequest(DateTime start, DateTime end,
-                                                           Dictionary<int, PageConferenceView.Conference> conferences)
+                                                           Dictionary<int, PageConferenceView.Conference> confs)
         {
             lock (streamLock)
             {
@@ -1859,7 +1831,7 @@ namespace BridgeOpsClient
                             {
                                 SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
-                                conferences.Clear();
+                                confs.Clear();
                                 PageConferenceView.Conference? c = null;
                                 foreach (List<object?> row in result.rows)
                                 {
@@ -1867,7 +1839,7 @@ namespace BridgeOpsClient
                                     {
                                         c = new();
                                         c.id = (int)row[0]!;
-                                        conferences.Add(c.id, c);
+                                        confs.Add(c.id, c);
                                         c.title = (string)row[1]!;
                                         c.start = (DateTime)row[2]!;
                                         c.end = (DateTime)row[3]!;
@@ -1982,6 +1954,59 @@ namespace BridgeOpsClient
                     catch
                     {
                         DisplayError("Could not move conference.");
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
+        public static bool SendConferenceSelectRequest(List<string> conferenceIDs,
+                                                       out List<SendReceiveClasses.Conference> confs)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_CONFERENCE_SELECT);
+                            sr.WriteAndFlush(stream, sd.sessionID);
+                            sr.WriteAndFlush(stream, ColumnRecord.columnRecordID.ToString());
+                            sr.WriteAndFlush(stream, sr.Serialise(conferenceIDs));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                confs = sr.Deserialise<List<SendReceiveClasses.Conference>>(sr.ReadString(stream))!;
+                                foreach (SendReceiveClasses.Conference conf in confs)
+                                    ConvertUnknownJsonObjectsToRespectiveTypes(conf.additionalValTypes,
+                                                                               new() { conf.additionalValObjects });
+                                return true;
+                            }
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                confs = new();
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                DisplayError("The conferences could not be selected. See error:\n\n" +
+                                                sr.ReadString(stream));
+                                confs = new();
+                                return false;
+                            }
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not run or return conference query.");
+                        confs = new();
                         return false;
                     }
                     finally

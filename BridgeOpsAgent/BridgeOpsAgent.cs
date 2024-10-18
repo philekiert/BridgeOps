@@ -2800,15 +2800,8 @@ internal class BridgeOpsAgent
         try
         {
             string sessionID = sr.ReadString(stream);
-            int conferenceID;
-            string conferenceIdStr = sr.ReadString(stream);
             string crID = sr.ReadString(stream);
-            if (!int.TryParse(conferenceIdStr, out conferenceID))
-            {
-                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
-                SafeFail(stream, "Conference ID was not an integer.");
-                return;
-            }
+            List<string> conferenceIdStrs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
 
             lock (clientSessions)
             {
@@ -2822,85 +2815,105 @@ internal class BridgeOpsAgent
             // Get the conference details.
 
             List<string> conferenceColNames = new();
-            foreach (DictionaryEntry de in ColumnRecord.orderedConference)
-                conferenceColNames.Add("c." + (string)de.Key);
+            foreach (string s in ColumnRecord.orderedConference.Keys)
+                conferenceColNames.Add("c." + s);
+
+            List<string> connectionColNames = new();
+            foreach (string s in ColumnRecord.connection.Keys)
+                connectionColNames.Add("n." + s);
+            connectionColNames.RemoveAt(1); // Get rid of Conference_ID
+            string connectionColsStr = string.Join(", ", connectionColNames);
 
             sqlConnect.Open();
             SqlCommand com = new($"SELECT {string.Join(", ", conferenceColNames)}, " +
-                                 $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME} " +
-                                 $"FROM Conference c " +
-                                 $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
-                                 $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +
-                                 $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceID};",
+                                   $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME}, {connectionColsStr}, " +
+                                   $"o.{Glo.Tab.ORGANISATION_ID}, o.{Glo.Tab.ORGANISATION_REF}, " +
+                                   $"o.{Glo.Tab.ORGANISATION_NAME} " +
+                              $"FROM Conference c " +
+                              $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
+                              $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +
+                              $"LEFT JOIN Connection n ON c.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
+                              $"LEFT JOIN Organisation o ON n.{Glo.Tab.DIAL_NO} = o.{Glo.Tab.DIAL_NO} " +
+                              $"WHERE c.{Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", conferenceIdStrs)}) " +
+                              $"ORDER BY c.{Glo.Tab.CONFERENCE_ID}, n.{Glo.Tab.CONNECTION_ROW};",
                                  sqlConnect);
             SelectResult result = new(com.ExecuteReader(), false);
             List<object?> confRow = result.rows[0];
-            Conference conf = new()
+            List<Conference> confs = new();
+            HashSet<int> confIDsRead = new();
+            Conference? currentlyBuilding = null;
+
+            // Store these indices as we'll be using them a lot.
+            int usernamesStart = conferenceColNames.Count;
+            int connStart = usernamesStart + 2;
+
+            foreach (List<object?> row in result.rows)
             {
-                sessionID = sessionID,
-                columnRecordID = columnRecordID,
-                conferenceID = conferenceID,
-                resourceID = (int)Glo.Fun.GetInt32FromNullableObject(confRow[1])!,
-                resourceRow = Convert.ToInt32(confRow[2]!),
-                title = (string?)confRow[3]!,
-                start = (DateTime)confRow[4]!,
-                end = (DateTime)confRow[5]!,
-                cancelled = (bool?)confRow[6]!,
-                closure = (string?)confRow[7],
-                createLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[8]),
-                createTime = (DateTime?)confRow[9]!,
-                editLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[10]),
-                editTime = (DateTime?)confRow[11]!,
-                notes = (string?)confRow[12]!,
-                additionalValTypes = new(),
-                additionalValObjects = new(),
-                // Additional columns were sandwiched before these, so count back from the end.
-                createdUsername = (string?)confRow[confRow.Count - 2],
-                editedUsername = (string?)confRow[confRow.Count - 1]
-            };
-
-            // Add the additional columns.
-            for (int i = 12; i < confRow.Count; ++i)
-            {
-                conf.additionalValTypes.Add(result.columnTypes[i]);
-                conf.additionalValObjects.Add(confRow[i]);
-            }
-
-            // Get a list of connections.
-
-            com.CommandText = $"SELECT Connection.*, " +
-                                     $"Organisation.{Glo.Tab.ORGANISATION_ID}, " +
-                                     $"Organisation.{Glo.Tab.ORGANISATION_REF}, " +
-                                     $"Organisation.{Glo.Tab.ORGANISATION_NAME} " +
-                              $"FROM Connection " +
-                              $"LEFT JOIN Organisation ON Organisation.{Glo.Tab.DIAL_NO} = " +
-                                                         $"Connection.{Glo.Tab.DIAL_NO} " +
-                              $"WHERE Connection.{Glo.Tab.CONFERENCE_ID} = {conferenceID} " +
-                              $"ORDER BY {Glo.Tab.CONNECTION_ROW};";
-            result = new(com.ExecuteReader(), false);
-
-            conf.connections = new();
-            foreach (var row in result.rows)
-            {
-                Conference.Connection connection = new()
+                // This will certainly never be null as it's the primary key.
+                int conferenceID = (int)Glo.Fun.GetInt32FromNullableObject(row[0])!;
+                if (!confIDsRead.Contains(conferenceID))
                 {
-                    connectionID = (int)Glo.Fun.GetInt32FromNullableObject(row[0])!,
-                    conferenceID = conferenceID,
-                    dialNo = (string)row[2]!,
-                    isManaged = row[3] != null && (bool)row[3]!,
-                    connected = (DateTime?)row[4],
-                    disconnected = (DateTime?)row[5],
-                    row = (int)Glo.Fun.GetInt32FromNullableObject(row[6])!,
-                    isTest = row[7] != null && (bool)row[7]!,
-                    orgId = Glo.Fun.GetInt32FromNullableObject(row[8]),
-                    orgReference = (string?)row[9],
-                    orgName = (string?)row[10]
-                };
-                conf.connections.Add(connection);
+                    confIDsRead.Add(conferenceID);
+                    Conference conf = new()
+                    {
+                        sessionID = sessionID,
+                        columnRecordID = columnRecordID,
+                        conferenceID = conferenceID,
+                        resourceID = (int)Glo.Fun.GetInt32FromNullableObject(confRow[1])!,
+                        resourceRow = Convert.ToInt32(confRow[2]!),
+                        title = (string?)confRow[3]!,
+                        start = (DateTime)confRow[4]!,
+                        end = (DateTime)confRow[5]!,
+                        cancelled = (bool?)confRow[6]!,
+                        closure = (string?)confRow[7],
+                        createLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[8]),
+                        createTime = (DateTime?)confRow[9]!,
+                        editLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[10]),
+                        editTime = (DateTime?)confRow[11]!,
+                        notes = (string?)confRow[12]!,
+                        additionalValTypes = new(),
+                        additionalValObjects = new(),
+                        // Additional columns were sandwiched before these, so count back from the end.
+                        createdUsername = (string?)confRow[usernamesStart],
+                        editedUsername = (string?)confRow[usernamesStart + 1],
+
+                        connections = new()
+                    };
+
+                    // Add the additional columns.
+                    for (int i = 12; i < ColumnRecord.conference.Count; ++i)
+                    {
+                        conf.additionalValTypes.Add(result.columnTypes[i]);
+                        conf.additionalValObjects.Add(confRow[i]);
+                    }
+
+                    confs.Add(conf);
+                    currentlyBuilding = conf;
+                }
+
+                // If not null, it means the row lists a connection.
+                if (row[connStart] != null)
+                {
+                    Conference.Connection connection = new()
+                    {
+                        connectionID = (int)Glo.Fun.GetInt32FromNullableObject(row[connStart])!,
+                        conferenceID = conferenceID,
+                        dialNo = (string)row[connStart + 1]!,
+                        isManaged = row[connStart + 2] != null && (bool)row[connStart + 2]!,
+                        connected = (DateTime?)row[connStart + 3],
+                        disconnected = (DateTime?)row[connStart + 4],
+                        row = (int)Glo.Fun.GetInt32FromNullableObject(row[connStart + 5])!,
+                        isTest = row[connStart + 6] != null && (bool)row[connStart + 6]!,
+                        orgId = Glo.Fun.GetInt32FromNullableObject(row[connStart + 7]),
+                        orgReference = (string?)row[connStart + 8],
+                        orgName = (string?)row[connStart + 9]
+                    };
+                    currentlyBuilding!.Value.connections.Add(connection);
+                }
             }
 
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            sr.WriteAndFlush(stream, sr.Serialise(conf));
+            sr.WriteAndFlush(stream, sr.Serialise(confs));
         }
         catch (Exception e)
         {
@@ -2913,7 +2926,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-
+    
     // Permission restricted
     private static void ClientConferenceQuickMove(NetworkStream stream, SqlConnection sqlConnect)
     {
