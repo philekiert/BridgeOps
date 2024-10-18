@@ -4,16 +4,16 @@
     xmlns:local="clr-namespace:BridgeOpsClient">
 
     <!-- Window -->
-    <Color x:Key="colorTitleBar">#e0e2e8</Color>
+    <Color x:Key="colorTitleBar">#dcdfe5</Color>
     <Color x:Key="colorTitleBarBorder">#bbb</Color>
     <Color x:Key="colorTitleBarForeGround">#000</Color>
-    <Color x:Key="colorMinimise">#d6d8db</Color>
+    <Color x:Key="colorMinimise">#d3d5d8</Color>
     <Color x:Key="colorMinimiseButton">#556383</Color>
-    <Color x:Key="colorMaximise">#ccced2</Color>
+    <Color x:Key="colorMaximise">#c9cbce</Color>
     <Color x:Key="colorMaximiseButton">#556383</Color>
     <Color x:Key="colorClose">#e0e2e8</Color>
     <Color x:Key="colorCloseButton">#f54e80</Color>
-    <Color x:Key="colorWindowBorder">#bbb</Color>
+    <Color x:Key="colorWindowBorder">#aaa</Color>
     <!--<Color x:Key="colorTitleBar">#3B4557</Color>
     <Color x:Key="colorTitleBarBorder">#24282F</Color>
     <Color x:Key="colorTitleBarForeGround">#eee</Color>
