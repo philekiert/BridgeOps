@@ -10,7 +10,7 @@
         UseLayoutRounding="True" MinHeight="500" MinWidth="850" Width="850"
         Closed="Window_Closed" ContentRendered="Window_ContentRendered"
         KeyDown="CustomWindow_KeyDown">
-    <Grid x:Name="grdMain" Background="White">
+    <Grid x:Name="grdMain">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="500"/>
             <ColumnDefinition Width="Auto"/>

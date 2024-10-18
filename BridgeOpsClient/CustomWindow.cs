@@ -52,6 +52,7 @@ namespace BridgeOpsClient
         public CustomWindow()
         {
             Activated += CustomWindow_Activated;
+            StateChanged += CustomWindow_StateChanged;
 
             // Only instantiate once.
             if (tmrWindowLeaveDetect == null)
@@ -82,10 +83,10 @@ namespace BridgeOpsClient
             AllowsTransparency = false;
             windowBorder = new()
             {
-                CornerRadius = new CornerRadius(borderRadius),
                 BorderBrush = (Brush)resources["brushWindowBorder"],
                 BorderThickness = new Thickness(1),
-                Background = (Brush)resources["brushTitleBar"],
+                //Background = (Brush)resources["brushTitleBar"], Still not working.
+                Background = Brushes.White,
                 ClipToBounds = true
             };
 
@@ -102,10 +103,18 @@ namespace BridgeOpsClient
             FontFamily robotoMono = new FontFamily(new Uri("pack://application:,,,/"),
                                                            "./Resources/Fonts/Roboto Mono/#Roboto Mono");
             // Set up the title bar.
+            Border titleBarCornerFill = new()
+            {
+                Height = titleBarHeight,
+                CornerRadius = new CornerRadius(borderRadius - 2, 0, 0, 0),
+                Background = resources["brushTitleBar"] as Brush,
+                Margin = new Thickness(0, 0, 0, 0),
+            };
+            grid.Children.Add(titleBarCornerFill);
+            Grid.SetColumnSpan(titleBarCornerFill, 4);
             titleBar = new()
             {
                 Height = titleBarHeight,
-                CornerRadius = new CornerRadius(borderRadius, 0, 0, 0),
                 Background = resources["brushTitleBar"] as Brush,
                 Margin = new Thickness(0, 0, 0, 0),
                 BorderThickness = new Thickness(0, 0, 0, 1),
@@ -134,7 +143,7 @@ namespace BridgeOpsClient
 
             Path minimisePath = new()
             {
-                Fill = (Brush)resources["brushPrimaryButton"],
+                Fill = (Brush)resources["brushMinimiseButton"],
                 Data = new RectangleGeometry(new Rect(8, 16, 10, 3))
             };
             CombinedGeometry combinedGeometry = new(GeometryCombineMode.Exclude,
@@ -142,7 +151,7 @@ namespace BridgeOpsClient
                                                     new RectangleGeometry(new Rect(9, 11, 8, 7)));
             Path maximisePath = new()
             {
-                Fill = (Brush)resources["brushPrimaryButton"],
+                Fill = (Brush)resources["brushMaximiseButton"],
                 Data = combinedGeometry
             };
 
@@ -180,7 +189,6 @@ namespace BridgeOpsClient
             };
             closeButton = new()
             {
-                CornerRadius = new CornerRadius(0, borderRadius, 0, 0),
                 Height = titleBarHeight,
                 Width = titleBarHeight,
                 Background = (Brush)resources["brushClose"],
@@ -188,6 +196,15 @@ namespace BridgeOpsClient
                 BorderBrush = resources["brushTitleBarBorder"] as Brush,
                 Child = closeText,
                 Margin = new Thickness(0, 0, 0, 0),
+            };
+            Border closeButtonBorderFill = new()
+            {
+                CornerRadius = new CornerRadius(0, borderRadius - 2, 0, 0),
+                Height = titleBarHeight,
+                Width = titleBarHeight,
+                Background = (Brush)resources["brushClose"],
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Margin = new Thickness(0, 0, 0, 0)
             };
 
             WindowChrome.SetIsHitTestVisibleInChrome(minimiseButton, true);
@@ -211,17 +228,18 @@ namespace BridgeOpsClient
 
             Grid.SetColumn(minimiseButton, 2);
             Grid.SetColumn(maximiseButton, 3);
+            Grid.SetColumn(closeButtonBorderFill, 4);
             Grid.SetColumn(closeButton, 4);
             grid.Children.Add(minimiseButton);
             grid.Children.Add(maximiseButton);
+            grid.Children.Add(closeButtonBorderFill);
             grid.Children.Add(closeButton);
 
             Image icon = new();
 
-
             TextBlock title = new()
             {
-                Foreground = ScheduleView.PrintBrushFromLuminance(titleBar.Background!),
+                Foreground = (Brush)resources["brushTitleBarForeground"],
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(10, 0, 0, 0),
                 FontSize = 14,
@@ -234,6 +252,13 @@ namespace BridgeOpsClient
             Content = windowBorder;
 
             Loaded += CustomWindow_Loaded;
+
+            ToggleCornerRadius(true);
+        }
+
+        private void CustomWindow_StateChanged(object? sender, EventArgs e)
+        {
+            ToggleCornerRadius(WindowState != WindowState.Maximized);
         }
 
         private void UnhoverTitleBarButtons(bool unhover)
@@ -261,9 +286,9 @@ namespace BridgeOpsClient
 
         public void CentreTitle(bool centre)
         {
-            ((TextBlock)grid.Children[0]).HorizontalAlignment = centre ? HorizontalAlignment.Center :
+            ((TextBlock)grid.Children[1]).HorizontalAlignment = centre ? HorizontalAlignment.Center :
                                                                          HorizontalAlignment.Left;
-            Grid.SetColumnSpan(grid.Children[0], centre ? 5 : 1);
+            Grid.SetColumnSpan(grid.Children[1], centre ? 5 : 1);
         }
         public void AssignMenuBar(Menu menu, double topPadding)
         {
@@ -271,7 +296,7 @@ namespace BridgeOpsClient
             menuBar.Padding = new(15, topPadding, 0, 0);
             Brush background = (Brush)Application.Current.Resources.MergedDictionaries[0]["brushTitleBar"];
             menu.Background = background;
-            menu.Foreground = ScheduleView.PrintBrushFromLuminance(background);
+            menu.Foreground = (Brush)Application.Current.Resources.MergedDictionaries[0]["brushTitleBarForeground"];
             // Menus are not styled yet, so set all MenuItems one nest down back to black.
             foreach (UIElement e in menu.Items)
                 if (e is MenuItem mi1)
@@ -294,6 +319,12 @@ namespace BridgeOpsClient
             ((Image)((StackPanel)titleBar.Child).Children[0]).Width = 20;
             ((Image)((StackPanel)titleBar.Child).Children[0]).Margin = new Thickness(6, 0, 0, 0);
         }
+        public void ToggleCornerRadius(bool rounded)
+        {
+            windowBorder.CornerRadius = rounded ? new(borderRadius) : new(0);
+            titleBar.CornerRadius = rounded ? new CornerRadius(borderRadius, 0, 0, 0) : new(0);
+            closeButton.CornerRadius = rounded ? new CornerRadius(0, borderRadius, 0, 0) : new(0);
+        }
 
         private void Button_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
@@ -311,9 +342,10 @@ namespace BridgeOpsClient
         { buttonPressed = -1; }
         private void CustomWindow_PreviewMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            grid.Children[3].ClearValue(OpacityProperty);
             grid.Children[4].ClearValue(OpacityProperty);
             grid.Children[5].ClearValue(OpacityProperty);
+            grid.Children[6].ClearValue(OpacityProperty);
+            grid.Children[7].ClearValue(OpacityProperty);
         }
 
         private void MinimiseButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -367,12 +399,15 @@ namespace BridgeOpsClient
             // Carry out some other tasks after load to take advantage of properties set in XAML.
             ((TextBlock)((StackPanel)titleBar.Child).Children[1]).Text = Title;
             if (ResizeMode == ResizeMode.CanMinimize)
+            {
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
+            }
             else if (ResizeMode == ResizeMode.NoResize)
             {
                 grid.ColumnDefinitions[2].Width = new GridLength(0);
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
-                ((Border)grid.Children[4]).Background = ((Border)grid.Children[2]).Background;
+                ((Border)grid.Children[5]).Background = ((Border)grid.Children[3]).Background;
+                ((Border)grid.Children[6]).Background = ((Border)grid.Children[3]).Background;
             }
 
             // Ensure that the window sits comfortably in the screen.

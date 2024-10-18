@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net;
@@ -69,7 +68,10 @@ namespace BridgeOpsClient
             grdMain.Children.Remove(menuBar);
             grdMain.RowDefinitions[0].Height = new(0);
             AssignMenuBar(menuBar, 0);
-            SetIcon("/Resources/Icons/x20TitleBarIcon.png");
+            if (ScheduleView.PrintColorFromLuminance((Color)Application.Current.Resources.MergedDictionaries[0]["colorTitleBar"]) == Colors.White)
+                SetIcon("/Resources/Icons/x20TitleBarIconDark.png");
+            else
+                SetIcon("/Resources/Icons/x20TitleBarIcon.png");
 
             frameConf.Content = new PageConferenceView();
             pageDatabase = new PageDatabase(this);

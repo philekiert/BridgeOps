@@ -19,6 +19,7 @@
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
     <None Remove="Resources\Icons\x20TitleBarIcon.png" />
+    <None Remove="Resources\Icons\x20TitleBarIconDark.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +37,7 @@
     <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
     <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
     <Resource Include="Resources\Icons\x20TitleBarIcon.png" />
+    <Resource Include="Resources\Icons\x20TitleBarIconDark.png" />
   </ItemGroup>
 
   <ItemGroup>

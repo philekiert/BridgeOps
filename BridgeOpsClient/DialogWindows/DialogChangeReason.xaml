@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Change Reason" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner">
-    <Grid Background="White">
+    <Grid>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition/>

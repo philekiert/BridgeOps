@@ -9,7 +9,7 @@
         Title="LinkRecord" Height="450" Width="450" MaxHeight="800" MaxWidth="450"
         WindowStartupLocation="CenterOwner"
         ContentRendered="Window_ContentRendered">
-    <Grid Background="White">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>

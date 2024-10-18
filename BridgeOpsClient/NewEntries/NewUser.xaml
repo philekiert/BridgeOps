@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="New User" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True">
-    <Grid Margin="0 5 0 0" Background="White">
+    <Grid Margin="0 5 0 0">
         <Grid.Resources>
             <Style TargetType="TextBox">
                 <Setter Property="Margin" Value="10 5 10 5"/>
