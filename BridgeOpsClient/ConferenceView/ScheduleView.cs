@@ -51,6 +51,7 @@ namespace BridgeOpsClient
         public double scrollResource = 0f;
 
         public Point? cursor = null;
+        public Point lastCursor = new(0, 0);
 
         // These brushes remain the same forever, so declare, initialise and freeze.
         Brush brsCursor;
@@ -916,6 +917,8 @@ namespace BridgeOpsClient
         }
         public void SetCursor(double x, double y)
         {
+            if (cursor != null && cursor.Value.X >= 0 && cursor.Value.Y >= 0)
+                lastCursor = cursor.Value;
             if (x < 0 || y < 0)
                 cursor = null;
             else
@@ -1046,6 +1049,10 @@ namespace BridgeOpsClient
             double row = conferenceView!.GetResourceRowInView(resourceID, resourceRow);
             double y = row * zoomResourceCurrent;
             return y - DisplayResourceScroll();
+        }
+        public int GetRowFromResource(int resourceID, int resourceRow)
+        {
+            return GetRowFromY(GetYfromResource(resourceID, resourceRow), true);
         }
         public DateTime GetDateTimeFromX(double x)
         {

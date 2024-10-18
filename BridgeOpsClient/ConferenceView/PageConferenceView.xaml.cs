@@ -901,14 +901,8 @@ namespace BridgeOpsClient
 
                     if (conferenceIDs.Count > 0)
                     {
-                        if (draggingGhosts)
-                        {
-                            App.SendConferenceQuickMoveRequest(true, conferenceIDs, starts, ends,
-                                                                    resourceIDs, resourceRows, false, false);
-                            DropGhosts();
-                        }
-                        else if (!App.SendConferenceQuickMoveRequest(false, conferenceIDs, starts, ends,
-                                                                     resourceIDs, resourceRows, false, false))
+                        if (!App.SendConferenceQuickMoveRequest(draggingGhosts, conferenceIDs, starts, ends,
+                                                                resourceIDs, resourceRows, false, false))
                         {
                             if (wasDraggingResize)
                                 foreach (Conference c in schView.selectedConferences)
@@ -916,7 +910,7 @@ namespace BridgeOpsClient
                                     c.start = c.resizeOriginStart;
                                     c.end = c.resizeOriginEnd;
                                 }
-                            else if (wasDraggingMove)
+                            else if (wasDraggingMove && !draggingGhosts)
                             {
                                 foreach (Conference c in schView.selectedConferences)
                                 {
@@ -927,9 +921,10 @@ namespace BridgeOpsClient
                                     c.resourceRow = c.moveOriginResourceRow;
                                 }
                             }
-                            SearchTimeframe();
-                            // schView.UpdateOverflowPoints(); will be called by SearchtimeFrame().
                         }
+                        DropGhosts();
+                        SearchTimeframe();
+                        // schView.UpdateOverflowPoints(); will be called by SearchtimeFrame().
                     }
                 }
                 else if (wasDraggingBoxSelect)
@@ -1395,12 +1390,14 @@ namespace BridgeOpsClient
             if (schView.currentConference == null)
             {
                 mnuScheduleRefresh.Visibility = Visibility.Visible;
-                mnuScheduleSepOne.Visibility = Visibility.Collapsed;
+                mnuScheduleSepOne.Visibility = Visibility.Visible;
                 mnuScheduleCopy.Visibility = Visibility.Collapsed;
-                mnuSchedulePaste.Visibility = Visibility.Collapsed;
+                mnuSchedulePaste.Visibility = Visibility.Visible;
                 mnuScheduleSepTwo.Visibility = Visibility.Collapsed;
                 mnuScheduleCancel.Visibility = Visibility.Collapsed;
                 mnuScheduleDelete.Visibility = Visibility.Collapsed;
+
+                mnuSchedulePaste.IsEnabled = copiedConferences.Count > 0;
 
                 return;
             }
@@ -1408,7 +1405,7 @@ namespace BridgeOpsClient
             mnuScheduleRefresh.Visibility = Visibility.Visible;
             mnuScheduleSepOne.Visibility = Visibility.Visible;
             mnuScheduleCopy.Visibility = Visibility.Visible;
-            mnuSchedulePaste.Visibility = Visibility.Visible;
+            mnuSchedulePaste.Visibility = Visibility.Collapsed;
             mnuScheduleSepTwo.Visibility = Visibility.Visible;
             mnuScheduleCancel.Visibility = Visibility.Visible;
             mnuScheduleDelete.Visibility = Visibility.Visible;
@@ -1478,23 +1475,96 @@ namespace BridgeOpsClient
         }
 
         public static List<SendReceiveClasses.Conference> copiedConferences = new();
-        private void mnuScheduleCopy_Click(object sender, RoutedEventArgs e)
+        // For storing the position of each conference relative to the top-leftmost on the grid.
+        struct RelativePos
+        {
+            public int row; public TimeSpan time;
+            public RelativePos(int row, TimeSpan time) { this.row = row; this.time = time; }
+        }
+        Dictionary<int, RelativePos> relativePositions = new();
+        private void mnuScheduleCopy_Click(object? sender, RoutedEventArgs? e)
         {
             copiedConferences.Clear();
+            relativePositions.Clear();
             try
             {
                 List<string> confIDs = new();
+                DateTime earliest = DateTime.MaxValue;
+                int topmost = int.MaxValue;
+
+                // Store these so we don't have to calculate them twice.
+                Dictionary<int, int> rowsInView = new();
+
                 lock (conferenceListLock)
                 {
-                    foreach (Conference c in SelectedConferences)
+                    List<Conference> selected = SelectedConferences;
+                    if (selected.Count == 0)
+                        selected.Add(conferences[schView.lastCurrentConferenceID]);
+                    foreach (Conference c in selected)
+                    {
                         confIDs.Add(c.id.ToString());
-                    if (confIDs.Count == 0)
-                        confIDs.Add(schView.lastCurrentConferenceID.ToString());
+                        int row = schView.GetRowFromResource(c.resourceID, c.resourceRow);
+                        rowsInView.Add(c.id, row);
+                        if (row < topmost)
+                            topmost = row;
+                        if (c.start < earliest)
+                            earliest = c.start;
+                    }
+                    foreach (Conference c in selected)
+                    {
+                        // Store the relative positions to the top-leftmost start time, used when pasting.
+                        relativePositions.Add(c.id, new(rowsInView[c.id] - topmost, c.start - earliest));
+                    }
                 }
                 if (App.SendConferenceSelectRequest(confIDs, out copiedConferences) && copiedConferences.Count == 0)
+                {
+                    relativePositions.Clear();
                     throw new();
+                }
             }
             catch { App.DisplayError("Due to an unknown error, conference could not be copied."); }
+        }
+
+        private void mnuSchedulePaste_Click(object sender, RoutedEventArgs e)
+        {
+            DateTime startX = schView.GetDateTimeFromX(schView.lastCursor.X, schView.DisplayTimeZoom());
+            int startY = schView.GetRowFromY(schView.lastCursor.Y, true);
+
+            List<SendReceiveClasses.Conference> conferencesToPaste = new();
+            foreach (var c in copiedConferences)
+            {
+                SendReceiveClasses.Conference conf = c;
+                TimeSpan length = conf.end!.Value - conf.start!.Value;
+                conf.start = startX + relativePositions[conf.conferenceID!.Value].time;
+                conf.end = conf.start + length;
+
+                ResourceInfo? r = GetResourceFromSelectedRow(startY + relativePositions[conf.conferenceID!.Value].row);
+                if (r == null)
+                {
+                    App.DisplayError("Copied conferences will not fit here as they would extend past the bottom row.");
+                    return;
+                }
+
+                conf.resourceID = r.id;
+                conf.resourceRow = r.SelectedRow;
+
+                // Wipe the connection and disconnection times as it's unlikely that the user would want these copied.
+                List<SendReceiveClasses.Conference.Connection> newConnections = new();
+                foreach (var conn in c.connections)
+                {
+                    SendReceiveClasses.Conference.Connection altered = conn;
+                    altered.connected = null;
+                    altered.disconnected = null;
+                    altered.conferenceID = null;
+                    newConnections.Add(altered);
+                }
+
+                conf.connections = newConnections;
+
+                conferencesToPaste.Add(conf);
+            }
+
+            App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conferencesToPaste);
         }
 
         private bool draggingGhosts = false;
@@ -1533,11 +1603,6 @@ namespace BridgeOpsClient
                 dragConferenceGhosts.Clear();
                 draggingGhosts = false;
             }
-        }
-
-        private void mnuSchedulePaste_Click(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void mnuRefresh_Click(object sender, RoutedEventArgs e)

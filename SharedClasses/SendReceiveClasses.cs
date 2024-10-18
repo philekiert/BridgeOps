@@ -1426,7 +1426,7 @@ namespace SendReceiveClasses
         }
 
         public string SqlInsert() { return SqlUpdate(true); }
-        public string SqlInsert(bool asTransaction, bool captureIDs)
+        public string SqlInsert(bool asTransaction)
         {
             Prepare();
 
@@ -1454,13 +1454,13 @@ namespace SendReceiveClasses
                                     SqlAssist.DateTimeToSQL(DateTime.Now,
                                                             false, true),
                                     closure,
-                                    "0",
+                                    cancelled == true ? "1" : "0",
                                     notes == null ? "NULL" : notes) + ");"
             };
 
             if (connections.Count > 0)
             {
-                commands.Add("DECLARE @NewID INT; SET @NewID = SCOPE_IDENTITY();");
+                commands.Add("SET @NewID = SCOPE_IDENTITY();");
 
                 foreach (Connection c in connections)
                 {
@@ -2735,7 +2735,7 @@ END
 
         public static bool NeedsQuotes(string type)
         {
-            if (type.Contains("INT"))
+            if (type.ToUpper().Contains("INT"))
                 return false;
             return true;
         }
@@ -2818,6 +2818,31 @@ END
                 return concat;
             }
             else return "";
+        }
+
+        public static string? ConvertObjectToSqlString(object? o)
+        {
+            if (o == null)
+                return null;
+            else if (o is DateTime dt)
+                return DateTimeToSQL(dt, false, false);
+            else if (o is byte b)
+                return b.ToString();
+            else if (o is Int16 i16)
+                return i16.ToString();
+            else if (o is Int32 i32)
+                return i32.ToString();
+            else if (o is TimeSpan ts)
+                return TimeSpanToSQL(ts);
+            else if (o is string s)
+                return s;
+            else // Hopefully this catches anything I missed...
+            {
+                if (o.ToString() == null)
+                    return "";
+                else
+                    return o.ToString()!;
+            }
         }
 
         public static string HashBytes(string str)

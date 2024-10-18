@@ -90,10 +90,10 @@
                 <Canvas.ContextMenu>
                     <ContextMenu x:Name="mnuSchedule">
                         <MenuItem x:Name="mnuScheduleRefresh" Header="Refresh" Click="mnuRefresh_Click"/>
-                        <Separator x:Name="mnuScheduleSepTwo"/>
+                        <Separator x:Name="mnuScheduleSepOne"/>
                         <MenuItem x:Name="mnuScheduleCopy" Header="Copy" Click="mnuScheduleCopy_Click"/>
                         <MenuItem x:Name="mnuSchedulePaste" Header="Paste" Click="mnuSchedulePaste_Click"/>
-                        <Separator x:Name="mnuScheduleSepOne"/>
+                        <Separator x:Name="mnuScheduleSepTwo"/>
                         <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
                         <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"/>
                     </ContextMenu>

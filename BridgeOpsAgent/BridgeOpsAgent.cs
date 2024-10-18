@@ -1307,6 +1307,7 @@ internal class BridgeOpsAgent
         SelectResult? resourceOverflows = null;
         bool overrideDialNoClashes = true;
         bool overrideResourceOverflows = true;
+        List<Conference>? conferenceInserts = null;
 
         try
         {
@@ -1345,13 +1346,14 @@ internal class BridgeOpsAgent
                 }
                 else if (target == Glo.CLIENT_NEW_CONFERENCE)
                 {
-                    Conference newRow = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    conferenceInserts = sr.Deserialise<List<Conference>>(sr.ReadString(stream))!;
                     overrideDialNoClashes = stream.ReadByte() == 1;
                     overrideResourceOverflows = stream.ReadByte() == 1;
-                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES,
-                        create, out permission))
-                        com.CommandText = newRow.SqlInsert(false, true);
+                    CheckSessionValidity(conferenceInserts[0].sessionID,
+                                         conferenceInserts[0].columnRecordID, out sessionValid);
+                    CheckSessionPermission(clientSessions[conferenceInserts[0].sessionID], Glo.PERMISSION_CONFERENCES,
+                                         create, out permission);
+                    // Conference inserts are added further down due to the possibility of multiple inserts.
                 }
                 else if (target == Glo.CLIENT_NEW_RESOURCE)
                 {
@@ -1407,8 +1409,11 @@ internal class BridgeOpsAgent
                 List<string> coms = new()
                 {
                     "CREATE TABLE #IDs (ID INT); ", // Temp table used for storing IDs of all inserts.
-                    com.CommandText
+                    "DECLARE @NewID INT; " // Used for storing ints when inserting new conferences.
                 };
+
+                foreach (Conference c in conferenceInserts!)
+                    coms.Add(c.SqlInsert(false));
 
                 coms.Add(Conference.SqlCheckForRowClashes(null, sqlConnect));
                 if (!overrideDialNoClashes)
@@ -2838,10 +2843,13 @@ internal class BridgeOpsAgent
                               $"ORDER BY c.{Glo.Tab.CONFERENCE_ID}, n.{Glo.Tab.CONNECTION_ROW};",
                                  sqlConnect);
             SelectResult result = new(com.ExecuteReader(), false);
-            List<object?> confRow = result.rows[0];
             List<Conference> confs = new();
             HashSet<int> confIDsRead = new();
             Conference? currentlyBuilding = null;
+
+            List<bool> additionalNeedsQuotes = new();
+            for (int i = Glo.Tab.CONFERENCE_STATIC_COUNT; i < ColumnRecord.conference.Count; ++i)
+                additionalNeedsQuotes.Add(SqlAssist.NeedsQuotes(result.columnTypes[i]!));
 
             // Store these indices as we'll be using them a lot.
             int usernamesStart = conferenceColNames.Count;
@@ -2859,32 +2867,37 @@ internal class BridgeOpsAgent
                         sessionID = sessionID,
                         columnRecordID = columnRecordID,
                         conferenceID = conferenceID,
-                        resourceID = (int)Glo.Fun.GetInt32FromNullableObject(confRow[1])!,
-                        resourceRow = Convert.ToInt32(confRow[2]!),
-                        title = (string?)confRow[3]!,
-                        start = (DateTime)confRow[4]!,
-                        end = (DateTime)confRow[5]!,
-                        cancelled = (bool?)confRow[6]!,
-                        closure = (string?)confRow[7],
-                        createLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[8]),
-                        createTime = (DateTime?)confRow[9]!,
-                        editLoginID = Glo.Fun.GetInt32FromNullableObject(confRow[10]),
-                        editTime = (DateTime?)confRow[11]!,
-                        notes = (string?)confRow[12]!,
+                        resourceID = (int)Glo.Fun.GetInt32FromNullableObject(row[1])!,
+                        resourceRow = Convert.ToInt32(row[2]!),
+                        title = (string?)row[3]!,
+                        start = (DateTime)row[4]!,
+                        end = (DateTime)row[5]!,
+                        cancelled = (bool?)row[6]!,
+                        closure = (string?)row[7],
+                        createLoginID = Glo.Fun.GetInt32FromNullableObject(row[8]),
+                        createTime = (DateTime?)row[9]!,
+                        editLoginID = Glo.Fun.GetInt32FromNullableObject(row[10]),
+                        editTime = (DateTime?)row[11]!,
+                        notes = (string?)row[12]!,
+                        additionalCols = new(),
                         additionalValTypes = new(),
+                        additionalVals = new(),
                         additionalValObjects = new(),
                         // Additional columns were sandwiched before these, so count back from the end.
-                        createdUsername = (string?)confRow[usernamesStart],
-                        editedUsername = (string?)confRow[usernamesStart + 1],
+                        createdUsername = (string?)row[usernamesStart],
+                        editedUsername = (string?)row[usernamesStart + 1],
 
-                        connections = new()
+                        connections = new(),
                     };
 
                     // Add the additional columns.
-                    for (int i = 12; i < ColumnRecord.conference.Count; ++i)
+                    for (int i = Glo.Tab.CONFERENCE_STATIC_COUNT; i < ColumnRecord.conference.Count; ++i)
                     {
+                        conf.additionalCols.Add(result.columnNames[i]!);
                         conf.additionalValTypes.Add(result.columnTypes[i]);
-                        conf.additionalValObjects.Add(confRow[i]);
+                        conf.additionalValObjects.Add(row[i]);
+                        conf.additionalNeedsQuotes = additionalNeedsQuotes;
+                        conf.additionalVals.Add(SqlAssist.ConvertObjectToSqlString(row[i]));
                     }
 
                     confs.Add(conf);
@@ -2926,7 +2939,7 @@ internal class BridgeOpsAgent
                 sqlConnect.Close();
         }
     }
-    
+
     // Permission restricted
     private static void ClientConferenceQuickMove(NetworkStream stream, SqlConnection sqlConnect)
     {

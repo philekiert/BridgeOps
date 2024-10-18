@@ -1964,6 +1964,11 @@ namespace BridgeOpsClient
             }
         }
 
+        //public static bool SendConferenceMultipleInsert(List<SendReceiveClasses.Conference> confs)
+        //{
+
+        //}
+
         public static bool SendConferenceSelectRequest(List<string> conferenceIDs,
                                                        out List<SendReceiveClasses.Conference> confs)
         {

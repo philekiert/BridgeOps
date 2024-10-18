@@ -783,7 +783,7 @@ namespace BridgeOpsClient
             if (edit)
                 return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference, false, false);
             else
-                return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conference);
+                return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, new List<Conference>() { conference });
         }
 
         // Don't scroll to fit in the summary button if the user clicks one that extends out of view.
