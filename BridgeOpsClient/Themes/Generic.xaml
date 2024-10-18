@@ -4,16 +4,31 @@
     xmlns:local="clr-namespace:BridgeOpsClient">
 
     <!-- Window -->
-    <Color x:Key="colorTitleBar">#eee</Color>
-    <Color x:Key="colorTitleBarBorder">#ccc</Color>
-    <Color x:Key="colorMinimise">#e2e2e2</Color>
-    <Color x:Key="colorMaximise">#d5d5d5</Color>
-    <Color x:Key="colorClose">#eee</Color>
+    <Color x:Key="colorTitleBar">#dddde0</Color>
+    <Color x:Key="colorTitleBarBorder">#bbbbbf</Color>
+    <Color x:Key="colorMinimise">#d2d2d9</Color>
+    <Color x:Key="colorMaximise">#c5c5cb</Color>
+    <Color x:Key="colorClose">#dddde0</Color>
     <Color x:Key="colorCloseButton">#f54e80</Color>
     <Color x:Key="colorWindowBorder">#bbb</Color>
-    <Color x:Key="colorMenuBar">#fff</Color>
+    <!--<Color x:Key="colorTitleBar">#3B4557</Color>
+    <Color x:Key="colorTitleBarBorder">#24282F</Color>
+    <Color x:Key="colorMinimise">#323B4E</Color>
+    <Color x:Key="colorMaximise">#2D3441</Color>
+    <Color x:Key="colorClose">#3B4557</Color>
+    <Color x:Key="colorCloseButton">#f54e80</Color>
+    <Color x:Key="colorWindowBorder">#24282F</Color>
+    <Color x:Key="colorMenuBar">#3B4557</Color>-->
+    <SolidColorBrush x:Key="brushTitleBar" Color="{StaticResource colorTitleBar}"/>
+    <SolidColorBrush x:Key="brushTitleBarBorder" Color="{StaticResource colorTitleBarBorder}"/>
+    <SolidColorBrush x:Key="brushMinimise" Color="{StaticResource colorMinimise}"/>
+    <SolidColorBrush x:Key="brushMaximise" Color="{StaticResource colorMaximise}"/>
+    <SolidColorBrush x:Key="brushClose" Color="{StaticResource colorClose}"/>
+    <SolidColorBrush x:Key="brushCloseButton" Color="{StaticResource colorCloseButton}"/>
+    <SolidColorBrush x:Key="brushWindowBorder" Color="{StaticResource colorWindowBorder}"/>
 
     <!-- Components -->
+    <Color x:Key="colorMenuBar">#fff</Color>
     <Color x:Key="colorPrimaryButton">#556383</Color>
     <Color x:Key="colorPrimaryButtonBorder">#000</Color>
     <Color x:Key="colorPrimaryButtonHover">#569cd6</Color>
@@ -29,13 +44,6 @@
     <Color x:Key="colorDerynsPurpleBarBorder">#5d4270</Color>
     <Color x:Key="colorStatusBar">#edeeef</Color>
     <Color x:Key="colorStatusBarBorder">#ccc</Color>
-    <SolidColorBrush x:Key="brushTitleBar" Color="{StaticResource colorTitleBar}"/>
-    <SolidColorBrush x:Key="brushTitleBarBorder" Color="{StaticResource colorTitleBarBorder}"/>
-    <SolidColorBrush x:Key="brushMinimise" Color="{StaticResource colorMinimise}"/>
-    <SolidColorBrush x:Key="brushMaximise" Color="{StaticResource colorMaximise}"/>
-    <SolidColorBrush x:Key="brushClose" Color="{StaticResource colorClose}"/>
-    <SolidColorBrush x:Key="brushCloseButton" Color="{StaticResource colorCloseButton}"/>
-    <SolidColorBrush x:Key="brushWindowBorder" Color="{StaticResource colorWindowBorder}"/>
     <SolidColorBrush x:Key="brushMenuBar" Color="{StaticResource colorMenuBar}"/>
     <SolidColorBrush x:Key="brushPrimaryButton" Color="{StaticResource colorPrimaryButton}"/>
     <SolidColorBrush x:Key="brushPrimaryButtonBorder" Color="{StaticResource colorPrimaryButtonBorder}"/>

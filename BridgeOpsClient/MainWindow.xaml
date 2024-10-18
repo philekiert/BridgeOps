@@ -10,7 +10,7 @@
         Closed="Window_Closed"
         KeyDown="CustomWindow_KeyDown" KeyUp="CustomWindow_KeyUp"
         Deactivated="CustomWindow_Deactivated">
-    <Grid x:Name="grdMain">
+    <Grid x:Name="grdMain" Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
             <RowDefinition Height="29"/>

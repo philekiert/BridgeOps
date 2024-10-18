@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Select Query Builder" Width="1050" Height="600" UseLayoutRounding="True"
         MinWidth="1130">
-    <Grid Margin="0 5 0 0">
+    <Grid Margin="0 5 0 0" Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition/>

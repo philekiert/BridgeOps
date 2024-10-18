@@ -10,7 +10,7 @@
                     SizeToContent="Height" UseLayoutRounding="True" WindowStartupLocation="CenterScreen"
                     Loaded="CustomWindow_Loaded"
                     ContentRendered="CustomWindow_ContentRendered">
-    <Grid x:Name="grdMain">
+    <Grid x:Name="grdMain" Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="0"/>

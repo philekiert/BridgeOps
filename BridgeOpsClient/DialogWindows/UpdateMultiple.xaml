@@ -39,7 +39,7 @@
             <CheckBox Grid.Column="2" Margin="0 10 10 10" VerticalAlignment="Center"/>
         </DataTemplate>
     </Window.Resources>
-    <Grid>
+    <Grid Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>

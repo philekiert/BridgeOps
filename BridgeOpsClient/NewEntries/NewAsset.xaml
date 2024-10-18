@@ -8,90 +8,92 @@
         mc:Ignorable="d"
         Title="New Asset" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True" Loaded="Window_Loaded">
-    <TabControl BorderThickness="0 1 0 0" Background="Transparent" Margin="-1 5 0 0" Padding="0">
-        <TabItem Header="Asset">
-            <Grid MaxWidth="470">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Label Grid.Row="0" x:Name="lblViewingChange" Margin="0"
+    <Border Background="White">
+        <TabControl BorderThickness="0 1 0 0" Background="White" Margin="-1 5 0 0" Padding="0">
+            <TabItem Header="Asset">
+                <Grid MaxWidth="470">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" x:Name="lblViewingChange" Margin="0"
                        Content="Viewing change" Background="{StaticResource brushNegativeBackground}"
                        Height="0" Padding="5 1" FontWeight="SemiBold" Foreground="White"/>
-                <Grid Grid.Row="1" Margin="0 10 0 0">
-                    <Grid.Resources>
-                        <Style TargetType="TextBox">
-                            <Setter Property="Margin" Value="10 4 10 4" />
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        </Style>
-                    </Grid.Resources>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="1" Margin="0 10 0 0">
+                        <Grid.Resources>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Margin" Value="10 4 10 4" />
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Label Content="Asset Reference" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID"
+                           VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetRef" Height="20"
+                             VerticalContentAlignment="Center" TextChanged="ValueChanged"/>
+                        <Label Content="Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID"
+                           VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1">
+                            <ComboBox x:Name="cmbOrgRef" Margin="10 4 0 4" Height="20" Width="308" Padding="4 2 4 2"
+                                  SelectionChanged="cmbOrgRef_SelectionChanged"/>
+                            <Button x:Name="btnOpenOrganisation" Margin="-1 4 5 4" Padding="8 0 8 0" Content="Open"
+                                IsEnabled="False" Click="btnOpenOrganisation_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <custom:DataInputTable x:Name="ditAsset" Grid.Row="2" Margin="10 10 10 10"/>
+                    <Label Grid.Row="3" Content="Notes" x:Name="lblNotes"
+                       HorizontalAlignment="Left" VerticalAlignment="Top"
+                       Margin="5,0,10,0" Height="26" FontWeight="SemiBold"/>
+                    <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
+                         Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
+                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                         TextChanged="ValueChanged"/>
+                    <Grid Grid.Row="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                            x:Name="btnAdd" Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
+                        <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                            x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"
+                            Style="{StaticResource primary-button}"/>
+                        <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
+                            x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Change Log" x:Name="tabChangeLog" GotFocus="tabHistory_GotFocus">
+                <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
-                    <Label Content="Asset Reference" Grid.Row="0" Grid.Column="0" x:Name="lblAssetID"
-                           VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtAssetRef" Height="20"
-                             VerticalContentAlignment="Center" TextChanged="ValueChanged"/>
-                    <Label Content="Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgID"
-                           VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1">
-                        <ComboBox x:Name="cmbOrgRef" Margin="10 4 0 4" Height="20" Width="308" Padding="4 2 4 2"
-                                  SelectionChanged="cmbOrgRef_SelectionChanged"/>
-                        <Button x:Name="btnOpenOrganisation" Margin="-1 4 5 4" Padding="8 0 8 0" Content="Open"
-                                IsEnabled="False" Click="btnOpenOrganisation_Click"/>
-                    </StackPanel>
-                </Grid>
-                <custom:DataInputTable x:Name="ditAsset" Grid.Row="2" Margin="10 10 10 10"/>
-                <Label Grid.Row="3" Content="Notes" x:Name="lblNotes"
-                       HorizontalAlignment="Left" VerticalAlignment="Top"
-                       Margin="5,0,10,0" Height="26" FontWeight="SemiBold"/>
-                <TextBox x:Name="txtNotes" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Top"
-                         Margin="10,0,10,10" TextWrapping="Wrap" Width="450" Height="150"
-                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
-                         TextChanged="ValueChanged"/>
-                <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Add" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnAdd" Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
-                    <Button Grid.Column="0" Content="Save" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"
-                            Style="{StaticResource primary-button}"/>
-                    <Button Grid.Column="1" Content="Delete" Margin="10,5,0,15" HorizontalAlignment="Left" Width="70"
-                            x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
-                </Grid>
-            </Grid>
-        </TabItem>
-        <TabItem Header="Change Log" x:Name="tabChangeLog" GotFocus="tabHistory_GotFocus">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Button Grid.Row="0" Grid.Column="0" x:Name="btnRefresh" Content="Refresh"
+                    <Button Grid.Row="0" Grid.Column="0" x:Name="btnRefresh" Content="Refresh"
                         Margin="10 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnRefresh_Click"/>
-                <Button Grid.Row="0" Grid.Column="1" x:Name="btnCorrectReason" Content="Correct Reason"
+                    <Button Grid.Row="0" Grid.Column="1" x:Name="btnCorrectReason" Content="Correct Reason"
                         Margin="10 10 10 0" Width="100" HorizontalAlignment="Right" Click="btnCorrectReason_Click"
                         IsEnabled="False"/>
-                <custom:SqlDataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                    <custom:SqlDataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                     x:Name="dtgChangeLog" Width="900" Height="400"
                                     CustomDoubleClick="dtgChangeLog_MouseDoubleClick"/>
-            </Grid>
-        </TabItem>
-    </TabControl>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Border>
 </local:CustomWindow>

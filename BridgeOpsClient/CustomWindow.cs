@@ -79,13 +79,14 @@ namespace BridgeOpsClient
             // This hard coding of the dictionary index is not ideal, but I can't load the resources from FindName here
             // for some reason. Might need updating if more dictionaries are added.
             var resources = Application.Current.Resources.MergedDictionaries[0];
-
+            AllowsTransparency = false;
             windowBorder = new()
             {
                 CornerRadius = new CornerRadius(borderRadius),
                 BorderBrush = (Brush)resources["brushWindowBorder"],
                 BorderThickness = new Thickness(1),
-                Background = Brushes.White
+                Background = (Brush)resources["brushTitleBar"],
+                ClipToBounds = true
             };
 
             grid = new();
@@ -126,7 +127,7 @@ namespace BridgeOpsClient
                 Margin = new Thickness(0, 0, 0, 0),
                 BorderThickness = new Thickness(0, 0, 0, 1),
                 BorderBrush = resources["brushTitleBarBorder"] as Brush,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
             Grid.SetColumn(menuBar, 1);
             grid.Children.Add(menuBar);
@@ -220,7 +221,7 @@ namespace BridgeOpsClient
 
             TextBlock title = new()
             {
-                Foreground = Brushes.Black,
+                Foreground = ScheduleView.PrintBrushFromLuminance(titleBar.Background!),
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(10, 0, 0, 0),
                 FontSize = 14,
@@ -268,6 +269,15 @@ namespace BridgeOpsClient
         {
             menuBar.Child = menu;
             menuBar.Padding = new(15, topPadding, 0, 0);
+            Brush background = (Brush)Application.Current.Resources.MergedDictionaries[0]["brushTitleBar"];
+            menu.Background = background;
+            menu.Foreground = ScheduleView.PrintBrushFromLuminance(background);
+            // Menus are not styled yet, so set all MenuItems one nest down back to black.
+            foreach (UIElement e in menu.Items)
+                if (e is MenuItem mi1)
+                    foreach (UIElement u in mi1.Items)
+                        if (u is MenuItem mi2)
+                            mi2.Foreground = Brushes.Black;
             WindowChrome.SetIsHitTestVisibleInChrome(menuBar, false);
             foreach (IInputElement iie in menu.Items)
                 WindowChrome.SetIsHitTestVisibleInChrome(iie, true);
@@ -358,7 +368,7 @@ namespace BridgeOpsClient
             ((TextBlock)((StackPanel)titleBar.Child).Children[1]).Text = Title;
             if (ResizeMode == ResizeMode.CanMinimize)
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
-            if (ResizeMode == ResizeMode.NoResize)
+            else if (ResizeMode == ResizeMode.NoResize)
             {
                 grid.ColumnDefinitions[2].Width = new GridLength(0);
                 grid.ColumnDefinitions[3].Width = new GridLength(0);

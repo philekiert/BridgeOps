@@ -8,7 +8,8 @@
         mc:Ignorable="d"
         Title="New Organisation" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True" Loaded="Window_Loaded">
-    <TabControl BorderThickness="0 1 0 0" Background="Transparent" Margin="-1 5 0 0" Padding="0">
+    <Border Background="White">
+    <TabControl BorderThickness="0 1 0 0" Margin="-1 5 0 0" Padding="0">
         <TabItem Header="Organisation">
             <Grid MaxWidth="520">
                 <Grid.RowDefinitions>
@@ -163,4 +164,5 @@
             </Grid>
         </TabItem>
     </TabControl>
+    </Border>
 </local:CustomWindow>

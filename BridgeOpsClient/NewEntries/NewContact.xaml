@@ -9,7 +9,7 @@
         Title="New Contact" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True"
         Loaded="CustomWindow_Loaded">
-    <Grid>
+    <Grid Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
