@@ -1528,6 +1528,7 @@ namespace BridgeOpsClient
         private void mnuSchedulePaste_Click(object sender, RoutedEventArgs e)
         {
             DateTime startX = schView.GetDateTimeFromX(schView.lastCursor.X, schView.DisplayTimeZoom());
+            startX = schView.SnapDateTime(startX, schView.DisplayTimeZoom());
             int startY = schView.GetRowFromY(schView.lastCursor.Y, true);
 
             List<SendReceiveClasses.Conference> conferencesToPaste = new();

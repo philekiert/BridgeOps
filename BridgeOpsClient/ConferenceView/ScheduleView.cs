@@ -52,6 +52,7 @@ namespace BridgeOpsClient
 
         public Point? cursor = null;
         public Point lastCursor = new(0, 0);
+        public Point lastCursorSnapped = new(0, 0);
 
         // These brushes remain the same forever, so declare, initialise and freeze.
         Brush brsCursor;
