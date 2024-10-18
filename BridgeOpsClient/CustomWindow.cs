@@ -7,6 +7,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Shell;
@@ -84,8 +85,7 @@ namespace BridgeOpsClient
                 CornerRadius = new CornerRadius(borderRadius),
                 BorderBrush = (Brush)resources["brushWindowBorder"],
                 BorderThickness = new Thickness(1),
-                Background = Brushes.White,
-                ClipToBounds = true
+                Background = Brushes.White
             };
 
             grid = new();

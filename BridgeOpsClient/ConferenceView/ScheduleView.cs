@@ -348,9 +348,9 @@ namespace BridgeOpsClient
 
                 // Draw any conference overflow warnings beneath the grid lines.
 
-                lock (PageConferenceView.resources)
+                lock (resources)
                 {
-                    foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources.Values)
+                    foreach (ResourceInfo ri in resources.Values)
                     {
                         double startY = GetYfromResource(ri.id, 0);
                         double endY = GetYfromResource(ri.id, ri.rowsTotal);
@@ -415,9 +415,10 @@ namespace BridgeOpsClient
                                             DateTime s = ri.capacityChangePoints[i].point;
                                             DateTime e = ri.capacityChangePoints[i + 1].point;
 
-                                            // If the first change point is after the start of the screen or if the last
-                                            // is before the end of the screen, there will be regions at the beginning and
-                                            // end of the schedule that don't show a capacity of 0. Force this.
+                                            // If the first change point is after the start of the screen or if the
+                                            // last is before the end of the screen, there will be regions at the
+                                            // beginning and end of the schedule that don't show a capacity of 0. Force
+                                            // this.
                                             if (i == 0 && xDT < s)
                                             {
                                                 e = s;
@@ -470,7 +471,7 @@ namespace BridgeOpsClient
                             }
                             else
                             {
-                                if (conferenceView.statusBarContext == PageConferenceView.StatusContext.Overflow)
+                                if (conferenceView.statusBarContext == StatusContext.Overflow)
                                     conferenceView.SetStatus();
                             }
                         }
@@ -559,7 +560,7 @@ namespace BridgeOpsClient
 
                 bool dDown = Keyboard.IsKeyDown(Key.D);
 
-                lock (conferences)
+                lock (conferenceListLock)
                     lock (clashIDs)
                     {
                         bool cursorOverConference = false;
@@ -567,27 +568,37 @@ namespace BridgeOpsClient
                         if (cursor != null)
                             cursorPoint = cursor.Value;
 
-                        foreach (var kvp in conferences)
+                        List<Conference> conferencesToDraw = conferences.Values.ToList();
+                        conferencesToDraw.AddRange(dragConferenceGhosts);
+                        foreach (var c in conferencesToDraw)
                         {
-                            PageConferenceView.Conference conference = kvp.Value;
-                            if (conference.end > start && conference.start < end)
+                            if (c.end > start && c.start < end)
                             {
                                 // Assemble the correct paint set :)
                                 Brush textBrush = Brushes.Black;
                                 Brush brush = brsConference;
                                 Brush brushHover = brsConferenceHover;
                                 Brush brushSolid = brsConferenceSolid;
-                                Pen border = penConferenceBorder;
-                                Pen borderSelected = new(brsConferenceBorder, 2);
-                                if (conference.test)
+                                Pen? border = penConferenceBorder;
+                                Pen? borderSelected = new(brsConferenceBorder, 2);
+                                if (c.isGhost)
                                 {
-                                    brush = brsConferenceTest;
-                                    brushHover = brsConferenceTestHover;
-                                    brushSolid = brsConferenceTestSolid;
-                                    border = penConferenceTestBorder;
-                                    borderSelected.Brush = brsConferenceTestBorder;
+                                    brush = brsOverflowCheck;
+                                    brushHover = brsOverflowCheck;
+                                    brushSolid = brsOverflowCheck;
+                                    border = null;
+                                    borderSelected = null;
                                 }
-                                if (conference.cancelled)
+                                else if (dDown && clashIDs.Contains(c.id))
+                                {
+                                    // Temp code, ideally there would be a colour defined for this.
+                                    brush = brsConferenceFailed;
+                                    brushHover = brsConferenceFailedHover;
+                                    brushSolid = brsConferenceFailedSolid;
+                                    border = penConferenceFailedBorder;
+                                    borderSelected.Brush = brsConferenceFailedBorder;
+                                }
+                                else if (c.cancelled)
                                 {
                                     brush = brsConferenceCancelled;
                                     brushHover = brsConferenceCancelledHover;
@@ -595,9 +606,17 @@ namespace BridgeOpsClient
                                     border = penConferenceBorder;
                                     borderSelected.Brush = brsConferenceBorder;
                                 }
-                                if (conference.end < now && !conference.test && !conference.cancelled)
+                                else if (c.test)
                                 {
-                                    if (conference.closure == "Succeeded" && !conference.hasUnclosedConnection)
+                                    brush = brsConferenceTest;
+                                    brushHover = brsConferenceTestHover;
+                                    brushSolid = brsConferenceTestSolid;
+                                    border = penConferenceTestBorder;
+                                    borderSelected.Brush = brsConferenceTestBorder;
+                                }
+                                else if (c.end < now)
+                                {
+                                    if (c.closure == "Succeeded" && !c.hasUnclosedConnection)
                                     {
                                         brush = brsConferenceEnded;
                                         brushHover = brsConferenceEndedHover;
@@ -605,7 +624,7 @@ namespace BridgeOpsClient
                                         border = penConferenceEndedBorder;
                                         borderSelected.Brush = brsConferenceEndedBorder;
                                     }
-                                    else if (conference.closure == "Degraded" && !conference.hasUnclosedConnection)
+                                    else if (c.closure == "Degraded" && !c.hasUnclosedConnection)
                                     {
                                         brush = brsConferenceDegraded;
                                         brushHover = brsConferenceDegradedHover;
@@ -613,9 +632,7 @@ namespace BridgeOpsClient
                                         border = penConferenceDegradedBorder;
                                         borderSelected.Brush = brsConferenceDegradedBorder;
                                     }
-                                    else if (conference.closure == "Failed" ||
-                                             // Temporary, really one of these need their own colour.
-                                             (dDown && clashIDs.Contains(conference.id)))
+                                    else if (c.closure == "Failed")
                                     {
                                         brush = brsConferenceFailed;
                                         brushHover = brsConferenceFailedHover;
@@ -625,15 +642,15 @@ namespace BridgeOpsClient
                                     }
                                 }
 
-                                double startX = GetXfromDateTime(conference.start > start ? conference.start : start,
+                                double startX = GetXfromDateTime(c.start > start ? c.start : start,
                                                                    zoomTimeDisplay);
-                                double endX = GetXfromDateTime(conference.end < end ? conference.end : end,
+                                double endX = GetXfromDateTime(c.end < end ? c.end : end,
                                                                  zoomTimeDisplay);
                                 startX = startX < 0 ? (int)(startX - 1) : (int)startX;
                                 endX = endX < 0 ? (int)(endX - 1) : (int)endX;
 
                                 // If the conferences are off-screen, indicate this and skip the rest.
-                                int startY = (int)GetYfromResource(conference.resourceID, conference.resourceRow);
+                                int startY = (int)GetYfromResource(c.resourceID, c.resourceRow);
                                 if (startY >= ActualHeight - 4)
                                 {
                                     dc.DrawRectangle(brushHover, null,
@@ -659,31 +676,31 @@ namespace BridgeOpsClient
                                 bool dragResize = conferenceView.drag == PageConferenceView.Drag.Resize;
                                 bool thickBorder = false; // Needed to figure out some spacing below.
                                 if (area.Contains(cursorPoint) ||
-                                    ((dragMove || dragResize) && conference == currentConference))
+                                    ((dragMove || dragResize) && c == currentConference))
                                 {
                                     // Record this for switching off the status further down  if needed.
                                     cursorOverConference = true;
-                                    lastCurrentConferenceID = conference.id;
-                                    currentConference = conference;
+                                    lastCurrentConferenceID = c.id;
+                                    currentConference = c;
 
                                     // Add
                                     string times;
-                                    if (conference.start.Date == conference.end.Date)
-                                        times = conference.start.ToString("hh:mm") + " - " +
-                                                conference.end.ToString("hh:mm");
+                                    if (c.start.Date == c.end.Date)
+                                        times = c.start.ToString("hh:mm") + " - " +
+                                                c.end.ToString("hh:mm");
                                     else
-                                        times = conference.start.ToString("dd/MM/yyyy hh:mm") + " - " +
-                                                conference.end.ToString("dd/MM/yyyy hh:mm");
+                                        times = c.start.ToString("dd/MM/yyyy hh:mm") + " - " +
+                                                c.end.ToString("dd/MM/yyyy hh:mm");
                                     if (conferenceView.statusBarContext == StatusContext.None)
                                         conferenceView.SetStatus(StatusContext.None,
-                                            new() { conference.title,
+                                            new() { c.title,
                                                     times,
-                                                    "Dial Count: " + conference.dialNos.Count.ToString()},
+                                                    "Dial Count: " + c.dialNos.Count.ToString()},
                                             new() { false, false, false });
 
                                     isMouseOverConference = true;
-                                    if (selectedConferences.Contains(conference) ||
-                                        boxSelectConferences.Contains(conference))
+                                    if (selectedConferences.Contains(c) ||
+                                        boxSelectConferences.Contains(c))
                                     {
                                         // Reduce the size slightly for drawing so the pen is on the inside.
                                         dc.DrawRectangle(brushSolid, borderSelected,
@@ -707,8 +724,8 @@ namespace BridgeOpsClient
                                             conferenceView.resizeStart = cursorPoint.X < area.Left + 5;
                                     }
                                 }
-                                else if (selectedConferences.Contains(conference) ||
-                                         boxSelectConferences.Contains(conference))
+                                else if (selectedConferences.Contains(c) ||
+                                         boxSelectConferences.Contains(c))
                                 {
                                     // Reduce the size of the rect slightly for drawing so the pen is on the inside.
                                     dc.DrawRectangle(brushSolid, borderSelected,
@@ -727,7 +744,7 @@ namespace BridgeOpsClient
                                 dc.PushClip(clipGeometry);
 
                                 // If the conference is currently running and is not cancelled, indicate this.
-                                if (conference.start < now && conference.end > now && !conference.cancelled)
+                                if (c.start < now && c.end > now && !c.cancelled && !c.isGhost)
                                 {
                                     Rect iconTray;
                                     if (thickBorder)
@@ -749,7 +766,7 @@ namespace BridgeOpsClient
                                 if (area.Width > 8)
                                 {
                                     // Draw title.
-                                    FormattedText title = new(conference.title,
+                                    FormattedText title = new(c.title,
                                                               CultureInfo.CurrentCulture,
                                                               FlowDirection.LeftToRight,
                                                               segoeUISemiBold,
@@ -762,8 +779,8 @@ namespace BridgeOpsClient
                                     // Draw start and end time.
                                     if (area.Height > 25)
                                     {
-                                        FormattedText time = new(conference.start.ToString("HH:mm") + " - " +
-                                                                 conference.end.ToString("HH:mm"),
+                                        FormattedText time = new(c.start.ToString("HH:mm") + " - " +
+                                                                 c.end.ToString("HH:mm"),
                                                                  CultureInfo.CurrentCulture,
                                                                  FlowDirection.LeftToRight,
                                                                  segoeUI,
@@ -845,7 +862,7 @@ namespace BridgeOpsClient
                 }
 
                 // Draw the dial clash tooltip.
-                if (cursor != null && Keyboard.IsKeyDown(Key.D) && currentConference != null)
+                if (cursor != null && dDown && currentConference != null)
                 {
                     PageConferenceView.Conference cc = currentConference;
                     HashSet<string> clashingDialNos = new();
@@ -874,6 +891,12 @@ namespace BridgeOpsClient
                     {
                         status.Add((clashingDialNos.Count > 0 ? "Others:  " : "Dial Nos:  ") +
                                    string.Join(", ", notClashing));
+                        bold.Add(false);
+                    }
+
+                    if (clashingDialNos.Count == 0 && notClashing.Count == 0)
+                    {
+                        status.Add("Dial Nos:  [None]");
                         bold.Add(false);
                     }
 

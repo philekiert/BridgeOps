@@ -30,7 +30,7 @@ namespace BridgeOpsClient
 {
     public partial class PageConferenceView : Page
     {
-        DispatcherTimer tmrRender = new (DispatcherPriority.Render);
+        DispatcherTimer tmrRender = new(DispatcherPriority.Render);
 
         public class ResourceInfo
         {
@@ -176,12 +176,13 @@ namespace BridgeOpsClient
                     }
 
                     // First, calculate resource change points.
-                    lock (conferences)
-                    {
-                        foreach (var kvp in conferences)
-                        {
 
-                            Conference c = kvp.Value;
+                    lock (conferenceListLock)
+                    {
+                        List<Conference> confsToCheck = conferences.Values.ToList();
+                        confsToCheck.AddRange(dragConferenceGhosts);
+                        foreach (Conference c in confsToCheck)
+                        {
                             if (c.cancelled || !resources.ContainsKey(c.resourceID))
                                 continue;
 
@@ -246,7 +247,7 @@ namespace BridgeOpsClient
         public void UpdateClashIDs()
         {
             lock (clashIDs)
-                lock (conferences)
+                lock (conferenceListLock)
                 {
                     clashIDs.Clear();
                     clashRegionAlternations.Clear();
@@ -254,32 +255,36 @@ namespace BridgeOpsClient
                     List<ClashPoint> points = new();
 
                     HashSet<int> checkedIDs = new();
-                    foreach (Conference conf in conferences.Values)
+
+                    List<Conference> confsToCheck = conferences.Values.ToList();
+                    confsToCheck.AddRange(dragConferenceGhosts);
+
+                    foreach (Conference c in confsToCheck)
                     {
-                        bool addedConf = clashIDs.Contains(conf.id);
+                        if (c.cancelled)
+                            continue;
+                        bool addedConf = clashIDs.Contains(c.id);
                         foreach (Conference compare in conferences.Values)
                         {
-                            bool addedCompare = clashIDs.Contains(compare.id);
-                            // Skip if both have already been added or if they're both the same conference
-                            if ((addedConf && addedCompare || conf == compare) ||
-                                // or if they don't overlap
-                                (conf.end <= compare.start || conf.start >= compare.end) ||
-                                // or if they're both fully ended.
-                                (conf.closure != null && compare.closure != null &&
-                                 !conf.hasUnclosedConnection && !compare.hasUnclosedConnection))
+                            if (compare.cancelled)
                                 continue;
 
+                            bool addedCompare = clashIDs.Contains(compare.id);
+                            // Skip if both have already been added or if they're both the same conference
+                            if ((addedConf && addedCompare || c == compare) ||
+                                // or if they don't overlap
+                                (c.end <= compare.start || c.start >= compare.end))
+                                continue;
 
-
-                            foreach (string s in conf.dialNos)
+                            foreach (string s in c.dialNos)
                                 if (compare.dialNos.Contains(s))
                                 {
                                     if (!addedConf)
                                     {
-                                        points.Add(new(conf.start, 1));
-                                        points.Add(new(conf.end, -1));
+                                        points.Add(new(c.start, 1));
+                                        points.Add(new(c.end, -1));
                                         addedConf = true;
-                                        clashIDs.Add(conf.id);
+                                        clashIDs.Add(c.id);
                                     }
                                     if (!addedCompare)
                                     {
@@ -291,7 +296,7 @@ namespace BridgeOpsClient
                                     break;
                                 }
 
-                            checkedIDs.Add(conf.id);
+                            checkedIDs.Add(c.id);
                         }
                     }
 
@@ -347,6 +352,8 @@ namespace BridgeOpsClient
             public HashSet<string> dialNos = new();
             public bool hasUnclosedConnection = false;
 
+            public bool isGhost = false; // Used for deciding whether or not a conference is a copy representation.
+
             // Used only for dragging.
             public DateTime resizeOriginStart = new(); // The time the conference started at when dragging to resize.
             public DateTime resizeOriginEnd = new(); // The time the conference ended at when dragging to resize.
@@ -354,7 +361,32 @@ namespace BridgeOpsClient
             public int moveOriginResourceID = new(); // The resource the conference started when dragging to move.
             public int moveOriginResourceRow = new(); // ^^
             public int moveOriginTotalRow = 0;
+
+            public Conference Ghost()
+            {
+                Conference c = Clone();
+                c.isGhost = true;
+                return c;
+            }
+            public Conference Clone()
+            {
+                Conference c = new();
+                c.id = id;
+                c.title = title;
+                c.start = start;
+                c.end = end;
+                c.resourceID = resourceID;
+                c.resourceRow = resourceRow;
+                c.cancelled = cancelled;
+                c.closure = closure;
+                c.test = test;
+                c.dialNos = dialNos.ToHashSet();
+                c.hasUnclosedConnection = false;
+                return c;
+            }
         }
+
+        public static object conferenceListLock = new();
         public static Dictionary<int, Conference> conferences = new();
         public static Dictionary<int, Conference> conferencesUpdate = new();
 
@@ -389,21 +421,20 @@ namespace BridgeOpsClient
                     App.SendConferenceViewSearchRequest(searchStart, searchEnd, conferencesUpdate);
 
             // Clone the updated dictionary into the dictionary list.
-            lock (conferences)
+            lock (conferenceListLock)
             {
                 conferences = conferencesUpdate.ToDictionary(e => e.Key, e => e.Value);
 
                 List<Conference> selectedConferences = new();
                 selectedConferences.AddRange(schView.selectedConferences);
-                lock (boxSelectConferences)
-                    lock (schView.selectedConferences)
+                lock (conferenceListLock)
+                {
+                    foreach (Conference c in boxSelectConferences)
                     {
-                        foreach (Conference c in boxSelectConferences)
-                        {
-                            if (schView.selectedConferences.Contains(c))
-                                selectedConferences.Add(c);
-                        }
+                        if (schView.selectedConferences.Contains(c))
+                            selectedConferences.Add(c);
                     }
+                }
 
                 bool dragging = drag == Drag.Move || drag == Drag.Resize;
 
@@ -460,17 +491,32 @@ namespace BridgeOpsClient
             searchTimeframeThreadQueued = false;
         }
 
+        private bool invalidatedRulerThisFrame = false;
+        private bool invalidatedResourcesThisFrame = false;
+        private bool invalidatedGridThisFrame = false;
         void RedrawRuler()
         {
-            schRuler.InvalidateVisual();
+            if (!invalidatedRulerThisFrame)
+            {
+                schRuler.InvalidateVisual();
+                invalidatedRulerThisFrame = true;
+            }
         }
         void RedrawResources()
         {
-            schResources.InvalidateVisual();
+            if (!invalidatedResourcesThisFrame)
+            {
+                schResources.InvalidateVisual();
+                invalidatedRulerThisFrame = true;
+            }
         }
         public void RedrawGrid()
         {
-            schView.InvalidateVisual();
+            if (!invalidatedGridThisFrame)
+            {
+                schView.InvalidateVisual();
+                invalidatedRulerThisFrame = true;
+            }
         }
 
         //   E V E N T   H A N D L E R S
@@ -525,7 +571,10 @@ namespace BridgeOpsClient
 
             // Update horizontally every second or two to account for the stylus moving.
             if ((DateTime.Now - lastUpdate).Seconds > 1)
+            {
                 horizontalChange = true;
+                lastUpdate = DateTime.Now;
+            }
 
             if (schView.zoomTimeCurrent != schView.zoomTime)
             {
@@ -665,6 +714,12 @@ namespace BridgeOpsClient
                 queueGridRedrawFromOtherThread = false;
                 RedrawGrid();
             }
+            invalidatedRulerThisFrame = false;
+            invalidatedResourcesThisFrame = false;
+            invalidatedGridThisFrame = false;
+
+            RedrawRuler(); // This should not need to be here, but I can't figure out just now why horiztonalChange
+                           // isn't being set to true when dragging to scroll.
 
             lastFrame = Environment.TickCount64;
             schView.lastScheduleTime = schView.scheduleTime;
@@ -730,7 +785,7 @@ namespace BridgeOpsClient
                     // Select conferences
                     else if (schView.currentConference != null)
                     {
-                        if (!ShiftDown() && !DragConferences.Contains(schView.currentConference))
+                        if (!ShiftDown() && !SelectedConferences.Contains(schView.currentConference))
                         {
                             schView.selectedConferences = new() { schView.currentConference };
                             conferenceSelectionAffected = true;
@@ -741,23 +796,36 @@ namespace BridgeOpsClient
                             conferenceSelectionAffected = true;
                         }
 
-                        if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+                        var dragConfs = SelectedConferences;
+                        if (schView.Cursor == Cursors.SizeWE && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
                         {
-                            var dragConfs = DragConferences;
-                            if (schView.Cursor == Cursors.SizeWE)
+                            drag = Drag.Resize;
+                            currentAtStartOfDrag = schView.currentConference;
+                            foreach (Conference c in dragConfs)
                             {
-                                drag = Drag.Resize;
-                                currentAtStartOfDrag = schView.currentConference;
-                                foreach (Conference c in dragConfs)
-                                {
-                                    c.resizeOriginStart = c.start;
-                                    c.resizeOriginEnd = c.end;
-                                }
+                                c.resizeOriginStart = c.start;
+                                c.resizeOriginEnd = c.end;
                             }
-                            else if (schView.currentConference != null)
+                        }
+                        else if (schView.currentConference != null)
+                        {
+                            drag = Drag.Move;
+
+                            bool hasPermissions = false;
+                            if (AltDown() && App.sd.createPermissions[Glo.PERMISSION_CONFERENCES])
                             {
-                                drag = Drag.Move;
+                                CreateGhosts();
+                                dragConfs = dragConferenceGhosts;
+                                hasPermissions = true;
+                            }
+                            else if (App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
+                            {
                                 currentAtStartOfDrag = schView.currentConference;
+                                hasPermissions = true;
+                            }
+
+                            if (hasPermissions) // Same for either duplicate of move.
+                            {
                                 moveOriginCursor = schView.GetDateTimeFromX(mouseX);
                                 foreach (Conference c in dragConfs)
                                 {
@@ -808,7 +876,13 @@ namespace BridgeOpsClient
                     List<DateTime> ends = new();
                     List<int> resourceIDs = new();
                     List<int> resourceRows = new();
-                    foreach (Conference c in DragConferences)
+                    List<Conference> confs;
+                    if (draggingGhosts)
+                        confs = dragConferenceGhosts;
+                    else
+                        confs = SelectedConferences;
+
+                    foreach (Conference c in confs)
                     {
                         if ((wasDraggingResize && (c.start != c.resizeOriginStart ||
                                                    c.end != c.resizeOriginEnd)) ||
@@ -827,8 +901,14 @@ namespace BridgeOpsClient
 
                     if (conferenceIDs.Count > 0)
                     {
-                        if (!App.SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames, starts, ends,
-                                                                resourceIDs, resourceRows, false, false))
+                        if (draggingGhosts)
+                        {
+                            App.SendConferenceQuickMoveRequest(true, conferenceIDs, starts, ends,
+                                                                    resourceIDs, resourceRows, false, false);
+                            DropGhosts();
+                        }
+                        else if (!App.SendConferenceQuickMoveRequest(false, conferenceIDs, starts, ends,
+                                                                     resourceIDs, resourceRows, false, false))
                         {
                             if (wasDraggingResize)
                                 foreach (Conference c in schView.selectedConferences)
@@ -854,21 +934,20 @@ namespace BridgeOpsClient
                 }
                 else if (wasDraggingBoxSelect)
                 {
-                    lock (boxSelectConferences)
-                        lock (schView.selectedConferences)
+                    lock (conferenceListLock)
+                    {
+                        if (boxSelectConferences.Count > 0)
                         {
-                            if (boxSelectConferences.Count > 0)
+                            if (ShiftDown())
                             {
-                                if (ShiftDown())
-                                {
-                                    foreach (Conference c in boxSelectConferences)
-                                        if (!schView.selectedConferences.Contains(c))
-                                            schView.selectedConferences.Add(c);
-                                }
-                                else
-                                    schView.selectedConferences = boxSelectConferences.ToList();
+                                foreach (Conference c in boxSelectConferences)
+                                    if (!schView.selectedConferences.Contains(c))
+                                        schView.selectedConferences.Add(c);
                             }
+                            else
+                                schView.selectedConferences = boxSelectConferences.ToList();
                         }
+                    }
                     boxSelectConferences.Clear();
                 }
                 else if (schView.currentConference != null && !conferenceSelectionAffected && !dragMouseHADmoved)
@@ -892,11 +971,11 @@ namespace BridgeOpsClient
             currentAtStartOfDrag = null;
         }
 
-        private List<Conference> DragConferences
+        private List<Conference> SelectedConferences
         {
             get
             {
-                lock (schView.selectedConferences)
+                lock (conferenceListLock)
                 {
                     if (schView.selectedConferences.Count == 0)
                         return schView.currentConference == null ? new() : new() { schView.currentConference };
@@ -929,96 +1008,106 @@ namespace BridgeOpsClient
                     else
                         time = schView.SnapDateTime(time);
 
-                    var dragConfs = DragConferences;
+                    lock (conferenceListLock)
+                    {
+                        var dragConfs = SelectedConferences;
 
-                    // First, decide whether to proceed with the resize in case of overlapping start and end time.
-                    bool resizeLegal = true;
+                        // First, decide whether to proceed with the resize in case of overlapping start and end time.
+                        bool resizeLegal = true;
 
-                    // Get the potential resize difference.
-                    TimeSpan dif = new((resizeStart ? currentAtStartOfDrag.resizeOriginStart.Ticks :
-                                                      currentAtStartOfDrag.resizeOriginEnd.Ticks) - time.Ticks);
-                    dif = -dif;
+                        // Get the potential resize difference.
+                        TimeSpan dif = new((resizeStart ? currentAtStartOfDrag.resizeOriginStart.Ticks :
+                                                          currentAtStartOfDrag.resizeOriginEnd.Ticks) - time.Ticks);
+                        dif = -dif;
 
-                    foreach (Conference c in dragConfs)
-                        if ((resizeStart && c.resizeOriginStart + dif >= c.end) ||
-                            (!resizeStart && c.resizeOriginEnd + dif <= c.start))
-                        {
-                            resizeLegal = false;
-                            break;
-                        }
-
-                    if (resizeLegal)
                         foreach (Conference c in dragConfs)
-                            if (resizeStart)
-                                c.start = c.resizeOriginStart + dif;
-                            else
-                                c.end = c.resizeOriginEnd + dif;
+                            if ((resizeStart && c.resizeOriginStart + dif >= c.end) ||
+                                (!resizeStart && c.resizeOriginEnd + dif <= c.start))
+                            {
+                                resizeLegal = false;
+                                break;
+                            }
+
+                        if (resizeLegal)
+                            foreach (Conference c in dragConfs)
+                                if (resizeStart)
+                                    c.start = c.resizeOriginStart + dif;
+                                else
+                                    c.end = c.resizeOriginEnd + dif;
+                    }
                 }
             }
-            else if (drag == Drag.Move && dragMouseHasMoved)
+            else if ((drag == Drag.Move) && dragMouseHasMoved)
             {
                 if (currentAtStartOfDrag != null)
                 {
-                    var dragConfs = DragConferences;
-
-                    int resourceRow = schView.GetRowFromY(mouseY, true);
-                    int resourceRowDif = resourceRow - currentAtStartOfDrag.moveOriginTotalRow;
-
-                    // Make sure the row difference is legal and restrict if it isn't.
-                    int correction = 0;
-                    int worstBreach = 0;
-                    foreach (Conference c in dragConfs)
+                    lock (conferenceListLock)
                     {
-                        int rowInView = GetResourceRowInView(c.moveOriginResourceID, c.moveOriginResourceRow);
-                        int potentialRow = rowInView + resourceRowDif;
-                        if (potentialRow < 0 && potentialRow < worstBreach)
+                        List<Conference> confs;
+                        if (draggingGhosts)
+                            confs = dragConferenceGhosts;
+                        else
+                            confs = SelectedConferences;
+
+                        int resourceRow = schView.GetRowFromY(mouseY, true);
+                        int resourceRowDif = resourceRow - currentAtStartOfDrag.moveOriginTotalRow;
+
+                        // Make sure the row difference is legal and restrict if it isn't.
+                        int correction = 0;
+                        int worstBreach = 0;
+                        foreach (Conference c in confs)
                         {
-                            correction = -potentialRow;
-                            worstBreach = potentialRow;
+                            int rowInView = GetResourceRowInView(c.moveOriginResourceID, c.moveOriginResourceRow);
+                            int potentialRow = rowInView + resourceRowDif;
+                            if (potentialRow < 0 && potentialRow < worstBreach)
+                            {
+                                correction = -potentialRow;
+                                worstBreach = potentialRow;
+                            }
+                            else if (potentialRow >= resourceRowNames.Count && potentialRow > worstBreach)
+                            {
+                                correction = (resourceRowNames.Count - 1) - potentialRow;
+                                worstBreach = potentialRow;
+                            }
                         }
-                        else if (potentialRow >= resourceRowNames.Count && potentialRow > worstBreach)
+                        resourceRowDif += correction;
+
+                        // Record the desired time for the primarily selected conference, and the difference to move
+                        // all the others by.
+                        DateTime time = schView.GetDateTimeFromX(mouseX);
+                        if (CtrlDown())
+                            time = schView.SnapDateTime(time, schView.zoomTimeMaximum);
+                        else
+                            time = schView.SnapDateTime(time);
+
+                        // This code is a bit confusing, but it makes it so only the primarily selected conference
+                        // snaps and all other conferences follow it. Otherwise, each conference individually snaps,
+                        // providing in much less control and utility.
+                        TimeSpan cursorDifference = new(moveOriginCursor.Ticks - time.Ticks);
+                        DateTime snappedDestination = currentAtStartOfDrag.moveOriginStart - cursorDifference;
+                        // Snap to grid unless ctrl is pressed, then snap to 5 mins.
+                        if (CtrlDown())
+                            snappedDestination = schView.SnapDateTime(snappedDestination, schView.zoomTimeMaximum);
+                        else
+                            snappedDestination = schView.SnapDateTime(snappedDestination);
+                        cursorDifference = new(currentAtStartOfDrag.moveOriginStart.Ticks - snappedDestination.Ticks);
+
+                        foreach (Conference c in confs)
                         {
-                            correction = (resourceRowNames.Count - 1) - potentialRow;
-                            worstBreach = potentialRow;
-                        }
-                    }
-                    resourceRowDif += correction;
+                            DateTime newConfStart = c.moveOriginStart - cursorDifference;
 
-                    // Record the desired time for the primarily selected conference, and the difference to move all
-                    // the others by.
-                    DateTime time = schView.GetDateTimeFromX(mouseX);
-                    if (CtrlDown())
-                        time = schView.SnapDateTime(time, schView.zoomTimeMaximum);
-                    else
-                        time = schView.SnapDateTime(time);
+                            TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
+                            c.start = newConfStart;
+                            c.end = newConfStart + confLength;
 
-                    // This code is a bit confusing, but it makes it so only the primarily selected conference snaps
-                    // and all other conferences follow it. Otherwise, each conference individually snaps, providing
-                    // in much less control and utility.
-                    TimeSpan cursorDifference = new(moveOriginCursor.Ticks - time.Ticks);
-                    DateTime snappedDestination = currentAtStartOfDrag.moveOriginStart - cursorDifference;
-                    // Snap to grid unless ctrl is pressed, then snap to 5 mins.
-                    if (CtrlDown())
-                        snappedDestination = schView.SnapDateTime(snappedDestination, schView.zoomTimeMaximum);
-                    else
-                        snappedDestination = schView.SnapDateTime(snappedDestination);
-                    cursorDifference = new(currentAtStartOfDrag.moveOriginStart.Ticks - snappedDestination.Ticks);
-
-                    foreach (Conference c in dragConfs)
-                    {
-                        DateTime newConfStart = c.moveOriginStart - cursorDifference;
-
-                        TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
-                        c.start = newConfStart;
-                        c.end = newConfStart + confLength;
-
-                        // Apply the new resource.
-                        int rowInView = GetResourceRowInView(c.moveOriginResourceID, c.moveOriginResourceRow);
-                        ResourceInfo? ri = GetResourceFromSelectedRow(rowInView + resourceRowDif);
-                        if (ri != null)
-                        {
-                            c.resourceID = ri.id;
-                            c.resourceRow = ri.SelectedRow;
+                            // Apply the new resource.
+                            int rowInView = GetResourceRowInView(c.moveOriginResourceID, c.moveOriginResourceRow);
+                            ResourceInfo? ri = GetResourceFromSelectedRow(rowInView + resourceRowDif);
+                            if (ri != null)
+                            {
+                                c.resourceID = ri.id;
+                                c.resourceRow = ri.SelectedRow;
+                            }
                         }
                     }
                 }
@@ -1028,7 +1117,7 @@ namespace BridgeOpsClient
                 boxSelectToX = schView.GetDateTimeFromX(mouseX);
                 boxSelectToY = schView.GetRowFromY(mouseY, true);
 
-                lock (boxSelectConferences)
+                lock (conferenceListLock)
                 {
                     boxSelectConferences.Clear();
                     DateTime startX;
@@ -1057,18 +1146,15 @@ namespace BridgeOpsClient
                         endY = boxSelectToY;
                     }
 
-                    lock (conferences)
+                    foreach (Conference c in conferences.Values)
                     {
-                        foreach (Conference c in conferences.Values)
-                        {
-                            // Only proceed if the conference is actually in a visible resource.
-                            if (!resourcesOrder.Contains(c.resourceID))
-                                continue;
+                        // Only proceed if the conference is actually in a visible resource.
+                        if (!resourcesOrder.Contains(c.resourceID))
+                            continue;
 
-                            int row = schView.GetRowFromY(schView.GetYfromResource(c.resourceID, c.resourceRow), true);
-                            if (row >= startY && row <= endY && endX > c.start && startX < c.end)
-                                boxSelectConferences.Add(c);
-                        }
+                        int row = schView.GetRowFromY(schView.GetYfromResource(c.resourceID, c.resourceRow), true);
+                        if (row >= startY && row <= endY && endX > c.start && startX < c.end)
+                            boxSelectConferences.Add(c);
                     }
                 }
             }
@@ -1113,8 +1199,8 @@ namespace BridgeOpsClient
             {
                 schView.SetCursor((int)e.GetPosition(schView).X, (int)e.GetPosition(schView).Y);
                 RedrawResources(); // Highlight needs updating.
-                cursorMoved = true;
             }
+            cursorMoved = true;
             lastX = newX;
             lastY = newY;
         }
@@ -1156,6 +1242,8 @@ namespace BridgeOpsClient
         private void schView_MouseLeave(object sender, MouseEventArgs e)
         {
             schView.SetCursor(-1, -1);
+            RedrawGrid();
+            RedrawResources();
         }
 
         private void btnDayPrevious_Click(object sender, RoutedEventArgs e)
@@ -1224,56 +1312,76 @@ namespace BridgeOpsClient
             UpdateScrollBar();
         }
 
+        public void CancelAllDrags(object? sender) // Also called by MainWindow when the window loses focus.
+        {
+            if (drag == Drag.Move)
+            {
+                if (schView.currentConference != null && !draggingGhosts)
+                {
+                    foreach (Conference c in SelectedConferences)
+                    {
+                        TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
+                        c.start = c.moveOriginStart;
+                        c.end = c.start + confLength;
+                        c.resourceID = c.moveOriginResourceID;
+                        c.resourceRow = c.moveOriginResourceRow;
+                    }
+                }
+                dragMouseHasMoved = false;
+                drag = Drag.None;
+                // If I add separate panes, this will need updating to accommodate whatever form that takes.
+                if (sender != null)
+                    ((IInputElement)sender).ReleaseMouseCapture();
+
+                DropGhosts();
+                UpdateOverflowPoints();
+                UpdateClashIDs();
+            }
+            else if (drag == Drag.Resize)
+            {
+                Conference? conf = schView.currentConference;
+                if (conf != null)
+                {
+                    if (schView.selectedConferences.Count == 0)
+                    {
+                        conf.start = conf.resizeOriginStart;
+                        conf.end = conf.resizeOriginEnd;
+                    }
+                    else
+                    {
+                        foreach (Conference c in schView.selectedConferences)
+                        {
+                            c.start = c.resizeOriginStart;
+                            c.end = c.resizeOriginEnd;
+                        }
+                    }
+                }
+                dragMouseHasMoved = false;
+                drag = Drag.None;
+
+                UpdateOverflowPoints();
+                UpdateClashIDs();
+
+                if (sender != null)
+                    // If I add separate panes, this will need updating to accommodate whatever form that takes.
+                    ((IInputElement)sender).ReleaseMouseCapture();
+            }
+            else if (drag == Drag.BoxSelect)
+            {
+                boxSelectConferences.Clear();
+                dragMouseHasMoved = false;
+                drag = Drag.None;
+            }
+        }
         private void schView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
             {
-                if (drag == Drag.Move)
-                {
-                    if (schView.currentConference != null)
-                    {
-                        foreach (Conference c in DragConferences)
-                        {
-                            TimeSpan confLength = new(c.end.Ticks - c.start.Ticks);
-                            c.start = c.moveOriginStart;
-                            c.end = c.start + confLength;
-                            c.resourceID = c.moveOriginResourceID;
-                            c.resourceRow = c.moveOriginResourceRow;
-                        }
-                    }
-                    dragMouseHasMoved = false;
-                    drag = Drag.None;
-                    ((IInputElement)sender).ReleaseMouseCapture();
-                }
-                else if (drag == Drag.Resize)
-                {
-                    Conference? conf = schView.currentConference;
-                    if (conf != null)
-                    {
-                        if (schView.selectedConferences.Count == 0)
-                        {
-                            conf.start = conf.resizeOriginStart;
-                            conf.end = conf.resizeOriginEnd;
-                        }
-                        else
-                        {
-                            foreach (Conference c in schView.selectedConferences)
-                            {
-                                c.start = c.resizeOriginStart;
-                                c.end = c.resizeOriginEnd;
-                            }
-                        }
-                    }
-                    dragMouseHasMoved = false;
-                    drag = Drag.None;
-                    ((IInputElement)sender).ReleaseMouseCapture();
-                }
-                else if (drag == Drag.BoxSelect)
-                {
-                    boxSelectConferences.Clear();
-                    dragMouseHasMoved = false;
-                    drag = Drag.None;
-                }
+                CancelAllDrags(sender);
+            }
+            if (e.Key == Key.Delete)
+            {
+                mnuScheduleDelete_Click(null, null);
             }
         }
 
@@ -1286,15 +1394,30 @@ namespace BridgeOpsClient
         {
             if (schView.currentConference == null)
             {
-                e.Handled = true;
+                mnuScheduleRefresh.Visibility = Visibility.Visible;
+                mnuScheduleSepOne.Visibility = Visibility.Collapsed;
+                mnuScheduleCopy.Visibility = Visibility.Collapsed;
+                mnuSchedulePaste.Visibility = Visibility.Collapsed;
+                mnuScheduleSepTwo.Visibility = Visibility.Collapsed;
+                mnuScheduleCancel.Visibility = Visibility.Collapsed;
+                mnuScheduleDelete.Visibility = Visibility.Collapsed;
+
                 return;
             }
 
+            mnuScheduleRefresh.Visibility = Visibility.Visible;
+            mnuScheduleSepOne.Visibility = Visibility.Visible;
+            mnuScheduleCopy.Visibility = Visibility.Visible;
+            mnuSchedulePaste.Visibility = Visibility.Visible;
+            mnuScheduleSepTwo.Visibility = Visibility.Visible;
+            mnuScheduleCancel.Visibility = Visibility.Visible;
+            mnuScheduleDelete.Visibility = Visibility.Visible;
+
             // Set button to "Uncancel" only if all selected conferences are cancelled.
-            lock (conferences)
+            lock (conferenceListLock)
             {
                 mnuScheduleCancel.Header = "Uncancel";
-                List<Conference> toCheck = DragConferences;
+                List<Conference> toCheck = SelectedConferences;
                 foreach (Conference c in toCheck)
                 {
                     if (!c.cancelled)
@@ -1306,20 +1429,19 @@ namespace BridgeOpsClient
             }
         }
 
-        private void mnuScheduleDelete_Click(object sender, RoutedEventArgs e)
+        private void mnuScheduleDelete_Click(object? sender, RoutedEventArgs? e)
         {
             try
             {
                 List<string> ids = new();
-                lock (conferences)
-                    lock (schView.selectedConferences)
-                    {
-                        List<Conference> confs = DragConferences;
-                        foreach (Conference c in DragConferences)
-                            ids.Add(c.id.ToString());
-                        if (ids.Count == 0)
-                            ids.Add(schView.lastCurrentConferenceID.ToString());
-                    }
+                lock (conferenceListLock)
+                {
+                    List<Conference> confs = SelectedConferences;
+                    foreach (Conference c in SelectedConferences)
+                        ids.Add(c.id.ToString());
+                    if (ids.Count == 0)
+                        ids.Add(schView.lastCurrentConferenceID.ToString());
+                }
                 // Clear the selection, as this will cause the program to hold onto these references even though they
                 // won't be returned next time frame search.
                 schView.selectedConferences.Clear();
@@ -1337,15 +1459,14 @@ namespace BridgeOpsClient
                 bool uncancel = mnuScheduleCancel.Header.ToString() == "Uncancel";
 
                 List<string> ids = new();
-                lock (conferences)
-                    lock (schView.selectedConferences)
-                    {
-                        List<Conference> confs = DragConferences;
-                        foreach (Conference c in DragConferences)
-                            ids.Add(c.id.ToString());
-                        if (ids.Count == 0)
-                            ids.Add(schView.lastCurrentConferenceID.ToString());
-                    }
+                lock (conferenceListLock)
+                {
+                    List<Conference> confs = SelectedConferences;
+                    foreach (Conference c in SelectedConferences)
+                        ids.Add(c.id.ToString());
+                    if (ids.Count == 0)
+                        ids.Add(schView.lastCurrentConferenceID.ToString());
+                }
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },
@@ -1358,7 +1479,59 @@ namespace BridgeOpsClient
 
         private void mnuScheduleCopy_Click(object sender, RoutedEventArgs e)
         {
+        }
 
+        private bool draggingGhosts = false;
+        public static List<Conference> dragConferenceGhosts = new();
+        private void CreateGhosts()
+        {
+            Conference? clickedConf = null;
+
+            if (schView.currentConference != null)
+                lock (conferenceListLock)
+                {
+                    List<Conference> confs = SelectedConferences;
+                    dragConferenceGhosts.Clear();
+
+                    foreach (Conference c in confs)
+                    {
+                        Conference copied = c.Ghost();
+                        copied.moveOriginStart = copied.start;
+                        copied.moveOriginResourceID = copied.resourceID;
+                        copied.moveOriginResourceRow = copied.resourceRow;
+                        copied.moveOriginTotalRow = GetResourceRowInView(copied.resourceID, copied.resourceRow);
+                        dragConferenceGhosts.Add(copied);
+
+                        if (c.id == schView.currentConference.id)
+                            clickedConf = copied;
+                    }
+                }
+
+            currentAtStartOfDrag = clickedConf;
+            draggingGhosts = dragConferenceGhosts.Count > 0 && currentAtStartOfDrag != null;
+        }
+        private void DropGhosts()
+        {
+            lock (conferenceListLock)
+            {
+                dragConferenceGhosts.Clear();
+                draggingGhosts = false;
+            }
+        }
+
+        private void mnuSchedulePaste_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void mnuRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            SearchTimeframe();
+        }
+
+        private void schView_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CancelAllDrags(this);
         }
     }
 }

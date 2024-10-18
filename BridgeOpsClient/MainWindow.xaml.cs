@@ -350,5 +350,11 @@ namespace BridgeOpsClient
                 foreach (var view in pageConferenceViews)
                     view.RedrawGrid();
         }
+
+        private void CustomWindow_Deactivated(object sender, EventArgs e)
+        {
+            foreach (PageConferenceView view in pageConferenceViews)
+                view.CancelAllDrags(view.schView);
+        }
     }
 }

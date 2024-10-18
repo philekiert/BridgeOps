@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Bibliography;
 using Irony;
 using SendReceiveClasses;
 using static BridgeOpsClient.PageConferenceView;
@@ -1912,7 +1913,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendConferenceQuickMoveRequest(List<int> conferenceIDs, List<string> conferenceNames,
+        public static bool SendConferenceQuickMoveRequest(bool duplicate, List<int> conferenceIDs,
                                                           List<DateTime> starts, List<DateTime> ends,
                                                           List<int> resourceIDs, List<int> resourceRows,
                                                           bool overrideDialNoClashes, bool overrideResourceOverflows)
@@ -1927,9 +1928,9 @@ namespace BridgeOpsClient
                         {
                             string json = sr.Serialise(conferenceIDs);
                             stream.WriteByte(Glo.CLIENT_CONFERENCE_QUICK_MOVE);
+                            stream.WriteByte((byte)(duplicate ? 1 : 0));
                             sr.WriteAndFlush(stream, sd.sessionID);
                             sr.WriteAndFlush(stream, sr.Serialise(conferenceIDs));
-                            sr.WriteAndFlush(stream, sr.Serialise(conferenceNames));
                             sr.WriteAndFlush(stream, sr.Serialise(starts));
                             sr.WriteAndFlush(stream, sr.Serialise(ends));
                             sr.WriteAndFlush(stream, sr.Serialise(resourceIDs));
@@ -1953,7 +1954,7 @@ namespace BridgeOpsClient
                                     if (DialNoClashConfirm(res))
                                     {
                                         stream.Close();
-                                        return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,
+                                        return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               true, overrideResourceOverflows);
                                     }
@@ -1965,7 +1966,7 @@ namespace BridgeOpsClient
                                     if (ResourceOverflowConfirm(res))
                                     {
                                         stream.Close();
-                                        return SendConferenceQuickMoveRequest(conferenceIDs, conferenceNames,
+                                        return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               overrideDialNoClashes, true);
                                     }

@@ -2922,9 +2922,9 @@ internal class BridgeOpsAgent
 
         try
         {
+            bool duplicate = stream.ReadByte() == 1;
             string sessionID = sr.ReadString(stream);
             List<int>? conferenceIDs = sr.Deserialise<List<int>>(sr.ReadString(stream));
-            List<string>? conferenceNames = sr.Deserialise<List<string>>(sr.ReadString(stream));
             List<DateTime>? starts = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
             List<DateTime>? ends = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
             List<int>? resources = sr.Deserialise<List<int>>(sr.ReadString(stream));
@@ -2932,8 +2932,7 @@ internal class BridgeOpsAgent
             bool overrideDialNoClashes = stream.ReadByte() == 1;
             bool overrideResourceOverflows = stream.ReadByte() == 1;
 
-
-            if (conferenceIDs == null || conferenceNames == null || starts == null || ends == null ||
+            if (conferenceIDs == null || starts == null || ends == null ||
                 resources == null || resourceRows == null ||
                 conferenceIDs.Count != starts.Count ||
                 conferenceIDs.Count != ends.Count ||
@@ -2949,8 +2948,11 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     return;
                 }
-                if (!CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_CONFERENCES,
-                                                                       Glo.PERMISSION_EDIT))
+                // Duplicate needs create permissions, move needs edit.
+                if (duplicate && !CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_CONFERENCES,
+                                                         Glo.PERMISSION_CREATE) ||
+                    !duplicate && !CheckSessionPermission(clientSessions[sessionID], Glo.PERMISSION_CONFERENCES,
+                                                         Glo.PERMISSION_EDIT))
                 {
                     stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                     return;
@@ -2963,16 +2965,63 @@ internal class BridgeOpsAgent
             sqlConnect.Open();
 
             List<string> coms = new();
+            if (duplicate)
+            {
+                // Create a separate insert statement for each conference, customised with the new values.
+                List<string> sameCols = new();
+                HashSet<string> changingCols = new() { Glo.Tab.CONFERENCE_ID,
+                                                       Glo.Tab.CONFERENCE_START, Glo.Tab.CONFERENCE_END,
+                                                       Glo.Tab.RESOURCE_ID, Glo.Tab.CONFERENCE_RESOURCE_ROW,
+                                                       Glo.Tab.CONFERENCE_CREATION_LOGIN,
+                                                       Glo.Tab.CONFERENCE_CREATION_TIME,
+                                                       Glo.Tab.CONFERENCE_EDIT_LOGIN, Glo.Tab.CONFERENCE_EDIT_TIME};
+                foreach (string s in ColumnRecord.conference.Keys)
+                    if (!changingCols.Contains(s))
+                        sameCols.Add(s);
+                string confSame = string.Join(", ", sameCols);
+                // We can drop the ID here, as we don't want to use it.
+                changingCols.Remove(Glo.Tab.CONFERENCE_ID);
+                string confChanging = string.Join(", ", changingCols);
+
+                // Do much the same as above but this time for connections, as all connection and disconnection times
+                // will need nullifying.
+                sameCols = new();
+                changingCols = new() { Glo.Tab.CONNECTION_ID, Glo.Tab.CONFERENCE_ID,
+                                       Glo.Tab.CONNECTION_TIME_FROM, Glo.Tab.CONNECTION_TIME_TO };
+                foreach (string s in ColumnRecord.connection.Keys)
+                    if (!changingCols.Contains(s))
+                        sameCols.Add(s);
+                string connSame = string.Join(", ", sameCols);
+
+                coms.Add("DECLARE @DuplicateConfID INT; ");
+                for (int i = 0; i < conferenceIDs.Count; ++i)
+                {
+                    coms.Add($"INSERT INTO Conference ({confSame}, {confChanging})" +
+                             $"SELECT {confSame}, '{SqlAssist.DateTimeToSQL(starts[i])}', " +
+                                            $"'{SqlAssist.DateTimeToSQL(ends[i])}', " +
+                                            $"{resources[i]}, {resourceRows[i]}," +
+                                            $"{loginID}, '{SqlAssist.DateTimeToSQL(DateTime.Now)}', NULL, NULL " +
+                             $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i].ToString()}; " +
+                              "SET @DuplicateConfID = SCOPE_IDENTITY(); " +
+                             $"INSERT INTO Connection ({connSame}, {Glo.Tab.CONFERENCE_ID}, " +
+                                                     $"{Glo.Tab.CONNECTION_TIME_TO}, {Glo.Tab.CONNECTION_TIME_FROM})" +
+                             $"SELECT {connSame}, @DuplicateConfID, NULL, NULL " +
+                             $"FROM Connection WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i].ToString()};");
+                }
+            }
             // Update all conferences.
-            for (int i = 0; i < conferenceIDs.Count; ++i)
-                coms.Add("UPDATE Conference " +
-                        $"SET {Glo.Tab.CONFERENCE_START} = '{SqlAssist.DateTimeToSQL(starts[i], false)}', " +
-                            $"{Glo.Tab.CONFERENCE_END} = '{SqlAssist.DateTimeToSQL(ends[i], false)}', " +
-                            $"{Glo.Tab.RESOURCE_ID} = {resources[i]}, " +
-                            $"{Glo.Tab.CONFERENCE_RESOURCE_ROW} = {resourceRows[i]}, " +
-                            $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
-                            $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
-                        $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
+            else
+            {
+                for (int i = 0; i < conferenceIDs.Count; ++i)
+                    coms.Add("UPDATE Conference " +
+                            $"SET {Glo.Tab.CONFERENCE_START} = '{SqlAssist.DateTimeToSQL(starts[i], false)}', " +
+                                $"{Glo.Tab.CONFERENCE_END} = '{SqlAssist.DateTimeToSQL(ends[i], false)}', " +
+                                $"{Glo.Tab.RESOURCE_ID} = {resources[i]}, " +
+                                $"{Glo.Tab.CONFERENCE_RESOURCE_ROW} = {resourceRows[i]}, " +
+                                $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {loginID}, " +
+                                $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL(DateTime.Now, false)}' " +
+                            $"WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i]}; ");
+            }
 
             // Check for various clashes. Row clashes cannot be bypassed, dial no and resource overflows can.
             coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect));

@@ -2873,6 +2873,10 @@ END
                 return "";
         }
 
+        public static string DateTimeToSQL(DateTime dateTime)
+        {
+            return DateTimeToSQL(dateTime, false, false);
+        }
         public static string DateTimeToSQL(DateTime dateTime, bool dateOnly)
         {
             return DateTimeToSQL(dateTime, dateOnly, false);

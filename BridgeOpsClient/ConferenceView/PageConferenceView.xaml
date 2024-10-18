@@ -75,9 +75,9 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Canvas Background="White"/>
-                <local:ScheduleResources Grid.Row="1" x:Name="schResources"/>
+                <local:ScheduleResources Grid.Row="1" x:Name="schResources"
+                                         MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"/>
             </Grid>
-            <local:ScheduleRuler Grid.Row="0" x:Name="schRuler" Grid.Column="1" VerticalAlignment="Top" Height="44"/>
             <GridSplitter Grid.Column="0" Width="5"/>
             <local:ScheduleView Grid.Column="1" x:Name="schView" Background="White"
                                 MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
@@ -85,17 +85,23 @@
                                 PreviewMouseWheel="schView_PreviewMouseWheel"
                                 KeyDown="schView_KeyDown"
                                 Focusable="True" Margin="0,44,0,0"
-                                ContextMenuOpening="mnuSchedule_ContextMenuOpening">
+                                ContextMenuOpening="mnuSchedule_ContextMenuOpening"
+                                LostFocus="schView_LostFocus">
                 <Canvas.ContextMenu>
                     <ContextMenu x:Name="mnuSchedule">
+                        <MenuItem x:Name="mnuScheduleRefresh" Header="Refresh" Click="mnuRefresh_Click"/>
+                        <Separator x:Name="mnuScheduleSepTwo"/>
                         <MenuItem x:Name="mnuScheduleCopy" Header="Copy" Click="mnuScheduleCopy_Click"/>
-                        <Separator/>
+                        <MenuItem x:Name="mnuSchedulePaste" Header="Paste" Click="mnuSchedulePaste_Click"/>
+                        <Separator x:Name="mnuScheduleSepOne"/>
                         <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
                         <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"/>
                     </ContextMenu>
                 </Canvas.ContextMenu>
             </local:ScheduleView>
-
+            <!-- The order of these elements seems to affect the render order, so the rule has to be here. -->
+            <local:ScheduleRuler Grid.Row="0" x:Name="schRuler" Grid.Column="1" VerticalAlignment="Top" Height="44"
+                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave" MouseEnter="schView_MouseLeave"/>
             <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
                            SizeChanged="scrollBar_SizeChanged" Margin="0 44 0 0"/>

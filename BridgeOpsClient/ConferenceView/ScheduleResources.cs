@@ -84,7 +84,7 @@ namespace BridgeOpsClient
                 }
 
                 // Highlight cursor resource.
-                if (view.cursor != null)
+                if (view.cursor != null && view.cursor.Value.X != -1 && view.cursor.Value.Y != -1)
                 {
                     double y = view.GetRowFromY(view.cursor.Value.Y, true);
 
