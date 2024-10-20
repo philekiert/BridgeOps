@@ -107,7 +107,12 @@ namespace BridgeOpsClient.DialogWindows
             req.length = length;
 
             if (App.SendConferenceAdjustment(req))
+            {
                 Close();
+                return true;
+            }
+            else
+                return false;
         }
     }
 }
