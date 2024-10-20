@@ -773,7 +773,7 @@ namespace BridgeOpsClient
                     drag = Drag.Scroll;
 
                     // Box select.
-                    if (CtrlDown())
+                    if (schView.currentConference == null)
                     {
                         drag = Drag.BoxSelect;
                         boxSelectFromX = schView.GetDateTimeFromX(mouseX);
@@ -927,6 +927,18 @@ namespace BridgeOpsClient
                         // schView.UpdateOverflowPoints(); will be called by SearchtimeFrame().
                     }
                 }
+                else if (schView.currentConference != null && !conferenceSelectionAffected && !dragMouseHADmoved)
+                {
+                    if (ShiftDown())
+                        schView.selectedConferences.Remove(schView.currentConference);
+                    else
+                        schView.selectedConferences = new() { schView.currentConference };
+                }
+                else if (!dragMouseHADmoved && schView.currentConference == null)
+                {
+                    schView.selectedConferences.Clear();
+                    boxSelectConferences.Clear();
+                }
                 else if (wasDraggingBoxSelect)
                 {
                     lock (conferenceListLock)
@@ -943,18 +955,6 @@ namespace BridgeOpsClient
                                 schView.selectedConferences = boxSelectConferences.ToList();
                         }
                     }
-                    boxSelectConferences.Clear();
-                }
-                else if (schView.currentConference != null && !conferenceSelectionAffected && !dragMouseHADmoved)
-                {
-                    if (ShiftDown())
-                        schView.selectedConferences.Remove(schView.currentConference);
-                    else
-                        schView.selectedConferences = new() { schView.currentConference };
-                }
-                else if (!dragMouseHADmoved && schView.currentConference == null)
-                {
-                    schView.selectedConferences.Clear();
                     boxSelectConferences.Clear();
                 }
 
@@ -1377,6 +1377,13 @@ namespace BridgeOpsClient
             if (e.Key == Key.Delete)
             {
                 mnuScheduleDelete_Click(null, null);
+            }
+            if (CtrlDown())
+            {
+                if (e.Key == Key.C)
+                {
+                    mnuScheduleCopy_Click(null, null);
+                }
             }
         }
 

@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2010.Excel;
@@ -354,15 +355,23 @@ namespace BridgeOpsClient
                     if (loginID == sd.loginID && us.settingsPulled)
                     {
                         settings = "";
+                        // Store the data table column configurations.
                         for (int i = 0; i < us.dataOrder.Length; ++i)
                             settings += string.Join(";", us.dataOrder[i]) + "\n";
                         for (int i = 0; i < us.dataHidden.Length; ++i)
                             settings += string.Join(";", us.dataHidden[i]) + "\n";
                         for (int i = 0; i < us.dataWidths.Length; ++i)
                             settings += string.Join(";", us.dataWidths[i]) + "\n";
+                        // Store the conference and database view state and widths.
                         settings += (int)BridgeOpsClient.MainWindow.oldConfWidth + ";" +
                                     (int)BridgeOpsClient.MainWindow.oldDataWidth + ";" +
-                                    BridgeOpsClient.MainWindow.viewState;
+                                    BridgeOpsClient.MainWindow.viewState + "\n";
+                        // Loosely store the database view pane states.
+                        foreach (PageDatabaseView pdv in PageDatabase.views)
+                        {
+                            settings += pdv.cmbTable.Text + ";";
+                            settings += pdv.GetRowDefinitionForFrame().Height.Value.ToString() + ";";
+                        }
                         us = new();
                     }
 
@@ -599,7 +608,7 @@ namespace BridgeOpsClient
             }
             else
                 // An error will display if SendConferenceSelectRequest() fails.
-                return false;   
+                return false;
         }
 
         static bool columnRecordPulInProgress = false;
@@ -731,6 +740,13 @@ namespace BridgeOpsClient
                     us.settingsPulled = true;
                     try
                     {
+                        // Set defaults.
+#if DEBUG
+                        BridgeOpsClient.MainWindow.viewState = 1;
+#else
+                        BridgeOpsClient.MainWindow.viewState = 2;
+#endif
+
                         stream.WriteByte(Glo.CLIENT_PULL_USER_SETTINGS);
                         {
                             sr.WriteAndFlush(stream, sd.sessionID);
@@ -739,46 +755,66 @@ namespace BridgeOpsClient
 
                             string[] settings = result.Split("\n");
 
-                            if (settings.Length != (us.dataOrder.Length * 3) + 1)
-                                return false;
-
                             double dVal;
-                            for (int i = 0; i < us.dataOrder.Length; ++i)
+                            if (settings[0] != "")
                             {
-                                // Order strings.
-                                us.dataOrder[i] = settings[i].Split(";").ToList();
-                                us.dataWidths[i].Clear();
-                                us.dataHidden[i].Clear();
+                                try
+                                {
+                                    for (int i = 0; i < us.dataOrder.Length; ++i)
+                                    {
+                                        // Order strings.
+                                        us.dataOrder[i] = settings[i].Split(';').ToList();
+                                        us.dataWidths[i].Clear();
+                                        us.dataHidden[i].Clear();
 
-                                // Hidden bools.
-                                int index = i + us.dataOrder.Length;
-                                foreach (string s in settings[index].Split(";"))
-                                    us.dataHidden[i].Add(s == "True");
+                                        // Hidden bools.
+                                        int index = i + us.dataOrder.Length;
+                                        foreach (string s in settings[index].Split(';'))
+                                            us.dataHidden[i].Add(s == "True");
 
-                                // Width ints.
-                                index += us.dataOrder.Length;
-                                foreach (string s in settings[index].Split(";"))
-                                    if (double.TryParse(s, out dVal) && dVal >= 0)
-                                        us.dataWidths[i].Add(dVal);
+                                        // Width ints.
+                                        index += us.dataOrder.Length;
+                                        foreach (string s in settings[index].Split(';'))
+                                            if (double.TryParse(s, out dVal) && dVal >= 0)
+                                                us.dataWidths[i].Add(dVal);
+                                    }
+                                }
+                                catch { }
                             }
 
                             // Conference view width, database view width, then view state.
-                            string[] viewSplit = settings[us.dataOrder.Length * 3].Split(";");
-                            if (viewSplit.Length != 3)
-                                return false;
+                            int next = settings.Length - 2;
+                            if (next > 0)
+                            {
+                                string[] viewSplit = settings[next].Split(';');
+                                if (viewSplit.Length == 3)
+                                {
+                                    int iVal;
+                                    if (int.TryParse(viewSplit[0], out iVal))
+                                        BridgeOpsClient.MainWindow.oldConfWidth = iVal;
+                                    if (int.TryParse(viewSplit[1], out iVal))
+                                        BridgeOpsClient.MainWindow.oldDataWidth = iVal;
+                                    if (int.TryParse(viewSplit[2], out iVal) && iVal >= 0 && iVal <= 2)
+                                        BridgeOpsClient.MainWindow.viewState = iVal;
+                                }
+                            }
 
-                            int iVal;
-                            if (int.TryParse(viewSplit[0], out iVal))
-                                BridgeOpsClient.MainWindow.oldConfWidth = iVal;
-                            if (int.TryParse(viewSplit[1], out iVal))
-                                BridgeOpsClient.MainWindow.oldDataWidth = iVal;
-                            if (int.TryParse(viewSplit[2], out iVal) && iVal >= 0 && iVal <= 2)
-                                BridgeOpsClient.MainWindow.viewState = iVal;
+                            // Data view pane instances.
+                            ++next;
+                            try
+                            {
+                                if (BridgeOpsClient.MainWindow.pageDatabase == null)
+                                    PageDatabase.storedViewSettingsToApply = settings[next];
+                                else
+                                    BridgeOpsClient.MainWindow.pageDatabase.ApplyViewSettings(settings[next]);
 
-                            for (int i = 0; i < us.dataOrder.Length; ++i)
-                                if (us.dataOrder[i].Count != us.dataHidden[i].Count ||
-                                    us.dataOrder[i].Count != us.dataWidths[i].Count)
-                                    return false;
+                                // Verify table settings integrity.
+                                for (int i = 0; i < us.dataOrder.Length; ++i)
+                                    if (us.dataOrder[i].Count != us.dataHidden[i].Count ||
+                                        us.dataOrder[i].Count != us.dataWidths[i].Count)
+                                        return false;
+                            }
+                            catch { }
                         }
                     }
                     catch
@@ -2173,7 +2209,7 @@ namespace BridgeOpsClient
 
     public class UserSettings
     {
-        // These collections store the user's desired order and display settings for the database view.
+        // These collections store the user's desired order and display settings for SqlDataGrids.
         // Array indices:  0  Organisation
         //                 1  Asset
         //                 2  Contact

@@ -61,7 +61,11 @@ namespace BridgeOpsClient
 
             // Hide the conference bar buttons.
             grdMain.RowDefinitions[1].Height = new GridLength(0);
-#endif 
+#endif
+
+            pageDatabase = new PageDatabase(this);
+            frameConf.Content = new PageConferenceView();
+            frameData.Content = pageDatabase;
 
             grdConfData.Focus();
 
@@ -72,10 +76,6 @@ namespace BridgeOpsClient
                 SetIcon("/Resources/Icons/x20TitleBarIconDark.png");
             else
                 SetIcon("/Resources/Icons/x20TitleBarIcon.png");
-
-            frameConf.Content = new PageConferenceView();
-            pageDatabase = new PageDatabase(this);
-            frameData.Content = pageDatabase;
 
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
 

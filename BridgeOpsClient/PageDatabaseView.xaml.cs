@@ -59,6 +59,11 @@ namespace BridgeOpsClient
                 App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
         }
 
+        public RowDefinition GetRowDefinitionForFrame()
+        {
+            return containingPage.grdPanes.RowDefinitions[Grid.GetRow(containingFrame)];
+        }
+
         private void WipeCallback()
         {
             SetStatusBar();

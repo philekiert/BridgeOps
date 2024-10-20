@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,12 +13,36 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace BridgeOpsClient
 {
     public partial class PageDatabase : Page
     {
         MainWindow containingWindow;
+
+        // When settings are first read, MainWindow hasn't been initialised yet, so we need to store the settings and
+        // apply them below when the constructor is called.
+        public static string storedViewSettingsToApply = "";
+        public void ApplyViewSettings(string settings)
+        {
+            RemoveAllPanes();
+
+            string[] dataViewPanes = settings.Split(';');
+            for (int i = 0; i < dataViewPanes.Length - 1; i += 2)
+            {
+                int row = i / 2;
+                AddPane(row - 1);
+                views[row].cmbTable.Text = dataViewPanes[i];
+                double height;
+                if (double.TryParse(dataViewPanes[i + 1], out height))
+                    grdPanes.RowDefinitions[row].Height = new(height, GridUnitType.Star);
+            }
+
+            // This will be the case if user settings were blank or failed to be read.
+            if (grdPanes.Children.Count == 0)
+                AddPane(-1);
+        }
 
         // Store the views for easy toggling of +/- buttons.
         public static List<PageDatabaseView> views = new();
@@ -28,7 +53,9 @@ namespace BridgeOpsClient
         {
             this.containingWindow = containingWindow;
             InitializeComponent();
-            AddPane(-1);
+
+            // If settings are blank, the method will add a pane.
+            ApplyViewSettings(storedViewSettingsToApply);
         }
 
         public void AddPane(Frame element)
@@ -86,6 +113,14 @@ namespace BridgeOpsClient
             ResetTabIndices();
         }
 
+        // Never call this function and leave it that way, always add a pane after.
+        public void RemoveAllPanes()
+        {
+            grdPanes.RowDefinitions.Clear();
+            grdPanes.Children.Clear();
+            views.Clear();
+            paneCount = 0;
+        }
         public void RemovePane(Frame element)
         {
             int index = Grid.GetRow(element);
