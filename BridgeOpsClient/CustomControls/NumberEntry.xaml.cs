@@ -29,6 +29,9 @@ namespace BridgeOpsClient.CustomControls
         public void ToggleEnabled(bool enabled)
         {
             txtNumber.IsReadOnly = !enabled;
+            txtNumber.IsEnabled = enabled;
+            btnDecrement.IsEnabled = enabled;
+            btnIncrement.IsEnabled = enabled;
         }
 
         public string Text { get { return txtNumber.Text; } set { txtNumber.Text = value; } }

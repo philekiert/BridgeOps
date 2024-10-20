@@ -91,11 +91,16 @@
                     <ContextMenu x:Name="mnuSchedule">
                         <MenuItem x:Name="mnuScheduleRefresh" Header="Refresh" Click="mnuRefresh_Click"/>
                         <Separator x:Name="mnuScheduleSepOne"/>
-                        <MenuItem x:Name="mnuScheduleCopy" Header="Copy" Click="mnuScheduleCopy_Click"/>
-                        <MenuItem x:Name="mnuSchedulePaste" Header="Paste" Click="mnuSchedulePaste_Click"/>
+                        <MenuItem x:Name="mnuScheduleCopy" Header="Copy" Click="mnuScheduleCopy_Click"
+                                  InputGestureText="Ctrl+C"/>
+                        <MenuItem x:Name="mnuSchedulePaste" Header="Paste" Click="mnuSchedulePaste_Click"
+                                  InputGestureText="Ctrl+V"/>
                         <Separator x:Name="mnuScheduleSepTwo"/>
+                        <MenuItem x:Name="mnuScheduleUpdate" Header="Update" Click="mnuScheduleUpdate_Click"/>
+                        <MenuItem x:Name="mnuScheduleAdjust" Header="Adjust" Click="mnuScheduleAdjust_Click"/>
                         <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
-                        <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"/>
+                        <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"
+                                  InputGestureText="Del"/>
                     </ContextMenu>
                 </Canvas.ContextMenu>
             </local:ScheduleView>

@@ -1769,6 +1769,44 @@ END
         }
     }
 
+    public struct ConferenceAdjustment
+    {
+        public string sessionID;
+        public int columnRecordID;
+
+        public TimeSpan? startTime;
+        public TimeSpan? move;
+        public TimeSpan? length;
+
+        public List<string>? dialAdd;
+        public List<string>? dialRemove;
+        public string? dialHost;
+        public List<string>? dialTest;
+
+        private void Prepare()
+        {
+            if (dialAdd != null)
+                SqlAssist.SecureValue(dialAdd!);
+            if (dialRemove != null)
+                SqlAssist.SecureValue(dialRemove!);
+            if (dialHost != null)
+                dialHost = SqlAssist.SecureValue(dialHost);
+            if (dialTest != null)
+                SqlAssist.SecureValue(dialTest!);
+        }
+
+        public string SqlUdpate()
+        {
+            Prepare();
+
+            List<string> commands = new();
+
+
+
+            return "";
+        }
+    }
+
     struct Resource
     {
         public string sessionID;

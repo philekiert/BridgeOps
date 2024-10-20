@@ -68,7 +68,7 @@ namespace BridgeOpsClient.DialogWindows
         private void Set(bool isTrue)
         {
             try
-            { DialogResult = true; }
+            { DialogResult = isTrue; }
             catch { } // No need to handle this.
         }
 
@@ -83,9 +83,14 @@ namespace BridgeOpsClient.DialogWindows
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && btnCancel.Visibility != Visibility.Visible)
+            if (e.Key == Key.Enter)
             {
                 Set(true);
+                Close();
+            }
+            else if (e.Key == Key.Escape)
+            {
+                Set(false);
                 Close();
             }
         }

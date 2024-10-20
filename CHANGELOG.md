@@ -3,6 +3,7 @@
   
 ## 0.5.4
 ### Added
+- Each user's data pane selection is now persistent across sessions.
 - Added != and IS NOT operators to the select query builder.
 - Holding Ctrl while clicking the add tab button in the select query builder now clones the current tab.
 - The select builder now makes use of VARCHAR columns' allow lists for conditions where either the = or the != operators are being used.

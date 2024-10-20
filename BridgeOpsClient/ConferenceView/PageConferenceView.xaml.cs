@@ -319,6 +319,7 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
+            mnuScheduleUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleCancel.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
 
@@ -766,6 +767,12 @@ namespace BridgeOpsClient
                 {
                     drag = Drag.Scroll;
                     ((IInputElement)sender).CaptureMouse();
+                }
+                else if (e.ChangedButton == MouseButton.Right)
+                {
+                    if (schView.currentConference != null &&
+                        !schView.selectedConferences.Contains(schView.currentConference))
+                        schView.selectedConferences = new() { schView.currentConference };
                 }
                 else if (e.ChangedButton == MouseButton.Left)
                 {
@@ -1384,6 +1391,10 @@ namespace BridgeOpsClient
                 {
                     mnuScheduleCopy_Click(null, null);
                 }
+                if (e.Key == Key.V)
+                {
+                    mnuSchedulePaste_Click(null, null);
+                }
             }
         }
 
@@ -1401,6 +1412,8 @@ namespace BridgeOpsClient
                 mnuScheduleCopy.Visibility = Visibility.Collapsed;
                 mnuSchedulePaste.Visibility = Visibility.Visible;
                 mnuScheduleSepTwo.Visibility = Visibility.Collapsed;
+                mnuScheduleAdjust.Visibility = Visibility.Collapsed;
+                mnuScheduleUpdate.Visibility = Visibility.Collapsed;
                 mnuScheduleCancel.Visibility = Visibility.Collapsed;
                 mnuScheduleDelete.Visibility = Visibility.Collapsed;
 
@@ -1414,6 +1427,8 @@ namespace BridgeOpsClient
             mnuScheduleCopy.Visibility = Visibility.Visible;
             mnuSchedulePaste.Visibility = Visibility.Collapsed;
             mnuScheduleSepTwo.Visibility = Visibility.Visible;
+            mnuScheduleAdjust.Visibility = Visibility.Visible;
+            mnuScheduleUpdate.Visibility = Visibility.Visible;
             mnuScheduleCancel.Visibility = Visibility.Visible;
             mnuScheduleDelete.Visibility = Visibility.Visible;
 
@@ -1433,6 +1448,26 @@ namespace BridgeOpsClient
             }
         }
 
+        private void mnuScheduleUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = new();
+            lock (conferenceListLock)
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id.ToString());
+            UpdateMultiple um = new(7, "Conference", ColumnRecord.orderedConference, Glo.Tab.CONFERENCE_ID, ids, false);
+            um.ShowDialog();
+        }
+
+        private void mnuScheduleAdjust_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = new();
+            lock (conferenceListLock)
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id.ToString());
+            DialogWindows.AdjustConferences adjust = new(ids);
+            adjust.ShowDialog();
+        }
+
         private void mnuScheduleDelete_Click(object? sender, RoutedEventArgs? e)
         {
             try
@@ -1443,11 +1478,13 @@ namespace BridgeOpsClient
                     List<Conference> confs = SelectedConferences;
                     foreach (Conference c in SelectedConferences)
                         ids.Add(c.id.ToString());
-                    if (ids.Count == 0)
+                    if (ids.Count == 0 && e != null) // e will be null if called by KeyDown.
                         ids.Add(schView.lastCurrentConferenceID.ToString());
                 }
                 // Clear the selection, as this will cause the program to hold onto these references even though they
                 // won't be returned next time frame search.
+                if (ids.Count == 0)
+                    return;
                 schView.selectedConferences.Clear();
                 if (App.DeleteConfirm(ids.Count > 1))
                     App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false);
@@ -1504,6 +1541,7 @@ namespace BridgeOpsClient
 
                 lock (conferenceListLock)
                 {
+
                     List<Conference> selected = SelectedConferences;
                     if (selected.Count == 0)
                         selected.Add(conferences[schView.lastCurrentConferenceID]);
@@ -1532,7 +1570,7 @@ namespace BridgeOpsClient
             catch { App.DisplayError("Due to an unknown error, conference could not be copied."); }
         }
 
-        private void mnuSchedulePaste_Click(object sender, RoutedEventArgs e)
+        private void mnuSchedulePaste_Click(object? sender, RoutedEventArgs? e)
         {
             DateTime startX = schView.GetDateTimeFromX(schView.lastCursor.X, schView.DisplayTimeZoom());
             startX = schView.SnapDateTime(startX, schView.DisplayTimeZoom());

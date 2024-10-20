@@ -44,6 +44,8 @@ namespace BridgeOpsClient.CustomControls
         {
             txtHour.IsReadOnly = !enabled;
             txtMinute.IsReadOnly = !enabled;
+            txtHour.IsEnabled = enabled;
+            txtMinute.IsEnabled = enabled;
         }
 
         public void SetTime(long ticks) { SetTime(new TimeSpan(ticks)); }

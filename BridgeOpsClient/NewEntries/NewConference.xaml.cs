@@ -668,22 +668,16 @@ namespace BridgeOpsClient
         {
             // Vet all inputs.
 
-            bool Abort(string message)
-            {
-                App.DisplayError(message);
-                return false;
-            }
-
             if (txtTitle.Text == null || txtTitle.Text == "")
-                return Abort("Must enter a conference title.");
+                return App.Abort("Must enter a conference title.");
             DateTime? start = dtpStart.GetDateTime();
             if (start == null)
-                return Abort("Must select a start date and time.");
+                return App.Abort("Must select a start date and time.");
             DateTime? end = dtpEnd.GetDateTime();
             if (end == null)
-                return Abort("Must select an end date and time.");
+                return App.Abort("Must select an end date and time.");
             if (start >= end)
-                return Abort("End cannot be before the start date and time.");
+                return App.Abort("End cannot be before the start date and time.");
             int indexResourceNameSplit = cmbResource.Text.LastIndexOf(' ');
             string resourceName;
             int resourceID = -1;
@@ -693,7 +687,7 @@ namespace BridgeOpsClient
                 resourceName = cmbResource.Text.Remove(indexResourceNameSplit);
                 if (resourceName == "" || !int.TryParse(cmbResource.Text.Substring(indexResourceNameSplit + 1),
                                                                                    out resourceRow))
-                    return Abort("Must select a valid resource.");
+                    return App.Abort("Must select a valid resource.");
                 --resourceRow; // Row names add 1 to the row number for user readability.
                 bool foundResource = false;
                 foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources.Values)
@@ -706,7 +700,7 @@ namespace BridgeOpsClient
                     }
                 }
                 if (!foundResource)
-                    return Abort("Must select a valid resource.");
+                    return App.Abort("Must select a valid resource.");
             }
 
             // Set the ID as null if we're creating, otherwise use the ID.
@@ -715,7 +709,7 @@ namespace BridgeOpsClient
             if (!edit)
                 conferenceIdNullable = null;
             else if (!int.TryParse(id, out conferenceId))
-                return Abort("Could not determine conference ID.");
+                return App.Abort("Could not determine conference ID.");
             else
                 conferenceIdNullable = conferenceId;
 
@@ -723,7 +717,7 @@ namespace BridgeOpsClient
             foreach (Connection c in connections)
             {
                 if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
-                    return Abort("All connection rows must have a dial number selected.");
+                    return App.Abort("All connection rows must have a dial number selected.");
 
                 Conference.Connection confC = new Conference.Connection(conferenceIdNullable,
                                                                         c.dialNo, c.orgRef != null,
@@ -740,7 +734,7 @@ namespace BridgeOpsClient
                     confC.disconnected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpDisconnected.GetTime()!.Value.Ticks);
 
                 if (confC.connected != null && confC.disconnected != null && confC.connected > confC.disconnected)
-                    return Abort("Connection times must be before disconnection times.");
+                    return App.Abort("Connection times must be before disconnection times.");
 
                 conferenceConnections.Add(confC);
             }

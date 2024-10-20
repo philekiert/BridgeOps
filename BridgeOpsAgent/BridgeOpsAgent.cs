@@ -883,6 +883,8 @@ internal class BridgeOpsAgent
                     ClientConferenceSelect(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_QUICK_MOVE)
                     ClientConferenceQuickMove(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_CONFERENCE_ADJUST)
+                    ClientConferenceAdjust(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -3099,5 +3101,11 @@ internal class BridgeOpsAgent
             if (sqlConnect.State == ConnectionState.Open)
                 sqlConnect.Close();
         }
+    }
+
+    // Permission restricted
+    private static void ClientConferenceAdjust(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        ConferenceAdjustment req = sr.Deserialise<ConferenceAdjustment>(sr.ReadString(stream));
     }
 }

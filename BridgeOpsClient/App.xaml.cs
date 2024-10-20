@@ -72,6 +72,13 @@ namespace BridgeOpsClient
             catch { return false; }
         }
 
+        // This is a handy function to have, as a lot of other functions display an error and then return false.
+        public static bool Abort(string message)
+        {
+            DisplayError(message);
+            return false;
+        }
+
         public static bool DialNoClashConfirm(SelectResult selectRes)
         {
             try
@@ -2000,11 +2007,6 @@ namespace BridgeOpsClient
             }
         }
 
-        //public static bool SendConferenceMultipleInsert(List<SendReceiveClasses.Conference> confs)
-        //{
-
-        //}
-
         public static bool SendConferenceSelectRequest(List<string> conferenceIDs,
                                                        out List<SendReceiveClasses.Conference> confs)
         {
@@ -2048,6 +2050,47 @@ namespace BridgeOpsClient
                     {
                         DisplayError("Could not run or return conference query.");
                         confs = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
+        public static bool SendConferenceAdjustment(ConferenceAdjustment req)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_CONFERENCE_ADJUST);
+                            sr.WriteAndFlush(stream, sr.Serialise(req));
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                return true;
+                            }
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                return false;
+                            }
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not run conference adjustment.");
                         return false;
                     }
                     finally
@@ -2215,6 +2258,9 @@ namespace BridgeOpsClient
         //                 2  Contact
         //                 3  Asset (Organisation links table)
         //                 4  Contact (Organisation links table)
+        //                 5  User (Settings menu)
+        //                 6  Column (Settings menu)
+        //                 7  Conference
         public List<string>[] dataOrder = new List<string>[7];
         public List<bool>[] dataHidden = new List<bool>[7];
         public List<double>[] dataWidths = new List<double>[7];
