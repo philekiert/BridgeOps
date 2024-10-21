@@ -852,7 +852,16 @@ namespace BridgeOpsClient
 
         private void schView_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (drag != Drag.None &&
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                CancelAllDrags(schView);
+                // This should run on mouse down, but if right clicking out of a context menu into another, that
+                // doesn't trigger for some reason.
+                if (schView.currentConference != null &&
+                    !schView.selectedConferences.Contains(schView.currentConference))
+                    schView.selectedConferences = new() { schView.currentConference };
+            }
+            else if (drag != Drag.None &&
                 (e.ChangedButton == MouseButton.Middle ||
                  e.ChangedButton == MouseButton.Left))
             {
@@ -1412,7 +1421,8 @@ namespace BridgeOpsClient
                 mnuScheduleCopy.Visibility = Visibility.Collapsed;
                 mnuSchedulePaste.Visibility = Visibility.Visible;
                 mnuScheduleSepTwo.Visibility = Visibility.Collapsed;
-                mnuScheduleAdjust.Visibility = Visibility.Collapsed;
+                mnuScheduleAdjustTime.Visibility = Visibility.Collapsed;
+                mnuScheduleAdjustConnections.Visibility = Visibility.Collapsed;
                 mnuScheduleUpdate.Visibility = Visibility.Collapsed;
                 mnuScheduleCancel.Visibility = Visibility.Collapsed;
                 mnuScheduleDelete.Visibility = Visibility.Collapsed;
@@ -1427,7 +1437,8 @@ namespace BridgeOpsClient
             mnuScheduleCopy.Visibility = Visibility.Visible;
             mnuSchedulePaste.Visibility = Visibility.Collapsed;
             mnuScheduleSepTwo.Visibility = Visibility.Visible;
-            mnuScheduleAdjust.Visibility = Visibility.Visible;
+            mnuScheduleAdjustTime.Visibility = Visibility.Visible;
+            mnuScheduleAdjustConnections.Visibility = Visibility.Visible;
             mnuScheduleUpdate.Visibility = Visibility.Visible;
             mnuScheduleCancel.Visibility = Visibility.Visible;
             mnuScheduleDelete.Visibility = Visibility.Visible;
@@ -1458,13 +1469,23 @@ namespace BridgeOpsClient
             um.ShowDialog();
         }
 
-        private void mnuScheduleAdjust_Click(object sender, RoutedEventArgs e)
+        private void mnuScheduleAdjustTime_Click(object sender, RoutedEventArgs e)
         {
             List<string> ids = new();
             lock (conferenceListLock)
                 foreach (Conference c in SelectedConferences)
                     ids.Add(c.id.ToString());
-            DialogWindows.AdjustConferences adjust = new(ids);
+            DialogWindows.AdjustConferenceTimes adjust = new(ids);
+            adjust.ShowDialog();
+        }
+
+        private void mnuScheduleAdjustConnections_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = new();
+            lock (conferenceListLock)
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id.ToString());
+            DialogWindows.AdjustConferenceConnections adjust = new(ids);
             adjust.ShowDialog();
         }
 

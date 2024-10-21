@@ -1,4 +1,4 @@
-﻿<local:CustomWindow x:Class="BridgeOpsClient.DialogWindows.AdjustConferences"
+﻿<local:CustomWindow x:Class="BridgeOpsClient.DialogWindows.AdjustConferenceTimes"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Conference Adjustement" SizeToContent="WidthAndHeight">
-    <Grid Margin="10 10 10 10">
+        Title="Time Adjustment" SizeToContent="WidthAndHeight"
+        UseLayoutRounding="True" ResizeMode="NoResize">
+    <Grid Margin="15 15 10 15">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="90"/>
             <ColumnDefinition Width="Auto"/>
@@ -17,25 +18,28 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <CheckBox x:Name="chkStartTime" Content="Start Time" Grid.Row="0" VerticalAlignment="Center"
                   Click="chkTime_Click"/>
         <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Vertical" VerticalAlignment="Center">
-            <CheckBox x:Name="chkMove" Content="Move" Grid.Row="1" VerticalAlignment="Center"
+            <CheckBox x:Name="chkMove" Content="Move" Grid.Row="2" VerticalAlignment="Center"
                       Click="chkTime_Click"/>
-            <ComboBox x:Name="cmbMoveDirection" SelectedIndex="0" Grid.Row="1" Width="62"
+            <ComboBox x:Name="cmbMoveDirection" SelectedIndex="0" Grid.Row="2" Width="62"
                       VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 5 0 0">
                 <ComboBoxItem Content="Future"/>
                 <ComboBoxItem Content="Past"/>
             </ComboBox>
         </StackPanel>
-        <CheckBox x:Name="chkLength" Content="Length" Grid.Row="2" VerticalAlignment="Center"
+        <CheckBox x:Name="chkEndTime" Content="End Time" Grid.Row="2" VerticalAlignment="Center"
+                  Click="chkTime_Click" Margin="0 0 0 15"/>
+        <CheckBox x:Name="chkLength" Content="Length" Grid.Row="3" VerticalAlignment="Center"
                   Click="chkTime_Click"/>
         <customcontrols:TimePicker x:Name="timStartTime" Grid.Column="1" Grid.Row="0" />
         <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Vertical">
             <StackPanel Orientation="Horizontal" Margin="0 15 0 0">
                 <customcontrols:NumberEntry x:Name="numWeeks" Width="50"/>
-                <Label Content="Weeks" Width="60" Margin="0 0 10 0"/>
+                <Label Content="Weeks" Width="50" Margin="0 0 0 0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0 5 0 0">
                 <customcontrols:NumberEntry x:Name="numDays" Width="50"/>
@@ -50,8 +54,9 @@
                 <Label Content="Minutes"/>
             </StackPanel>
         </StackPanel>
-        <customcontrols:TimePicker x:Name="timLength" Grid.Column="1" Grid.Row="2" />
-        <Button Content="Adjust" Grid.Row="3" Grid.ColumnSpan="2" HorizontalAlignment="Left"
+        <customcontrols:TimePicker x:Name="timEndTime" Grid.Column="1" Grid.Row="2" Margin="0 0 0 15"/>
+        <customcontrols:TimePicker x:Name="timLength" Grid.Column="1" Grid.Row="3" />
+        <Button Content="Adjust" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Left"
                 Height="20" Width="70" Margin="0 20 0 0" Click="Button_Click"/>
     </Grid>
 </local:CustomWindow>

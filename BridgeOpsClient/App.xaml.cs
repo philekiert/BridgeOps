@@ -2062,6 +2062,8 @@ namespace BridgeOpsClient
 
         public static bool SendConferenceAdjustment(ConferenceAdjustment req)
         {
+            req.sessionID = sd.sessionID;
+            req.columnRecordID = ColumnRecord.columnRecordID;
             lock (streamLock)
             {
                 using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
@@ -2083,6 +2085,34 @@ namespace BridgeOpsClient
                             }
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
+                                string reason = sr.ReadString(stream);
+
+                                // If there was an overridable clash, ask first and then re-run the request if the
+                                // user desires.
+                                if (reason == Glo.DIAL_CLASH_WARNING)
+                                {
+                                    SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                    if (DialNoClashConfirm(res))
+                                    {
+                                        stream.Close();
+                                        req.overrideDialNoClashes = true;
+                                        return SendConferenceAdjustment(req);
+                                    }
+                                    else return false;
+                                }
+                                else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
+                                {
+                                    SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                    if (ResourceOverflowConfirm(res))
+                                    {
+                                        stream.Close();
+                                        req.overrideResourceOverflows = true;
+                                        return SendConferenceAdjustment(req);
+                                    }
+                                    else return false;
+                                }
+                                else
+                                    DisplayError(ErrorConcat("Could not update record. See Error:", reason));
                                 return false;
                             }
                         }

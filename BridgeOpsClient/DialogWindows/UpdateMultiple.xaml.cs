@@ -75,6 +75,9 @@ namespace BridgeOpsClient
             datTemplate = (DataTemplate)FindResource("fieldDat");
             timTemplate = (DataTemplate)FindResource("fieldTim");
             chkTemplate = (DataTemplate)FindResource("fieldChk");
+
+            btnAdd_Click(null, null);
+            rows[0].button.IsEnabled = false;
         }
 
         private void UpdateColumnList()
@@ -105,9 +108,12 @@ namespace BridgeOpsClient
                 if (rows[i].value != null)
                     Grid.SetRow((UIElement)rows[i].value!, i);
             }
+
+            if (rows.Count == 1)
+                rows[0].button.IsEnabled = false;
         }
 
-        private void btnAdd_Click(object sender, RoutedEventArgs e)
+        private void btnAdd_Click(object? sender, RoutedEventArgs? e)
         {
             int row = grdFields.RowDefinitions.Count;
 
@@ -123,6 +129,7 @@ namespace BridgeOpsClient
             grdFields.Children.Add(removeButton);
             grdFields.Children.Add(selector);
 
+            rows[0].button.IsEnabled = true;
             btnUpdate.IsEnabled = true;
         }
 

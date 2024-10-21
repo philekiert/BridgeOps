@@ -372,7 +372,7 @@ namespace BridgeOpsClient
                         // Update any conference windows with the new information if needed.
                         foreach (Window w in Application.Current.Windows)
                             if (w is NewConference nc)
-                                foreach (NewConference.Connection connection in nc.connections)
+                                foreach (var connection in nc.connections)
                                     if (connection.orgId == id)
                                     {
                                         // Doesn't remove if made unavailable at this time.

@@ -1965,7 +1965,7 @@ internal class BridgeOpsAgent
                 return;
             }
 
-            // If conferences are being upgraded, we may need to check for clashes and overflows.
+            // If conferences are being updated, we may need to check for clashes and overflows.
             if (req.table == "Conference")
             {
                 List<string> coms = new() { req.SqlUpdate() };
@@ -3106,6 +3106,82 @@ internal class BridgeOpsAgent
     // Permission restricted
     private static void ClientConferenceAdjust(NetworkStream stream, SqlConnection sqlConnect)
     {
-        ConferenceAdjustment req = sr.Deserialise<ConferenceAdjustment>(sr.ReadString(stream));
+        // Only used for Conference updates.
+        SelectResult? dialNoClashes = null;
+        SelectResult? resourceOverflows = null;
+
+        try
+        {
+            sqlConnect.Open();
+            ConferenceAdjustment req = sr.Deserialise<ConferenceAdjustment>(sr.ReadString(stream));
+
+            if (!CheckSessionValidity(req.sessionID, columnRecordID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            if (!CheckSessionPermission(clientSessions[req.sessionID],
+                                        Glo.PERMISSION_CONFERENCES, Glo.PERMISSION_EDIT))
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                return;
+            }
+
+            List<string> coms = new()
+            {
+                "CREATE TABLE #IDs (ID INT); ",
+                req.SqlUdpate()
+            };
+
+            coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect));
+            if (!req.overrideDialNoClashes)
+                coms.Add(Conference.SqlCheckForDialNoClashes(req.ids, sqlConnect));
+            if (!req.overrideResourceOverflows)
+                coms.Add(Conference.SqlCheckForResourceOverflows(req.ids, sqlConnect));
+
+            SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
+
+            SqlDataReader reader = com.ExecuteReader();
+            reader.NextResult();
+            if (!req.overrideDialNoClashes)
+            {
+                dialNoClashes = new(reader, true);
+                reader.NextResult();// This is where the exception will be thrown.
+            }
+            if (!req.overrideResourceOverflows)
+            {
+                resourceOverflows = new(reader, true);
+                reader.NextResult();// This is where the exception will be thrown.
+            }
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+        }
+        catch (Exception e)
+        {
+            if (dialNoClashes != null && dialNoClashes.Value.rows.Count > 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.DIAL_CLASH_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(dialNoClashes));
+            }
+            else if (resourceOverflows != null && resourceOverflows.Value.rows.Count > 0)
+            {
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+                sr.WriteAndFlush(stream, Glo.RESOURCE_OVERFLOW_WARNING);
+                sr.WriteAndFlush(stream, sr.Serialise(resourceOverflows));
+            }
+            else
+            {
+                LogError("Couldn't update conference, see error:", e);
+                SafeFail(stream, e.Message);
+            }
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
     }
 }

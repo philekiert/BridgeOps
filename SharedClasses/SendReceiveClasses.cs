@@ -1773,15 +1773,23 @@ END
     {
         public string sessionID;
         public int columnRecordID;
+        public List<int> ids;
+
+        public bool overrideDialNoClashes;
+        public bool overrideResourceOverflows;
 
         public TimeSpan? startTime;
         public TimeSpan? move;
+        public TimeSpan? endTime;
         public TimeSpan? length;
 
         public List<string>? dialAdd;
         public List<string>? dialRemove;
         public string? dialHost;
         public List<string>? dialTest;
+
+        public enum Intent { Times, Connections }
+        public Intent intent;
 
         private void Prepare()
         {
@@ -1799,11 +1807,60 @@ END
         {
             Prepare();
 
-            List<string> commands = new();
+            List<string> idStr = ids.Select(i => i.ToString()).ToList();
+            string com = "";
 
+            if (intent == Intent.Times)
+            {
+                List<string> timeSets = new();
+                com = "UPDATE Conference SET ";
 
+                if (startTime != null)
+                    timeSets.Add($"{Glo.Tab.CONFERENCE_START} = " +
+                                 $"CAST(CAST({Glo.Tab.CONFERENCE_START} AS DATE) AS DATETIME) + " +
+                                 $"CAST('{SqlAssist.TimeSpanToSQL((TimeSpan)startTime)}' AS DATETIME)");
+                else if (move != null)
+                    timeSets.Add($"{Glo.Tab.CONFERENCE_START} = " +
+                                 $"DATEADD(MINUTE, {((TimeSpan)move).TotalMinutes}, {Glo.Tab.CONFERENCE_START})");
 
-            return "";
+                if (endTime != null)
+                    timeSets.Add($"{Glo.Tab.CONFERENCE_END} = " +
+                                 $"CAST(CAST({Glo.Tab.CONFERENCE_END} AS DATE) AS DATETIME) + " +
+                                 $"CAST('{SqlAssist.TimeSpanToSQL((TimeSpan)endTime)}' AS DATETIME)");
+                else if (length != null)
+                {
+                    if (startTime == null && move == null)
+                    {
+                        timeSets.Add($"{Glo.Tab.CONFERENCE_END} = " +
+                                     $"DATEADD(MINUTE, {((TimeSpan)length).TotalMinutes}, " +
+                                     $"{Glo.Tab.CONFERENCE_START})");
+                    }
+                    if (startTime != null)
+                    {
+                        timeSets.Add($"{Glo.Tab.CONFERENCE_END} = " +
+                                     $"DATEADD(MINUTE, {((TimeSpan)length).TotalMinutes}, " +
+                                     $"CAST(CAST({Glo.Tab.CONFERENCE_START} AS DATE) AS DATETIME) + " +
+                                     $"CAST('{SqlAssist.TimeSpanToSQL((TimeSpan)startTime)}' AS DATETIME))");
+                    }
+                    else if (move != null)
+                    {
+                        timeSets.Add($"{Glo.Tab.CONFERENCE_END} = " +
+                                     $"DATEADD(MINUTE, {((TimeSpan)length).TotalMinutes}, " +
+                                     $"DATEADD(MINUTE, {((TimeSpan)move).TotalMinutes}, {Glo.Tab.CONFERENCE_START}))");
+                    }
+                }
+                else if (move != null)
+                {
+                    timeSets.Add($"{Glo.Tab.CONFERENCE_END} = " +
+                                 $"DATEADD(MINUTE, {((TimeSpan)move).TotalMinutes}, {Glo.Tab.CONFERENCE_END})");
+                }
+
+                if (timeSets.Count > 0)
+                    com += $"{string.Join(", ", timeSets)} " +
+                           $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)});";
+            }
+
+            return com;
         }
     }
 
