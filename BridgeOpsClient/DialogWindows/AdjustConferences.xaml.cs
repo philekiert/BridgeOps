@@ -76,14 +76,14 @@ namespace BridgeOpsClient.DialogWindows
             timLength.ToggleEnabled(enabled);
         }
 
-        private bool Button_Click(object sender, RoutedEventArgs e)
+        private bool Adjust()
         {
             TimeSpan? startTime = timStartTime.GetTime();
             TimeSpan? move = null;
             TimeSpan? length = timLength.GetTime();
 
             if (chkStartTime.IsChecked == true && startTime == null)
-                    return App.Abort("Start time is checked, but no time has been entered.");
+                return App.Abort("Start time is checked, but no time has been entered.");
             if (chkMove.IsChecked == true)
             {
                 int? weeks = numDays.GetNumber();
@@ -99,7 +99,7 @@ namespace BridgeOpsClient.DialogWindows
                     move = -move;
             }
             if (chkLength.IsChecked == true && length == null)
-                    return App.Abort("Length is checked, but no time has been entered.");
+                return App.Abort("Length is checked, but no time has been entered.");
 
             SendReceiveClasses.ConferenceAdjustment req = new();
             req.startTime = startTime;
@@ -113,6 +113,12 @@ namespace BridgeOpsClient.DialogWindows
             }
             else
                 return false;
+        }
+
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Adjust();
         }
     }
 }

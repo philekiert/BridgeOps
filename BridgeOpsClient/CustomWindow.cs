@@ -258,7 +258,17 @@ namespace BridgeOpsClient
 
         private void CustomWindow_StateChanged(object? sender, EventArgs e)
         {
-            ToggleCornerRadius(WindowState != WindowState.Maximized);
+            bool maximised = WindowState == WindowState.Maximized;
+            ToggleCornerRadius(!maximised);
+
+            // The resize border interferes with the clickable area for dragging restoring the window when maximised.
+            var windowChrome = new WindowChrome
+            {
+                // I have no idea why - 5, but it overshoots otherwise. Possible the border thickness size is included.
+                CaptionHeight = titleBarHeight - 5,
+                ResizeBorderThickness = new Thickness(maximised ? 0 : 6)
+            };
+            WindowChrome.SetWindowChrome(this, windowChrome);
         }
 
         private void UnhoverTitleBarButtons(bool unhover)
@@ -531,7 +541,7 @@ namespace BridgeOpsClient
             public RECT(int left, int top, int right, int bottom)
             {
                 this.Left = left;
-                this.Top = top;
+                this.Top = top - 1; // Cut off the top border so that the X button extends to the top of the screen.
                 this.Right = right;
                 this.Bottom = bottom;
             }
