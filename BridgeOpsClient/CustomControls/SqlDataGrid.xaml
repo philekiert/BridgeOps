@@ -18,6 +18,7 @@
               SelectionChanged="dtg_SelectionChanged" Loaded="dtg_Loaded"
               RequestBringIntoView="dtg_RequestBringIntoView" MouseDoubleClick="dtg_MouseDoubleClick"
               MouseLeftButtonDown="dtg_MouseLeftButtonDown"
+              PreviewMouseLeftButtonDown="dtg_PreviewMouseLeftButtonDown"
               ColumnReordered="dtg_ColumnReordered"
               KeyDown="dtg_KeyDown" IsTabStop="False" UseLayoutRounding="True"
               CanUserDeleteRows="False" CanUserAddRows="False"

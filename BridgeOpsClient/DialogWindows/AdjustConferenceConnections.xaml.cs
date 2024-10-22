@@ -34,10 +34,10 @@ namespace BridgeOpsClient.DialogWindows
 
             string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
                                         (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
-            string orgRefFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
-                                        (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
-            string orgNameFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
-                                        (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
+            string orgRefFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF,
+                                        (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF]!);
+            string orgNameFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME,
+                                        (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
 
             SelectResult res;
             if (!App.SendConnectionSelectRequest(ids, out res))

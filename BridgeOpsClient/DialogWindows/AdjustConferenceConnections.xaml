@@ -6,16 +6,16 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Connection Adjustment" SizeToContent="WidthAndHeight"
+        Title="Connection Adjustment" Width="600" Height="500"
         UseLayoutRounding="True" ResizeMode="CanResize" MinWidth="500" MinHeight="500">
     <Grid Margin="10 10 10 10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="4*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="5*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Label Content="Add Connections" FontSize="14" FontWeight="SemiBold" Margin="0 0 0 0"
@@ -54,7 +54,7 @@
         <Border Grid.Row="3" Background="LightGray" Height="1" Grid.ColumnSpan="2" Margin="0 5 0 15"/>
         <Label Content="Remove Connections" FontSize="14" FontWeight="SemiBold" Margin="0 0 0 0"
                BorderThickness="0 0 0 1" BorderBrush="LightSteelBlue" Grid.Row="4"/>
-        <customcontrols:SqlDataGrid x:Name="dtgRemove" Grid.Row="5" Margin="-10 0 -10 0"/>
+        <customcontrols:SqlDataGrid x:Name="dtgRemove" Grid.Row="5" Margin="-10 0 -10 0" AddCheckBoxes="True"/>
 
         <Button x:Name="btnAdjust" Content="Adjust" Grid.Row="6" Click="btnAdjust_Click"
                 Margin="5 10 0 10" Width="80" HorizontalAlignment="Left"/>

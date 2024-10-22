@@ -21,6 +21,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Collections.Specialized;
 using System.Globalization;
 using static System.Resources.ResXFileRef;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 
 namespace BridgeOpsClient.CustomControls
@@ -96,6 +98,13 @@ namespace BridgeOpsClient.CustomControls
         public void btnWipe_Click(object sender, EventArgs e) { Wipe(); }
 
         List<Row> rowsBinder = new();
+
+        public bool checkBox = false;
+        public bool AddCheckBoxes
+        {
+            get { return checkBox; }
+            set { checkBox = value; }
+        }
 
         // I have allowed more than one dictionary to be fed to this array, because sometimes you want a select result
         // that joins two tables. The downside is that tables sharing column names need to use the same type and
@@ -225,15 +234,26 @@ namespace BridgeOpsClient.CustomControls
                 }
             }
 
+            if (checkBox)
+            {
+                var checkBoxColumn = new DataGridCheckBoxColumn
+                {
+                    Header = "Remove",
+                    Binding = new System.Windows.Data.Binding("IsSelected"),
+                    IsReadOnly = false
+                };
+                dtg.Columns.Insert(0, checkBoxColumn);
+                dtg.SelectionUnit = DataGridSelectionUnit.FullRow;
+            }
+
             dtg.ItemsSource = rowsBinder;
 
             // This sets up the event for detecting column resizes.
-            foreach (DataGridTextColumn column in dtg.Columns)
-            {
-                // Courtesy of Copilot.
-                System.ComponentModel.DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty,
-                    typeof(DataGridColumn)).AddValueChanged(column, dtg_ColumnResized!);
-            }
+            foreach (object column in dtg.Columns)
+                if (column is DataGridTextColumn dgtc)
+                    // Courtesy of Copilot.
+                    System.ComponentModel.DependencyPropertyDescriptor.FromProperty(DataGridColumn.WidthProperty,
+                        typeof(DataGridColumn)).AddValueChanged(dgtc, dtg_ColumnResized!);
 
             dtg.ContextMenu = mnuData;
         }
@@ -363,13 +383,28 @@ namespace BridgeOpsClient.CustomControls
         // When clicking on an empty space on the DataGrid, select item 0 if present.
         private void dtg_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+
+            //// Select a row even if the columns don't extend that far.
+            //var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
+            //if (hit != null)
+            //{
+            //    DependencyObject obj = hit.VisualHit;
+            //    while (obj != null && !(obj is DataGridRow))
+            //        obj = VisualTreeHelper.GetParent(obj);
+
+            //    if (obj is DataGridRow row)
+            //        dtg.SelectedItem = row.Item;
+            //}
+        }
+
+        private void dtg_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
             // A mousedown on the DataGrid won't be triggered if it's on a data row or header.
             if (dtg.Items.Count != 0 && dtg.SelectedIndex == -1)
             {
-                dtg.SelectedIndex = 0;
+                dtg.SelectedIndex = dtg.Items.Count - 1;
                 dtg.Focus(); // Otherwise the item highlight is greyed out.
             }
-
 
             // Select a row even if the columns don't extend that far.
             var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
@@ -380,7 +415,16 @@ namespace BridgeOpsClient.CustomControls
                     obj = VisualTreeHelper.GetParent(obj);
 
                 if (obj is DataGridRow row)
+                {
                     dtg.SelectedItem = row.Item;
+
+                    // While we're in here, switch checkboxes on and off if present.
+                    if (checkBox)
+                    {
+                        CheckBox box = (CheckBox)dtg.Columns[0].GetCellContent(row);
+                        box.IsChecked = box.IsChecked != true;
+                    }
+                }
             }
         }
 
@@ -403,10 +447,15 @@ namespace BridgeOpsClient.CustomControls
             remove { RemoveHandler(SelectionChangedEvent, value); }
         }
 
+        bool ignoreChanged = false;
         private void dtg_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // When the DataGrid's selection changes, raise the custom event.
-            RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
+            // For now, assume that we never need selection on checkbox grids.
+            if (checkBox)
+                dtg.UnselectAllCells(); // For some reason, UnselectAll() doesn't do the trick.
+            else
+                // When the DataGrid's selection changes, raise the custom event.
+                RaiseEvent(new RoutedEventArgs(SelectionChangedEvent));
         }
 
         #endregion
