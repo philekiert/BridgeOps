@@ -885,6 +885,8 @@ internal class BridgeOpsAgent
                     ClientConferenceQuickMove(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_ADJUST)
                     ClientConferenceAdjust(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT_CONNECTIONS)
+                    ClientConferenceSelectConnections(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -3177,6 +3179,54 @@ internal class BridgeOpsAgent
                 LogError("Couldn't update conference, see error:", e);
                 SafeFail(stream, e.Message);
             }
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientConferenceSelectConnections(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            // No need to get the column record ID as we're selecting all core columns.
+            List<string> conferenceIdStrs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
+
+            SqlAssist.SecureValue(conferenceIdStrs.Cast<string?>().ToList());
+            string ids = string.Join(", ", conferenceIdStrs);
+
+            // Get all connections present.
+            string command = @$"
+SELECT DISTINCT
+	n.{Glo.Tab.CONNECTION_IS_TEST} AS Test,
+	n.{Glo.Tab.DIAL_NO},
+	CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 THEN o.{Glo.Tab.ORGANISATION_REF} ELSE NULL END,
+	CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 THEN o.{Glo.Tab.ORGANISATION_NAME} ELSE NULL END,
+    COUNT(n.{Glo.Tab.CONNECTION_ID}) AS Count
+FROM Connection n
+LEFT JOIN Organisation o ON o.{Glo.Tab.DIAL_NO} = n.{Glo.Tab.DIAL_NO}
+WHERE {Glo.Tab.CONFERENCE_ID} IN ({ids})
+GROUP BY
+    n.{Glo.Tab.CONNECTION_IS_TEST},
+    n.{Glo.Tab.DIAL_NO},
+    n.{Glo.Tab.CONNECTION_IS_MANAGED},
+    o.{Glo.Tab.ORGANISATION_REF},
+    o.{Glo.Tab.ORGANISATION_NAME};";
+
+            SqlCommand com = new(command, sqlConnect);
+            sqlConnect.Open();
+            SelectResult resConnectionsAll = new(com.ExecuteReader(), false);
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(resConnectionsAll));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't load conference, see error:", e);
+            SafeFail(stream, e.Message);
         }
         finally
         {

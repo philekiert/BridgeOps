@@ -135,9 +135,9 @@ namespace BridgeOpsClient
             return 0;
         }
 
-        public enum StatusContext { None, Overflow, Clash }
-        public StatusContext statusBarContext = StatusContext.None;
-        public void SetStatus() { stkStatus.Children.Clear(); statusBarContext = StatusContext.None; }
+        public enum StatusContext { None, Overflow, Clash, Selection, Info }
+        public StatusContext statusContext = StatusContext.None;
+        public void SetStatus() { stkStatus.Children.Clear(); statusContext = StatusContext.None; }
         public void SetStatus(StatusContext context, string message, bool bold, bool alignLeft)
         { SetStatus(context, new List<string>() { message }, new() { bold }); }
         public void SetStatus(StatusContext context, List<string> messages, List<bool> bold)
@@ -156,7 +156,7 @@ namespace BridgeOpsClient
                 label.Content = messages[i];
                 stkStatus.Children.Add(label);
             }
-            statusBarContext = context;
+            statusContext = context;
         }
 
         // Used for creating the overflow warning graphics in Render().

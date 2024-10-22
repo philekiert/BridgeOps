@@ -106,6 +106,7 @@ public static class Glo
     public const int CLIENT_CONFERENCE_QUICK_MOVE = 73;
     public const int CLIENT_CONFERENCE_DUPLICATE_SERIES = 74;
     public const int CLIENT_CONFERENCE_ADJUST = 75;
+    public const int CLIENT_CONFERENCE_SELECT_CONNECTIONS = 76;
 
     public const int SERVER_CLIENT_NUDGE = 0;
     public const int SERVER_COLUMN_RECORD_UPDATED = 1;

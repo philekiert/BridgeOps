@@ -19,6 +19,8 @@ using ClosedXML.Excel;
 using static BridgeOpsClient.CustomControls.SqlDataGrid;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Collections.Specialized;
+using System.Globalization;
+using static System.Resources.ResXFileRef;
 
 
 namespace BridgeOpsClient.CustomControls
@@ -170,6 +172,12 @@ namespace BridgeOpsClient.CustomControls
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:hh\\:mm}";
                     }
+                    else if ((col.type != null && col.type.ToUpper() == "BOOLEAN") ||
+                             (rows.Count > 0 && rows[0].Count > 0 && rows[0][count] is bool))
+                    {
+                        header.Binding = new Binding(string.Format("items[{0}]", count))
+                        { Converter = new BooleanToYesNoConverter() };
+                    }
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                 }
@@ -228,6 +236,24 @@ namespace BridgeOpsClient.CustomControls
             }
 
             dtg.ContextMenu = mnuData;
+        }
+
+        // Present bools in line with the rest of the application.
+        public class BooleanToYesNoConverter : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is bool boolValue)
+                    return boolValue ? "Yes" : "No";
+                return "No";
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is string stringValue)
+                    return stringValue.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                return false;
+            }
         }
 
         public Dictionary<string, int> maxLengthOverrides = new();

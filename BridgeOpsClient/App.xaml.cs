@@ -1141,7 +1141,7 @@ namespace BridgeOpsClient
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not update record. See Error:", reason));
+                                DisplayError(ErrorConcat("Could not update record.", reason));
                             return false;
                         }
                     }
@@ -1271,7 +1271,7 @@ namespace BridgeOpsClient
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not update record. See Error:", reason));
+                                DisplayError(ErrorConcat("Could not update record.", reason));
                             return false;
                         }
                         else throw new Exception();
@@ -1323,7 +1323,7 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError(ErrorConcat("Could not delete record. See Error:", sr.ReadString(stream)));
+                            DisplayError(ErrorConcat("Could not delete record.", sr.ReadString(stream)));
                         }
                         else throw new Exception();
                     }
@@ -2112,8 +2112,7 @@ namespace BridgeOpsClient
                                     else return false;
                                 }
                                 else
-                                    DisplayError(ErrorConcat("Could not update record. See Error:", reason));
-                                return false;
+                                    DisplayError(ErrorConcat("Could not update record.", reason));
                             }
                         }
                         throw new Exception();
@@ -2121,6 +2120,50 @@ namespace BridgeOpsClient
                     catch
                     {
                         DisplayError("Could not run conference adjustment.");
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
+        public static bool SendConnectionSelectRequest(List<string> conferenceIDs, out SelectResult res)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    if (stream == null)
+                        throw new();
+                    try
+                    {
+                        stream.WriteByte(Glo.CLIENT_CONFERENCE_SELECT_CONNECTIONS);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        sr.WriteAndFlush(stream, sr.Serialise(conferenceIDs));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                            ConvertUnknownJsonObjectsToRespectiveTypes(res.columnTypes, res.rows);
+                            return true;
+                        }
+                        if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError(ErrorConcat("Could not update record.", sr.ReadString(stream)));
+                            res = new();
+                            return false;
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not select connection list.");
+                        res = new();
                         return false;
                     }
                     finally

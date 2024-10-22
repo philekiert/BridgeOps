@@ -7,18 +7,56 @@
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
         Title="Connection Adjustment" SizeToContent="WidthAndHeight"
-        UseLayoutRounding="True" ResizeMode="CanResize" MinWidth="500" MinHeight="400">
+        UseLayoutRounding="True" ResizeMode="CanResize" MinWidth="500" MinHeight="500">
     <Grid Margin="10 10 10 10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Label Content="Add Connections" FontSize="14" FontWeight="SemiBold" Margin="0 0 0 0"
                BorderThickness="0 0 0 1" BorderBrush="LightSteelBlue"/>
+        <Grid Grid.Row="1" x:Name="grdHeaders" Focusable="False">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="34"/>
+                <ColumnDefinition Width="32" MaxWidth="32"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Button x:Name="btnAddConnection" Grid.Row="0" Margin="10 10 0 5" Padding="0 -2 0 0"
+                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                        Style="{StaticResource plus-button}" Click="btnAddConnection_Click"/>
+            <Label Grid.Column="2" Margin="0 8 0 0" Content="Test" FontWeight="SemiBold"/>
+            <Label Grid.Column="5" Margin="0 8 0 0" Content="Site" FontWeight="SemiBold"/>
+        </Grid>
+        <!-- Connections -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Focusable="False"
+                      RequestBringIntoView="ScrollViewer_RequestBringIntoView"
+                      ScrollChanged="ScrollViewer_ScrollChanged">
+            <Grid Grid.Row="0" x:Name="grdConnections" Focusable="False">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="34"/>
+                    <ColumnDefinition Width="32" MaxWidth="32"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+            </Grid>
+        </ScrollViewer>
 
-        <Button x:Name="btnAdjust" Content="Adjust" Grid.Row="4" Click="btnAdjust_Click"/>
+        <Border Grid.Row="3" Background="LightGray" Height="1" Grid.ColumnSpan="2" Margin="0 5 0 15"/>
+        <Label Content="Remove Connections" FontSize="14" FontWeight="SemiBold" Margin="0 0 0 0"
+               BorderThickness="0 0 0 1" BorderBrush="LightSteelBlue" Grid.Row="4"/>
+        <customcontrols:SqlDataGrid x:Name="dtgRemove" Grid.Row="5" Margin="-10 0 -10 0"/>
+
+        <Button x:Name="btnAdjust" Content="Adjust" Grid.Row="6" Click="btnAdjust_Click"
+                Margin="5 10 0 10" Width="80" HorizontalAlignment="Left"/>
     </Grid>
 </local:CustomWindow>

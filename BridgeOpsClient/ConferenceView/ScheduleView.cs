@@ -262,6 +262,10 @@ namespace BridgeOpsClient
 
         protected override void OnRender(DrawingContext dc)
         {
+            StatusContext statusContext = StatusContext.None;
+            List<string> status = new();
+            List<bool> statusBold = new();
+
             if (conferenceView == null)
                 return;
 
@@ -405,9 +409,11 @@ namespace BridgeOpsClient
                                     {
                                         Rect r = new(0, startY, ActualWidth, endY - startY);
                                         dc.DrawRectangle(brsOverflowCheck, null, r);
-                                        conferenceView.SetStatus(PageConferenceView.StatusContext.Overflow,
-                                                                 new() { "Connections:  0", "Conferences:  0" },
-                                                                 new() { false, false });
+                                        status.Add("Connections:  0");
+                                        status.Add("Conferences:  0");
+                                        statusBold.Add(false);
+                                        statusBold.Add(false);
+                                        statusContext = StatusContext.Overflow;
                                     }
                                     else
                                     {
@@ -453,28 +459,16 @@ namespace BridgeOpsClient
                                                 dc.DrawRectangle(brsOverflowCheck, null, r);
 
                                                 // Write messages to status bar.
-                                                List<string> statusMessages = new()
-                                                    {
-                                                        $"Connections:  {connections}/{ri.connectionCapacity}",
-                                                        $"Conferences:  {confs}/{ri.conferenceCapacity}"
-                                                    };
-                                                List<bool> bold = new()
-                                                    {
-                                                        connections > ri.connectionCapacity,
-                                                        confs > ri.conferenceCapacity
-                                                    };
-                                                conferenceView.SetStatus(StatusContext.Overflow,
-                                                                         statusMessages, bold);
+                                                statusContext = StatusContext.Overflow;
+                                                status.Add($"Connections:  {connections}/{ri.connectionCapacity}");
+                                                status.Add($"Conferences:  {confs}/{ri.conferenceCapacity}");
+                                                statusBold.Add(connections > ri.connectionCapacity);
+                                                statusBold.Add(confs > ri.conferenceCapacity);
                                                 break;
                                             }
                                         }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                if (conferenceView.statusBarContext == StatusContext.Overflow)
-                                    conferenceView.SetStatus();
                             }
                         }
                     }
@@ -693,12 +687,14 @@ namespace BridgeOpsClient
                                     else
                                         times = c.start.ToString("dd/MM/yyyy hh:mm") + " - " +
                                                 c.end.ToString("dd/MM/yyyy hh:mm");
-                                    if (conferenceView.statusBarContext == StatusContext.None)
-                                        conferenceView.SetStatus(StatusContext.None,
-                                            new() { c.title,
-                                                    times,
-                                                    "Dial Count: " + c.dialNos.Count.ToString()},
-                                            new() { false, false, false });
+                                    if (statusContext == StatusContext.None)
+                                    {
+                                        statusContext = StatusContext.Info;
+                                        status.Add("Title: " + c.title);
+                                        status.Add(times);
+                                        status.Add("Dial Count: " + c.dialNos.Count.ToString());
+                                        statusBold.AddRange(new bool[] { false, false, false });
+                                    }
 
                                     isMouseOverConference = true;
                                     if (selectedConferences.Contains(c) ||
@@ -796,9 +792,6 @@ namespace BridgeOpsClient
                                 dc.Pop();
                             }
                         }
-
-                        if (!cursorOverConference && conferenceView.statusBarContext == StatusContext.None)
-                            conferenceView.SetStatus();
                     }
 
 
@@ -874,14 +867,14 @@ namespace BridgeOpsClient
                                 if (cc.dialNos.Contains(s) && !clashingDialNos.Contains(s))
                                     clashingDialNos.Add(s);
 
-                    List<string> status = new();
-                    List<bool> bold = new();
+                    status = new();
+                    statusBold = new();
 
                     // First add the clashes in bold.
                     if (clashingDialNos.Count > 0)
                     {
                         status.Add("Clashes:  " + string.Join(", ", clashingDialNos));
-                        bold.Add(true);
+                        statusBold.Add(true);
                     }
 
                     // Then add the rest as normal.
@@ -893,19 +886,25 @@ namespace BridgeOpsClient
                     {
                         status.Add((clashingDialNos.Count > 0 ? "Others:  " : "Dial Nos:  ") +
                                    string.Join(", ", notClashing));
-                        bold.Add(false);
+                        statusBold.Add(false);
                     }
 
                     if (clashingDialNos.Count == 0 && notClashing.Count == 0)
                     {
                         status.Add("Dial Nos:  [None]");
-                        bold.Add(false);
+                        statusBold.Add(false);
                     }
 
-                    conferenceView.SetStatus(StatusContext.Clash, status, bold);
+                    statusContext = StatusContext.Clash;
                 }
-                else if (conferenceView.statusBarContext == StatusContext.Clash)
-                    conferenceView.SetStatus();
+
+                // Set the accumulated status messages, including the selection count if needed.
+                if (selectedConferences.Count > 0)
+                {
+                    status.Insert(0, "Selected: " + selectedConferences.Count.ToString());
+                    statusBold.Insert(0, false);
+                }
+                conferenceView.SetStatus(statusContext, status, statusBold);
             }
         }
 
