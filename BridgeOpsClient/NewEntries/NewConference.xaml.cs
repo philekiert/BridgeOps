@@ -352,7 +352,7 @@ namespace BridgeOpsClient
                 // Add borders if the dial number clashes with another conference.
                 if (confStart != null && confEnd != null)
                     foreach (PageConferenceView.Conference c in PageConferenceView.conferences.Values)
-                        if (c.end > confStart && c.start < confEnd && c.id.ToString() != id)
+                        if (c.end > confStart && c.start < confEnd && c.id.ToString() != id && !c.cancelled)
                         {
                             // Print only the required information, and usually dates will not be necessary.
                             string s = "";
@@ -723,7 +723,7 @@ namespace BridgeOpsClient
                                                                         c.dialNo, c.orgRef != null,
                                                                         c.dtpConnected.GetDateTime(),
                                                                         c.dtpDisconnected.GetDateTime(),
-                                                                        c.row, c.chkIsTest.IsChecked == true);
+                                                                        c.row + 1, c.chkIsTest.IsChecked == true);
                 confC.connectionID = c.connectionId;
 
                 // If the date pickers aren't visible and times are set, automatically set them to the day of the
@@ -775,7 +775,7 @@ namespace BridgeOpsClient
                     SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.conference, c).type));
 
             if (edit)
-                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference, false, false);
+                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference, false, false, false);
             else
                 return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, new List<Conference>() { conference });
         }

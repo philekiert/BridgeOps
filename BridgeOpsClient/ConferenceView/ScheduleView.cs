@@ -559,7 +559,6 @@ namespace BridgeOpsClient
                 lock (conferenceListLock)
                     lock (clashIDs)
                     {
-                        bool cursorOverConference = false;
                         Point cursorPoint = new();
                         if (cursor != null)
                             cursorPoint = cursor.Value;
@@ -675,7 +674,6 @@ namespace BridgeOpsClient
                                     ((dragMove || dragResize) && c == currentConference))
                                 {
                                     // Record this for switching off the status further down  if needed.
-                                    cursorOverConference = true;
                                     lastCurrentConferenceID = c.id;
                                     currentConference = c;
 
@@ -729,6 +727,7 @@ namespace BridgeOpsClient
                                     dc.DrawRectangle(brushSolid, borderSelected,
                                         new Rect(area.X + .5d, area.Y + .5d,
                                                  area.Width - 1, area.Height - 1));
+                                    textBrush = PrintBrushFromLuminance(brushSolid);
                                     thickBorder = true;
                                 }
                                 else
@@ -751,6 +750,7 @@ namespace BridgeOpsClient
                                         iconTray = new Rect(area.Left + .5d, area.Top + .5d, 14d, area.Height - 1d);
 
                                     dc.DrawRectangle(brushSolid, null, iconTray);
+                                    textBrush = PrintBrushFromLuminance(brushSolid);
 
                                     // Draw the play symbol.
                                     PathGeometry play = symbolPlay.Clone();
@@ -859,9 +859,9 @@ namespace BridgeOpsClient
                 // Draw the dial clash tooltip.
                 if (cursor != null && dDown && currentConference != null)
                 {
-                    PageConferenceView.Conference cc = currentConference;
+                    Conference cc = currentConference;
                     HashSet<string> clashingDialNos = new();
-                    foreach (PageConferenceView.Conference c in conferences.Values)
+                    foreach (Conference c in conferences.Values)
                         if (cc.end > c.start && cc.start < c.end && cc.id != c.id)
                             foreach (string s in c.dialNos)
                                 if (cc.dialNos.Contains(s) && !clashingDialNos.Contains(s))

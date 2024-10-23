@@ -99,6 +99,7 @@
                         <MenuItem x:Name="mnuScheduleUpdate" Header="Update" Click="mnuScheduleUpdate_Click"/>
                         <MenuItem x:Name="mnuScheduleAdjustTime" Header="Adjust Time" Click="mnuScheduleAdjustTime_Click"/>
                         <MenuItem x:Name="mnuScheduleAdjustConnections" Header="Adjust Connections" Click="mnuScheduleAdjustConnections_Click"/>
+                        <MenuItem x:Name="mnuScheduleSetHost" Header="Set Host" Click="mnuScheduleSetHost_Click"/>
                         <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
                         <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"
                                   InputGestureText="Del"/>

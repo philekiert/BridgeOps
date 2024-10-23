@@ -79,6 +79,18 @@ namespace BridgeOpsClient
             return false;
         }
 
+        public static bool RowClashConfirm()
+        {
+            try
+            {
+                DialogWindows.DialogBox dialog = new(Glo.ROW_CLASH_WARNING + " Do you wish to resolve automatically?",
+                                                     "Row Clash",
+                                                 DialogWindows.DialogBox.Buttons.YesNo);
+                dialog.ShowDialog();
+                return dialog.DialogResult == true;
+            }
+            catch { return false; }
+        }
         public static bool DialNoClashConfirm(SelectResult selectRes)
         {
             try
@@ -837,19 +849,22 @@ namespace BridgeOpsClient
 
         public static bool SendInsert(byte fncByte, object toSerialise)
         {
-            return SendInsert(fncByte, toSerialise, false, false, out _);
+            return SendInsert(fncByte, toSerialise, false, false, false, out _);
         }
         public static bool SendInsert(byte fncByte, object toSerialise,
+                                      bool resolveRowClashes,
                                       bool overrideDialNoClashes, bool overrideResourceOverflows)
         {
-            return SendInsert(fncByte, toSerialise, overrideDialNoClashes, overrideResourceOverflows, out _);
+            return SendInsert(fncByte, toSerialise,
+                              resolveRowClashes, overrideDialNoClashes, overrideResourceOverflows, out _);
         }
 
         public static bool SendInsert(byte fncByte, object toSerialise, out string returnID)
         {
-            return SendInsert(fncByte, toSerialise, false, false, out returnID);
+            return SendInsert(fncByte, toSerialise, false, false, false, out returnID);
         }
         public static bool SendInsert(byte fncByte, object toSerialise,
+                                      bool resolveRowClashes,
                                       bool overrideDialNoClashes, bool overrideResourceOverflows, out string returnID)
         {
             // Carry out soft duplicate checks if needed.
@@ -934,6 +949,7 @@ namespace BridgeOpsClient
                         sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
                         if (fncByte == Glo.CLIENT_NEW_CONFERENCE)
                         {
+                            stream.WriteByte((byte)(resolveRowClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                         }
@@ -965,15 +981,27 @@ namespace BridgeOpsClient
                         {
                             string reason = sr.ReadString(stream);
                             // If there was an overridable clash, ask first and then re-run the request if the
-                            // user desires.
-                            if (reason == Glo.DIAL_CLASH_WARNING)
+                            // user desires.if (reason == Glo.DIAL_CLASH_WARNING)
+                            if (reason == Glo.ROW_CLASH_WARNING)
+                            {
+                                returnID = "";
+                                if (RowClashConfirm())
+                                {
+                                    stream.Close();
+                                    return SendInsert(fncByte, toSerialise,
+                                                      true, overrideDialNoClashes, overrideResourceOverflows);
+                                }
+                                else return false;
+                            }
+                            else if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 returnID = "";
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendInsert(fncByte, toSerialise, true, overrideResourceOverflows);
+                                    return SendInsert(fncByte, toSerialise,
+                                                      resolveRowClashes, true, overrideResourceOverflows);
                                 }
                                 else return false;
                             }
@@ -984,7 +1012,8 @@ namespace BridgeOpsClient
                                 if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendInsert(fncByte, toSerialise, overrideDialNoClashes, true);
+                                    return SendInsert(fncByte, toSerialise,
+                                                      resolveRowClashes, overrideDialNoClashes, true);
                                 }
                                 else return false;
                             }
@@ -1008,8 +1037,9 @@ namespace BridgeOpsClient
         }
 
         public static bool SendUpdate(byte fncByte, object toSerialise)
-        { return SendUpdate(fncByte, toSerialise, false, false); }
+        { return SendUpdate(fncByte, toSerialise, false, false, false); }
         public static bool SendUpdate(byte fncByte, object toSerialise,
+                                      bool resolveRowClashes,
                                       bool overrideDialNoClashes, bool overrideResourceOverflows)
         {
             // Carry out soft duplicate checks if needed.
@@ -1100,6 +1130,7 @@ namespace BridgeOpsClient
                         sr.WriteAndFlush(stream, sr.Serialise(toSerialise));
                         if (fncByte == Glo.CLIENT_UPDATE_CONFERENCE)
                         {
+                            stream.WriteByte((byte)(resolveRowClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                         }
@@ -1120,13 +1151,24 @@ namespace BridgeOpsClient
 
                             // If there was an overridable clash, ask first and then re-run the request if the
                             // user desires.
-                            if (reason == Glo.DIAL_CLASH_WARNING)
+                            if (reason == Glo.ROW_CLASH_WARNING)
+                            {
+                                if (RowClashConfirm())
+                                {
+                                    stream.Close();
+                                    return SendUpdate(fncByte, toSerialise,
+                                                      true, overrideDialNoClashes, overrideResourceOverflows);
+                                }
+                                else return false;
+                            }
+                            else if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendUpdate(fncByte, toSerialise, true, overrideResourceOverflows);
+                                    return SendUpdate(fncByte, toSerialise,
+                                                      resolveRowClashes, true, overrideResourceOverflows);
                                 }
                                 else return false;
                             }
@@ -1136,7 +1178,8 @@ namespace BridgeOpsClient
                                 if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendUpdate(fncByte, toSerialise, overrideDialNoClashes, true);
+                                    return SendUpdate(fncByte, toSerialise,
+                                                      resolveRowClashes, overrideDialNoClashes, true);
                                 }
                                 else return false;
                             }
@@ -1160,9 +1203,10 @@ namespace BridgeOpsClient
         }
 
         public static bool SendUpdate(UpdateRequest req)
-        { return SendUpdate(req, false, false); }
+        { return SendUpdate(req, false, false, false); }
         public static bool SendUpdate(UpdateRequest req,
                                       // Only in use for Conference updates:
+                                      bool resolveRowClashes,
                                       bool overrideDialNoClashes, bool overrideResourceOverflows)
         {
             // Carry out soft duplicate checks if needed.
@@ -1226,6 +1270,7 @@ namespace BridgeOpsClient
                         sr.WriteAndFlush(stream, sr.Serialise(req));
                         if (req.table == "Conference")
                         {
+                            stream.WriteByte((byte)(resolveRowClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                         }
@@ -1250,13 +1295,22 @@ namespace BridgeOpsClient
 
                             // If there was an overridable clash, ask first and then re-run the request if the
                             // user desires.
-                            if (reason == Glo.DIAL_CLASH_WARNING)
+                            if (reason == Glo.ROW_CLASH_WARNING)
+                            {
+                                if (RowClashConfirm())
+                                {
+                                    stream.Close();
+                                    return SendUpdate(req, true, overrideDialNoClashes, overrideResourceOverflows);
+                                }
+                                else return false;
+                            }
+                            else if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, true, overrideResourceOverflows);
+                                    return SendUpdate(req, resolveRowClashes, true, overrideResourceOverflows);
                                 }
                                 else return false;
                             }
@@ -1266,7 +1320,7 @@ namespace BridgeOpsClient
                                 if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, overrideDialNoClashes, true);
+                                    return SendUpdate(req, resolveRowClashes, overrideDialNoClashes, true);
                                 }
                                 else return false;
                             }
@@ -1931,7 +1985,9 @@ namespace BridgeOpsClient
         public static bool SendConferenceQuickMoveRequest(bool duplicate, List<int> conferenceIDs,
                                                           List<DateTime> starts, List<DateTime> ends,
                                                           List<int> resourceIDs, List<int> resourceRows,
-                                                          bool overrideDialNoClashes, bool overrideResourceOverflows)
+                                                          bool resolveRowClashes,
+                                                          bool overrideDialNoClashes,
+                                                          bool overrideResourceOverflows)
         {
             lock (streamLock)
             {
@@ -1950,6 +2006,7 @@ namespace BridgeOpsClient
                             sr.WriteAndFlush(stream, sr.Serialise(ends));
                             sr.WriteAndFlush(stream, sr.Serialise(resourceIDs));
                             sr.WriteAndFlush(stream, sr.Serialise(resourceRows));
+                            stream.WriteByte((byte)(resolveRowClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideDialNoClashes ? 1 : 0));
                             stream.WriteByte((byte)(overrideResourceOverflows ? 1 : 0));
                             int response = stream.ReadByte();
@@ -1963,7 +2020,19 @@ namespace BridgeOpsClient
 
                                 // If there was an overridable clash, ask first and then re-run the request if the
                                 // user desires.
-                                if (reason == Glo.DIAL_CLASH_WARNING)
+                                if (reason == Glo.ROW_CLASH_WARNING)
+                                {
+                                    if (RowClashConfirm())
+                                    {
+                                        stream.Close();
+                                        return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
+                                                                              starts, ends, resourceIDs, resourceRows,
+                                                                              true, overrideDialNoClashes,
+                                                                              overrideResourceOverflows);
+                                    }
+                                    else return false;
+                                }
+                                else if (reason == Glo.DIAL_CLASH_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                     if (DialNoClashConfirm(res))
@@ -1971,7 +2040,8 @@ namespace BridgeOpsClient
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
-                                                                              true, overrideResourceOverflows);
+                                                                              resolveRowClashes, true,
+                                                                              overrideResourceOverflows);
                                     }
                                     else return false;
                                 }
@@ -1983,7 +2053,8 @@ namespace BridgeOpsClient
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
-                                                                              overrideDialNoClashes, true);
+                                                                              resolveRowClashes, overrideDialNoClashes,
+                                                                              true);
                                     }
                                     else return false;
                                 }

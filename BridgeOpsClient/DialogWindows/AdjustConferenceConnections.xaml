@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Connection Adjustment" Width="600" Height="500"
+        Title="Connection Adjustment" Width="600" Height="800"
         UseLayoutRounding="True" ResizeMode="CanResize" MinWidth="500" MinHeight="500">
     <Grid Margin="10 10 10 10">
         <Grid.RowDefinitions>

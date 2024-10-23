@@ -19,9 +19,11 @@ namespace BridgeOpsClient
 {
     public partial class LinkRecord : CustomWindow
     {
-        string table;
-        OrderedDictionary columns;
+        string table = "";
+        OrderedDictionary columns = new();
         public string? id = null;
+
+        int idColumn = 0;
 
         public LinkRecord(string table, OrderedDictionary columns)
         {
@@ -30,30 +32,38 @@ namespace BridgeOpsClient
             this.table = table;
             this.columns = columns;
 
-            Populate();
-
-            txtSearch.Focus();
-        }
-
-        public void Populate()
-        {
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
             if (App.SelectAll(table, out columnNames, out rows, false))
                 dtg.Update(columns, columnNames, rows);
             dtg.CustomDoubleClick += dtg_DoubleClick;
+
+            txtSearch.Focus();
+        }
+
+        public LinkRecord(List<string?> columns, List<List<object?>> data, int idColumn)
+        {
+            this.idColumn = idColumn;
+
+            InitializeComponent();
+
+            dtg.Update(columns, data);
+            dtg.CustomDoubleClick += dtg_DoubleClick;
+
+            txtSearch.Focus();
         }
 
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            id = dtg.GetCurrentlySelectedCell(0);
+            id = dtg.GetCurrentlySelectedCell(idColumn);
             Close();
         }
 
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             MaxHeight = double.PositiveInfinity;
+            MaxWidth = double.PositiveInfinity;
         }
 
         private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)

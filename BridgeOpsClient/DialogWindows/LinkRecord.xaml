@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="LinkRecord" Height="450" Width="450" MaxHeight="800" MaxWidth="450"
+        Title="LinkRecord" Height="450" Width="600" MaxHeight="800" MaxWidth="600"
         WindowStartupLocation="CenterOwner"
         ContentRendered="Window_ContentRendered">
     <Grid>

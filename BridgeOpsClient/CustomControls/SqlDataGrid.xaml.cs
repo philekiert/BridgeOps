@@ -23,6 +23,7 @@ using System.Globalization;
 using static System.Resources.ResXFileRef;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System.ComponentModel;
 
 
 namespace BridgeOpsClient.CustomControls
@@ -73,13 +74,35 @@ namespace BridgeOpsClient.CustomControls
             FindScrollViewer(dtg);
         }
 
-        public struct Row
+        // INotifyPropertyChanged is necessary in case of checkboxes.
+        public class Row : INotifyPropertyChanged
         {
+            private bool isChecked;
+            public bool IsChecked
+            {
+                get => isChecked;
+                set
+                {
+                    if (isChecked != value)
+                    {
+                        isChecked = value;
+                        OnPropertyChanged(nameof(IsChecked));
+                    }
+                }
+            }
             public List<object?> items { get; set; }
 
             public Row(List<object?> items)
             {
                 this.items = items;
+                isChecked = false;
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+
+            protected virtual void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
         }
 
@@ -132,6 +155,17 @@ namespace BridgeOpsClient.CustomControls
             dtg.ItemsSource = null;
 
             int count = 0;
+
+            if (checkBox)
+            {
+                DataGridCheckBoxColumn col = new()
+                {
+                    Header = "Remove",
+                    Binding = new Binding("IsChecked"),
+                    IsReadOnly = false
+                };
+                dtg.Columns.Add(col);
+            }
 
             foreach (string? s in columnNames)
             {
@@ -232,18 +266,6 @@ namespace BridgeOpsClient.CustomControls
                         }
                     }
                 }
-            }
-
-            if (checkBox)
-            {
-                var checkBoxColumn = new DataGridCheckBoxColumn
-                {
-                    Header = "Remove",
-                    Binding = new System.Windows.Data.Binding("IsSelected"),
-                    IsReadOnly = false
-                };
-                dtg.Columns.Insert(0, checkBoxColumn);
-                dtg.SelectionUnit = DataGridSelectionUnit.FullRow;
             }
 
             dtg.ItemsSource = rowsBinder;
@@ -414,15 +436,15 @@ namespace BridgeOpsClient.CustomControls
                 while (obj != null && !(obj is DataGridRow))
                     obj = VisualTreeHelper.GetParent(obj);
 
-                if (obj is DataGridRow row)
+                if (obj is DataGridRow dgr)
                 {
-                    dtg.SelectedItem = row.Item;
+                    Row row = (Row)dgr.Item;
+                    dtg.SelectedItem = row;
 
                     // While we're in here, switch checkboxes on and off if present.
                     if (checkBox)
                     {
-                        CheckBox box = (CheckBox)dtg.Columns[0].GetCellContent(row);
-                        box.IsChecked = box.IsChecked != true;
+                        row.IsChecked = row.IsChecked != true;
                     }
                 }
             }
@@ -447,7 +469,6 @@ namespace BridgeOpsClient.CustomControls
             remove { RemoveHandler(SelectionChangedEvent, value); }
         }
 
-        bool ignoreChanged = false;
         private void dtg_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // For now, assume that we never need selection on checkbox grids.
@@ -772,6 +793,21 @@ namespace BridgeOpsClient.CustomControls
                         col.Width = 250;
                     col.MaxWidth = float.PositiveInfinity;
                 }
+        }
+
+        public List<Row> GetCheckedRows()
+        {
+            List<Row> rows = new();
+
+            if (checkBox)
+                for (int i = 0; i < dtg.Items.Count; ++i)
+                {
+                    Row row = (Row)dtg.Items[i];
+                    if (row.IsChecked == true)
+                        rows.Add(row);
+                }
+
+            return rows;
         }
     }
 }

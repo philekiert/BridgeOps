@@ -1309,6 +1309,7 @@ internal class BridgeOpsAgent
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
         SelectResult? resourceOverflows = null;
+        bool resolveRowClashes = true;
         bool overrideDialNoClashes = true;
         bool overrideResourceOverflows = true;
         List<Conference>? conferenceInserts = null;
@@ -1351,6 +1352,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_NEW_CONFERENCE)
                 {
                     conferenceInserts = sr.Deserialise<List<Conference>>(sr.ReadString(stream))!;
+                    resolveRowClashes = stream.ReadByte() == 1;
                     overrideDialNoClashes = stream.ReadByte() == 1;
                     overrideResourceOverflows = stream.ReadByte() == 1;
                     CheckSessionValidity(conferenceInserts[0].sessionID,
@@ -1419,7 +1421,7 @@ internal class BridgeOpsAgent
                 foreach (Conference c in conferenceInserts!)
                     coms.Add(c.SqlInsert(false));
 
-                coms.Add(Conference.SqlCheckForRowClashes(null, sqlConnect));
+                coms.Add(Conference.SqlCheckForRowClashes(null, sqlConnect, resolveRowClashes));
                 if (!overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(null, sqlConnect));
                 if (!overrideResourceOverflows)
@@ -1772,6 +1774,7 @@ internal class BridgeOpsAgent
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
         SelectResult? resourceOverflows = null;
+        bool resolveRowClashes = true;
         bool overrideDialNoClashes = true;
         bool overrideResourceOverflows = true;
         int confID = 0;
@@ -1820,6 +1823,7 @@ internal class BridgeOpsAgent
                 else if (target == Glo.CLIENT_UPDATE_CONFERENCE)
                 {
                     Conference update = sr.Deserialise<Conference>(sr.ReadString(stream));
+                    resolveRowClashes = stream.ReadByte() == 1;
                     overrideDialNoClashes = stream.ReadByte() == 1;
                     overrideResourceOverflows = stream.ReadByte() == 1;
                     confID = (int)update.conferenceID!;
@@ -1868,9 +1872,12 @@ internal class BridgeOpsAgent
             // If it's a conference, we'll need to run clash and overflow checks.
             if (target == Glo.CLIENT_UPDATE_CONFERENCE)
             {
-                List<string> coms = new() { com.CommandText };
+                List<string> coms = new()
+                {
+                    com.CommandText,
+                    Conference.SqlCheckForRowClashes(new() { confID }, sqlConnect, resolveRowClashes)
+                };
 
-                coms.Add(Conference.SqlCheckForRowClashes(new() { confID }, sqlConnect));
                 if (!overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(new() { confID }, sqlConnect));
                 if (!overrideResourceOverflows)
@@ -1938,6 +1945,7 @@ internal class BridgeOpsAgent
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
         SelectResult? resourceOverflows = null;
+        bool resolveRowClashes = true;
         bool overrideDialNoClashes = true;
         bool overrideResourceOverflows = true;
 
@@ -1947,6 +1955,7 @@ internal class BridgeOpsAgent
             UpdateRequest req = sr.Deserialise<UpdateRequest>(sr.ReadString(stream));
             if (req.table == "Conference")
             {
+                resolveRowClashes = stream.ReadByte() == 1;
                 overrideDialNoClashes = stream.ReadByte() == 1;
                 overrideResourceOverflows = stream.ReadByte() == 1;
             }
@@ -1980,7 +1989,7 @@ internal class BridgeOpsAgent
                     else
                         throw new("Could not convert all conference IDs to integers.");
 
-                coms.Add(Conference.SqlCheckForRowClashes(confIdInts, sqlConnect));
+                coms.Add(Conference.SqlCheckForRowClashes(confIdInts, sqlConnect, resolveRowClashes));
                 if (!overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(confIdInts, sqlConnect));
                 if (!overrideResourceOverflows)
@@ -2959,6 +2968,7 @@ internal class BridgeOpsAgent
             List<DateTime>? ends = sr.Deserialise<List<DateTime>>(sr.ReadString(stream));
             List<int>? resources = sr.Deserialise<List<int>>(sr.ReadString(stream));
             List<int>? resourceRows = sr.Deserialise<List<int>>(sr.ReadString(stream));
+            bool resolveRowClashes = stream.ReadByte() == 1;
             bool overrideDialNoClashes = stream.ReadByte() == 1;
             bool overrideResourceOverflows = stream.ReadByte() == 1;
 
@@ -3054,7 +3064,7 @@ internal class BridgeOpsAgent
             }
 
             // Check for various clashes. Row clashes cannot be bypassed, dial no and resource overflows can.
-            coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect));
+            coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect, resolveRowClashes));
             if (!overrideDialNoClashes)
                 coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
             if (!overrideResourceOverflows)
@@ -3063,7 +3073,8 @@ internal class BridgeOpsAgent
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
             SqlDataReader reader = com.ExecuteReader();
-            reader.NextResult(); // Clear the first result, as it's for the pointless row clash report.
+            if (!resolveRowClashes)
+                reader.NextResult(); // Clear the first result, as it's for the pointless row clash report.
             if (!overrideDialNoClashes)
             {
                 dialNoClashes = new(reader, true);
@@ -3136,7 +3147,7 @@ internal class BridgeOpsAgent
                 req.SqlUdpate()
             };
 
-            coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect));
+            coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect, req.resolveRowClashes));
             if (!req.overrideDialNoClashes)
                 coms.Add(Conference.SqlCheckForDialNoClashes(req.ids, sqlConnect));
             if (!req.overrideResourceOverflows)
@@ -3201,11 +3212,12 @@ internal class BridgeOpsAgent
             // Get all connections present.
             string command = @$"
 SELECT DISTINCT
-	n.{Glo.Tab.CONNECTION_IS_TEST} AS Test,
 	n.{Glo.Tab.DIAL_NO},
 	CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 THEN o.{Glo.Tab.ORGANISATION_REF} ELSE NULL END,
 	CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 THEN o.{Glo.Tab.ORGANISATION_NAME} ELSE NULL END,
-    COUNT(n.{Glo.Tab.CONNECTION_ID}) AS Count
+	n.{Glo.Tab.CONNECTION_IS_TEST},
+    CAST(CASE WHEN MIN(n.{Glo.Tab.CONNECTION_ROW}) = 0 THEN 1 ELSE 0 END AS BIT),
+    COUNT(n.{Glo.Tab.CONNECTION_ID})
 FROM Connection n
 LEFT JOIN Organisation o ON o.{Glo.Tab.DIAL_NO} = n.{Glo.Tab.DIAL_NO}
 WHERE {Glo.Tab.CONFERENCE_ID} IN ({ids})

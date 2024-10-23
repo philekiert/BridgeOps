@@ -1599,7 +1599,7 @@ namespace SendReceiveClasses
                 return string.Join(" ", commands);
         }
 
-        public static string SqlCheckForRowClashes(List<int>? confIDs, SqlConnection sqlConnect)
+        public static string SqlCheckForRowClashes(List<int>? confIDs, SqlConnection sqlConnect, bool autoResolve)
         {
             StringBuilder idIn = new();
             // Build a list of IDs.
@@ -1613,25 +1613,94 @@ namespace SendReceiveClasses
                     idIn.Remove(idIn.Length - 2, 2);
             }
 
-            StringBuilder str = new();
-            str.Append("WITH NewConfs AS (" +
-                      $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
-                             $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
-                             $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
-                      $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
-                      $") ");
-            str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
-                       $"JOIN Conference c " +
-                           $"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
-                           $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
-                           $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
-                           $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
-                           $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
+            if (!autoResolve)
+            {
+                StringBuilder str = new();
 
-            str.Append("IF @@ROWCOUNT > 0 BEGIN " +
-                       $"THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1; END");
+                str.Append("WITH NewConfs AS (" +
+                          $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
+                                 $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
+                                 $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
+                          $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
+                          $") ");
+                str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
+                           $"JOIN Conference c " +
+                               $"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
+                               $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
+                               $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
+                               $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
+                               $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
+                str.Append($"IF @@ROWCOUNT > 0 BEGIN THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1; END");
 
-            return str.ToString();
+                return str.ToString();
+            }
+            else
+            {
+                // Out of time, so modifying Copilot's output for more complex SQL at this point. All is checked
+                // and thoroughly tested before committing.
+                return $@"
+DECLARE @CurrentRow INT;
+DECLARE @ConflictCount INT;
+DECLARE @ConferenceID INT;
+DECLARE @ResourceID INT;
+DECLARE @StartTime DATETIME;
+DECLARE @EndTime DATETIME;
+DECLARE @MaxRow INT;
+
+-- Cursor to iterate over selected conferences
+DECLARE conference_cursor CURSOR FOR
+SELECT {Glo.Tab.CONFERENCE_ID}, {Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END}
+FROM Conference
+WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()})
+ORDER BY {Glo.Tab.CONFERENCE_START};
+
+OPEN conference_cursor;
+FETCH NEXT FROM conference_cursor INTO @ConferenceID, @ResourceID, @StartTime, @EndTime;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    -- Calculate the maximum row for the current resource
+    SELECT @MaxRow = {Glo.Tab.RESOURCE_CAPACITY_CONFERENCE} + {Glo.Tab.RESOURCE_ROWS_ADDITIONAL}
+    FROM Resource
+    WHERE {Glo.Tab.RESOURCE_ID} = @ResourceID;
+
+    SET @CurrentRow = 0;
+
+    WHILE @CurrentRow < @MaxRow
+    BEGIN
+        -- Check for conflicts on the current row
+        SELECT @ConflictCount = COUNT(*)
+        FROM Conference
+        WHERE {Glo.Tab.RESOURCE_ID} = @ResourceID
+          AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRow
+          AND {Glo.Tab.CONFERENCE_END} > @StartTime
+          AND {Glo.Tab.CONFERENCE_START} < @EndTime
+          AND {Glo.Tab.CONFERENCE_ID} != @ConferenceID;
+
+        IF @ConflictCount = 0
+        BEGIN
+            -- No conflict, update the conference to the current row
+            UPDATE Conference
+            SET {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRow
+            WHERE {Glo.Tab.CONFERENCE_ID} = @ConferenceID;
+            BREAK;
+        END
+
+        SET @CurrentRow = @CurrentRow + 1;
+    END
+
+    IF @CurrentRow >= @MaxRow
+    BEGIN
+        -- If we exceed the maximum row, throw an exception
+        THROW 50000, '{Glo.ROW_CLASH_FAILED_RESOLVE}', 1;
+    END
+
+    FETCH NEXT FROM conference_cursor INTO @ConferenceID, @ResourceID, @StartTime, @EndTime;
+END
+
+CLOSE conference_cursor;
+DEALLOCATE conference_cursor;";
+            }
         }
         public static string SqlCheckForDialNoClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
@@ -1775,6 +1844,7 @@ END
         public int columnRecordID;
         public List<int> ids;
 
+        public bool resolveRowClashes;
         public bool overrideDialNoClashes;
         public bool overrideResourceOverflows;
 
@@ -1783,35 +1853,49 @@ END
         public TimeSpan? endTime;
         public TimeSpan? length;
 
-        public List<string>? dialAdd;
-        public List<string>? dialRemove;
-        public string? dialHost;
-        public List<string>? dialTest;
+        public class Connection
+        {
+            public string dialNo;
+            public bool isManaged;
+            public bool isTest;
+            public Connection(string dialNo, bool isManaged, bool isTest)
+            { this.dialNo = dialNo; this.isManaged = isManaged; this.isTest = isTest; }
+        }
 
-        public enum Intent { Times, Connections }
+        public List<Connection>? additions;
+        public List<Connection>? removals;
+        public string? dialHost;
+
+        public enum Intent { Times, Connections, Host }
         public Intent intent;
 
         private void Prepare()
         {
-            if (dialAdd != null)
-                SqlAssist.SecureValue(dialAdd!);
-            if (dialRemove != null)
-                SqlAssist.SecureValue(dialRemove!);
+            if (additions != null)
+                foreach (Connection c in additions)
+                    c.dialNo = SqlAssist.SecureValue(c.dialNo);
+            if (removals != null)
+                foreach (Connection c in removals)
+                    c.dialNo = SqlAssist.SecureValue(c.dialNo);
+
             if (dialHost != null)
                 dialHost = SqlAssist.SecureValue(dialHost);
-            if (dialTest != null)
-                SqlAssist.SecureValue(dialTest!);
         }
 
         public string SqlUdpate()
         {
+            if (ids.Count == 0)
+                return "";
+
             Prepare();
 
             List<string> idStr = ids.Select(i => i.ToString()).ToList();
-            string com = "";
+            List<string> commands = new();
 
             if (intent == Intent.Times)
             {
+                string com = "";
+
                 List<string> timeSets = new();
                 com = "UPDATE Conference SET ";
 
@@ -1858,9 +1942,100 @@ END
                 if (timeSets.Count > 0)
                     com += $"{string.Join(", ", timeSets)} " +
                            $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)});";
+
+                commands.Add(com);
             }
 
-            return com;
+            else if (intent == Intent.Connections)
+            {
+
+                // Removals need to be carried out before, otherwise additions could potentially violate constraints.
+                if (removals != null && removals.Count > 0)
+                {
+                    string idCat = string.Join(", ", idStr);
+
+                    // This isn't the most efficient way I expect, but hey, we'll never have more than 255! And
+                    // in practice, probably never more than three or four.
+                    foreach (Connection c in removals)
+                        commands.Add(@$"
+DELETE FROM Connection
+WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat})
+AND {Glo.Tab.DIAL_NO} = '{c.dialNo}'
+AND {Glo.Tab.CONNECTION_IS_MANAGED} = {(c.isManaged ? "1" : "0")}
+AND {Glo.Tab.CONNECTION_IS_TEST} = {(c.isTest ? "1" : "0")};
+");
+                }
+
+                // Carry out additions.
+                if (additions != null && additions.Count > 0)
+                {
+                    List<string> inV = new();
+                    foreach (string s in idStr)
+                    {
+                        int row = 255 - additions.Count; // 255 is the most sites a conference can contain.
+                        foreach (Connection c in additions)
+                        {
+                            inV.Add($"{s}, {c.dialNo}, {(c.isManaged ? "1" : "0")}, {(c.isTest ? "1" : "0")}, {row}");
+                            ++row;
+                        }
+                    }
+
+
+                    // Insert each new row, skipping any where the conference already has that dial no.
+                    commands.Add($@"
+MERGE INTO Connection AS target
+USING (VALUES ({string.Join("), (", inV)}))
+    AS source ({Glo.Tab.CONFERENCE_ID}, {Glo.Tab.DIAL_NO},
+               {Glo.Tab.CONNECTION_IS_MANAGED}, {Glo.Tab.CONNECTION_IS_TEST}, {Glo.Tab.CONNECTION_ROW})
+ON target.{Glo.Tab.CONFERENCE_ID} = source.{Glo.Tab.CONFERENCE_ID} 
+AND target.{Glo.Tab.DIAL_NO} = source.{Glo.Tab.DIAL_NO}
+WHEN NOT MATCHED BY TARGET THEN
+INSERT ({Glo.Tab.CONFERENCE_ID}, {Glo.Tab.DIAL_NO},
+           {Glo.Tab.CONNECTION_IS_MANAGED}, {Glo.Tab.CONNECTION_IS_TEST}, {Glo.Tab.CONNECTION_ROW})
+VALUES (source.{Glo.Tab.CONFERENCE_ID}, source.{Glo.Tab.DIAL_NO}, source.{Glo.Tab.CONNECTION_IS_MANAGED},
+        source.{Glo.Tab.CONNECTION_IS_TEST}, source.{Glo.Tab.CONNECTION_ROW});
+");
+                }
+
+                if ((additions != null && additions.Count > 0) ||
+                    (removals != null && removals.Count > 0))
+                    commands.Add(ReseatAllConnections());
+            }
+
+            else if (intent == Intent.Host && dialHost != null)
+            {
+                // Set the row of the desired host to 0.
+                commands.Add($"UPDATE Connection SET {Glo.Tab.CONNECTION_ROW} = 0 " +
+                             $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)}) " +
+                               $"AND {Glo.Tab.DIAL_NO} = '{dialHost}';");
+
+                // ReseatAllConnections() will amend this to 1 and nudge all other connections down if needed.
+                commands.Add(ReseatAllConnections());
+            }
+
+            return string.Join(" ", commands);
+        }
+
+        public string ReseatAllConnections()
+        {
+            List<string> idStr = ids.Select(i => i.ToString()).ToList();
+
+            return $@"
+WITH OrderedConnections AS (
+    SELECT 
+        {Glo.Tab.CONNECTION_ID},
+        {Glo.Tab.CONFERENCE_ID},
+        {Glo.Tab.CONNECTION_ROW},
+        ROW_NUMBER() OVER (PARTITION BY {Glo.Tab.CONFERENCE_ID} ORDER BY {Glo.Tab.CONNECTION_ROW}) AS NewRowNumber
+    FROM 
+        Connection
+    WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)})
+)
+UPDATE Connection
+SET {Glo.Tab.CONNECTION_ROW} = OrderedConnections.NewRowNumber
+FROM Connection
+JOIN OrderedConnections
+ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_ID};";
         }
     }
 

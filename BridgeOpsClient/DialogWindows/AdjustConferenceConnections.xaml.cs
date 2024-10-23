@@ -43,16 +43,39 @@ namespace BridgeOpsClient.DialogWindows
             if (!App.SendConnectionSelectRequest(ids, out res))
                 Close();
 
-            res.columnNames = new() { "Test", dialNoFriendly, orgRefFriendly, orgNameFriendly, "Presence" };
+            res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
             dtgRemove.Update(res.columnNames, res.rows);
         }
 
         private bool Adjust()
         {
-            SendReceiveClasses.ConferenceAdjustment req = new();
+            ConferenceAdjustment req = new();
 
             req.ids = ids.Select(int.Parse).ToList();
-            req.intent = SendReceiveClasses.ConferenceAdjustment.Intent.Connections;
+            req.intent = ConferenceAdjustment.Intent.Connections;
+
+            foreach (Connection c in connections)
+                if (c.dialNo == null || c.txtSearch.Visibility == Visibility.Visible)
+                    return App.Abort("All additions must have a dial number selected.");
+
+            List<CustomControls.SqlDataGrid.Row> removals = dtgRemove.GetCheckedRows();
+            if (connections.Count == 0 && removals.Count == 0)
+                return App.Abort("No changes to be made.");
+
+            // Assemble connection additions.
+            if (connections.Count > 0)
+            {
+                req.additions = new();
+                foreach (Connection c in connections)
+                    req.additions.Add(new(c.dialNo, c.orgRef != null, c.chkIsTest.IsChecked == true));
+            }
+
+            if (removals.Count > 0)
+            {
+                req.removals = new();
+                foreach (var row in removals)
+                    req.removals.Add(new((string)row.items[0]!, row.items[1] != null, (bool)row.items[3]! == true));
+            }
 
             if (App.SendConferenceAdjustment(req))
             {

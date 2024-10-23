@@ -64,14 +64,14 @@ namespace BridgeOpsClient
             public void SetSelectedRow(int selected, int selectedTotal)
             {
                 selectedRow = Math.Clamp(selected, 0, conferenceCapacity + rowsAdditional);
-                selectedRowTotal = Math.Clamp(selectedTotal, 0, rowsTotal);
+                selectedRowTotal = selectedTotal;
             }
         }
         // All resources are stored here, regardless of resources visibility (not yet implemented as of 19/12/2023).
         public static Dictionary<int, ResourceInfo> resources = new();
         public static List<string> resourceRowNames = new();
         // This is a list of resource IDs, allowing the user to customise the display.
-        public List<int> resourcesOrder = new() { 1, 2 }; // TEMP CODE UNTIL CUSTOM ORDERS IMPLEMENTED.
+        public List<int> resourcesOrder = new() { 1, 2, 4 }; // TEMP CODE UNTIL CUSTOM ORDERS IMPLEMENTED.
         public bool updateScrollBar = false;
         public int totalRows = 0;
         public void SetResources()
@@ -319,6 +319,9 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
+            mnuScheduleAdjustTime.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleAdjustConnections.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleSetHost.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleCancel.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
@@ -918,7 +921,7 @@ namespace BridgeOpsClient
                     if (conferenceIDs.Count > 0)
                     {
                         if (!App.SendConferenceQuickMoveRequest(draggingGhosts, conferenceIDs, starts, ends,
-                                                                resourceIDs, resourceRows, false, false))
+                                                                resourceIDs, resourceRows, false, false, false))
                         {
                             if (wasDraggingResize)
                                 foreach (Conference c in schView.selectedConferences)
@@ -1423,6 +1426,7 @@ namespace BridgeOpsClient
                 mnuScheduleSepTwo.Visibility = Visibility.Collapsed;
                 mnuScheduleAdjustTime.Visibility = Visibility.Collapsed;
                 mnuScheduleAdjustConnections.Visibility = Visibility.Collapsed;
+                mnuScheduleSetHost.Visibility = Visibility.Collapsed;
                 mnuScheduleUpdate.Visibility = Visibility.Collapsed;
                 mnuScheduleCancel.Visibility = Visibility.Collapsed;
                 mnuScheduleDelete.Visibility = Visibility.Collapsed;
@@ -1437,6 +1441,7 @@ namespace BridgeOpsClient
             mnuScheduleCopy.Visibility = Visibility.Visible;
             mnuSchedulePaste.Visibility = Visibility.Collapsed;
             mnuScheduleSepTwo.Visibility = Visibility.Visible;
+            mnuScheduleSetHost.Visibility = Visibility.Visible;
             mnuScheduleAdjustTime.Visibility = Visibility.Visible;
             mnuScheduleAdjustConnections.Visibility = Visibility.Visible;
             mnuScheduleUpdate.Visibility = Visibility.Visible;
@@ -1489,6 +1494,36 @@ namespace BridgeOpsClient
             adjust.ShowDialog();
         }
 
+        private void mnuScheduleSetHost_Click(object sender, RoutedEventArgs e)
+        {
+            List<int> ids = new();
+            lock (conferenceListLock)
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id);
+
+            SelectResult res;
+            if (App.SendConnectionSelectRequest(ids.Select(i => i.ToString()).ToList(), out res))
+            {
+                string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
+                string orgRefFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF]!);
+                string orgNameFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
+                res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
+
+                LinkRecord lr = new(res.columnNames, res.rows, 0);
+                lr.ShowDialog();
+                ConferenceAdjustment ca = new();
+                ca.intent = ConferenceAdjustment.Intent.Host;
+                ca.dialHost = lr.id;
+                ca.ids = ids;
+
+                // Error will display in the below function if it fails.
+                App.SendConferenceAdjustment(ca);
+            }
+        }
+
         private void mnuScheduleDelete_Click(object? sender, RoutedEventArgs? e)
         {
             try
@@ -1513,7 +1548,7 @@ namespace BridgeOpsClient
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
         }
-
+            
         private void mnuScheduleCancel_Click(object sender, RoutedEventArgs e)
         {
             try
