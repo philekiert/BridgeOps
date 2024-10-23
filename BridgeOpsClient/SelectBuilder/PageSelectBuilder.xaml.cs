@@ -673,12 +673,14 @@ namespace BridgeOpsClient
                         relevantTable = RelevantTable.None;
                         dtgOutput.Update(columnNames, rows);
                         int permissionRelevancy = -1;
-                        if (selectRequest.columns[0] == $"Organisation.{Glo.Tab.ORGANISATION_ID}")
+                        if (selectRequest.columns[0] == $"Organisation.{Glo.Tab.ORGANISATION_ID}" ||
+                            selectRequest.columns[0] == $"OrganisationChange.{Glo.Tab.ORGANISATION_ID}")
                         {
                             relevantTable = RelevantTable.Organisation;
                             permissionRelevancy = Glo.PERMISSION_RECORDS;
                         }
-                        else if (selectRequest.columns[0] == $"Asset.{Glo.Tab.ASSET_ID}")
+                        else if (selectRequest.columns[0] == $"Asset.{Glo.Tab.ASSET_ID}" ||
+                                 selectRequest.columns[0] == $"AssetChange.{Glo.Tab.ASSET_ID}")
                         {
                             relevantTable = RelevantTable.Asset;
                             permissionRelevancy = Glo.PERMISSION_RECORDS;

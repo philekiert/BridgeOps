@@ -1433,7 +1433,8 @@ internal class BridgeOpsAgent
                 com.CommandText = SqlAssist.Transaction(coms.ToArray());
 
                 SqlDataReader reader = com.ExecuteReader();
-                reader.NextResult();
+                if (!resolveRowClashes)
+                    reader.NextResult();
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -1886,7 +1887,8 @@ internal class BridgeOpsAgent
                 com.CommandText = SqlAssist.Transaction(coms.ToArray());
 
                 SqlDataReader reader = com.ExecuteReader();
-                reader.NextResult();
+                if (!resolveRowClashes)
+                    reader.NextResult();
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -1998,7 +2000,8 @@ internal class BridgeOpsAgent
                 SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
                 SqlDataReader reader = com.ExecuteReader();
-                reader.NextResult();
+                if (!resolveRowClashes)
+                    reader.NextResult();
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -3125,7 +3128,6 @@ internal class BridgeOpsAgent
 
         try
         {
-            sqlConnect.Open();
             ConferenceAdjustment req = sr.Deserialise<ConferenceAdjustment>(sr.ReadString(stream));
 
             if (!CheckSessionValidity(req.sessionID, columnRecordID))
@@ -3147,26 +3149,42 @@ internal class BridgeOpsAgent
                 req.SqlUdpate()
             };
 
-            coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect, req.resolveRowClashes));
-            if (!req.overrideDialNoClashes)
-                coms.Add(Conference.SqlCheckForDialNoClashes(req.ids, sqlConnect));
-            if (!req.overrideResourceOverflows)
-                coms.Add(Conference.SqlCheckForResourceOverflows(req.ids, sqlConnect));
+            // No need to check for clashes when adjusting the host, as this won't modify anything relevant.
+            if (req.intent != ConferenceAdjustment.Intent.Host)
+            {
+                if (!req.resolveRowClashes)
+                    coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect, req.resolveRowClashes));
+                if (!req.overrideDialNoClashes)
+                    coms.Add(Conference.SqlCheckForDialNoClashes(req.ids, sqlConnect));
+                if (!req.overrideResourceOverflows)
+                    coms.Add(Conference.SqlCheckForResourceOverflows(req.ids, sqlConnect));
+            }
 
+            sqlConnect.Open();
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
-            SqlDataReader reader = com.ExecuteReader();
-            reader.NextResult();
-            if (!req.overrideDialNoClashes)
+            if (req.intent != ConferenceAdjustment.Intent.Host)
             {
-                dialNoClashes = new(reader, true);
-                reader.NextResult();// This is where the exception will be thrown.
+                SqlDataReader reader = com.ExecuteReader();
+
+                if (req.intent != ConferenceAdjustment.Intent.Host)
+                {
+                    if (!req.resolveRowClashes)
+                        reader.NextResult();
+                    if (!req.overrideDialNoClashes)
+                    {
+                        dialNoClashes = new(reader, true);
+                        reader.NextResult();// This is where the exception will be thrown.
+                    }
+                    if (!req.overrideResourceOverflows)
+                    {
+                        resourceOverflows = new(reader, true);
+                        reader.NextResult();// This is where the exception will be thrown.
+                    }
+                }
             }
-            if (!req.overrideResourceOverflows)
-            {
-                resourceOverflows = new(reader, true);
-                reader.NextResult();// This is where the exception will be thrown.
-            }
+            else
+                com.ExecuteNonQuery();
 
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);

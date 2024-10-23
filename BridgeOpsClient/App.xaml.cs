@@ -83,7 +83,7 @@ namespace BridgeOpsClient
         {
             try
             {
-                DialogWindows.DialogBox dialog = new(Glo.ROW_CLASH_WARNING + " Do you wish to resolve automatically?",
+                DialogWindows.DialogBox dialog = new(Glo.ROW_CLASH_WARNING + "\n\nDo you wish to resolve automatically?",
                                                      "Row Clash",
                                                  DialogWindows.DialogBox.Buttons.YesNo);
                 dialog.ShowDialog();
@@ -729,7 +729,10 @@ namespace BridgeOpsClient
                         }
                     }
                     foreach (PageConferenceView confView in BridgeOpsClient.MainWindow.pageConferenceViews)
+                    {
+                        confView.resourcesOrder = resources.Select(r => r.Value.id).ToList();
                         confView.SetResources();
+                    }
 
                     return true;
                 }

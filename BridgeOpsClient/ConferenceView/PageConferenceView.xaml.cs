@@ -71,7 +71,7 @@ namespace BridgeOpsClient
         public static Dictionary<int, ResourceInfo> resources = new();
         public static List<string> resourceRowNames = new();
         // This is a list of resource IDs, allowing the user to customise the display.
-        public List<int> resourcesOrder = new() { 1, 2, 4 }; // TEMP CODE UNTIL CUSTOM ORDERS IMPLEMENTED.
+        public List<int> resourcesOrder = new(); // Current set in App.PullResourceInformation(), should be custom.
         public bool updateScrollBar = false;
         public int totalRows = 0;
         public void SetResources()
@@ -80,6 +80,9 @@ namespace BridgeOpsClient
             {
                 lock (resourcesOrder)
                 {
+                    // Temp code until custom resource orders are configurable by the user.
+                    resourcesOrder = resources.Select(r => r.Value.id).ToList();
+
                     resourceRowNames.Clear();
                     totalRows = 0;
                     foreach (int i in resourcesOrder)
@@ -1514,6 +1517,10 @@ namespace BridgeOpsClient
 
                 LinkRecord lr = new(res.columnNames, res.rows, 0);
                 lr.ShowDialog();
+
+                if (lr.id == null)
+                    return;
+
                 ConferenceAdjustment ca = new();
                 ca.intent = ConferenceAdjustment.Intent.Host;
                 ca.dialHost = lr.id;
