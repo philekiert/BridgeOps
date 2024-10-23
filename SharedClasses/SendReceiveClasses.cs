@@ -1613,25 +1613,25 @@ namespace SendReceiveClasses
                     idIn.Remove(idIn.Length - 2, 2);
             }
 
+            StringBuilder str = new();
+            str.Append("WITH NewConfs AS (" +
+                      $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
+                             $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
+                             $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
+                      $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
+                      $") ");
+            str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
+                       $"JOIN Conference c " +
+                           $"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
+                           $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
+            str.Append($"IF @@ROWCOUNT > 0\n");
+
             if (!autoResolve)
             {
-                StringBuilder str = new();
-
-                str.Append("WITH NewConfs AS (" +
-                          $"SELECT {Glo.Tab.CONFERENCE_ID}, " +
-                                 $"{Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
-                                 $"{Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END} " +
-                          $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()}) " +
-                          $") ");
-                str.Append($"SELECT DISTINCT nc.{Glo.Tab.CONFERENCE_ID} FROM NewConfs nc " +
-                           $"JOIN Conference c " +
-                               $"ON c.{Glo.Tab.RESOURCE_ID} = nc.{Glo.Tab.RESOURCE_ID} " +
-                               $"AND c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} = nc.{Glo.Tab.CONFERENCE_RESOURCE_ROW} " +
-                               $"AND c.{Glo.Tab.CONFERENCE_END} > nc.{Glo.Tab.CONFERENCE_START} " +
-                               $"AND c.{Glo.Tab.CONFERENCE_START} < nc.{Glo.Tab.CONFERENCE_END} " +
-                               $"AND c.{Glo.Tab.CONFERENCE_ID} != nc.{Glo.Tab.CONFERENCE_ID}; ");
-                str.Append($"IF @@ROWCOUNT > 0 BEGIN THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1; END");
-
+                str.Append("BEGIN THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1;\nEND");
                 return str.ToString();
             }
             else
@@ -1639,23 +1639,26 @@ namespace SendReceiveClasses
                 // Out of time, so modifying Copilot's output for more complex SQL at this point. All is checked
                 // and thoroughly tested before committing.
                 return $@"
-DECLARE @CurrentRow INT;
+DECLARE @CurrentRowUp INT;
+DECLARE @CurrentRowDown INT;
 DECLARE @ConflictCount INT;
 DECLARE @ConferenceID INT;
 DECLARE @ResourceID INT;
 DECLARE @StartTime DATETIME;
 DECLARE @EndTime DATETIME;
 DECLARE @MaxRow INT;
+DECLARE @HomeRow INT;
 
 -- Cursor to iterate over selected conferences
 DECLARE conference_cursor CURSOR FOR
-SELECT {Glo.Tab.CONFERENCE_ID}, {Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END}
+SELECT {Glo.Tab.CONFERENCE_ID}, {Glo.Tab.RESOURCE_ID}, {Glo.Tab.CONFERENCE_RESOURCE_ROW},
+       {Glo.Tab.CONFERENCE_START}, {Glo.Tab.CONFERENCE_END}
 FROM Conference
 WHERE {Glo.Tab.CONFERENCE_ID} IN ({idIn.ToString()})
 ORDER BY {Glo.Tab.CONFERENCE_START};
 
 OPEN conference_cursor;
-FETCH NEXT FROM conference_cursor INTO @ConferenceID, @ResourceID, @StartTime, @EndTime;
+FETCH NEXT FROM conference_cursor INTO @ConferenceID, @ResourceID, @HomeRow, @StartTime, @EndTime;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -1664,38 +1667,65 @@ BEGIN
     FROM Resource
     WHERE {Glo.Tab.RESOURCE_ID} = @ResourceID;
 
-    SET @CurrentRow = 0;
+    SET @CurrentRowUp = @HomeRow;
+    SET @CurrentRowDown = @HomeRow + 1;
+    
 
-    WHILE @CurrentRow < @MaxRow
+    WHILE @CurrentRowDown < @MaxRow OR @CurrentRowUp >= 0
     BEGIN
-        -- Check for conflicts on the current row
-        SELECT @ConflictCount = COUNT(*)
-        FROM Conference
-        WHERE {Glo.Tab.RESOURCE_ID} = @ResourceID
-          AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRow
-          AND {Glo.Tab.CONFERENCE_END} > @StartTime
-          AND {Glo.Tab.CONFERENCE_START} < @EndTime
-          AND {Glo.Tab.CONFERENCE_ID} != @ConferenceID;
-
-        IF @ConflictCount = 0
+        IF @CurrentRowUp >= 0
         BEGIN
-            -- No conflict, update the conference to the current row
-            UPDATE Conference
-            SET {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRow
-            WHERE {Glo.Tab.CONFERENCE_ID} = @ConferenceID;
-            BREAK;
+            -- Same again, going up.
+            SELECT @ConflictCount = COUNT(*)
+            FROM Conference
+            WHERE {Glo.Tab.RESOURCE_ID} = @ResourceID
+              AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRowUp
+              AND {Glo.Tab.CONFERENCE_END} > @StartTime
+              AND {Glo.Tab.CONFERENCE_START} < @EndTime
+              AND {Glo.Tab.CONFERENCE_ID} != @ConferenceID;
+
+            IF @ConflictCount = 0
+            BEGIN
+                -- No conflict, update the conference to the current row
+                UPDATE Conference
+                SET {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRowUp
+                WHERE {Glo.Tab.CONFERENCE_ID} = @ConferenceID;
+                BREAK;
+            END
         END
 
-        SET @CurrentRow = @CurrentRow + 1;
+        IF @CurrentRowDown < @MaxRow
+        BEGIN
+            -- Check for conflicts on the current row down
+            SELECT @ConflictCount = COUNT(*)
+            FROM Conference
+            WHERE {Glo.Tab.RESOURCE_ID} = @ResourceID
+              AND {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRowDown
+              AND {Glo.Tab.CONFERENCE_END} > @StartTime
+              AND {Glo.Tab.CONFERENCE_START} < @EndTime
+              AND {Glo.Tab.CONFERENCE_ID} != @ConferenceID;
+
+            IF @ConflictCount = 0
+            BEGIN
+                -- No conflict, update the conference to the current row
+                UPDATE Conference
+                SET {Glo.Tab.CONFERENCE_RESOURCE_ROW} = @CurrentRowDown
+                WHERE {Glo.Tab.CONFERENCE_ID} = @ConferenceID;
+                BREAK;
+            END
+        END
+
+        SET @CurrentRowUp = @CurrentRowUp - 1;
+        SET @CurrentRowDown = @CurrentRowDown + 1;
     END
 
-    IF @CurrentRow >= @MaxRow
+    IF @CurrentRowDown >= @MaxRow AND @CurrentRowUp < 0
     BEGIN
         -- If we exceed the maximum row, throw an exception
         THROW 50000, '{Glo.ROW_CLASH_FAILED_RESOLVE}', 1;
     END
 
-    FETCH NEXT FROM conference_cursor INTO @ConferenceID, @ResourceID, @StartTime, @EndTime;
+    FETCH NEXT FROM conference_cursor INTO @ConferenceID, @ResourceID, @HomeRow, @StartTime, @EndTime;
 END
 
 CLOSE conference_cursor;

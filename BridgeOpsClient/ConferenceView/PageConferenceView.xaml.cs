@@ -924,7 +924,7 @@ namespace BridgeOpsClient
                     if (conferenceIDs.Count > 0)
                     {
                         if (!App.SendConferenceQuickMoveRequest(draggingGhosts, conferenceIDs, starts, ends,
-                                                                resourceIDs, resourceRows, false, false, false))
+                                                                resourceIDs, resourceRows, true, false, false))
                         {
                             if (wasDraggingResize)
                                 foreach (Conference c in schView.selectedConferences)
