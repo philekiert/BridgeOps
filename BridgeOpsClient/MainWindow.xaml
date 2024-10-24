@@ -11,13 +11,17 @@
         KeyDown="CustomWindow_KeyDown" KeyUp="CustomWindow_KeyUp"
         Deactivated="CustomWindow_Deactivated">
     <Grid x:Name="grdMain" Background="White">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="17*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
             <RowDefinition Height="29"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False">
+        <Menu Grid.Row="0" x:Name="menuBar" IsTabStop="False" Grid.ColumnSpan="2">
             <MenuItem Header="_File">
                 <MenuItem Header="Log _In" IsEnabled="False"
                           x:Name="menuUserLogIn" Click="menuUserLogIn_Click"/>
@@ -43,15 +47,18 @@
                     <MenuItem Header="_Contact" x:Name="menuDatabaseNewContact"
                               Click="menuDatabaseNewContact_Click"/>
                     <Separator/>
+                    <MenuItem Header="Co_nference" x:Name="menuDatabaseNewConference"
+                              Click="menuDatabaseNewConference_Click"/>
+                    <MenuItem Header="R_ecurrence" x:Name="menuDatabaseNewRecurrence"
+                              Click="menuDatabaseNewRecurrence_Click"/>
                     <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click"/>
-
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="_Select Query Builder" Click="menuSelect_Click"/>
             </MenuItem>
         </Menu>
-        <Grid Grid.Row="1" Margin="0 5 0 0">
+        <Grid Grid.Row="1" Margin="0 5 0 0" Grid.ColumnSpan="2">
             <Grid.Resources>
                 <Style TargetType="Button">
                     <Setter Property="Width" Value="20"/>
@@ -77,7 +84,7 @@
             <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"
                     Margin="2 2 10 2"/>
         </Grid>
-        <Grid x:Name="grdConfData" Grid.Row="2">
+        <Grid x:Name="grdConfData" Grid.Row="2" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" MinWidth="200"/>
                 <ColumnDefinition Width="1*" MinWidth="818"/>

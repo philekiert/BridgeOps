@@ -89,7 +89,7 @@
                         Margin="10 10 10 0" Width="100" HorizontalAlignment="Right" Click="btnCorrectReason_Click"
                         IsEnabled="False"/>
                 <custom:SqlDataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                                    x:Name="dtgChangeLog" Width="900" Height="400"
+                                    x:Name="dtgChangeLog" Width="980" Height="400"
                                     CustomDoubleClick="dtgChangeLog_MouseDoubleClick"/>
             </Grid>
         </TabItem>

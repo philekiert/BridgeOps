@@ -137,9 +137,9 @@ namespace BridgeOpsClient
             ditAsset.ValueChangedHandler = AnyInteraction;
 #pragma warning restore CS8602
 
-            Title = "Asset " + originalRef;
+            Title = "Asset - " + originalRef;
             if (!edit)
-                Title += " Change";
+                Title += " (Change)";
         }
 
         private void GetHistory()
@@ -404,8 +404,8 @@ namespace BridgeOpsClient
                 Top = screenHeight - (ActualHeight + 6);
             if (Top < 0)
                 Top = 0;
-            if (Left + 920 > screenWidth)
-                Left = screenWidth - 920;
+            if (Left + 1000 > screenWidth)
+                Left = screenWidth - 1000;
             if (Left < 0)
                 Left = 0;
         }

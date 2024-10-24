@@ -35,6 +35,20 @@ public static class ColumnRecord
 
     public static int columnRecordID;
 
+    public static string GetPrintName(string colName, OrderedDictionary dictionary)
+    {
+        try
+        {
+            if (((Column)dictionary[colName]!).friendlyName != "")
+                return ((Column)dictionary[colName]!).friendlyName.Replace('_', ' ');
+            else
+                return colName.Replace('_', ' ');
+        }
+        catch
+        {
+            return "";
+        }
+    }
     public static string GetPrintName(KeyValuePair<string, Column> col)
     {
         if (col.Value.friendlyName != "")
@@ -173,7 +187,7 @@ public static class ColumnRecord
                     return (Column?)conferenceType[column];
                 case "Conference":
                     return (Column?)conference[column];
-                case "ConferenceRecurrence":
+                case "Recurrence":
                     return (Column?)conferenceRecurrence[column];
                 case "Resource":
                     return (Column?)resource[column];

@@ -133,11 +133,12 @@ namespace BridgeOpsClient
         }
 
         public static string NO_NETWORK_STREAM = "NetworkStream could not be connected.";
-        public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action";
+        public static string PERMISSION_DENIED = "You do not have sufficient permissions to carry out this action.";
 
         // The listener thread can't interact with WPF components, so have this timer handle anything that comes
         // in that requires that functionality, such as force logouts.
         static bool forceLogoutQueued = false;
+        static bool recurrenceUpdateQueued = false;
         DispatcherTimer tmrStatusCheck;
         private void StatusCheck(object? sender, EventArgs e)
         {
@@ -146,6 +147,13 @@ namespace BridgeOpsClient
                 if (IsLoggedIn)
                     SessionInvalidated();
                 forceLogoutQueued = false;
+            }
+            if (recurrenceUpdateQueued)
+            {
+                foreach (object cw in App.Current.Windows)
+                    if (cw is EditRecurrence er)
+                        er.Refresh();
+                recurrenceUpdateQueued = false;
             }
         }
 
@@ -208,7 +216,7 @@ namespace BridgeOpsClient
 
             tmrStatusCheck = new()
             {
-                Interval = new TimeSpan(TimeSpan.TicksPerSecond)
+                Interval = new TimeSpan(TimeSpan.TicksPerSecond / 10)
             };
             tmrStatusCheck.Tick += StatusCheck;
             tmrStatusCheck.Start();
@@ -284,9 +292,8 @@ namespace BridgeOpsClient
                     else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
                     {
                         foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
-                        {
                             pcv.SearchTimeframe();
-                        }
+                        recurrenceUpdateQueued = true;
                     }
                 }
                 catch
@@ -1380,7 +1387,11 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError(ErrorConcat("Could not delete record.", sr.ReadString(stream)));
+                            string error = sr.ReadString(stream);
+                            if (error.Contains("fk_ConfRecurrence"))
+                                DisplayError("Can not delete a recurrence with conferences still attached.");
+                            else
+                                DisplayError(ErrorConcat("Could not delete record.", sr.ReadString(stream)));
                         }
                         else throw new Exception();
                     }
@@ -1945,15 +1956,17 @@ namespace BridgeOpsClient
                                         c.end = (DateTime)row[3]!;
                                         c.resourceID = (int)row[4]!;
                                         c.resourceRow = (int)row[5]!;
-                                        c.cancelled = (bool)row[6]!;
-                                        c.closure = (string)row[7]!;
+                                        c.recurrenceID = (int?)row[6]!;
+                                        c.recurrenceName = (string?)row[7];
+                                        c.cancelled = (bool)row[8]!;
+                                        c.closure = (string)row[9]!;
                                     }
-                                    if (row[8] != null)
+                                    if (row[10] != null)
                                     {
-                                        c.dialNos.Add((string)row[8]!);
-                                        if ((bool?)row[9] == true)
+                                        c.dialNos.Add((string)row[10]!);
+                                        if ((bool?)row[11] == true)
                                             c.test = true;
-                                        if ((bool?)row[10] == false)
+                                        if ((bool?)row[12] == false)
                                             c.hasUnclosedConnection = true;
                                     }
                                 }
@@ -2228,7 +2241,7 @@ namespace BridgeOpsClient
                             SessionInvalidated();
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError(ErrorConcat("Could not update record.", sr.ReadString(stream)));
+                            DisplayError(ErrorConcat("Could not select connection list.", sr.ReadString(stream)));
                             res = new();
                             return false;
                         }

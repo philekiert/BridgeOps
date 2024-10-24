@@ -143,6 +143,7 @@
             <StackPanel Grid.Row="8" Grid.ColumnSpan="2" x:Name="stkInfoPanel">
                 <Label x:Name="lblCreatedBy" Content="Created by..."/>
                 <Label x:Name="lblEditedBy" Content="Not yet edited"/>
+                <Label x:Name="lblRecurrence" Content="Recurrence: None"/>
             </StackPanel>
 
             <Border Grid.Row="9" Background="LightGray" Height="1" Grid.ColumnSpan="2" Margin="0 10 10 5"/>

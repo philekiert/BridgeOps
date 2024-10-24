@@ -1,4 +1,5 @@
-﻿using SendReceiveClasses;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -328,6 +329,10 @@ namespace BridgeOpsClient
             mnuScheduleUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleCancel.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             mnuScheduleDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleAddToRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleRemoveFromRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleCreateRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] &&
+                                                    App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
 
             SetResources();
 
@@ -353,6 +358,8 @@ namespace BridgeOpsClient
             public DateTime end;
             public int resourceID;
             public int resourceRow;
+            public int? recurrenceID;
+            public string? recurrenceName;
             public bool cancelled;
             public string closure = "";
             public bool test = false;
@@ -384,6 +391,8 @@ namespace BridgeOpsClient
                 c.end = end;
                 c.resourceID = resourceID;
                 c.resourceRow = resourceRow;
+                c.recurrenceID = recurrenceID;
+                c.recurrenceName = recurrenceName;
                 c.cancelled = cancelled;
                 c.closure = closure;
                 c.test = test;
@@ -1433,6 +1442,11 @@ namespace BridgeOpsClient
                 mnuScheduleUpdate.Visibility = Visibility.Collapsed;
                 mnuScheduleCancel.Visibility = Visibility.Collapsed;
                 mnuScheduleDelete.Visibility = Visibility.Collapsed;
+                mnuScheduleSepThree.Visibility = Visibility.Collapsed;
+                mnuScheduleAddToRecurrence.Visibility = Visibility.Collapsed;
+                mnuScheduleRemoveFromRecurrence.Visibility = Visibility.Collapsed;
+                mnuScheduleCreateRecurrence.Visibility = Visibility.Collapsed;
+                mnuScheduleEditRecurrence.Visibility = Visibility.Collapsed;
 
                 mnuSchedulePaste.IsEnabled = copiedConferences.Count > 0;
 
@@ -1450,12 +1464,15 @@ namespace BridgeOpsClient
             mnuScheduleUpdate.Visibility = Visibility.Visible;
             mnuScheduleCancel.Visibility = Visibility.Visible;
             mnuScheduleDelete.Visibility = Visibility.Visible;
+            mnuScheduleSepThree.Visibility = Visibility.Visible;
 
             // Set button to "Uncancel" only if all selected conferences are cancelled.
             lock (conferenceListLock)
             {
                 mnuScheduleCancel.Header = "Uncancel";
                 List<Conference> toCheck = SelectedConferences;
+
+                // Figure out cancel button text.
                 foreach (Conference c in toCheck)
                 {
                     if (!c.cancelled)
@@ -1464,6 +1481,43 @@ namespace BridgeOpsClient
                         break;
                     }
                 }
+
+                // Enable or disable the the recurring buttons.
+                bool addToRec = true;
+                bool removeFromRec = false;
+                bool createRec = true;
+                bool editRec = true;
+
+                foreach (Conference c in toCheck)
+                {
+                    if (c.recurrenceID != null)
+                    {
+                        addToRec = false;
+                        createRec = false;
+                        removeFromRec = true;
+                        break;
+                    }
+                }
+
+                if (toCheck[0].recurrenceID == null)
+                    editRec = false;
+                else
+                {
+                    int? recurrenceID = toCheck[0].recurrenceID;
+                    for (int i = 1; i < toCheck.Count; ++i)
+                    {
+                        if (toCheck[i].recurrenceID != recurrenceID)
+                        {
+                            editRec = false;
+                            break;
+                        }
+                    }
+                }
+
+                mnuScheduleAddToRecurrence.Visibility = addToRec ? Visibility.Visible : Visibility.Collapsed;
+                mnuScheduleRemoveFromRecurrence.Visibility = removeFromRec ? Visibility.Visible : Visibility.Collapsed;
+                mnuScheduleCreateRecurrence.Visibility = createRec ? Visibility.Visible : Visibility.Collapsed;
+                mnuScheduleEditRecurrence.Visibility = editRec ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
@@ -1555,7 +1609,7 @@ namespace BridgeOpsClient
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
         }
-            
+
         private void mnuScheduleCancel_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1579,6 +1633,102 @@ namespace BridgeOpsClient
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
+        }
+
+        private void mnuScheduleAddToRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = new();
+            lock (conferenceListLock)
+            {
+                List<Conference> confs = SelectedConferences;
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id.ToString());
+                if (ids.Count == 0)
+                    ids.Add(schView.lastCurrentConferenceID.ToString());
+            }
+
+            if (ids.Count == 0)
+                return;
+
+            LinkRecord lr = new("Recurrence", ColumnRecord.conferenceRecurrence);
+            lr.ShowDialog();
+            if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
+            {
+                App.DisplayError("ID could not be ascertained from the record.");
+                return;
+            }
+
+            UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                    new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
+                                    Glo.Tab.CONFERENCE_ID, ids, false);
+            App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+        }
+
+        private void mnuScheduleRemoveFromRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = new();
+            lock (conferenceListLock)
+            {
+                List<Conference> confs = SelectedConferences;
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id.ToString());
+                if (ids.Count == 0)
+                    ids.Add(schView.lastCurrentConferenceID.ToString());
+            }
+
+            if (ids.Count == 0)
+                return;
+
+            UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                    new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
+                                    Glo.Tab.CONFERENCE_ID, ids, false);
+            App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+        }
+
+        private void mnuScheduleEditRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            int? id;
+
+            lock (conferenceListLock)
+            {
+                // All selected conferences should have the same ID, or the button would have been disabled.
+                List<Conference> confs = SelectedConferences;
+                if (confs.Count == 0)
+                    confs.Add(conferences[schView.lastCurrentConferenceID]);
+                id = confs[0].recurrenceID;
+            }
+
+            if (id == null) // This really should never be the case.
+                return;
+
+            EditRecurrence editRec = new((int)id);
+            editRec.Show();
+        }
+
+        private void mnuScheduleCreateRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = new();
+            lock (conferenceListLock)
+            {
+                List<Conference> confs = SelectedConferences;
+                foreach (Conference c in SelectedConferences)
+                    ids.Add(c.id.ToString());
+                if (ids.Count == 0)
+                    ids.Add(schView.lastCurrentConferenceID.ToString());
+            }
+
+            if (ids.Count == 0)
+                return;
+
+            NewRecurrence newRec = new();
+            newRec.ShowDialog();
+            if (newRec.DialogResult == true && newRec.returnID != "")
+            {
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                        new() { Glo.Tab.RECURRENCE_ID }, new() { newRec.returnID }, new() { false },
+                                        Glo.Tab.CONFERENCE_ID, ids, false);
+                App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+            }
         }
 
         public static List<SendReceiveClasses.Conference> copiedConferences = new();

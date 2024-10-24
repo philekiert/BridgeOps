@@ -832,6 +832,7 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_CONFERENCE_TYPE ||
                          fncByte == Glo.CLIENT_NEW_CONFERENCE ||
                          fncByte == Glo.CLIENT_NEW_RESOURCE ||
+                         fncByte == Glo.CLIENT_NEW_RECURRENCE ||
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_UPDATE)
@@ -841,6 +842,7 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_UPDATE_ASSET ||
                          fncByte == Glo.CLIENT_UPDATE_CONFERENCE_TYPE ||
                          fncByte == Glo.CLIENT_UPDATE_CONFERENCE ||
+                         fncByte == Glo.CLIENT_UPDATE_RECURRENCE ||
                          fncByte == Glo.CLIENT_UPDATE_RESOURCE ||
                          fncByte == Glo.CLIENT_UPDATE_LOGIN ||
                          fncByte == Glo.CLIENT_UPDATE_CHANGE_REASON)
@@ -1361,6 +1363,14 @@ internal class BridgeOpsAgent
                                          create, out permission);
                     // Conference inserts are added further down due to the possibility of multiple inserts.
                 }
+                else if (target == Glo.CLIENT_NEW_RECURRENCE)
+                {
+                    Recurrence newRow = sr.Deserialise<Recurrence>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_CONFERENCES,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
                 else if (target == Glo.CLIENT_NEW_RESOURCE)
                 {
                     Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
@@ -1392,7 +1402,7 @@ internal class BridgeOpsAgent
             }
 
             // Contact inserts work slightly differently, as we need to get the ID back out.
-            if (target == Glo.CLIENT_NEW_CONTACT)
+            if (target == Glo.CLIENT_NEW_CONTACT || target == Glo.CLIENT_NEW_RECURRENCE)
             {
                 SqlParameter id = new("@ID", SqlDbType.Int);
                 id.Direction = ParameterDirection.Output;
@@ -1433,8 +1443,7 @@ internal class BridgeOpsAgent
                 com.CommandText = SqlAssist.Transaction(coms.ToArray());
 
                 SqlDataReader reader = com.ExecuteReader();
-                if (!resolveRowClashes)
-                    reader.NextResult();
+                reader.NextResult(); // Clear the pointless first select in the row clash detection.
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -1833,12 +1842,21 @@ internal class BridgeOpsAgent
                         out permission))
                         com.CommandText = update.SqlUpdate(false);
                 }
+                else if (target == Glo.CLIENT_UPDATE_RECURRENCE)
+                {
+                    Recurrence update = sr.Deserialise<Recurrence>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
+                }
                 else if (target == Glo.CLIENT_UPDATE_RESOURCE)
                 {
-                    // Make sure, when you get around to implementing this, that you check for permissions (as above).
                     Resource update = sr.Deserialise<Resource>(sr.ReadString(stream));
-                    //if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid))
-                    //    com.CommandText = update.SqlUpdate();
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
                 }
                 else if (target == Glo.CLIENT_UPDATE_LOGIN)
                 {
@@ -1887,8 +1905,7 @@ internal class BridgeOpsAgent
                 com.CommandText = SqlAssist.Transaction(coms.ToArray());
 
                 SqlDataReader reader = com.ExecuteReader();
-                if (!resolveRowClashes)
-                    reader.NextResult();
+                reader.NextResult(); // Clear the pointless first select in the row clash detection.
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -2000,8 +2017,7 @@ internal class BridgeOpsAgent
                 SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
                 SqlDataReader reader = com.ExecuteReader();
-                if (!resolveRowClashes)
-                    reader.NextResult();
+                reader.NextResult(); // Clear the pointless first select in the row clash detection.
                 if (!overrideDialNoClashes)
                 {
                     dialNoClashes = new(reader, true);
@@ -2782,6 +2798,8 @@ internal class BridgeOpsAgent
                                         $"f.{Glo.Tab.CONFERENCE_END}, " +
                                         $"f.{Glo.Tab.RESOURCE_ID}, " +
                                         $"f.{Glo.Tab.CONFERENCE_RESOURCE_ROW}, " +
+                                        $"f.{Glo.Tab.RECURRENCE_ID}, " +
+                                        $"r.{Glo.Tab.RECURRENCE_NAME}, " +
                                         $"f.{Glo.Tab.CONFERENCE_CANCELLED}, " +
                                         $"f.{Glo.Tab.CONFERENCE_CLOSURE}, " +
                                         $"n.{Glo.Tab.DIAL_NO}, " +
@@ -2795,6 +2813,8 @@ internal class BridgeOpsAgent
                                   "FROM Conference AS f " +
                                  $"LEFT JOIN Connection AS n ON f.{Glo.Tab.CONFERENCE_ID} = " +
                                                               $"n.{Glo.Tab.CONFERENCE_ID} " +
+                                 $"LEFT JOIN Recurrence r ON r.{Glo.Tab.RECURRENCE_ID} = " +
+                                                                    $"f.{Glo.Tab.RECURRENCE_ID} " +
                                  $"WHERE f.{Glo.Tab.CONFERENCE_END} >= '{start}' " +
                                    $"AND f.{Glo.Tab.CONFERENCE_START} <= '{end}' " +
                                  $"ORDER BY f.{Glo.Tab.CONFERENCE_ID};",
@@ -2847,12 +2867,15 @@ internal class BridgeOpsAgent
 
             sqlConnect.Open();
             SqlCommand com = new($"SELECT {string.Join(", ", conferenceColNames)}, " +
-                                   $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME}, {connectionColsStr}, " +
+                                   $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME}, " +
+                                   $"r.{Glo.Tab.RECURRENCE_NAME}, " +
+                                   $"{connectionColsStr}, " +
                                    $"o.{Glo.Tab.ORGANISATION_ID}, o.{Glo.Tab.ORGANISATION_REF}, " +
                                    $"o.{Glo.Tab.ORGANISATION_NAME} " +
                               $"FROM Conference c " +
                               $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
                               $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +
+                              $"LEFT JOIN Recurrence r ON c.{Glo.Tab.RECURRENCE_ID} = r.{Glo.Tab.RECURRENCE_ID} " +
                               $"LEFT JOIN Connection n ON c.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
                               $"LEFT JOIN Organisation o ON n.{Glo.Tab.DIAL_NO} = o.{Glo.Tab.DIAL_NO} " +
                               $"WHERE c.{Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", conferenceIdStrs)}) " +
@@ -2869,7 +2892,8 @@ internal class BridgeOpsAgent
 
             // Store these indices as we'll be using them a lot.
             int usernamesStart = conferenceColNames.Count;
-            int connStart = usernamesStart + 2;
+            int resourceNameStart = usernamesStart + 2;
+            int connStart = usernamesStart + 3;
 
             foreach (List<object?> row in result.rows)
             {
@@ -2885,16 +2909,18 @@ internal class BridgeOpsAgent
                         conferenceID = conferenceID,
                         resourceID = (int)Glo.Fun.GetInt32FromNullableObject(row[1])!,
                         resourceRow = Convert.ToInt32(row[2]!),
-                        title = (string?)row[3]!,
-                        start = (DateTime)row[4]!,
-                        end = (DateTime)row[5]!,
-                        cancelled = (bool?)row[6]!,
-                        closure = (string?)row[7],
-                        createLoginID = Glo.Fun.GetInt32FromNullableObject(row[8]),
-                        createTime = (DateTime?)row[9]!,
-                        editLoginID = Glo.Fun.GetInt32FromNullableObject(row[10]),
-                        editTime = (DateTime?)row[11]!,
-                        notes = (string?)row[12]!,
+                        recurrenceID = Convert.ToInt32(row[3]!),
+                        recurrenceName = (string?)row[resourceNameStart],
+                        title = (string?)row[4]!,
+                        start = (DateTime)row[5]!,
+                        end = (DateTime)row[6]!,
+                        cancelled = (bool?)row[7]!,
+                        closure = (string?)row[8],
+                        createLoginID = Glo.Fun.GetInt32FromNullableObject(row[9]),
+                        createTime = (DateTime?)row[10]!,
+                        editLoginID = Glo.Fun.GetInt32FromNullableObject(row[11]),
+                        editTime = (DateTime?)row[12]!,
+                        notes = (string?)row[13]!,
                         additionalCols = new(),
                         additionalValTypes = new(),
                         additionalVals = new(),
@@ -3036,7 +3062,8 @@ internal class BridgeOpsAgent
                         sameCols.Add(s);
                 string connSame = string.Join(", ", sameCols);
 
-                coms.Add("DECLARE @DuplicateConfID INT; ");
+                coms.Add("CREATE TABLE #IDs (ID INT); " + // Temp table used for storing IDs of all duplications.
+                         "DECLARE @DuplicateConfID INT; ");
                 for (int i = 0; i < conferenceIDs.Count; ++i)
                 {
                     coms.Add($"INSERT INTO Conference ({confSame}, {confChanging})" +
@@ -3046,6 +3073,7 @@ internal class BridgeOpsAgent
                                             $"{loginID}, '{SqlAssist.DateTimeToSQL(DateTime.Now)}', NULL, NULL " +
                              $"FROM Conference WHERE {Glo.Tab.CONFERENCE_ID} = {conferenceIDs[i].ToString()}; " +
                               "SET @DuplicateConfID = SCOPE_IDENTITY(); " +
+                              "INSERT INTO #IDs VALUES (@DuplicateConfID); " +
                              $"INSERT INTO Connection ({connSame}, {Glo.Tab.CONFERENCE_ID}, " +
                                                      $"{Glo.Tab.CONNECTION_TIME_TO}, {Glo.Tab.CONNECTION_TIME_FROM})" +
                              $"SELECT {connSame}, @DuplicateConfID, NULL, NULL " +
@@ -3067,7 +3095,8 @@ internal class BridgeOpsAgent
             }
 
             // Check for various clashes. Row clashes cannot be bypassed, dial no and resource overflows can.
-            coms.Add(Conference.SqlCheckForRowClashes(conferenceIDs, sqlConnect, resolveRowClashes));
+            coms.Add(Conference.SqlCheckForRowClashes(duplicate ? null : conferenceIDs,
+                                                      sqlConnect, resolveRowClashes));
             if (!overrideDialNoClashes)
                 coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
             if (!overrideResourceOverflows)
@@ -3076,8 +3105,7 @@ internal class BridgeOpsAgent
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
             SqlDataReader reader = com.ExecuteReader();
-            if (!resolveRowClashes)
-                reader.NextResult(); // Clear the first result, as it's for the pointless row clash report.
+            reader.NextResult(); // Clear the first result, as it's for the pointless row clash report.
             if (!overrideDialNoClashes)
             {
                 dialNoClashes = new(reader, true);
@@ -3223,6 +3251,13 @@ internal class BridgeOpsAgent
             string sessionID = sr.ReadString(stream);
             // No need to get the column record ID as we're selecting all core columns.
             List<string> conferenceIdStrs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
+
+            lock (clientSessions)
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
 
             SqlAssist.SecureValue(conferenceIdStrs.Cast<string?>().ToList());
             string ids = string.Join(", ", conferenceIdStrs);

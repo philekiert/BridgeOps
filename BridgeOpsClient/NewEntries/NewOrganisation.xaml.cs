@@ -212,9 +212,9 @@ namespace BridgeOpsClient
             btnEdit.IsEnabled = false;
 #pragma warning restore CS8602
 
-            Title = "Organisation " + originalRef;
+            Title = "Organisation - " + originalRef;
             if (!edit)
-                Title += " Change";
+                Title += " (Change)";
 
             // Sort out contact and asset tables.
             PopulateAssets();
@@ -665,8 +665,8 @@ namespace BridgeOpsClient
                 Top = screenHeight - (ActualHeight + 6);
             if (Top < 0)
                 Top = 0;
-            if (Left + 920 > screenWidth)
-                Left = screenWidth - 920;
+            if (Left + 1000 > screenWidth)
+                Left = screenWidth - 1000;
             if (Left < 0)
                 Left = 0;
         }

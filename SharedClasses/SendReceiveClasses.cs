@@ -1352,6 +1352,8 @@ namespace SendReceiveClasses
         public int? conferenceID;
         public int resourceID;
         public int resourceRow;
+        public int? recurrenceID;
+        public string? recurrenceName;
         public string? title;
         public DateTime? start;
         public DateTime? end;
@@ -1387,6 +1389,8 @@ namespace SendReceiveClasses
             conferenceID = null;
             this.resourceID = resourceID;
             this.resourceRow = resourceRow;
+            this.recurrenceID = null;
+            this.recurrenceName = null;
             this.title = title;
             this.start = start;
             this.end = end;
@@ -1434,6 +1438,7 @@ namespace SendReceiveClasses
             {
                 "INSERT INTO Conference (" + SqlAssist.ColConcat(additionalCols, Glo.Tab.RESOURCE_ID,
                                                                  Glo.Tab.CONFERENCE_RESOURCE_ROW,
+                                                                 Glo.Tab.RECURRENCE_ID,
                                                                  Glo.Tab.CONFERENCE_TITLE,
                                                                  Glo.Tab.CONFERENCE_START,
                                                                  Glo.Tab.CONFERENCE_END,
@@ -1445,6 +1450,7 @@ namespace SendReceiveClasses
                 $"OUTPUT INSERTED.{Glo.Tab.CONFERENCE_ID} INTO #IDs VALUES (" +
                 SqlAssist.ValConcat(additionalVals, resourceID.ToString(),
                                     resourceRow.ToString(),
+                                    recurrenceID == null ? "NULL" : recurrenceID.ToString(),
                                     title,
                                     SqlAssist.DateTimeToSQL((DateTime)start!,
                                                             false, true),
@@ -1630,15 +1636,13 @@ namespace SendReceiveClasses
             str.Append($"IF @@ROWCOUNT > 0\n");
 
             if (!autoResolve)
-            {
-                str.Append("BEGIN THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1;\nEND");
-                return str.ToString();
-            }
+                str.Append($"BEGIN THROW 50000, '{Glo.ROW_CLASH_WARNING}', 1;\nEND");
             else
             {
                 // Out of time, so modifying Copilot's output for more complex SQL at this point. All is checked
                 // and thoroughly tested before committing.
-                return $@"
+                str.Append($@"
+BEGIN
 DECLARE @CurrentRowUp INT;
 DECLARE @CurrentRowDown INT;
 DECLARE @ConflictCount INT;
@@ -1729,8 +1733,11 @@ BEGIN
 END
 
 CLOSE conference_cursor;
-DEALLOCATE conference_cursor;";
+DEALLOCATE conference_cursor;
+
+END");
             }
+            return str.ToString();
         }
         public static string SqlCheckForDialNoClashes(List<int>? confIDs, SqlConnection sqlConnect)
         {
@@ -2078,6 +2085,10 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public int connectionCapacity;
         public int conferenceCapacity;
         public int rowsAdditional;
+        public bool nameChanged;
+        public bool connectionCapacityChanged;
+        public bool conferenceCapacityChanged;
+        public bool rowsAdditionalChanged;
 
         public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
                         int connectionCapacity, int conferenceCapacity, int rowsAdditional)
@@ -2089,6 +2100,26 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             this.connectionCapacity = connectionCapacity;
             this.conferenceCapacity = conferenceCapacity;
             this.rowsAdditional = rowsAdditional;
+            nameChanged = false;
+            connectionCapacityChanged = false;
+            conferenceCapacityChanged = false;
+            rowsAdditionalChanged = false;
+        }
+        public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
+                        int connectionCapacity, int conferenceCapacity, int rowsAdditional, bool nameChanged,
+                        bool connectionCapacityChanged, bool conferenceCapacityChanged, bool rowsAdditionalChanged)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.resourceID = resourceID;
+            this.name = name;
+            this.connectionCapacity = connectionCapacity;
+            this.conferenceCapacity = conferenceCapacity;
+            this.rowsAdditional = rowsAdditional;
+            this.nameChanged = nameChanged;
+            this.connectionCapacityChanged = connectionCapacityChanged;
+            this.conferenceCapacityChanged = conferenceCapacityChanged;
+            this.rowsAdditionalChanged = rowsAdditionalChanged;
         }
 
         private void Prepare()
@@ -2102,14 +2133,79 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         {
             Prepare();
             return SqlAssist.InsertInto("Resource",
-                             SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
-                                                 Glo.Tab.RESOURCE_CAPACITY_CONNECTION,
-                                                 Glo.Tab.RESOURCE_CAPACITY_CONFERENCE,
-                                                 Glo.Tab.RESOURCE_ROWS_ADDITIONAL),
-                             SqlAssist.ValConcat(name,
-                                                 connectionCapacity.ToString(),
-                                                 conferenceCapacity.ToString(),
-                                                 rowsAdditional.ToString()));
+                                        SqlAssist.ColConcat(Glo.Tab.RESOURCE_NAME,
+                                                            Glo.Tab.RESOURCE_CAPACITY_CONNECTION,
+                                                            Glo.Tab.RESOURCE_CAPACITY_CONFERENCE,
+                                                            Glo.Tab.RESOURCE_ROWS_ADDITIONAL),
+                                        SqlAssist.ValConcat(name,
+                                                            connectionCapacity.ToString(),
+                                                            conferenceCapacity.ToString(),
+                                                            rowsAdditional.ToString()));
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new();
+            if (nameChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_NAME, name));
+            if (connectionCapacityChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_CAPACITY_CONNECTION, connectionCapacity.ToString()));
+            if (conferenceCapacityChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_CAPACITY_CONFERENCE, conferenceCapacity.ToString()));
+            if (rowsAdditionalChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_ROWS_ADDITIONAL, rowsAdditional.ToString()));
+
+            return (SqlAssist.Update("Resource", string.Join(", ", setters),
+                                     Glo.Tab.RESOURCE_ID, resourceID));
+        }
+    }
+
+    struct Recurrence
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public int? id;
+        public string? name;
+        public string? notes;
+        public bool? requireIdBack;
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (name != null)
+                name = SqlAssist.AddQuotes(SqlAssist.SecureValue(name));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+
+            string com = SqlAssist.InsertInto("Recurrence", $"{Glo.Tab.RECURRENCE_NAME}, {Glo.Tab.NOTES}",
+                                              (name == null || name == "''" ? "NULL" : name) + ", " +
+                                              (notes == null || notes == "''" ? "NULL" : notes));
+            if (requireIdBack == true)
+                com += " SET @ID = SCOPE_IDENTITY();"; // Picked up by ExecuteNonQuery() in agent.
+
+            return com;
+        }
+
+        public string SqlUpdate()
+        {
+            if (id == null)
+                return "";
+
+            Prepare();
+            string recName = name == null || name == "''" ? "NULL" : name;
+            string recNotes = notes == null || notes == "''" ? "NULL" : notes;
+
+            return SqlAssist.Update("Recurrence",
+                                    $"{Glo.Tab.RECURRENCE_NAME} = {recName}, " +
+                                    $"{Glo.Tab.NOTES} = {recNotes}",
+                                    Glo.Tab.RECURRENCE_ID, id.ToString()!);
         }
     }
 

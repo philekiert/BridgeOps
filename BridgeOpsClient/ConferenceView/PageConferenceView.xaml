@@ -101,8 +101,16 @@
                         <MenuItem x:Name="mnuScheduleAdjustConnections" Header="Adjust Connections" Click="mnuScheduleAdjustConnections_Click"/>
                         <MenuItem x:Name="mnuScheduleSetHost" Header="Set Host" Click="mnuScheduleSetHost_Click"/>
                         <MenuItem x:Name="mnuScheduleCancel" Header="Cancel" Click="mnuScheduleCancel_Click"/>
-                        <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"
-                                  InputGestureText="Del"/>
+                        <MenuItem x:Name="mnuScheduleDelete" Header="Delete" Click="mnuScheduleDelete_Click"/>
+                        <Separator x:Name="mnuScheduleSepThree"/>
+                        <MenuItem x:Name="mnuScheduleAddToRecurrence" Header="Add to Recurrence"
+                                  Click="mnuScheduleAddToRecurrence_Click"/>
+                        <MenuItem x:Name="mnuScheduleRemoveFromRecurrence" Header="Remove From Recurrence"
+                                  Click="mnuScheduleRemoveFromRecurrence_Click"/>
+                        <MenuItem x:Name="mnuScheduleCreateRecurrence" Header="Create New Recurrence"
+                                  Click="mnuScheduleCreateRecurrence_Click"/>
+                        <MenuItem x:Name="mnuScheduleEditRecurrence" Header="View Recurrence"
+                                  Click="mnuScheduleEditRecurrence_Click"/>
                     </ContextMenu>
                 </Canvas.ContextMenu>
             </local:ScheduleView>

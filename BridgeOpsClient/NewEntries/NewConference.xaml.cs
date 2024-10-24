@@ -56,9 +56,7 @@ namespace BridgeOpsClient
             dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
             // Populate available resources and select whichever one the user clicked on in the schedule view.
-            if (resource == null)
-                App.DisplayError("Could not determine resource from selected row, please set manually.");
-            else
+            if (resource != null)
                 cmbResource.SelectedIndex = resource.SelectedRowTotal;
 
             ditConference.headers = ColumnRecord.conferenceHeaders;
@@ -82,6 +80,11 @@ namespace BridgeOpsClient
                 str.Append(" on ");
                 str.Append(((DateTime)conf.editTime).ToString("dd/MM/yyyy HH:mm"));
                 lblEditedBy.Content = str;
+            }
+            if (conf.recurrenceID != null)
+            {
+                lblRecurrence.Content = "Recurrence: " + conf.recurrenceID.ToString() + " - " +
+                                      (conf.recurrenceName == null ? "[no name]" : conf.recurrenceName);
             }
 
             edit = true;

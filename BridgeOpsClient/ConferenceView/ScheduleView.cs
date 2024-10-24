@@ -92,6 +92,7 @@ namespace BridgeOpsClient
         Pen penStylusFade;
 
         PathGeometry symbolPlay = new();
+        PathGeometry symbolRecurrence = new();
 
         public ScheduleView()
         {
@@ -106,6 +107,22 @@ namespace BridgeOpsClient
             pathPlay.Segments.Add(new LineSegment(p3, true));
             pathPlay.IsClosed = true;
             symbolPlay.Figures.Add(pathPlay);
+
+            // Create a play symbol for recurring conferences.
+            PathFigure pathRecurring = new() { StartPoint = new(4, 0) };
+            pathRecurring.Segments.Add(new LineSegment(new(6, 0d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(6, 4d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(10, 4d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(10, 6d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(6, 6d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(6, 10d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(4, 10d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(4, 6d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(0, 6d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(0, 4d), true));
+            pathRecurring.Segments.Add(new LineSegment(new(4, 4d), true));
+            pathRecurring.IsClosed = true;
+            symbolRecurrence.Figures.Add(pathRecurring);
 
             // Prepare colors, brushes and pens.
             brsCursor = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
@@ -741,7 +758,8 @@ namespace BridgeOpsClient
                                 dc.PushClip(clipGeometry);
 
                                 // If the conference is currently running and is not cancelled, indicate this.
-                                if (c.start < now && c.end > now && !c.cancelled && !c.isGhost)
+                                bool currentlyRunning = c.start < now && c.end > now && !c.cancelled && !c.isGhost;
+                                if (c.recurrenceID != null || currentlyRunning)
                                 {
                                     Rect iconTray;
                                     if (thickBorder)
@@ -750,13 +768,26 @@ namespace BridgeOpsClient
                                         iconTray = new Rect(area.Left + .5d, area.Top + .5d, 14d, area.Height - 1d);
 
                                     dc.DrawRectangle(brushSolid, null, iconTray);
-                                    textBrush = PrintBrushFromLuminance(brushSolid);
 
                                     // Draw the play symbol.
-                                    PathGeometry play = symbolPlay.Clone();
-                                    TranslateTransform translateTransform = new(startX + 4.5d, startY + 5d);
-                                    play.Transform = translateTransform;
-                                    dc.DrawGeometry(PrintBrushFromLuminance(brushSolid), null, play);
+                                    if (currentlyRunning)
+                                    {
+                                        PathGeometry play = symbolPlay.Clone();
+                                        TranslateTransform translateTransform = new(startX + 4.5d, startY + 5d);
+                                        play.Transform = translateTransform;
+                                        dc.DrawGeometry(PrintBrushFromLuminance(brushSolid), null, play);
+                                    }
+
+                                    // Draw the recurring symbol
+                                    if (c.recurrenceID != null)
+                                    {
+                                        PathGeometry recurrence = symbolRecurrence.Clone();
+                                        TranslateTransform translateTransform = new(
+                                            startX + 3d,
+                                            startY + (currentlyRunning ? zoomResourceSensitivity + 3d : 5d));
+                                        recurrence.Transform = translateTransform;
+                                        dc.DrawGeometry(PrintBrushFromLuminance(brushSolid), null, recurrence);
+                                    }
 
                                     startX += 14d; // Adjust start for drawing text.
                                 }

@@ -58,6 +58,8 @@ namespace BridgeOpsClient
             // Hide mention of resources in release build.
             ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
             ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
+            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
+            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
 
             // Hide the conference bar buttons.
             grdMain.RowDefinitions[1].Height = new GridLength(0);
@@ -109,6 +111,8 @@ namespace BridgeOpsClient
             menuDatabaseNewOrganisation.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewAsset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewContact.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
+            menuDatabaseNewConference.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
+            menuDatabaseNewRecurrence.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
             menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
         }
 
@@ -149,8 +153,21 @@ namespace BridgeOpsClient
         private void menuDatabaseNewContact_Click(object sender, RoutedEventArgs e)
         {
             NewContact newContact = new();
-
             newContact.Show();
+        }
+
+        private void menuDatabaseNewConference_Click(object sender, RoutedEventArgs e)
+        {
+            DateTime start = DateTime.Now;
+            start = start.Date + new TimeSpan(start.Hour + 1, 0, 0);
+            NewConference newConference = new(null, start);
+            newConference.Show();
+        }
+
+        private void menuDatabaseNewRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            NewRecurrence recurrence = new();
+            recurrence.ShowDialog();
         }
 
         private void menuDatabaseNewResource_Click(object sender, RoutedEventArgs e)

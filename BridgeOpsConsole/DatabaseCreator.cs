@@ -358,7 +358,7 @@ public class DatabaseCreator
             string resource = "";
             //string conferenceType = "";
             string conference = "";
-            string conferenceRecurrence = "";
+            string recurrence = "";
             string connections = "";
             //string dialNo = "";
             //string conferencesByDay = "";
@@ -387,8 +387,8 @@ public class DatabaseCreator
                 //    AddColumn(ref conferenceType, def);
                 if (fieldDefs.Category(def) == "Conference")
                     AddColumn(ref conference, def);
-                if (fieldDefs.Category(def) == "Conference Recurrence")
-                    AddColumn(ref conferenceRecurrence, def);
+                if (fieldDefs.Category(def) == "Recurrence")
+                    AddColumn(ref recurrence, def);
                 if (fieldDefs.Category(def) == "Connection")
                     AddColumn(ref connections, def);
                 //if (fieldDefs.Category(def) == "Dial No")
@@ -442,12 +442,12 @@ public class DatabaseCreator
             //conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";
             conference += ", CONSTRAINT pk_ConfID PRIMARY KEY (Conference_ID)" +
                           ", CONSTRAINT fk_ConfResource FOREIGN KEY (Resource_ID) REFERENCES Resource (Resource_ID)" +
+                          ", CONSTRAINT fk_ConfRecurrence FOREIGN KEY (Recurrence_ID) REFERENCES Recurrence (Recurrence_ID)" +
                           ", CONSTRAINT fk_ConfCreationLogin FOREIGN KEY (Creation_Login_ID) REFERENCES Login (Login_ID) ON DELETE SET NULL" +
                           ", CONSTRAINT dt_ConfStartEnd CHECK (Start_Time < End_Time) );";
             //               We have to manually implement the Edit_Login_ID cascades below due to SQL Server's cautious nature regarding cascade cycles.
-            //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the ConferenceRecurrence table.
-            conferenceRecurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID)" +
-                                    ", CONSTRAINT fk_ConfID FOREIGN KEY (Conference_ID) REFERENCES Conference (Conference_ID) ON DELETE CASCADE );";
+            //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the Recurrence table.
+            recurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID) );";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
@@ -496,10 +496,10 @@ public class DatabaseCreator
             SendCommandSQL(resource);
             //Writer.Message("Creating Conference Type table...");
             //SendCommandSQL(conferenceType);
+            Writer.Message("Creating Recurrence table...");
+            SendCommandSQL(recurrence);
             Writer.Message("Creating Conference table...");
             SendCommandSQL(conference);
-            Writer.Message("Creating Recurrence table...");
-            SendCommandSQL(conferenceRecurrence);
             //Writer.Message("Creating Dial No table...");
             //SendCommandSQL(dialNo);
             Writer.Message("Creating Connection table...");

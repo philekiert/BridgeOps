@@ -142,6 +142,7 @@ public class FieldDefs
         defs.Add("Conference ID", new Definition(10, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, true));
         defs.Add("Conference Resource ID", new Definition(10, Glo.Tab.RESOURCE_ID, typeResourceID, false, false, false));
         defs.Add("Conference Resource Row", new Definition(10, Glo.Tab.CONFERENCE_RESOURCE_ROW, typeResourceCapacity, false, false, false));
+        defs.Add("Conference Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, false, false));
         defs.Add("Conference Title", new Definition(10, Glo.Tab.CONFERENCE_TITLE, "VARCHAR(50)", true, false, false));
         defs.Add("Conference Start", new Definition(10, Glo.Tab.CONFERENCE_START, "DATETIME", false, false, false));
         defs.Add("Conference End", new Definition(10, Glo.Tab.CONFERENCE_END, "DATETIME", false, false, false));
@@ -158,8 +159,9 @@ public class FieldDefs
         //defs.Add("Conference Type Name", new Definition(15, Glo.Tab.CONFERENCE_TYPE_NAME, "VARCHAR(50)", true, false, false));
 
         // Conference Recurrence
-        defs.Add("Conference Recurrence Recurrence ID", new Definition(21, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, true, true));
-        defs.Add("Conference Recurrence Conference ID", new Definition(21, Glo.Tab.CONFERENCE_ID, typeConfID, false, true, false));
+        defs.Add("Recurrence Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, true, true));
+        defs.Add("Recurrence Name", new Definition(10, Glo.Tab.RECURRENCE_NAME, "VARCHAR(50)", true, false, false));
+        defs.Add("Recurrence Notes", new Definition(10, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
 
         // ----- SUPPLEMENTARY TABLES ----- //
@@ -290,7 +292,6 @@ public class FieldDefs
                $"{Glo.NL}Login ID:                             Type = " + typeLoginID +
                $"{Glo.NL}Resource ID:                          Type = " + typeResourceID +
                $"{Glo.NL}Conference ID:                        Type = " + typeConfID +
-               $"{Glo.NL}Conference Recurrence Recurrence ID:  Type = " + typeRecurrenceID +
                $"{Glo.NL}Organisation Change ID:               Type = " + typeOrgChangeID +
                $"{Glo.NL}Asset Change ID:                      Type = " + typeAssetChangeID +
                $"{Glo.NL}" +

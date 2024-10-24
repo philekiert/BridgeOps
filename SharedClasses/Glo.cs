@@ -31,7 +31,7 @@ public static class Glo
     public static string DNL = Environment.NewLine + Environment.NewLine;
 
     public static string ROW_CLASH_WARNING = "This would result in one or more row clashes. ";
-    public static string ROW_CLASH_FAILED_RESOLVE = "Could not resolve row clashes." + 
+    public static string ROW_CLASH_FAILED_RESOLVE = "Could not resolve row clashes. " + 
                                                     "Increase the resource capacity or additional rows and try again.";
     public static string DIAL_CLASH_WARNING = "This would result in one or more dial number clashes.";
     public static string RESOURCE_OVERFLOW_WARNING = "This move would result in one or more resource overflows.";
@@ -76,16 +76,18 @@ public static class Glo
     public const int CLIENT_NEW_ASSET = 10;
     public const int CLIENT_NEW_CONFERENCE_TYPE = 11;
     public const int CLIENT_NEW_CONFERENCE = 12;
-    public const int CLIENT_NEW_RESOURCE = 13;
-    public const int CLIENT_UPDATE = 14;
-    public const int CLIENT_UPDATE_LOGIN = 15;
-    public const int CLIENT_UPDATE_ORGANISATION = 16;
-    public const int CLIENT_UPDATE_CONTACT = 17;
-    public const int CLIENT_UPDATE_ASSET = 18;
-    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 19;
-    public const int CLIENT_UPDATE_CONFERENCE = 20;
-    public const int CLIENT_UPDATE_RESOURCE = 21;
-    public const int CLIENT_UPDATE_CHANGE_REASON = 22;
+    public const int CLIENT_NEW_RECURRENCE = 13;
+    public const int CLIENT_NEW_RESOURCE = 14;
+    public const int CLIENT_UPDATE = 15;
+    public const int CLIENT_UPDATE_LOGIN = 16;
+    public const int CLIENT_UPDATE_ORGANISATION = 17;
+    public const int CLIENT_UPDATE_CONTACT = 18;
+    public const int CLIENT_UPDATE_ASSET = 19;
+    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 20;
+    public const int CLIENT_UPDATE_CONFERENCE = 21;
+    public const int CLIENT_UPDATE_RESOURCE = 22;
+    public const int CLIENT_UPDATE_RECURRENCE = 23;
+    public const int CLIENT_UPDATE_CHANGE_REASON = 24;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT_QUICK = 31;
     public const int CLIENT_SELECT = 32;
@@ -214,6 +216,7 @@ public static class Glo
         public const string RESOURCE_ROWS_ADDITIONAL = "Rows_Additional";
 
         public const string RECURRENCE_ID = "Recurrence_ID";
+        public const string RECURRENCE_NAME = "Name";
 
         public const string LOGIN_ID = "Login_ID";
         public const string LOGIN_USERNAME = "Username";
@@ -232,7 +235,7 @@ public static class Glo
         public const int ORGANISATION_STATIC_COUNT = 7;
         public const int ASSET_STATIC_COUNT = 4;
         public const int CONTACT_STATIC_COUNT = 2;
-        public const int CONFERENCE_STATIC_COUNT = 13;
+        public const int CONFERENCE_STATIC_COUNT = 14;
 
         public const string NOTES = "Notes";
     }
@@ -259,7 +262,7 @@ public static class Glo
         {
             if (table == "Organisation" || table == "Asset" || table == "Contact")
                 return PERMISSION_RECORDS;
-            if (table == "Conference")
+            if (table == "Conference" || table == "Recurrence")
                 return PERMISSION_CONFERENCES;
             if (table == "Resource")
                 return PERMISSION_RESOURCES;
