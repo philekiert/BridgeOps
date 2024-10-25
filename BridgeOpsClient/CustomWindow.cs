@@ -260,6 +260,8 @@ namespace BridgeOpsClient
         {
             bool maximised = WindowState == WindowState.Maximized;
             ToggleCornerRadius(!maximised);
+            // Disable the border to make sure buttons are clickable right at the top of the screen when maximised.
+            windowBorder.BorderThickness = new(maximised ? 0 : 1);
 
             // The resize border interferes with the clickable area for dragging restoring the window when maximised.
             var windowChrome = new WindowChrome
@@ -488,9 +490,7 @@ namespace BridgeOpsClient
 
                     // If the taskbar is set to auto-hide, leave a few pixels at the bottom
                     if ((autoHide & ABS_AUTOHIDE) == ABS_AUTOHIDE)
-                    {
                         rcWorkArea.Bottom -= 1; // Adjust this value as needed
-                    }
 
                     mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
                     mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);

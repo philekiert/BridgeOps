@@ -34,7 +34,7 @@ namespace BridgeOpsClient.CustomControls
         ScrollViewer? scrollViewer;
 
         public bool canHideColumns = false;
-
+        
         DataTemplate tickIcon;
 
         // Set by the caller when calling Update(). This is used to make sure the correct column settings are updated
@@ -195,6 +195,14 @@ namespace BridgeOpsClient.CustomControls
                         }
                     }
 
+                    Type? dataType = null;
+                    for (int i = 0; i < rows.Count; ++i)
+                        if (rows[i][count] != null)
+                        {
+                            dataType = rows[i][count]!.GetType();
+                            break;
+                        }
+
                     header.Header = ColumnRecord.GetPrintName(s, col);
                     header.IsReadOnly = true;
                     if (col.type != null && col.type.ToUpper() == "DATE")
@@ -203,20 +211,21 @@ namespace BridgeOpsClient.CustomControls
                         header.Binding.StringFormat = "{0:dd/MM/yyyy}";
                     }
                     else if ((col.type != null && col.type.ToUpper() == "DATETIME") ||
-                        (rows.Count > 0 && rows[0].Count > 0 && rows[0][count] is DateTime))
+                             dataType == typeof(DateTime))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy HH:mm}";
                     }
                     else if ((col.type != null &&
                               (col.type.ToUpper() == "TIMESPAN" || col.type.ToUpper() == "TIME")) ||
-                             (rows.Count > 0 && rows[0].Count > 0 && rows[0][count] is TimeSpan))
+                             dataType == typeof(TimeSpan))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:hh\\:mm}";
                     }
-                    else if ((col.type != null && col.type.ToUpper() == "BOOLEAN") ||
-                             (rows.Count > 0 && rows[0].Count > 0 && rows[0][count] is bool))
+                    else if ((col.type != null &&
+                              (col.type.ToUpper().StartsWith("BOOL") || col.type.ToUpper() == "BIT")) ||
+                             dataType == typeof(bool))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count))
                         { Converter = new BooleanToYesNoConverter() };
@@ -282,12 +291,13 @@ namespace BridgeOpsClient.CustomControls
 
         // Present bools in line with the rest of the application.
         public class BooleanToYesNoConverter : IValueConverter
+
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
                 if (value is bool boolValue)
                     return boolValue ? "Yes" : "No";
-                return "No";
+                return "";
             }
 
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
