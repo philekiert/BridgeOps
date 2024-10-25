@@ -91,12 +91,30 @@ namespace BridgeOpsClient
                 {
                     "ID",
                     ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference),
+                    "Day",
                     "Start",
-                    "End"
+                    "End",
+                    "Host",
+                    "Notes"
                 };
                 List<List<object?>> data = new();
+                DateTime start;
+                DateTime end;
                 foreach (Conference c in conferences)
-                    data.Add(new() { c.conferenceID, c.title, c.start, c.end });
+                {
+                    start = (DateTime)c.start!;
+                    end = (DateTime)c.end!;
+                    data.Add(new()
+                    {
+                        c.conferenceID,
+                        c.title,
+                        start.DayOfWeek.ToString(),
+                        c.start,
+                        c.end,
+                        c.connections.Count == 0 ? null : c.connections[0].dialNo,
+                        c.notes
+                    });
+                }
 
                 dtg.Update(columnNames, data);
             }
@@ -157,17 +175,23 @@ namespace BridgeOpsClient
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            LinkRecord lr = new("Conference", ColumnRecord.orderedConference);
+            LinkRecord lr = new("Conference", ColumnRecord.orderedConference, typeof(int), new() { id }, 3 );
+            lr.EnableMultiLink();
+            lr.HideColumns(1, 2, 3);
             lr.ShowDialog();
-            if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
+
+            if (lr.DialogResult == false)
+                return;
+
+            if (lr.ids == null || lr.ids.Count == 0) // Error will display in LinkRecord if it couldn't get the ID.
             {
-                App.DisplayError("ID could not be ascertained from the record.");
+                App.DisplayError("IDs could not be ascertained from the selected records.");
                 return;
             }
 
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { id.ToString() }, new() { false },
-                                    Glo.Tab.CONFERENCE_ID, new() { lr.id! }, false);
+                                    Glo.Tab.CONFERENCE_ID, lr.ids, false);
             App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
         }
     }

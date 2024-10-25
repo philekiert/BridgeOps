@@ -22,8 +22,26 @@ namespace BridgeOpsClient
         string table = "";
         OrderedDictionary columns = new();
         public string? id = null;
+        public List<string>? ids = null;
 
         int idColumn = 0;
+
+        bool multiSelect = false;
+        public void EnableMultiLink()
+        {
+            dtg.EnableMultiSelect();
+            multiSelect = true;
+            grd.RowDefinitions[2].Height = new(1, GridUnitType.Auto);
+        }
+        public void HideColumns(params int[] indices)
+        {
+            try
+            {
+                foreach (int i in indices)
+                    dtg.dtg.Columns[i].Visibility = Visibility.Collapsed;
+            }
+            catch { }
+        }
 
         public LinkRecord(string table, OrderedDictionary columns)
         {
@@ -108,7 +126,10 @@ namespace BridgeOpsClient
 
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            id = dtg.GetCurrentlySelectedCell(idColumn);
+            if (multiSelect)
+                ids = new() { dtg.GetCurrentlySelectedCell(idColumn) };
+            else
+                id = dtg.GetCurrentlySelectedCell(idColumn);
             Close();
         }
 
@@ -143,6 +164,16 @@ namespace BridgeOpsClient
                 // Refresh the view to apply the filter
                 collectionView.Refresh();
             }
+        }
+
+        private void btnLink_Click(object sender, RoutedEventArgs e)
+        {
+            if (multiSelect)
+                ids = dtg.GetCurrentlySelectedCells(idColumn);
+            else
+                id = dtg.GetCurrentlySelectedCell(idColumn);
+
+            Close();
         }
     }
 }

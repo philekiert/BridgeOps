@@ -331,13 +331,17 @@ namespace BridgeOpsClient.CustomControls
         }
         public List<string> GetCurrentlySelectedIDs()
         {
+            return GetCurrentlySelectedCells(0);
+        }
+        public List<string> GetCurrentlySelectedCells(int column)
+        {
             List<string> ids = new();
 
             try
             {
                 foreach (Row row in dtg.SelectedItems)
                 {
-                    object? o = row.items[0];
+                    object? o = row.items[column];
                     if (o == null)
                         return new();
                     string? id = o.ToString();

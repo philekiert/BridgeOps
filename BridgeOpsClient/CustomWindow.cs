@@ -80,7 +80,6 @@ namespace BridgeOpsClient
             // This hard coding of the dictionary index is not ideal, but I can't load the resources from FindName here
             // for some reason. Might need updating if more dictionaries are added.
             var resources = Application.Current.Resources.MergedDictionaries[0];
-            AllowsTransparency = false;
             windowBorder = new()
             {
                 BorderBrush = (Brush)resources["brushWindowBorder"],

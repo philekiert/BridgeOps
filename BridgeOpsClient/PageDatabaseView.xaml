@@ -6,8 +6,7 @@
       xmlns:local="clr-namespace:BridgeOpsClient"
       xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
       mc:Ignorable="d" d:DesignWidth="818"
-      Title="PageDatabaseView" UseLayoutRounding="True"
-      >
+      Title="PageDatabaseView" UseLayoutRounding="True">
 
     <Grid x:Name="pageGrid">
         <Grid.RowDefinitions>

@@ -8,14 +8,17 @@
         mc:Ignorable="d"
         Title="LinkRecord" Height="450" Width="600" MaxHeight="800" MaxWidth="600"
         WindowStartupLocation="CenterOwner"
-        ContentRendered="Window_ContentRendered">
-    <Grid>
+        ContentRendered="Window_ContentRendered" UseLayoutRounding="True">
+    <Grid x:Name="grd">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="0"/>
         </Grid.RowDefinitions>
         <TextBox x:Name="txtSearch" Height="24" Margin="10 10 10 0" TextChanged="txtSearch_TextChanged"
                  VerticalContentAlignment="Center"/>
         <custom:SqlDataGrid Grid.Row="1" x:Name="dtg"/>
+        <Button x:Name="btnLink" Content="Link" Grid.Row="2" Style="{StaticResource primary-button}"
+                Margin="10 5 10 15" Width="50" HorizontalAlignment="Left" Click="btnLink_Click"/>
     </Grid>
 </local:CustomWindow>
