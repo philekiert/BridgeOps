@@ -173,6 +173,8 @@ namespace BridgeOpsClient
             }
             else
                 btnSave.IsEnabled = true;
+
+            Title = "Conference - " + id;
         }
 
         private void Window_Closed(object sender, EventArgs e)

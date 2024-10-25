@@ -24,6 +24,12 @@ namespace BridgeOpsClient
 
         List<Conference> conferences = new();
 
+        MenuItem btnUpdate;
+        MenuItem btnAdjustTime;
+        MenuItem btnAdjustConnections;
+        MenuItem btnSetHost;
+        MenuItem btnCancel;
+
         public EditRecurrence(int id)
         {
             this.id = id;
@@ -38,9 +44,40 @@ namespace BridgeOpsClient
             btnSave.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnDelete.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
 
-            Title = "Resource - " + id.ToString();
+            dtg.AddSeparator(false);
+            btnUpdate = dtg.AddContextMenuItem("Update Selected", false, btnUpdate_Click);
+            btnAdjustTime = dtg.AddContextMenuItem("Adjust Time", false, btnAdjustTime_Click);
+            btnAdjustConnections = dtg.AddContextMenuItem("Adjust Connections", false, btnAdjustConnections_Click);
+            btnSetHost = dtg.AddContextMenuItem("Set Host", false, btnSetHost_Click);
+            btnCancel = dtg.AddContextMenuItem("Cancel", false, btnCancel_Click);
+
+            Title = "Recurrence - " + id.ToString();
+
+            dtg.ContextMenuOpening += Dtg_ContextMenuOpening;
 
             Refresh();
+        }
+
+        private void Dtg_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            bool selectedSomething = dtg.dtg.SelectedItems.Count > 0;
+            btnUpdate.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnAdjustTime.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnAdjustConnections.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnSetHost.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnCancel.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+
+            btnCancel.Header = "Cancel";
+            if (selectedSomething)
+            {
+                btnCancel.Header = "Uncancel";
+                foreach (CustomControls.SqlDataGrid.Row row in dtg.dtg.SelectedItems)
+                    if ((bool?)row.items[6] != true)
+                    {
+                        btnCancel.Header = "Cancel";
+                        break;
+                    }
+            }
         }
 
         public bool Refresh()
@@ -86,7 +123,8 @@ namespace BridgeOpsClient
             {
                 if (!App.SendConferenceSelectRequest(confIDs, out conferences))
                     return Abort();
-
+                
+                // If you change the position of cancelled, make sure to udpate it in the ContextMenuOpening function.
                 List<string?> columnNames = new()
                 {
                     "ID",
@@ -95,6 +133,7 @@ namespace BridgeOpsClient
                     "Start",
                     "End",
                     "Host",
+                    "Cancelled",
                     "Notes"
                 };
                 List<List<object?>> data = new();
@@ -112,6 +151,7 @@ namespace BridgeOpsClient
                         c.start,
                         c.end,
                         c.connections.Count == 0 ? null : c.connections[0].dialNo,
+                        c.cancelled,
                         c.notes
                     });
                 }
@@ -124,15 +164,78 @@ namespace BridgeOpsClient
             return true;
         }
 
-        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            if (App.DeleteConfirm(false) && App.SendDelete("Recurrence", Glo.Tab.RECURRENCE_ID, id.ToString(), false))
+            if (dtg.dtg.SelectedItems.Count < 1)
             {
-                Close();
+                App.DisplayError("You must select at least one item to update.");
                 return;
             }
 
-            // App.SendDelete will present any errors necessary.
+            UpdateMultiple updateMultiple = new(7, "Conference", ColumnRecord.orderedConference,
+                                                Glo.Tab.CONFERENCE_ID, dtg.GetCurrentlySelectedIDs(), false);
+            updateMultiple.ShowDialog();
+        }
+
+        private void btnAdjustTime_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtg.GetCurrentlySelectedIDs();
+            DialogWindows.AdjustConferenceTimes adjust = new(ids);
+            adjust.ShowDialog();
+        }
+
+        private void btnAdjustConnections_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtg.GetCurrentlySelectedIDs();
+            DialogWindows.AdjustConferenceConnections adjust = new(ids);
+            adjust.ShowDialog();
+        }
+
+        private void btnSetHost_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtg.GetCurrentlySelectedIDs();
+
+            SelectResult res;
+            if (App.SendConnectionSelectRequest(ids, out res))
+            {
+                string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
+                string orgRefFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF]!);
+                string orgNameFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
+                res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
+
+                LinkRecord lr = new(res.columnNames, res.rows, 0);
+                lr.ShowDialog();
+
+                if (lr.id == null)
+                    return;
+
+                ConferenceAdjustment ca = new();
+                ca.intent = ConferenceAdjustment.Intent.Host;
+                ca.dialHost = lr.id;
+                ca.ids = ids.Select(int.Parse).ToList();
+
+                // Error will display in the below function if it fails.
+                App.SendConferenceAdjustment(ca);
+            }
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                bool uncancel = btnCancel.Header.ToString() == "Uncancel";
+                List<string> ids = dtg.GetCurrentlySelectedIDs();
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+                                        "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
+                                        new() { uncancel ? "0" : "1" },
+                                        new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
+                App.SendUpdate(req);
+            }
+            catch { } // No catch required due to intended inactivity on a conference disappearing and error
+                      // messages in App.Update().
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -175,7 +278,7 @@ namespace BridgeOpsClient
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            LinkRecord lr = new("Conference", ColumnRecord.orderedConference, typeof(int), new() { id }, 3 );
+            LinkRecord lr = new("Conference", ColumnRecord.orderedConference, typeof(int), new() { id }, 3);
             lr.EnableMultiLink();
             lr.HideColumns(1, 2, 3);
             lr.ShowDialog();
@@ -193,6 +296,17 @@ namespace BridgeOpsClient
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { id.ToString() }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, lr.ids, false);
             App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.DeleteConfirm(false) && App.SendDelete("Recurrence", Glo.Tab.RECURRENCE_ID, id.ToString(), false))
+            {
+                Close();
+                return;
+            }
+
+            // App.SendDelete will present any errors necessary.
         }
     }
 }

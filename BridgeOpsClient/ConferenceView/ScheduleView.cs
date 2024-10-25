@@ -795,7 +795,7 @@ namespace BridgeOpsClient
                                 if (area.Width > 8)
                                 {
                                     // Draw title.
-                                    FormattedText title = new(c.title,
+                                    FormattedText title = new($"{c.title} ({c.id.ToString()})" ,
                                                               CultureInfo.CurrentCulture,
                                                               FlowDirection.LeftToRight,
                                                               segoeUISemiBold,
