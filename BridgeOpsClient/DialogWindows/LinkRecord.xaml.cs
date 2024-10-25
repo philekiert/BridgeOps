@@ -41,12 +41,64 @@ namespace BridgeOpsClient
 
             txtSearch.Focus();
         }
+        public LinkRecord(string table, OrderedDictionary columns,
+                          Type idType, HashSet<object> excludeIDs, int excludeCol)
+        {
+            InitializeComponent();
+
+            this.table = table;
+            this.columns = columns;
+
+            // Error message is displayed by App.SelectAll() if something goes wrong.
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.SelectAll(table, out columnNames, out rows, false))
+            {
+                try
+                {
+                    for (int i = 0; i < rows.Count; ++i)
+                        if (excludeIDs.Contains(rows[i][excludeCol]!))
+                        {
+                            rows.RemoveAt(i);
+                            --i;
+                        }
+                }
+                catch { }
+                dtg.Update(columns, columnNames, rows);
+            }
+            dtg.CustomDoubleClick += dtg_DoubleClick;
+
+            txtSearch.Focus();
+        }
 
         public LinkRecord(List<string?> columns, List<List<object?>> data, int idColumn)
         {
             this.idColumn = idColumn;
 
             InitializeComponent();
+
+            dtg.Update(columns, data);
+            dtg.CustomDoubleClick += dtg_DoubleClick;
+
+            txtSearch.Focus();
+        }
+        public LinkRecord(List<string?> columns, List<List<object?>> data, int idColumn,
+                          Type idType, HashSet<object> excludeIDs, int excludeCol)
+        {
+            this.idColumn = idColumn;
+
+            InitializeComponent();
+
+            try
+            {
+                for (int i = 0; i < data.Count; ++i)
+                    if (excludeIDs.Contains(data[i][excludeCol]!))
+                    {
+                        data.RemoveAt(i);
+                        --i;
+                    }
+            }
+            catch { }
 
             dtg.Update(columns, data);
             dtg.CustomDoubleClick += dtg_DoubleClick;

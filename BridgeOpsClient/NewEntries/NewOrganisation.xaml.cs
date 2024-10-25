@@ -445,7 +445,7 @@ namespace BridgeOpsClient
             if (originalRef == null)
                 return;
 
-            LinkRecord lr = new("Asset", ColumnRecord.asset);
+            LinkRecord lr = new("Asset", ColumnRecord.asset, typeof(string), new() { originalRef }, 2);
             lr.ShowDialog();
             string? assetID = lr.id;
             int assetIdInt;
@@ -525,7 +525,15 @@ namespace BridgeOpsClient
             if (originalRef == null)
                 return;
 
-            LinkRecord lr = new("Contact", ColumnRecord.contact);
+            HashSet<object> excludeIDs = new();
+            try
+            {
+                foreach (CustomControls.SqlDataGrid.Row row in dtgContacts.dtg.Items)
+                    excludeIDs.Add(row.items[0]!);
+            }
+            catch { }
+
+            LinkRecord lr = new("Contact", ColumnRecord.contact, typeof(int), excludeIDs, 0);
             lr.ShowDialog();
             int contactIdInt;
             if (lr.id == null || !int.TryParse(lr.id, out contactIdInt))
