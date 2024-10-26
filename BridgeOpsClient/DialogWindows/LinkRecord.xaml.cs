@@ -130,6 +130,7 @@ namespace BridgeOpsClient
                 ids = new() { dtg.GetCurrentlySelectedCell(idColumn) };
             else
                 id = dtg.GetCurrentlySelectedCell(idColumn);
+            DialogResult = true;
             Close();
         }
 
@@ -172,7 +173,7 @@ namespace BridgeOpsClient
                 ids = dtg.GetCurrentlySelectedCells(idColumn);
             else
                 id = dtg.GetCurrentlySelectedCell(idColumn);
-
+            DialogResult = true;
             Close();
         }
     }

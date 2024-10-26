@@ -29,6 +29,7 @@ namespace BridgeOpsClient
         MenuItem btnAdjustConnections;
         MenuItem btnSetHost;
         MenuItem btnCancel;
+        MenuItem btnDeleteConference;
 
         public EditRecurrence(int id)
         {
@@ -50,6 +51,7 @@ namespace BridgeOpsClient
             btnAdjustConnections = dtg.AddContextMenuItem("Adjust Connections", false, btnAdjustConnections_Click);
             btnSetHost = dtg.AddContextMenuItem("Set Host", false, btnSetHost_Click);
             btnCancel = dtg.AddContextMenuItem("Cancel", false, btnCancel_Click);
+            btnDeleteConference = dtg.AddContextMenuItem("Delete Conference", false, btnDeleteConference_Click);
 
             Title = "Recurrence - " + id.ToString();
 
@@ -66,6 +68,7 @@ namespace BridgeOpsClient
             btnAdjustConnections.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnSetHost.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnCancel.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnDeleteConference.IsEnabled = selectedSomething && App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
 
             btnCancel.Header = "Cancel";
             if (selectedSomething)
@@ -134,6 +137,7 @@ namespace BridgeOpsClient
                     "End",
                     "Host",
                     "Cancelled",
+                    "Test",
                     "Notes"
                 };
                 List<List<object?>> data = new();
@@ -141,6 +145,14 @@ namespace BridgeOpsClient
                 DateTime end;
                 foreach (Conference c in conferences)
                 {
+                    bool test = false;
+                    foreach (Conference.Connection n in c.connections)
+                        if (n.isTest)
+                        {
+                            test = true;
+                            break;
+                        }
+
                     start = (DateTime)c.start!;
                     end = (DateTime)c.end!;
                     data.Add(new()
@@ -152,6 +164,7 @@ namespace BridgeOpsClient
                         c.end,
                         c.connections.Count == 0 ? null : c.connections[0].dialNo,
                         c.cancelled,
+                        test,
                         c.notes
                     });
                 }
@@ -238,6 +251,20 @@ namespace BridgeOpsClient
                       // messages in App.Update().
         }
 
+        private void btnDeleteConference_Click(object? sender, RoutedEventArgs? e)
+        {
+            try
+            {
+                List<string> ids = dtg.GetCurrentlySelectedIDs();
+                if (ids.Count == 0)
+                    return;
+                if (App.DeleteConfirm(ids.Count > 1))
+                    App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false);
+            }
+            catch { } // No catch required due to intended inactivity on a conference disappearing and error
+                      // messages in App.Update().
+        }
+
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             Recurrence r = new()
@@ -259,6 +286,8 @@ namespace BridgeOpsClient
         private void btnRemove_Click(object sender, RoutedEventArgs e)
         {
             List<string> confIDs = dtg.GetCurrentlySelectedIDs();
+            if (confIDs.Count == 0)
+                return;
 
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
@@ -307,6 +336,19 @@ namespace BridgeOpsClient
             }
 
             // App.SendDelete will present any errors necessary.
+        }
+
+        private void dtg_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            btnRemove.IsEnabled = dtg.dtg.SelectedItems.Count > 0;
+            btnDuplicate.IsEnabled = dtg.dtg.SelectedItems.Count == 1;
+        }
+
+        private void btnDuplicate_Click(object sender, RoutedEventArgs e)
+        {
+            string id = dtg.GetCurrentlySelectedID();
+            RecurrenceSelect rs = new(id);
+            rs.ShowDialog();
         }
     }
 }

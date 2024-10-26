@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient" 
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="EditRecurrence" Height="450" Width="800">
+        Title="EditRecurrence" Height="450" Width="800" MinHeight="450" MinWidth="800">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -19,7 +19,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Label Content="Conferences" FontWeight="SemiBold" Margin="5 5 0 -5"/>
-        <customcontrols:SqlDataGrid x:Name="dtg" Grid.Row="1" CustomDoubleClick="dtg_CustomDoubleClick"/>
+        <customcontrols:SqlDataGrid x:Name="dtg" Grid.Row="1"
+                                    CustomDoubleClick="dtg_CustomDoubleClick" SelectionChanged="dtg_SelectionChanged"/>
         <Label Content="Notes" FontWeight="SemiBold" Margin="5 5 0 0" Grid.Row="2"/>
         <TextBox x:Name="txtNotes" Grid.Row="3" Margin="10 0 10 10" AcceptsReturn="True" Height="100"/>
 
@@ -27,12 +28,15 @@
             <Label Content="Name" FontWeight="SemiBold" Margin="0 5 0 -5"/>
             <TextBox x:Name="txtName" Margin="5 10 10 10" Height="40"/>
             <Button x:Name="btnAdd" Content="Add Conferences" Margin="5 10 10 10" Click="btnAdd_Click"/>
-            <Button x:Name="btnRemove" Content="Remove Conferences" Margin="5 0 10 10" Click="btnRemove_Click"/>
+            <Button x:Name="btnRemove" Content="Remove Conferences" Margin="5 0 10 10" Click="btnRemove_Click"
+                    IsEnabled="False"/>
+            <Button x:Name="btnDuplicate" Content="Duplicate Conference" Margin="5 0 10 10" Click="btnDuplicate_Click"
+                    IsEnabled="False" Style="{StaticResource primary-button}"/>
         </StackPanel>
 
         <StackPanel Grid.Column="1" Grid.Row="3" VerticalAlignment="Bottom">
             <Button x:Name="btnSave" Content="Save Name &amp; Notes" Height="20" Margin="5 10 10 0"
-                    Click="btnSave_Click"/>
+                    Click="btnSave_Click" Style="{StaticResource primary-button}"/>
             <Button x:Name="btnDelete" Content="Delete Recurrence" Height="20" Margin="5 10 10 10"
                     Click="btnDelete_Click"/>
         </StackPanel>

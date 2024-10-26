@@ -1651,6 +1651,7 @@ namespace BridgeOpsClient
                 return;
 
             LinkRecord lr = new("Recurrence", ColumnRecord.conferenceRecurrence);
+            schView.selectedConferences.Clear();
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
             {
@@ -1702,6 +1703,7 @@ namespace BridgeOpsClient
                 return;
 
             EditRecurrence editRec = new((int)id);
+            schView.selectedConferences.Clear();
             editRec.Show();
         }
 

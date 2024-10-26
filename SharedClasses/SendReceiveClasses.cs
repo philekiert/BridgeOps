@@ -1873,6 +1873,44 @@ BEGIN
 END
 ";
         }
+
+        public Conference CloneForNewInsert(string sessionID, int columnRecordID)
+        {
+            Conference clone = new();
+            // Add the missing assignments to the clone object
+            clone.sessionID = sessionID;
+            clone.columnRecordID = columnRecordID;
+            clone.conferenceID = conferenceID;
+            clone.resourceID = resourceID;
+            clone.resourceRow = resourceRow;
+            clone.recurrenceID = recurrenceID;
+            clone.recurrenceName = recurrenceName;
+            clone.title = title;
+            clone.start = start;
+            clone.end = end;
+            clone.closure = closure;
+            clone.cancelled = cancelled;
+            clone.createLoginID = createLoginID;
+            clone.createTime = createTime;
+            clone.editLoginID = editLoginID;
+            clone.editTime = editTime;
+            clone.notes = notes;
+
+            clone.additionalCols = new();
+            foreach (string s in additionalCols)
+                clone.additionalCols.Add(s);
+            clone.additionalVals = new();
+            foreach (string? s in additionalVals)
+                clone.additionalVals.Add(s);
+            clone.additionalNeedsQuotes = new();
+            foreach (bool b in additionalNeedsQuotes)
+                clone.additionalNeedsQuotes.Add(b);
+            clone.connections = new(); ;
+            foreach (Connection c in connections)
+                clone.connections.Add(new(null, c.dialNo, c.isManaged, null, null, c.row, c.isTest));
+
+            return clone;
+        }
     }
 
     public struct ConferenceAdjustment
@@ -2170,6 +2208,17 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public string? name;
         public string? notes;
         public bool? requireIdBack;
+
+        public Recurrence(string sessionID, int columnRecordID, int? id,
+                          string? name, string? notes, bool? requireIdBack)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.id = id;
+            this.name = name;
+            this.notes = notes;
+            this.requireIdBack = requireIdBack;
+        }
 
         private void Prepare()
         {
