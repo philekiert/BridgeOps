@@ -26,12 +26,20 @@ namespace BridgeOpsClient.CustomControls
             InitializeComponent();
         }
 
+        // 
+        bool allowIncrement = true;
+        bool allowDecrement = true;
         public void ToggleEnabled(bool enabled)
         {
             txtNumber.IsReadOnly = !enabled;
             txtNumber.IsEnabled = enabled;
-            btnDecrement.IsEnabled = enabled;
-            btnIncrement.IsEnabled = enabled;
+            allowIncrement = enabled;
+            allowDecrement = enabled;
+
+            long value;
+            bool isNumber = long.TryParse(txtNumber.Text, out value);
+            btnDecrement.IsEnabled = (!isNumber || value > min) && allowDecrement;
+            btnIncrement.IsEnabled = (!isNumber || value < max) && allowIncrement;
         }
 
         public string Text { get { return txtNumber.Text; } set { txtNumber.Text = value; } }
@@ -151,8 +159,8 @@ namespace BridgeOpsClient.CustomControls
             }
 
             bool isNumber = long.TryParse(txtNumber.Text, out value);
-            btnDecrement.IsEnabled = !isNumber || value > min;
-            btnIncrement.IsEnabled = !isNumber || value < max;
+            btnDecrement.IsEnabled = (!isNumber || value > min) && allowDecrement;
+            btnIncrement.IsEnabled = (!isNumber || value < max) && allowIncrement;
 
             updating = false;
         }

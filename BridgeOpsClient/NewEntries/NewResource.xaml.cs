@@ -43,7 +43,7 @@ namespace BridgeOpsClient
             numRowsAdditional.SetMinMax(0, rowsMax);
 
             txtResourceName.IsReadOnly = !App.sd.editPermissions[Glo.PERMISSION_RESOURCES];
-            numCapacityConference.ToggleEnabled(App.sd.editPermissions[Glo.PERMISSION_RESOURCES]);
+            numCapacityConnection.ToggleEnabled(App.sd.editPermissions[Glo.PERMISSION_RESOURCES]);
             numCapacityConference.ToggleEnabled(App.sd.editPermissions[Glo.PERMISSION_RESOURCES]);
             numRowsAdditional.ToggleEnabled(App.sd.editPermissions[Glo.PERMISSION_RESOURCES]);
 
