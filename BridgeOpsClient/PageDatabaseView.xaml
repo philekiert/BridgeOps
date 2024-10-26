@@ -32,6 +32,9 @@
                 <ComboBoxItem Content="Organisation" />
                 <ComboBoxItem Content="Asset"/>
                 <ComboBoxItem Content="Contact"/>
+                <ComboBoxItem Content="Conference"/>
+                <ComboBoxItem Content="Recurrence"/>
+                <ComboBoxItem Content="Resource"/>
             </ComboBox>
             <ComboBox x:Name="cmbColumn" Grid.Column="2" Margin="10 10 0 10" Width="155"
                       SelectionChanged="cmbColumn_SelectionChanged"/>

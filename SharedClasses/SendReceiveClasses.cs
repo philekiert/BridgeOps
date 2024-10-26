@@ -2123,10 +2123,6 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public int connectionCapacity;
         public int conferenceCapacity;
         public int rowsAdditional;
-        public bool nameChanged;
-        public bool connectionCapacityChanged;
-        public bool conferenceCapacityChanged;
-        public bool rowsAdditionalChanged;
 
         public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
                         int connectionCapacity, int conferenceCapacity, int rowsAdditional)
@@ -2138,10 +2134,6 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             this.connectionCapacity = connectionCapacity;
             this.conferenceCapacity = conferenceCapacity;
             this.rowsAdditional = rowsAdditional;
-            nameChanged = false;
-            connectionCapacityChanged = false;
-            conferenceCapacityChanged = false;
-            rowsAdditionalChanged = false;
         }
         public Resource(string sessionID, int columnRecordID, int resourceID, string? name,
                         int connectionCapacity, int conferenceCapacity, int rowsAdditional, bool nameChanged,
@@ -2154,10 +2146,6 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             this.connectionCapacity = connectionCapacity;
             this.conferenceCapacity = conferenceCapacity;
             this.rowsAdditional = rowsAdditional;
-            this.nameChanged = nameChanged;
-            this.connectionCapacityChanged = connectionCapacityChanged;
-            this.conferenceCapacityChanged = conferenceCapacityChanged;
-            this.rowsAdditionalChanged = rowsAdditionalChanged;
         }
 
         private void Prepare()
@@ -2186,17 +2174,24 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             Prepare();
 
             List<string> setters = new();
-            if (nameChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_NAME, name));
-            if (connectionCapacityChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_CAPACITY_CONNECTION, connectionCapacity.ToString()));
-            if (conferenceCapacityChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_CAPACITY_CONFERENCE, conferenceCapacity.ToString()));
-            if (rowsAdditionalChanged)
-                setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_ROWS_ADDITIONAL, rowsAdditional.ToString()));
+            setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_NAME, name));
+            setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_CAPACITY_CONNECTION, connectionCapacity.ToString()));
+            setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_CAPACITY_CONFERENCE, conferenceCapacity.ToString()));
+            setters.Add(SqlAssist.Setter(Glo.Tab.RESOURCE_ROWS_ADDITIONAL, rowsAdditional.ToString()));
 
-            return (SqlAssist.Update("Resource", string.Join(", ", setters),
-                                     Glo.Tab.RESOURCE_ID, resourceID));
+            StringBuilder bld = new();
+            bld.Append($"IF EXISTS (SELECT c.{Glo.Tab.CONFERENCE_ID} FROM Conference c " +
+                                    $"JOIN Resource r ON r.{Glo.Tab.RESOURCE_ID} = c.{Glo.Tab.RESOURCE_ID} " +
+                                    $"WHERE c.{Glo.Tab.RESOURCE_ID} = {resourceID} AND " +
+                                          $"c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} >= " +
+                                          $"r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE} + " +
+                                          $"r.{Glo.Tab.RESOURCE_ROWS_ADDITIONAL}) " +
+                       $"BEGIN THROW 50000, 'That would remove rows that conferences are currently placed on.', 1; ELSE ");
+
+            bld.Append(SqlAssist.Update("Resource", string.Join(", ", setters), Glo.Tab.RESOURCE_ID, resourceID));
+            bld.Append(" END;");
+
+            return SqlAssist.Transaction(bld.ToString());
         }
     }
 

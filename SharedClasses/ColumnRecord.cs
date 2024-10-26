@@ -226,6 +226,8 @@ public static class ColumnRecord
             return ordered ? orderedContact : contact;
         else if (table == "Conference")
             return ordered ? orderedConference : conference;
+        else if (table == "Resource")
+            return resource;
         else if (table == "OrganisationChange")
             return organisationChange; // No ordered version.
         else if (table == "AssetChange")

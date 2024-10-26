@@ -209,7 +209,12 @@ namespace BridgeOpsClient
             {
                 DialogResult = true;
                 if (MainWindow.pageDatabase != null)
+                {
                     MainWindow.pageDatabase.RepeatSearches(identity);
+                    if (identity == 7 || identity == 8)
+                        foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                            view.SearchTimeframe();
+                }
                 Close();
             }
         }

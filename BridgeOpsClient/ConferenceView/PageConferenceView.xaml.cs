@@ -100,6 +100,7 @@ namespace BridgeOpsClient
                 }
             }
 
+            UpdateOverflowPoints();
             UpdateScrollBar();
             RedrawGrid();
             RedrawResources();

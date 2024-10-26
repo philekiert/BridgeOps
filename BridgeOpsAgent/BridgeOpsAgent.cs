@@ -1672,6 +1672,8 @@ internal class BridgeOpsAgent
                 columns = ColumnRecord.asset;
             else if (req.table == "Contact")
                 columns = ColumnRecord.contact;
+            else if (req.table == "Resource")
+                columns = ColumnRecord.resource;
             else
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);

@@ -637,6 +637,36 @@ namespace BridgeOpsClient
                 return false;
         }
 
+        public static bool EditResource(string id)
+        {
+            List<List<object?>> rows;
+            if (App.Select("Resource",
+                           new List<string> { "*" },
+                           new List<string> { Glo.Tab.RESOURCE_ID },
+                           new List<string> { id.ToString() },
+                           new List<Conditional> { Conditional.Equals },
+                           out _, out rows, true, false))
+            {
+                if (rows.Count > 0)
+                {
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.resource.Count)
+                    {
+                        NewResource resource = new(id);
+                        resource.Populate(rows[0]);
+                        resource.ShowDialog();
+                    }
+                    else
+                    {
+                        DisplayError("Incorrect number of fields received.");
+                    }
+                }
+                else
+                    DisplayError("Could no longer retrieve resource.");
+            }
+            return true;
+        }
+
         static bool columnRecordPulInProgress = false;
         public static bool PullColumnRecord()
         {
@@ -1390,6 +1420,8 @@ namespace BridgeOpsClient
                             string error = sr.ReadString(stream);
                             if (error.Contains("fk_ConfRecurrence"))
                                 DisplayError("Can not delete a recurrence with conferences still attached.");
+                            else if (error.Contains("fk_ConfResource"))
+                                DisplayError("Can not delete a resource that currently holds conferences.");
                             else
                                 DisplayError(ErrorConcat("Could not delete record.", sr.ReadString(stream)));
                         }
@@ -2421,9 +2453,11 @@ namespace BridgeOpsClient
         //                 5  User (Settings menu)
         //                 6  Column (Settings menu)
         //                 7  Conference
-        public List<string>[] dataOrder = new List<string>[7];
-        public List<bool>[] dataHidden = new List<bool>[7];
-        public List<double>[] dataWidths = new List<double>[7];
+        //                 8  Recurrence
+        //                 9  Resource
+        public List<string>[] dataOrder = new List<string>[10];
+        public List<bool>[] dataHidden = new List<bool>[10];
+        public List<double>[] dataWidths = new List<double>[10];
 
         public bool settingsPulled = false;
 

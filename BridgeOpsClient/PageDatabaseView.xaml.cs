@@ -76,8 +76,14 @@ namespace BridgeOpsClient
                 table = ColumnRecord.orderedOrganisation;
             else if (cmbTable.SelectedIndex == 1)
                 table = ColumnRecord.orderedAsset;
-            else
+            else if (cmbColumn.SelectedIndex == 2)
                 table = ColumnRecord.orderedContact;
+            else if (cmbColumn.SelectedIndex == 3)
+                table = ColumnRecord.orderedConference;
+            else if (cmbColumn.SelectedIndex == 4)
+                table = ColumnRecord.conferenceRecurrence;
+            else
+                table = ColumnRecord.resource;
 
             cmbColumn.Items.Clear();
             fieldValues.Clear();
@@ -132,6 +138,12 @@ namespace BridgeOpsClient
                 table = "Asset";
             else if (dtgResults.identity == 2)
                 table = "Contact";
+            else if (dtgResults.identity == 7)
+                table = "Conference";
+            else if (dtgResults.identity == 8)
+                table = "Recurrence";
+            else if (dtgResults.identity == 9)
+                table = "Resource";
 
             if (dtgResults.identity != -1)
             {
@@ -183,11 +195,29 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.asset;
                 nameReversals = ColumnRecord.assetFriendlyNameReversal;
             }
-            else // if == "Contact"
+            else if (cmbTable.Text == "Contact")
             {
                 identity = 2;
                 tableColDefs = ColumnRecord.contact;
                 nameReversals = ColumnRecord.contactFriendlyNameReversal;
+            }
+            else if (cmbTable.Text == "Conference")
+            {
+                identity = 7;
+                tableColDefs = ColumnRecord.conference;
+                nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
+            }
+            else if (cmbTable.Text == "Recurrence")
+            {
+                identity = 8;
+                tableColDefs = ColumnRecord.conferenceRecurrence;
+                nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
+            }
+            else // if Resource
+            {
+                identity = 9;
+                tableColDefs = ColumnRecord.resource;
+                nameReversals = ColumnRecord.resourceFriendlyNameReversal;
             }
 
             if (!nameReversals.ContainsKey(cmbColumn.Text)) // Should only trigger on no selection.
@@ -251,10 +281,25 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.asset;
                 nameReversals = ColumnRecord.assetFriendlyNameReversal;
             }
-            else // if == 2 / Contact
+            else if (identity == 2) // Contact
             {
                 tableColDefs = ColumnRecord.contact;
                 nameReversals = ColumnRecord.contactFriendlyNameReversal;
+            }
+            else if (identity == 7) // Conference
+            {
+                tableColDefs = ColumnRecord.conference;
+                nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
+            }
+            else if (identity == 8) // Recurrence
+            {
+                tableColDefs = ColumnRecord.conferenceRecurrence;
+                nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
+            }
+            else // if 9 // Resource
+            {
+                tableColDefs = ColumnRecord.resource;
+                nameReversals = ColumnRecord.resourceFriendlyNameReversal;
             }
 
             // Error message is displayed by App.SelectAll() if something goes wrong.
@@ -277,12 +322,20 @@ namespace BridgeOpsClient
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
         {
-            WideSearch(cmbTable.SelectedIndex);
+            int identity = cmbTable.SelectedIndex;
+            if (identity > 2)
+                identity += 4;
+
+            WideSearch(identity);
         }
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
+            int identity = cmbTable.SelectedIndex;
+            if (identity > 2)
+                identity += 4;
+
             if (e.Key == Key.Enter)
-                WideSearch(cmbTable.SelectedIndex);
+                WideSearch(identity);
         }
 
         private void SetStatusBar(params int[] vals)
@@ -308,6 +361,12 @@ namespace BridgeOpsClient
                 tableSearched = "Assets";
             else if (dtgResults.identity == 2)
                 tableSearched = "Contacts";
+            else if (dtgResults.identity == 7)
+                tableSearched = "Conferences";
+            else if (dtgResults.identity == 8)
+                tableSearched = "Recurrences";
+            else if (dtgResults.identity == 9)
+                tableSearched = "Resources";
             lblTable.Content = tableSearched;
 
             // Highlight searches where more than one field was searched in case the user was not aware.
@@ -374,17 +433,36 @@ namespace BridgeOpsClient
 
             string table = "Organisation";
             string idColumn = Glo.Tab.ORGANISATION_ID;
-            bool needsQuotes = true; ;
+            bool needsQuotes = false; ;
             if (dtgResults.identity == 1)
             {
+                needsQuotes = false;
                 table = "Asset";
                 idColumn = Glo.Tab.ASSET_ID;
             }
             else if (dtgResults.identity == 2)
             {
-                needsQuotes = true;
+                needsQuotes = false;
                 table = "Contact";
                 idColumn = Glo.Tab.CONTACT_ID;
+            }
+            else if (dtgResults.identity == 7)
+            {
+                needsQuotes = false;
+                table = "Conference";
+                idColumn = Glo.Tab.CONFERENCE_ID;
+            }
+            else if (dtgResults.identity == 8)
+            {
+                needsQuotes = false;
+                table = "Recurrence";
+                idColumn = Glo.Tab.RECURRENCE_ID;
+            }
+            else if (dtgResults.identity == 9)
+            {
+                needsQuotes = false;
+                table = "Resource";
+                idColumn = Glo.Tab.RESOURCE_ID;
             }
 
             var columns = ColumnRecord.GetDictionary(table, true);
@@ -400,19 +478,38 @@ namespace BridgeOpsClient
             if (!App.DeleteConfirm(dtgResults.dtg.SelectedItems.Count > 1))
                 return;
 
+            bool needsQuotes = false; ;
             string table = "Organisation";
             string column = Glo.Tab.ORGANISATION_ID;
-            bool needsQuotes = true; ;
             if (dtgResults.identity == 1)
             {
+                needsQuotes = false; ;
                 table = "Asset";
                 column = Glo.Tab.ASSET_ID;
             }
             else if (dtgResults.identity == 2)
             {
-                needsQuotes = true;
+                needsQuotes = false;
                 table = "Contact";
                 column = Glo.Tab.CONTACT_ID;
+            }
+            else if (dtgResults.identity == 7)
+            {
+                needsQuotes = false;
+                table = "Conference";
+                column = Glo.Tab.CONFERENCE_ID;
+            }
+            else if (dtgResults.identity == 8)
+            {
+                needsQuotes = false;
+                table = "Recurrence";
+                column = Glo.Tab.RECURRENCE_ID;
+            }
+            else if (dtgResults.identity == 9)
+            {
+                needsQuotes = false;
+                table = "Resource";
+                column = Glo.Tab.RESOURCE_ID;
             }
 
             if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), needsQuotes) &&
@@ -432,6 +529,8 @@ namespace BridgeOpsClient
                     App.EditAsset(currentID);
                 if (dtgResults.identity == 2)
                     App.EditContact(currentID);
+                if (dtgResults.identity == 9)
+                    App.EditResource(currentID);
             }
         }
 
