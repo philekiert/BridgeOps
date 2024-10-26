@@ -96,7 +96,7 @@ public static class ColumnRecord
     public static Dictionary<string, string> conferenceTypeFriendlyNameReversal = new();
     public static OrderedDictionary conference = new();
     public static Dictionary<string, string> conferenceFriendlyNameReversal = new();
-    public static OrderedDictionary conferenceRecurrence = new();
+    public static OrderedDictionary recurrence = new();
     public static Dictionary<string, string> conferenceRecurrenceFriendlyNameReversal = new();
     public static OrderedDictionary connection = new();
     public static Dictionary<string, string> connectionFriendlyNameReversal = new();
@@ -188,7 +188,7 @@ public static class ColumnRecord
                 case "Conference":
                     return (Column?)conference[column];
                 case "Recurrence":
-                    return (Column?)conferenceRecurrence[column];
+                    return (Column?)recurrence[column];
                 case "Resource":
                     return (Column?)resource[column];
                 case "Login":
@@ -226,6 +226,8 @@ public static class ColumnRecord
             return ordered ? orderedContact : contact;
         else if (table == "Conference")
             return ordered ? orderedConference : conference;
+        else if (table == "Recurrence")
+            return recurrence;
         else if (table == "Resource")
             return resource;
         else if (table == "OrganisationChange")
@@ -290,7 +292,7 @@ public static class ColumnRecord
         conferenceTypeFriendlyNameReversal = new();
         conference = new();
         conferenceFriendlyNameReversal = new();
-        conferenceRecurrence = new();
+        recurrence = new();
         conferenceRecurrenceFriendlyNameReversal = new();
         connection = new();
         connectionFriendlyNameReversal = new();
@@ -401,7 +403,7 @@ public static class ColumnRecord
                 else if (table == "Connection")
                     connection.Add(column, col);
                 else if (table == "Recurrence")
-                    conferenceRecurrence.Add(column, col);
+                    recurrence.Add(column, col);
                 else if (table == "Resource")
                     resource.Add(column, col);
                 else if (table == "Login")
@@ -449,7 +451,7 @@ public static class ColumnRecord
                 if (friendlySplit[0] == "Connection")
                     AddFriendlyName(connection);
                 if (friendlySplit[0] == "Recurrence")
-                    AddFriendlyName(conferenceRecurrence);
+                    AddFriendlyName(recurrence);
                 if (friendlySplit[0] == "Resource")
                     AddFriendlyName(resource);
                 if (friendlySplit[0] == "Login")
@@ -577,7 +579,7 @@ public static class ColumnRecord
                 conferenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in connection)
                 connectionFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
-            foreach (DictionaryEntry de in conferenceRecurrence)
+            foreach (DictionaryEntry de in recurrence)
                 conferenceRecurrenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in resource)
                 resourceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);

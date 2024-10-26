@@ -26,7 +26,8 @@ namespace BridgeOpsClient.CustomControls
             InitializeComponent();
         }
 
-        // 
+        // The buttons are enabled or disabled when the value is changed, so make
+        // sure the permissions are taken into account.
         bool allowIncrement = true;
         bool allowDecrement = true;
         public void ToggleEnabled(bool enabled)

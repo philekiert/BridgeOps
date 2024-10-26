@@ -1,4 +1,5 @@
-﻿using SendReceiveClasses;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using SendReceiveClasses;
 using System;
 using System.CodeDom;
 using System.Collections;
@@ -76,12 +77,12 @@ namespace BridgeOpsClient
                 table = ColumnRecord.orderedOrganisation;
             else if (cmbTable.SelectedIndex == 1)
                 table = ColumnRecord.orderedAsset;
-            else if (cmbColumn.SelectedIndex == 2)
+            else if (cmbTable.SelectedIndex == 2)
                 table = ColumnRecord.orderedContact;
-            else if (cmbColumn.SelectedIndex == 3)
+            else if (cmbTable.SelectedIndex == 3)
                 table = ColumnRecord.orderedConference;
-            else if (cmbColumn.SelectedIndex == 4)
-                table = ColumnRecord.conferenceRecurrence;
+            else if (cmbTable.SelectedIndex == 4)
+                table = ColumnRecord.recurrence;
             else
                 table = ColumnRecord.resource;
 
@@ -210,7 +211,7 @@ namespace BridgeOpsClient
             else if (cmbTable.Text == "Recurrence")
             {
                 identity = 8;
-                tableColDefs = ColumnRecord.conferenceRecurrence;
+                tableColDefs = ColumnRecord.recurrence;
                 nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
             }
             else // if Resource
@@ -293,7 +294,7 @@ namespace BridgeOpsClient
             }
             else if (identity == 8) // Recurrence
             {
-                tableColDefs = ColumnRecord.conferenceRecurrence;
+                tableColDefs = ColumnRecord.recurrence;
                 nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
             }
             else // if 9 // Resource
@@ -521,6 +522,7 @@ namespace BridgeOpsClient
         private void dtg_DoubleClick(object sender, MouseButtonEventArgs e)
         {
             string currentID = dtgResults.GetCurrentlySelectedID();
+
             if (currentID != "")
             {
                 if (dtgResults.identity == 0)
@@ -529,6 +531,14 @@ namespace BridgeOpsClient
                     App.EditAsset(currentID);
                 if (dtgResults.identity == 2)
                     App.EditContact(currentID);
+                if (dtgResults.identity == 8)
+                {
+                    int id;
+                    if (!int.TryParse(currentID, out id))
+                        return;
+                    EditRecurrence editRec = new(id);
+                    editRec.Show();
+                }
                 if (dtgResults.identity == 9)
                     App.EditResource(currentID);
             }

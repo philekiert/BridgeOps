@@ -1651,7 +1651,7 @@ namespace BridgeOpsClient
             if (ids.Count == 0)
                 return;
 
-            LinkRecord lr = new("Recurrence", ColumnRecord.conferenceRecurrence);
+            LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
             schView.selectedConferences.Clear();
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
