@@ -224,12 +224,16 @@ public static class ColumnRecord
             return ordered ? orderedAsset : asset;
         else if (table == "Contact")
             return ordered ? orderedContact : contact;
+        else if (table == "Connection")
+            return connection;
         else if (table == "Conference")
             return ordered ? orderedConference : conference;
         else if (table == "Recurrence")
             return recurrence;
         else if (table == "Resource")
             return resource;
+        else if (table == "Login")
+            return login;
         else if (table == "OrganisationChange")
             return organisationChange; // No ordered version.
         else if (table == "AssetChange")

@@ -48,6 +48,11 @@
                 <ComboBoxItem Content="Asset"/>
                 <ComboBoxItem Content="AssetChange"/>
                 <ComboBoxItem Content="Contact"/>
+                <ComboBoxItem Content="Connection"/>
+                <ComboBoxItem Content="Conference"/>
+                <ComboBoxItem Content="Recurrence"/>
+                <ComboBoxItem Content="Resource"/>
+                <ComboBoxItem Content="Login"/>
             </ComboBox>
             <Label Content="Remove Duplicate Rows" x:Name="lblDistinct" Grid.Row="0" Grid.Column="3"/>
             <CheckBox Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" x:Name="chkDistinct"/>

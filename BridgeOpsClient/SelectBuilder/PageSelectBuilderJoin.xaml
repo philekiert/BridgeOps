@@ -48,6 +48,11 @@
             <ComboBoxItem Content="Asset"/>
             <ComboBoxItem Content="AssetChange"/>
             <ComboBoxItem Content="Contact"/>
+            <ComboBoxItem Content="Connection"/>
+            <ComboBoxItem Content="Conference"/>
+            <ComboBoxItem Content="Recurrence"/>
+            <ComboBoxItem Content="Resource"/>
+            <ComboBoxItem Content="Login"/>
         </ComboBox>
         <Label Content="Columns" Grid.Row="0" Grid.Column="4" Margin="0 0 -6 0"/>
         <ComboBox Grid.Row="0" Grid.Column="5" MinWidth="80" Margin="10 5 0 5"

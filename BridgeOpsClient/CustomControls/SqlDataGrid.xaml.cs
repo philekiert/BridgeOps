@@ -233,6 +233,7 @@ namespace BridgeOpsClient.CustomControls
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                 }
+
                 if (s != null && columnstoOmit.ContainsKey(s))
                     header.Visibility = Visibility.Hidden;
                 else
