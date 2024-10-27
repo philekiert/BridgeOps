@@ -6,6 +6,7 @@
 - Conference scheduling now enabled for users.
 ### Fixed
 - Number entry fields now correctly disable their increment/decrement buttons if the user lacks edit permissions.
+- Data table rows will no longer expand to fit multi-line contents.
   
 
 ## 0.5.4
