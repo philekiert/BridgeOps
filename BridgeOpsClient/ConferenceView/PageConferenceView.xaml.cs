@@ -954,6 +954,9 @@ namespace BridgeOpsClient
                                 }
                             }
                         }
+                        else
+                            MainWindow.RepeatSearches(7);
+
                         DropGhosts();
                         SearchTimeframe();
                         // schView.UpdateOverflowPoints(); will be called by SearchtimeFrame().
@@ -1582,7 +1585,8 @@ namespace BridgeOpsClient
                 ca.ids = ids;
 
                 // Error will display in the below function if it fails.
-                App.SendConferenceAdjustment(ca);
+                if (App.SendConferenceAdjustment(ca))
+                    MainWindow.RepeatSearches(7);
             }
         }
 
@@ -1605,7 +1609,8 @@ namespace BridgeOpsClient
                     return;
                 schView.selectedConferences.Clear();
                 if (App.DeleteConfirm(ids.Count > 1))
-                    App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false);
+                    if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false))
+                        MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
@@ -1630,7 +1635,8 @@ namespace BridgeOpsClient
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },
                                         new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
-                App.SendUpdate(req);
+                if (App.SendUpdate(req))
+                    MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
@@ -1663,7 +1669,8 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, ids, false);
-            App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                MainWindow.RepeatSearches(7);
         }
 
         private void mnuScheduleRemoveFromRecurrence_Click(object sender, RoutedEventArgs e)
@@ -1684,7 +1691,8 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, ids, false);
-            App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                MainWindow.RepeatSearches(7);
         }
 
         private void mnuScheduleEditRecurrence_Click(object sender, RoutedEventArgs e)
@@ -1730,7 +1738,8 @@ namespace BridgeOpsClient
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                         new() { Glo.Tab.RECURRENCE_ID }, new() { newRec.returnID }, new() { false },
                                         Glo.Tab.CONFERENCE_ID, ids, false);
-                App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+                if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                    MainWindow.RepeatSearches(7);
             }
         }
 
@@ -1826,7 +1835,8 @@ namespace BridgeOpsClient
                 conferencesToPaste.Add(conf);
             }
 
-            App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conferencesToPaste);
+            if (App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conferencesToPaste))
+                MainWindow.RepeatSearches(7);
         }
 
         private bool draggingGhosts = false;

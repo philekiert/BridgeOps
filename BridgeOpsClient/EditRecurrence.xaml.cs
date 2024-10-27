@@ -126,7 +126,7 @@ namespace BridgeOpsClient
             {
                 if (!App.SendConferenceSelectRequest(confIDs, out conferences))
                     return Abort();
-                
+
                 // If you change the position of cancelled, make sure to udpate it in the ContextMenuOpening function.
                 List<string?> columnNames = new()
                 {
@@ -138,7 +138,7 @@ namespace BridgeOpsClient
                     "Host",
                     "Cancelled",
                     "Test",
-                    "Notes"
+                    ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference),
                 };
                 List<List<object?>> data = new();
                 DateTime start;
@@ -231,7 +231,8 @@ namespace BridgeOpsClient
                 ca.ids = ids.Select(int.Parse).ToList();
 
                 // Error will display in the below function if it fails.
-                App.SendConferenceAdjustment(ca);
+                if (App.SendConferenceAdjustment(ca))
+                    MainWindow.RepeatSearches(7);
             }
         }
 
@@ -245,7 +246,8 @@ namespace BridgeOpsClient
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },
                                         new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
-                App.SendUpdate(req);
+                if (App.SendUpdate(req))
+                    MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
@@ -259,7 +261,10 @@ namespace BridgeOpsClient
                 if (ids.Count == 0)
                     return;
                 if (App.DeleteConfirm(ids.Count > 1))
-                    App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false);
+                {
+                    if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false))
+                        MainWindow.RepeatSearches(7);
+                }
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
                       // messages in App.Update().
@@ -278,7 +283,10 @@ namespace BridgeOpsClient
             };
 
             if (App.SendUpdate(Glo.CLIENT_UPDATE_RECURRENCE, r))
+            {
+                MainWindow.RepeatSearches(9);
                 App.DisplayError("Save successful.");
+            }
             else
                 App.DisplayError("Save unsuccessful.");
         }
@@ -292,7 +300,8 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, confIDs, false);
-            App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                MainWindow.RepeatSearches(7);
         }
 
         private void dtg_CustomDoubleClick(object sender, MouseButtonEventArgs e)
@@ -324,13 +333,15 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { id.ToString() }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, lr.ids, false);
-            App.SendUpdate(req, true, true, true); // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.)
+                MainWindow.RepeatSearches(7);
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (App.DeleteConfirm(false) && App.SendDelete("Recurrence", Glo.Tab.RECURRENCE_ID, id.ToString(), false))
             {
+                MainWindow.RepeatSearches(9);
                 Close();
                 return;
             }

@@ -11,11 +11,22 @@
     <Grid x:Name="pageGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="44"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="22"/>
         </Grid.RowDefinitions>
+
+        <!-- Conference date pickers (at the top so as not to be null for cmbTable change -->
+        <StackPanel Orientation="Horizontal" Grid.Row="1" x:Name="stkDates" Visibility="Collapsed">
+            <CheckBox x:Name="chkConfFromTo" Margin="9 6 0 0"/>
+            <Label Content="From" Margin="5 0 0 0"/>
+            <DatePicker x:Name="datFrom" Margin="5 1 4 0"/>
+            <Label Content="To" Margin="10 0 0 0"/>
+            <DatePicker x:Name="datTo" Margin="5 1 4 0"/>
+        </StackPanel>
+
+        <!-- Search bar -->
         <Grid Grid.Row="0" MaxWidth="818" HorizontalAlignment="Left">
-            <!-- Search bar -->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -54,7 +65,7 @@
         </Grid>
 
         <!-- Results -->
-        <Grid Grid.Row="1" x:Name="resultsArea">
+        <Grid Grid.Row="2" x:Name="resultsArea">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
@@ -65,16 +76,16 @@
         </Grid>
 
         <!-- Status -->
-        <Border Margin="10 -10 10 0" Height="23" Grid.Row="2"
+        <Border Margin="10 -10 10 0" Height="23" Grid.Row="3"
                 VerticalAlignment="Top" CornerRadius="0 0 4 4" BorderThickness="1 0 1 1"
                 Background="{StaticResource brushStatusBar}" BorderBrush="{StaticResource brushStatusBarBorder}"/>
-        <StackPanel Grid.Row="2" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
+        <StackPanel Grid.Row="3" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
             <Label x:Name="lblRows" Padding="20 0 0 0" FontWeight="SemiBold"/>
             <Label x:Name="lblColumns" Padding="15 0 0 0"/>
             <Label x:Name="lblColumnsSearched" Padding="15 0 0 0"/>
             <Label x:Name="lblSelected" Padding="15 0 0 0"/>
         </StackPanel>
-        <Label Grid.Row="2" x:Name="lblTable" Padding="15 0 0 0" HorizontalAlignment="Right" Margin="0 -7 20 0"
+        <Label Grid.Row="3" x:Name="lblTable" Padding="15 0 0 0" HorizontalAlignment="Right" Margin="0 -7 20 0"
                FontWeight="SemiBold"/>
     </Grid>
 </Page>

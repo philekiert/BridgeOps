@@ -39,6 +39,11 @@ namespace BridgeOpsClient
 
         public static List<PageConferenceView> pageConferenceViews = new();
         public static PageDatabase? pageDatabase;
+        public static void RepeatSearches(int identity)
+        {
+            if (pageDatabase != null)
+                pageDatabase.RepeatSearches(identity);
+        }
 
         public MainWindow()
         {

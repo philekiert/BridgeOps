@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using DocumentFormat.OpenXml.Drawing;
 using SendReceiveClasses;
 using System;
 using System.CodeDom;
@@ -91,6 +91,16 @@ namespace BridgeOpsClient
 
             btnClear.IsEnabled = false;
 
+            // Add a few extras for conferences, handled separately in the search functions.
+            cmbColumn.Items.Add(new ComboBoxItem()
+            { Content = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO, ColumnRecord.organisation) });
+            cmbColumn.Items.Add(new ComboBoxItem()
+            { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF, ColumnRecord.organisation) });
+            cmbColumn.Items.Add(new ComboBoxItem()
+            { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
+            fieldValues.AddRange(new string[] { "", "", "" });
+
+
             foreach (DictionaryEntry de in table)
             {
                 // Anything that's TEXT type. Could add date and int search in the future, but it's just not urgent
@@ -146,7 +156,16 @@ namespace BridgeOpsClient
             else if (dtgResults.identity == 9)
                 table = "Resource";
 
-            if (dtgResults.identity != -1)
+            if (dtgResults.identity == 7 && conferenceSelectRequest != null)
+            {
+                List<string?> colNames = new();
+                List<List<object?>> rows = new();
+                if (App.SendSelectRequest((SelectRequest)conferenceSelectRequest, out colNames, out rows))
+                    PopulateConferencesFromSelect(rows, lastConferenceSearchSelectCount);
+                else
+                    SetStatusBar();
+            }
+            else if (dtgResults.identity != -1)
             {
                 List<string?> columnNames;
                 List<List<object?>> rows;
@@ -170,8 +189,14 @@ namespace BridgeOpsClient
             }
         }
 
+        int lastConferenceSearchSelectCount = 0;
+        SelectRequest? conferenceSelectRequest = null;
+
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Show/hide the conference dates panel
+            stkDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
+
             PopulateColumnComboBox();
         }
 
@@ -204,7 +229,9 @@ namespace BridgeOpsClient
             }
             else if (cmbTable.Text == "Conference")
             {
+                // Special case further down.
                 identity = 7;
+                // Not used, but set to keep the Visual Studio happy with assignments.
                 tableColDefs = ColumnRecord.conference;
                 nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
             }
@@ -221,48 +248,202 @@ namespace BridgeOpsClient
                 nameReversals = ColumnRecord.resourceFriendlyNameReversal;
             }
 
-            if (!nameReversals.ContainsKey(cmbColumn.Text)) // Should only trigger on no selection.
+            if (identity != 7) // Conference searches are a tad more complicated.
             {
-                App.DisplayError("Please select a column to search.");
-                return;
+                List<string> selectColumns = new();
+                List<string> selectValues = new();
+                for (int n = 0; n < fieldValues.Count; ++n)
+                {
+                    if (fieldValues[n] != "")
+                    {
+                        // Should only trigger on no selection.
+                        string colName = (string)((ComboBoxItem)cmbColumn.Items[n]).Content;
+                        if (!nameReversals.ContainsKey(colName))
+                        {
+                            App.DisplayError("Searched column is not legal.");
+                            return;
+                        }
+
+                        selectColumns.Add(nameReversals[colName]);
+                        selectValues.Add(fieldValues[n]);
+                    }
+                }
+
+                List<Conditional> conditionals = new();
+                for (int i = 0; i < selectColumns.Count; ++i)
+                    conditionals.Add(Conditional.Like);
+
+                // Error message is displayed by App.SelectAll() if something goes wrong.
+                List<string?> columnNames;
+                List<List<object?>> rows;
+                if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
+                               new List<string> { "*" },
+                               selectColumns, selectValues, conditionals,
+                               out columnNames, out rows, true, historical))
+                {
+                    lastSearchWide = false;
+                    lastSearchColumns = selectColumns;
+                    lastSearchValues = selectValues;
+                    lastSearchConditionals = conditionals;
+                    lastColumnDefinitions = tableColDefs;
+
+                    dtgResults.identity = identity;
+                    dtgResults.Update(tableColDefs, columnNames, rows);
+
+                    SetStatusBar(rows.Count, columnNames.Count, selectColumns.Count);
+                }
+                else
+                    SetStatusBar();
             }
 
+            // Special case if conference search:
+            else
+            {
+                try
+                {
+                    SearchConferences(false);
+                }
+                catch
+                {
+                    App.DisplayError("Something went wrong. Try reloading the application and searching again.");
+                }
+            }
+        }
+
+        private void SearchConferences(bool wide)
+        {
+            Dictionary<string, string> nameReversals = ColumnRecord.organisationFriendlyNameReversal;
             List<string> selectColumns = new();
-            List<string> selectValues = new();
+            List<string?> selectValues = new();
+            List<string> operators = new();
+            List<bool> needsQuotes = new();
+            List<string> andOrs = new();
+            string prefix = "Organisation.";
             for (int n = 0; n < fieldValues.Count; ++n)
             {
+                if (n == 3)
+                {
+                    prefix = "Conference.";
+                    nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
+                }
+
                 if (fieldValues[n] != "")
                 {
-                    selectColumns.Add(nameReversals[(string)((ComboBoxItem)cmbColumn.Items[n]).Content]);
-                    selectValues.Add(fieldValues[n]);
+                    // Should only trigger on no selection.
+                    string colName = (string)((ComboBoxItem)cmbColumn.Items[n]).Content;
+
+                    selectColumns.Add(prefix + nameReversals[colName]);
+                    selectValues.Add("%" + fieldValues[n] + "%");
+                    operators.Add("LIKE");
+                    needsQuotes.Add(true);
+                    andOrs.Add("AND");
                 }
             }
 
-            List<Conditional> conditionals = new();
-            for (int i = 0; i < selectColumns.Count; ++i)
-                conditionals.Add(Conditional.Like);
-
-            // Error message is displayed by App.SelectAll() if something goes wrong.
-            List<string?> columnNames;
-            List<List<object?>> rows;
-            if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
-                           new List<string> { "*" },
-                           selectColumns, selectValues, conditionals,
-                           out columnNames, out rows, true, historical))
+            if (chkConfFromTo.IsChecked == true)
             {
-                lastSearchWide = false;
-                lastSearchColumns = selectColumns;
-                lastSearchValues = selectValues;
-                lastSearchConditionals = conditionals;
-                lastColumnDefinitions = tableColDefs;
+                if (datFrom.SelectedDate == null || datTo.SelectedDate == null ||
+                    datTo.SelectedDate < datFrom.SelectedDate)
+                {
+                    App.DisplayError("Must select a start and end date when the box is checked." +
+                                     "\n\nThe end date must be prior to the start date.");
+                    return;
+                }
+                selectColumns.Add("Conference." + Glo.Tab.CONFERENCE_START);
+                selectColumns.Add("Conference." + Glo.Tab.CONFERENCE_START);
+                selectValues.Add(SqlAssist.DateTimeToSQL((DateTime)datFrom.SelectedDate));
+                selectValues.Add(SqlAssist.DateTimeToSQL(((DateTime)datTo.SelectedDate).AddDays(1)));
+                operators.Add(">=");
+                operators.Add("<");
+                needsQuotes.Add(true);
+                needsQuotes.Add(true);
+                andOrs.Add("AND");
+                andOrs.Add("AND");
+            }
 
-                dtgResults.identity = identity;
-                dtgResults.Update(tableColDefs, columnNames, rows);
+            if (andOrs.Count > 0)
+                andOrs.RemoveAt(0); // This needs to be one fewer than the rest.
 
-                SetStatusBar(rows.Count, columnNames.Count, selectColumns.Count);
+            SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, "Conference", true,
+                                    new() { "Connection", "Organisation" },
+                                    new() { "Connection." + Glo.Tab.CONFERENCE_ID,
+                                                    "Organisation." + Glo.Tab.DIAL_NO },
+                                    new() { "Conference." + Glo.Tab.CONFERENCE_ID,
+                                                    "Connection." + Glo.Tab.DIAL_NO },
+                                    new() { "LEFT", "LEFT" },
+                                    new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
+                                    selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
+                                    new(), new());
+
+            List<string?> colNames = new();
+            List<List<object?>> rows = new();
+            if (App.SendSelectRequest(req, out colNames, out rows))
+            {
+                lastConferenceSearchSelectCount = selectColumns.Count;
+                PopulateConferencesFromSelect(rows, lastConferenceSearchSelectCount);
+                lastSearchWide = wide;
+                conferenceSelectRequest = req;
             }
             else
                 SetStatusBar();
+        }
+        private void PopulateConferencesFromSelect(List<List<object?>> rows, int selectCount)
+        {
+            List<string> ids = new();
+            foreach (List<object?> row in rows)
+                ids.Add(((int)row[0]!).ToString());
+            List<Conference> conferences;
+
+            if (!App.SendConferenceSelectRequest(ids, out conferences))
+            {
+                App.DisplayError("Could not complete conference search, please try again.");
+                btnClear_Click(null, null); // Clears the status bars automatically.
+                return;
+            }
+
+            List<string?> colNames = new()
+            {
+                "ID",
+                ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference),
+                "Day",
+                "Start",
+                "End",
+                "Host",
+                "Cancelled",
+                "Test",
+                ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference)
+            };
+            List<List<object?>> data = new();
+            DateTime start;
+            DateTime end;
+            foreach (Conference c in conferences)
+            {
+                bool test = false;
+                foreach (Conference.Connection n in c.connections)
+                    if (n.isTest)
+                    {
+                        test = true;
+                        break;
+                    }
+
+                start = (DateTime)c.start!;
+                end = (DateTime)c.end!;
+                data.Add(new() { c.conferenceID,
+                                 c.title,
+                                 start.DayOfWeek.ToString(),
+                                 c.start,
+                                 c.end,
+                                 c.connections.Count == 0 ? null : c.connections[0].dialNo,
+                                 c.cancelled,
+                                 test,
+                                 c.notes
+                               });
+            }
+
+            dtgResults.identity = 7;
+            dtgResults.Update(colNames, data);
+
+            SetStatusBar(rows.Count, colNames.Count, selectCount);
         }
 
         // Wide search on either enter or click.
@@ -303,23 +484,30 @@ namespace BridgeOpsClient
                 nameReversals = ColumnRecord.resourceFriendlyNameReversal;
             }
 
-            // Error message is displayed by App.SelectAll() if something goes wrong.
-            List<string?> columnNames;
-            List<List<object?>> rows;
-            if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Needs changing in RepeatSearch() as well if adjusted.
-                               out columnNames, out rows, historical))
+            if (identity != 7) // Conference searches are a tad more complicated.
             {
-                lastSearchWide = true;
-                lastWideValue = txtSearch.Text;
-                lastColumnDefinitions = tableColDefs;
+                // Error message is displayed by App.SelectAll() if something goes wrong.
+                List<string?> columnNames;
+                List<List<object?>> rows;
+                if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Needs changing in RepeatSearch() as well if adjusted.
+                                   out columnNames, out rows, historical))
+                {
+                    lastSearchWide = true;
+                    lastWideValue = txtSearch.Text;
+                    lastColumnDefinitions = tableColDefs;
 
-                dtgResults.identity = identity;
-                dtgResults.Update(tableColDefs, columnNames, rows);
+                    dtgResults.identity = identity;
+                    dtgResults.Update(tableColDefs, columnNames, rows);
 
-                SetStatusBar(rows.Count, columnNames.Count, -1);
+                    SetStatusBar(rows.Count, columnNames.Count, -1);
+                }
+                else
+                    SetStatusBar();
             }
             else
-                SetStatusBar();
+            {
+
+            }
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
         {
@@ -408,7 +596,7 @@ namespace BridgeOpsClient
         }
 
         // Wipe all stored field search strings.
-        private void btnClear_Click(object sender, RoutedEventArgs e)
+        private void btnClear_Click(object? sender, RoutedEventArgs? e)
         {
             for (int n = 0; n < fieldValues.Count; ++n)
             {
@@ -531,6 +719,13 @@ namespace BridgeOpsClient
                     App.EditAsset(currentID);
                 if (dtgResults.identity == 2)
                     App.EditContact(currentID);
+                if (dtgResults.identity == 7)
+                {
+                    int id;
+                    if (!int.TryParse(currentID, out id))
+                        return;
+                    App.EditConference(id);
+                }
                 if (dtgResults.identity == 8)
                 {
                     int id;

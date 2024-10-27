@@ -95,7 +95,7 @@ namespace BridgeOpsClient
 
                 DisplayLoggedInUsers();
 
-                dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID, "Login_ID");
+                dtgUsers.Update(ColumnRecord.login, columnNames, rows, Glo.Tab.CHANGE_ID);
             }
             else
                 Close();

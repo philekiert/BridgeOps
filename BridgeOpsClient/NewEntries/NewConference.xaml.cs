@@ -666,7 +666,11 @@ namespace BridgeOpsClient
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             if (Save())
+            {
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(7);
                 Close();
+            }
         }
 
         private bool Save()

@@ -2129,6 +2129,12 @@ namespace BridgeOpsClient
         public static bool SendConferenceSelectRequest(List<string> conferenceIDs,
                                                        out List<SendReceiveClasses.Conference> confs)
         {
+            if (conferenceIDs.Count == 0)
+            {
+                confs = new();
+                return true;
+            }
+
             lock (streamLock)
             {
                 using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
