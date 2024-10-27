@@ -161,7 +161,7 @@ namespace BridgeOpsClient
                 List<string?> colNames = new();
                 List<List<object?>> rows = new();
                 if (App.SendSelectRequest((SelectRequest)conferenceSelectRequest, out colNames, out rows))
-                    PopulateConferencesFromSelect(rows, lastConferenceSearchSelectCount);
+                    PopulateConferencesFromSelect(rows);
                 else
                     SetStatusBar();
             }
@@ -319,6 +319,7 @@ namespace BridgeOpsClient
             List<bool> needsQuotes = new();
             List<string> andOrs = new();
             string prefix = "Organisation.";
+
             for (int n = 0; n < fieldValues.Count; ++n)
             {
                 if (n == 3)
@@ -327,16 +328,16 @@ namespace BridgeOpsClient
                     nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
                 }
 
-                if (fieldValues[n] != "")
+                if (wide || fieldValues[n] != "")
                 {
                     // Should only trigger on no selection.
                     string colName = (string)((ComboBoxItem)cmbColumn.Items[n]).Content;
 
                     selectColumns.Add(prefix + nameReversals[colName]);
-                    selectValues.Add("%" + fieldValues[n] + "%");
+                    selectValues.Add("%" + (wide ? txtSearch.Text : fieldValues[n]) + "%");
                     operators.Add("LIKE");
                     needsQuotes.Add(true);
-                    andOrs.Add("AND");
+                    andOrs.Add(wide ? "OR" : "AND");
                 }
             }
 
@@ -380,14 +381,14 @@ namespace BridgeOpsClient
             if (App.SendSelectRequest(req, out colNames, out rows))
             {
                 lastConferenceSearchSelectCount = selectColumns.Count;
-                PopulateConferencesFromSelect(rows, lastConferenceSearchSelectCount);
-                lastSearchWide = wide;
+                lastSearchWide = true;
+                PopulateConferencesFromSelect(rows);
                 conferenceSelectRequest = req;
             }
             else
                 SetStatusBar();
         }
-        private void PopulateConferencesFromSelect(List<List<object?>> rows, int selectCount)
+        private void PopulateConferencesFromSelect(List<List<object?>> rows)
         {
             List<string> ids = new();
             foreach (List<object?> row in rows)
@@ -443,7 +444,10 @@ namespace BridgeOpsClient
             dtgResults.identity = 7;
             dtgResults.Update(colNames, data);
 
-            SetStatusBar(rows.Count, colNames.Count, selectCount);
+            if (lastSearchWide)
+                SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1);
+            else
+                SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount);
         }
 
         // Wide search on either enter or click.
@@ -506,7 +510,7 @@ namespace BridgeOpsClient
             }
             else
             {
-
+                SearchConferences(true);
             }
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
