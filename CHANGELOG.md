@@ -4,6 +4,8 @@
 ## 0.6.0
 ### Added
 - Conference scheduling now enabled for users.
+### Changed
+- Time entry fields now display as a single textbox rather than two.
 ### Fixed
 - Number entry fields now correctly disable their increment/decrement buttons if the user lacks edit permissions.
 - Data table rows will no longer expand to fit multi-line contents.
