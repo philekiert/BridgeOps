@@ -1461,7 +1461,7 @@ namespace SendReceiveClasses
                                                             false, true),
                                     closure,
                                     cancelled == true ? "1" : "0",
-                                    notes == null ? "NULL" : notes) + ");"
+                                    notes == null || notes == "" ? "NULL" : notes) + ");"
             };
 
             if (connections.Count > 0)
@@ -2184,9 +2184,9 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                                     $"JOIN Resource r ON r.{Glo.Tab.RESOURCE_ID} = c.{Glo.Tab.RESOURCE_ID} " +
                                     $"WHERE c.{Glo.Tab.RESOURCE_ID} = {resourceID} AND " +
                                           $"c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} >= " +
-                                          $"r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE} + " +
-                                          $"r.{Glo.Tab.RESOURCE_ROWS_ADDITIONAL}) " +
-                       $"BEGIN THROW 50000, 'That would remove rows that conferences are currently placed on.', 1; ELSE ");
+                                          $"{conferenceCapacity} + {rowsAdditional}) " +
+                       $"BEGIN THROW 50000, 'That would remove rows that conferences are currently placed on.', 1; " +
+                       $"END ELSE BEGIN ");
 
             bld.Append(SqlAssist.Update("Resource", string.Join(", ", setters), Glo.Tab.RESOURCE_ID, resourceID));
             bld.Append(" END;");
@@ -3193,8 +3193,12 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public static string Transaction(params string[] statements)
         {
             for (int i = 0; i < statements.Length; ++i)
+            {
+                if (statements[i].EndsWith(' '))
+                    statements[i] = statements[i].Remove(statements[i].Length - 1);
                 if (!statements[i].EndsWith(';'))
                     statements[i] += ";";
+            }
 
             StringBuilder bldr = new("BEGIN TRANSACTION; BEGIN TRY");
             foreach (string s in statements)

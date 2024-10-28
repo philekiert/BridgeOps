@@ -196,6 +196,8 @@ namespace BridgeOpsClient
             else // if bool
                 value = (chkTemplate.LoadContent() as CheckBox)!;
 
+            if (rows[index].value != null)
+                grdFields.Children.Remove((UIElement)rows[index].value!);
             rows[index].value = value;
             Grid.SetRow((UIElement)value, index);
             grdFields.Children.Add((UIElement)value);

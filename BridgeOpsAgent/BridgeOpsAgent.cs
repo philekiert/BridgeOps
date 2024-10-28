@@ -1999,8 +1999,34 @@ internal class BridgeOpsAgent
                 return;
             }
 
+            // For resources, we need to make sure the capacity isn't being reduced.
+            if (req.table == "Resource" && req.columns.Contains(Glo.Tab.RESOURCE_CAPACITY_CONFERENCE) ||
+                                           req.columns.Contains(Glo.Tab.RESOURCE_ROWS_ADDITIONAL))
+            {
+                List<string> coms = new()
+                {
+                    req.SqlUpdate(),
+                    $"IF EXISTS (SELECT c.{Glo.Tab.CONFERENCE_ID} FROM Conference c " +
+                                 $"JOIN Resource r ON r.{Glo.Tab.RESOURCE_ID} = c.{Glo.Tab.RESOURCE_ID} " +
+                                 $"WHERE c.{Glo.Tab.RESOURCE_ID} IN ({string.Join(", ", req.ids)}) AND " +
+                                       $"c.{Glo.Tab.CONFERENCE_RESOURCE_ROW} >= " +
+                                       $"r.{Glo.Tab.RESOURCE_CAPACITY_CONFERENCE} + " +
+                                       $"r.{Glo.Tab.RESOURCE_ROWS_ADDITIONAL}) " +
+                    $"BEGIN THROW 50000, 'That would remove rows that conferences are currently placed on.', 1;" +
+                    $" END;"
+                };
+
+                SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
+                if (com.ExecuteNonQuery() == 0)
+                    stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
+                {
+                    stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                }
+            }
+
             // If conferences are being updated, we may need to check for clashes and overflows.
-            if (req.table == "Conference")
+            else if (req.table == "Conference")
             {
                 List<string> coms = new() { req.SqlUpdate() };
 
@@ -2911,9 +2937,9 @@ internal class BridgeOpsAgent
                         sessionID = sessionID,
                         columnRecordID = columnRecordID,
                         conferenceID = conferenceID,
-                        resourceID = (int)Glo.Fun.GetInt32FromNullableObject(row[1])!,
+                        resourceID = Convert.ToInt32(row[2]!),
                         resourceRow = Convert.ToInt32(row[2]!),
-                        recurrenceID = Convert.ToInt32(row[3]!),
+                        recurrenceID = Glo.Fun.GetInt32FromNullableObject(row[3]),
                         recurrenceName = (string?)row[resourceNameStart],
                         title = (string?)row[4]!,
                         start = (DateTime)row[5]!,

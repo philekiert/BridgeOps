@@ -18,7 +18,7 @@
                       SelectionChanged="ComboBox_SelectionChanged"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldTxt">
-            <TextBox Grid.Column="2" Margin="0 10 10 10" VerticalContentAlignment="Center" MinWidth="200"/>
+            <TextBox Grid.Column="2" Margin="0 10 10 10" VerticalContentAlignment="Center" MinWidth="200" Height="24"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldCmb">
             <ComboBox Grid.Column="2" Margin="0 10 10 10" MinWidth="200"/>
@@ -33,7 +33,7 @@
             <customcontrols:TimePicker Grid.Column="2" Margin="0 10 10 10"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldNum">
-            <customcontrols:NumberEntry Grid.Column="2" Margin="0 10 10 10" Width="200"/>
+            <customcontrols:NumberEntry Grid.Column="2" Margin="0 10 10 10"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldChk">
             <CheckBox Grid.Column="2" Margin="0 10 10 10" VerticalAlignment="Center"/>

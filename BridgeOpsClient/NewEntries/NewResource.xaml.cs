@@ -135,7 +135,11 @@ namespace BridgeOpsClient
             }
 
             if (App.SendDelete("Resource", Glo.Tab.RESOURCE_ID, id.ToString(), false))
+            {
                 Close();
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(9);
+            }
         }
     }
 }
