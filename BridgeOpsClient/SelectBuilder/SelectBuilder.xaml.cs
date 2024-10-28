@@ -240,10 +240,8 @@ namespace BridgeOpsClient
                 newWhere.txtValue.Text = oldWhere.txtValue.Text;
                 newWhere.numValue.Text = oldWhere.numValue.Text;
                 newWhere.dtmValue.datePicker.SelectedDate = oldWhere.dtmValue.datePicker.SelectedDate;
-                newWhere.dtmValue.timePicker.txtHour.Text = oldWhere.dtmValue.timePicker.txtHour.Text;
-                newWhere.dtmValue.timePicker.txtMinute.Text = oldWhere.dtmValue.timePicker.txtMinute.Text;
-                newWhere.timValue.txtHour.Text = oldWhere.timValue.txtHour.Text;
-                newWhere.timValue.txtMinute.Text = oldWhere.timValue.txtMinute.Text;
+                newWhere.dtmValue.timePicker.txt.Text = oldWhere.dtmValue.timePicker.txt.Text;
+                newWhere.timValue.txt.Text = oldWhere.timValue.txt.Text;
                 newWhere.datValue.SelectedDate = oldWhere.datValue.SelectedDate;
                 newWhere.chkValue.IsChecked = oldWhere.chkValue.IsChecked;
             }

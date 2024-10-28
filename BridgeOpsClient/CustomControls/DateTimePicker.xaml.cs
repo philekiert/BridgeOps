@@ -67,8 +67,8 @@ namespace BridgeOpsClient.CustomControls
         public void SetDateTime(DateTime dt)
         {
             datePicker.SelectedDate = dt.Date;
-            timePicker.txtHour.Text = dt.Hour < 10 ? "0" + dt.Hour.ToString() : dt.Hour.ToString();
-            timePicker.txtMinute.Text = dt.Minute < 10 ? "0" + dt.Minute.ToString() : dt.Minute.ToString();
+            timePicker.txt.Text = (dt.Hour < 10 ? "0" + dt.Hour.ToString() : dt.Hour.ToString()) + ":" +
+                                  (dt.Minute < 10 ? "0" + dt.Minute.ToString() : dt.Minute.ToString());
         }
 
         bool dateVisible = true;

@@ -119,8 +119,7 @@ namespace BridgeOpsClient.CustomControls
                         dtpInput.SetValue(Grid.RowProperty, i + headerBump);
 #pragma warning disable CS8622
                         dtpInput.datePicker.SelectedDateChanged += GenericValueChangedHandler;
-                        dtpInput.timePicker.txtHour.TextChanged += GenericValueChangedHandler;
-                        dtpInput.timePicker.txtMinute.TextChanged += GenericValueChangedHandler;
+                        dtpInput.timePicker.txt.TextChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
                         grdMain.Children.Add(dtpInput);
                     }
@@ -130,8 +129,7 @@ namespace BridgeOpsClient.CustomControls
                         timInput.SetValue(Grid.ColumnProperty, 1);
                         timInput.SetValue(Grid.RowProperty, i + headerBump);
 #pragma warning disable CS8622
-                        timInput.txtHour.TextChanged += GenericValueChangedHandler;
-                        timInput.txtMinute.TextChanged += GenericValueChangedHandler;
+                        timInput.txt.TextChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
                         grdMain.Children.Add(timInput);
                     }

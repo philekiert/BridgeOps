@@ -17,12 +17,14 @@ namespace BridgeOpsClient.CustomControls
 {
     public partial class TimePicker : UserControl
     {
-        private int maxHours = 23;
-        private int maxMinutes = 59;
-        public void SetMaxValues(int hours, int minutes)
+        private TimeSpan max = new(23, 59, 0);
+        public void SetMaxValue(TimeSpan max)
         {
-            maxHours = Math.Clamp(hours, 0, 99);
-            maxMinutes = Math.Clamp(minutes, 0, 59);
+            if (max.Hours > 99)
+                max = new(99, max.Minutes, 0);
+            else if (max < new TimeSpan(0, 2, 0))
+                max = new TimeSpan(0, 1, 0);
+            this.max = max;
         }
 
         public TimePicker()
@@ -32,63 +34,46 @@ namespace BridgeOpsClient.CustomControls
 
         public TimeSpan? GetTime()
         {
-            int hour, minute;
-            if (!int.TryParse(txtHour.Text, out hour))
+            TimeSpan time;
+            if (TimeSpan.TryParse(txt.Text, out time))
+                return time;
+            else
                 return null;
-            if (!int.TryParse(txtMinute.Text, out minute))
-                return null;
-            return new TimeSpan(hour, minute, 0);
         }
 
         public void ToggleEnabled(bool enabled)
         {
-            txtHour.IsReadOnly = !enabled;
-            txtMinute.IsReadOnly = !enabled;
-            txtHour.IsEnabled = enabled;
-            txtMinute.IsEnabled = enabled;
+            txt.IsReadOnly = !enabled;
+            txt.IsReadOnly = !enabled;
         }
 
         public void SetTime(long ticks) { SetTime(new TimeSpan(ticks)); }
         public void SetTime(TimeSpan timeSpan)
         {
-            if (timeSpan.Hours < 10)
-                txtHour.Text = "0" + timeSpan.Hours.ToString();
-            else
-                txtHour.Text = timeSpan.Hours.ToString();
-            if (timeSpan.Minutes < 10)
-                txtMinute.Text = "0" + timeSpan.Minutes.ToString();
-            else
-                txtMinute.Text = timeSpan.Minutes.ToString();
+            txt.Text = timeSpan.ToString("hh\\:mm");
+            EnforceValueRestriction();
         }
 
-        private void txtMinutes_TextChanged(object sender, TextChangedEventArgs e)
+        private void EnforceValueRestriction()
         {
-            EnforceValueRestriction((TextBox)sender, maxMinutes);
-        }
+            TimeSpan time;
+            if (!TimeSpan.TryParse(txt.Text, out time))
+                return;
 
-        private void txtHours_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            EnforceValueRestriction((TextBox)sender, maxHours);
-            if (txtHour.SelectionStart == 2 && txtHour.IsFocused)
+            TimeSpan correctedTime = time;
+            if (time > max)
+                time = max;
+            if (time < new TimeSpan(0, 1, 0))
+                time = new(0, 1, 0);
+
+            if (time != correctedTime)
             {
-                txtMinute.Focus();
-                txtMinute.Select(0, 0);
-            }
-        }
-
-        private void EnforceValueRestriction(TextBox textBox, int max)
-        {
-            int value;
-            if (int.TryParse(textBox.Text, out value))
-            {
-                int selection = textBox.SelectionStart;
+                int selection = txt.SelectionStart;
+                txt.Text = correctedTime.ToString("hh\\:mm");
                 // Shouldn't trigger if the user has erased both characters.
-                if (value > max)
-                    textBox.Text = max.ToString();
-                else if (value < 0)
-                    textBox.Text = "00";
-                textBox.SelectionStart = selection;
+                txt.SelectionStart = selection;
             }
+
         }
 
         private void txt_LostFocus(object sender, RoutedEventArgs e)
@@ -98,53 +83,16 @@ namespace BridgeOpsClient.CustomControls
                 ((TextBox)sender).Text = '0' + ((TextBox)sender).Text;
         }
 
-        private void txtHour_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void txt_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (e.Key == Key.Right)
-            {
-                if (txtHour.SelectionStart == txtHour.Text.Length)
-                {
-                    txtMinute.Focus();
-                    txtMinute.Select(0, 0);
-                    e.Handled = true;
-                }
-            }
-        }
-
-        private void txtMinute_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Left)
-            {
-                if (txtMinute.SelectionStart == 0 && txtMinute.SelectionLength == 0)
-                {
-                    txtHour.Focus();
-                    txtHour.Select(txtHour.Text.Length, 0);
-                    e.Handled = true;
-                }
-            }
-            else if (e.Key == Key.Back)
-            {
-                if (txtMinute.SelectionStart == 0 && txtMinute.SelectionLength == 0)
-                {
-                    if (txtHour.Text.Length != 0)
-                        txtHour.Text = txtHour.Text.Substring(0, txtHour.Text.Length - 1);
-                    txtHour.Focus();
-                    txtHour.Select(txtHour.Text.Length, 0);
-                    e.Handled = true;
-                }
-            }
-        }
-
-        private void txtHour_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            if (!int.TryParse(e.Text, out _))
+            if (!int.TryParse(e.Text, out _) && e.Text != ":")
                 e.Handled = true;
         }
 
-        private void txtMinute_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        private void txt_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            if (!int.TryParse(e.Text, out _))
-                e.Handled = true;
+            if (Mouse.LeftButton != MouseButtonState.Pressed)
+                txt.SelectAll();
         }
     }
 }

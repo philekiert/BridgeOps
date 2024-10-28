@@ -28,12 +28,12 @@ namespace BridgeOpsClient.DialogWindows
 
             InitializeComponent();
 
-            timStartTime.SetMaxValues(23, 59);
+            timStartTime.SetMaxValue(new TimeSpan(23, 59, 0));
             numWeeks.SetMinMax(0, 999);
             numDays.SetMinMax(0, 6);
             numHours.SetMinMax(0, 23);
             numMinutes.SetMinMax(0, 59);
-            timLength.SetMaxValues(99, 59);
+            timLength.SetMaxValue(new TimeSpan(99, 59, 0));
 
             ToggleStartTime(false);
             ToggleEndTime(false);
