@@ -426,8 +426,8 @@ namespace BridgeOpsClient
                                     {
                                         Rect r = new(0, startY, ActualWidth, endY - startY);
                                         dc.DrawRectangle(brsOverflowCheck, null, r);
-                                        status.Add("Connections:  0");
-                                        status.Add("Conferences:  0");
+                                        status.Add("Connections:  0/" + ri.connectionCapacity);
+                                        status.Add("Conferences:  0/" + ri.conferenceCapacity);
                                         statusBold.Add(false);
                                         statusBold.Add(false);
                                         statusContext = StatusContext.Overflow;
