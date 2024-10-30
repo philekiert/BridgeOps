@@ -2937,7 +2937,7 @@ internal class BridgeOpsAgent
                         sessionID = sessionID,
                         columnRecordID = columnRecordID,
                         conferenceID = conferenceID,
-                        resourceID = Convert.ToInt32(row[2]!),
+                        resourceID = Convert.ToInt32(row[1]!),
                         resourceRow = Convert.ToInt32(row[2]!),
                         recurrenceID = Glo.Fun.GetInt32FromNullableObject(row[3]),
                         recurrenceName = (string?)row[resourceNameStart],
