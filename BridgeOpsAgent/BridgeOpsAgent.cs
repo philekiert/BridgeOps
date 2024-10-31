@@ -2074,7 +2074,7 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                     if (req.table == "Resource")
                         SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-                    else if (req.table == "Conference")
+                    else if (req.table == "Conference" || req.table == "Organisation")
                         SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
                 }
             }
@@ -2143,7 +2143,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (req.table == "Resource")
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-                else if (req.table == "Conference")
+                else if (req.table == "Conference" || req.table == "Organisation")
                     SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
