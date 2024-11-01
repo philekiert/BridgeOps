@@ -1,0 +1,44 @@
+﻿<Page x:Class="BridgeOpsClient.PageSelectStatement"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:BridgeOpsClient"
+      xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls" 
+      xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+      mc:Ignorable="d"
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="PageSelectStatement">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.2*" MinWidth="500"/>
+            <ColumnDefinition Width="1*" MinWidth="300"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <customcontrols:CodeSpace Grid.Row="0" Margin="10 10 15 10"/>
+            <Button x:Name="btnRun" Content="Run" Grid.Row="1" Margin="10 0 15 10" Height="24"
+                    Style="{StaticResource primary-button}"/>
+        </Grid>
+        <GridSplitter Grid.Column="0" x:Name="gridSplitter" Width="5"
+                      HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
+        <Grid Grid.Column="1" Background="Transparent">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="25"/>
+            </Grid.RowDefinitions>
+            <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"/>
+            <Border Margin="10 -10 10 0" Height="23" Grid.Row="2" Background="#edeeef" VerticalAlignment="Top"
+                CornerRadius="0 0 4 4" BorderThickness="1 0 1 1" BorderBrush="#ccc"/>
+            <StackPanel Grid.Row="2" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
+                <Label x:Name="lblRows" Padding="20 0 0 0" FontWeight="SemiBold"/>
+                <Label x:Name="lblColumns" Padding="15 0 0 0"/>
+                <Label x:Name="lblSelected" Padding="15 0 0 0"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

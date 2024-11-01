@@ -478,7 +478,7 @@ namespace BridgeOpsClient
 
         // This is used to allow the opening of relevant windows by double clicking on the SqlDataGrid when a
         // compatible query has been run, i.e. ID as the first column.
-        enum RelevantTable { None, Organisation, Asset, Contact }
+        enum RelevantTable { None, Organisation, Asset, Contact, Conference, Recurrence, Resource }
         RelevantTable relevantTable = RelevantTable.None;
 
         // Used for retaining friendly names as we don't have the dictionaries to help us in the output stage.
@@ -692,6 +692,21 @@ namespace BridgeOpsClient
                             relevantTable = RelevantTable.Contact;
                             permissionRelevancy = Glo.PERMISSION_RECORDS;
                         }
+                        else if (selectRequest.columns[0] == $"Conference.{Glo.Tab.CONFERENCE_ID}")
+                        {
+                            relevantTable = RelevantTable.Conference;
+                            permissionRelevancy = Glo.PERMISSION_CONFERENCES;
+                        }
+                        else if (selectRequest.columns[0] == $"Recurrence.{Glo.Tab.RECURRENCE_ID}")
+                        {
+                            relevantTable = RelevantTable.Recurrence;
+                            permissionRelevancy = Glo.PERMISSION_CONFERENCES;
+                        }
+                        else if (selectRequest.columns[0] == $"Resource.{Glo.Tab.RESOURCE_ID}")
+                        {
+                            relevantTable = RelevantTable.Resource;
+                            permissionRelevancy = Glo.PERMISSION_RESOURCES;
+                        }
                         btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
                                                       App.sd.deletePermissions[permissionRelevancy];
                         btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
@@ -761,6 +776,23 @@ namespace BridgeOpsClient
                 App.EditAsset(dtgOutput.GetCurrentlySelectedID());
             if (relevantTable == RelevantTable.Contact)
                 App.EditContact(dtgOutput.GetCurrentlySelectedID());
+            if (relevantTable == RelevantTable.Conference)
+            {
+                int id;
+                if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
+                    return;
+                App.EditConference(id);
+            }
+            if (relevantTable == RelevantTable.Recurrence)
+            {
+                int id;
+                if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
+                    return;
+                EditRecurrence editRec = new(id);
+                editRec.Show();
+            }
+            if (relevantTable == RelevantTable.Resource)
+                App.EditResource(dtgOutput.GetCurrentlySelectedID());
         }
     }
 }
