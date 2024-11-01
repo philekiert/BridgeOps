@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <AssemblyName>Bridge Manager</AssemblyName>
@@ -20,6 +20,7 @@
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
     <None Remove="Resources\Icons\x20TitleBarIcon.png" />
     <None Remove="Resources\Icons\x20TitleBarIconDark.png" />
+    <None Remove="Resources\sql-syntax.xshd" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +28,10 @@
     <Compile Include="..\SharedClasses\Glo.cs" Link="Glo.cs" />
     <Compile Include="..\SharedClasses\MathHelper.cs" Link="MathHelper.cs" />
     <Compile Include="..\SharedClasses\SendReceiveClasses.cs" Link="SendReceiveClasses.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\sql-syntax.xshd" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
     <PackageReference Include="ClosedXML" Version="0.102.3" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
     <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />

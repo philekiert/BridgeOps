@@ -338,9 +338,9 @@ namespace BridgeOpsClient
 
         private void SavePreset(string name)
         {
-            if (cmbPresets.Text != "<New>" &&
+            if (cmbPresets.Text != "<New>" && !savingNew &&
                 !App.DisplayQuestion("Overwrite current preset?", "Save Changes",
-                                    DialogWindows.DialogBox.Buttons.YesNo))
+                                     DialogWindows.DialogBox.Buttons.YesNo))
                 return;
 
             JsonObject json = new();
@@ -417,7 +417,7 @@ namespace BridgeOpsClient
                 cmbPresets.SelectedItem = name;
                 skipPresetLoad = false;
                 if (savingNew)
-                    App.DisplayError("Saved successfully");
+                    App.DisplayError("Saved successfully.");
                 else
                     App.DisplayError("Changes saved successfully.");
             }

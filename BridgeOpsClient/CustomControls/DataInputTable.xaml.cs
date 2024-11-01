@@ -33,13 +33,14 @@ namespace BridgeOpsClient.CustomControls
             public string name;
             public string type;
             public long restriction;
-            public string? value = "";
+            public string? value;
 
             public ColValue(string name, string type, long restriction)
             {
                 this.name = name;
                 this.type = type;
                 this.restriction = restriction;
+                value = "";
             }
         }
         public List<ColValue> colValues = new();

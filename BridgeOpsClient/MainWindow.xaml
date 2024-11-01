@@ -10,7 +10,7 @@
         Closed="Window_Closed"
         KeyDown="CustomWindow_KeyDown" KeyUp="CustomWindow_KeyUp"
         Deactivated="CustomWindow_Deactivated">
-    <Grid x:Name="grdMain" Background="White">
+    <Grid x:Name="grdMain">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="17*"/>
             <ColumnDefinition Width="3*"/>
@@ -55,7 +55,8 @@
                               Click="menuDatabaseNewResource_Click"/>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="_Select Query Builder" Click="menuSelect_Click"/>
+                <MenuItem Header="Select _Query Builder" Click="menuSelect_Click"/>
+                <MenuItem Header="_Select by Statement" Click="menuSelect_Click"/>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1" Margin="0 5 0 0" Grid.ColumnSpan="2">
