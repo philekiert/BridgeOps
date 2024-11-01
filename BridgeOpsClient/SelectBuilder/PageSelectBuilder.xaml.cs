@@ -583,6 +583,8 @@ namespace BridgeOpsClient
                 {
                     if (where.txtValue.Visibility == Visibility.Visible)
                         whereValues.Add(where.txtValue.Text);
+                    else if (where.cmbValue.Visibility == Visibility.Visible)
+                        whereValues.Add(where.cmbValue.Text);
                     else if (where.numValue.Visibility == Visibility.Visible)
                         whereValues.Add(where.numValue.GetNumber().ToString());
                     else if (where.dtmValue.Visibility == Visibility.Visible)
