@@ -404,7 +404,7 @@ namespace BridgeOpsClient
 
             List<string?> colNames = new()
             {
-                "ID",
+                Glo.Tab.CONFERENCE_ID,
                 ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference),
                 "Day",
                 "Start",

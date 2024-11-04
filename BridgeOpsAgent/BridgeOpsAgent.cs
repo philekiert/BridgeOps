@@ -617,6 +617,18 @@ internal class BridgeOpsAgent
                     "Application Name=BridgeManagerAgent;";
         }
     }
+    private static string ConnectionStringReadOnly
+    {
+        get
+        {
+            return $"server=localhost\\{sqlServerName};" +
+                    "integrated security=SSPI;" +
+                    "encrypt=false;" +
+                    "database=BridgeManager;" +
+                    "Application Name=BridgeManagerAgent;" +
+                    "ApplicationIntent=ReadOnly;";
+        }
+    }
 
     private static void Main(string[] args)
     {
@@ -853,6 +865,8 @@ internal class BridgeOpsAgent
                     ClientSelectQuick(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT)
                     ClientSelect(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_STATEMENT)
+                    ClientSelectStatement(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_WIDE)
                     ClientSelectWide(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_EXISTS)
@@ -1634,6 +1648,42 @@ internal class BridgeOpsAgent
             }
 
             SqlCommand com = new(req.SqlSelect(), sqlConnect);
+
+            SelectResult result = new(com.ExecuteReader(), false);
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(result));
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelectStatement(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            // Set to read only.
+            sqlConnect.ConnectionString = ConnectionStringReadOnly;
+
+            string sessionID = sr.ReadString(stream);
+            string colRecordID = sr.ReadString(stream);
+            string statement = sr.ReadString(stream);
+
+            int colRecIDInt = int.Parse(colRecordID);
+            if (!CheckSessionValidity(sessionID, colRecIDInt))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+
+            sqlConnect.Open();
+            SqlCommand com = new(statement, sqlConnect);
 
             SelectResult result = new(com.ExecuteReader(), false);
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);

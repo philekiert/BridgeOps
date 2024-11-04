@@ -91,9 +91,10 @@ public static class Glo
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT_QUICK = 31;
     public const int CLIENT_SELECT = 32;
-    public const int CLIENT_SELECT_WIDE = 33;
-    public const int CLIENT_SELECT_EXISTS = 34;
-    public const int CLIENT_DELETE = 35;
+    public const int CLIENT_SELECT_STATEMENT = 33;
+    public const int CLIENT_SELECT_WIDE = 34;
+    public const int CLIENT_SELECT_EXISTS = 35;
+    public const int CLIENT_DELETE = 36;
     public const int CLIENT_LINK_CONTACT = 40;
     public const int CLIENT_LINKED_CONTACT_SELECT = 41;
     public const int CLIENT_SELECT_HISTORY = 42;

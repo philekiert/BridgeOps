@@ -174,7 +174,7 @@ namespace BridgeOpsClient
             else
                 btnSave.IsEnabled = true;
 
-            Title = "Conference - " + id;
+            Title = "Conference C-" + id;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -665,6 +665,12 @@ namespace BridgeOpsClient
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
+            if (cmbResource.Text == "")
+            {
+                App.DisplayError("You must select a resource.");
+                return;
+            }
+
             if (Save())
             {
                 if (MainWindow.pageDatabase != null)

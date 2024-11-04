@@ -1651,13 +1651,68 @@ namespace BridgeOpsClient
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
                                 DisplayError("The SQL query could not be run. See error:\n\n" +
-                                                sr.ReadString(stream));
+                                             sr.ReadString(stream));
                                 columnNames = new();
                                 rows = new();
                                 return false;
 
                             }
-                            throw new Exception();
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not run or return query.");
+                        columnNames = new();
+                        rows = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+        public static bool SendSelectStatement(string statement,
+                                               out List<string?> columnNames, out List<List<object?>> rows)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    try
+                    {
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_SELECT_STATEMENT);
+                            sr.WriteAndFlush(stream, App.sd.sessionID);
+                            sr.WriteAndFlush(stream, ColumnRecord.columnRecordID.ToString());
+                            sr.WriteAndFlush(stream, statement);
+                            int response = stream.ReadByte();
+                            if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                columnNames = result.columnNames;
+                                rows = result.rows;
+                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
+                                return true;
+                            }
+                            columnNames = new();
+                            rows = new();
+                            if (response == Glo.CLIENT_SESSION_INVALID)
+                            {
+                                return SessionInvalidated();
+                            }
+                            else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                DisplayError("The SQL query could not be run. See error:\n\n" +
+                                             sr.ReadString(stream));
+                                columnNames = new();
+                                rows = new();
+                                return false;
+
+                            }
                         }
                         throw new Exception();
                     }
@@ -2310,7 +2365,7 @@ namespace BridgeOpsClient
                 {
                     if (rows[n][i] != null)
                     {
-                        if (columnTypes[i].StartsWith("Int") || columnTypes[i].StartsWith("Byte"))
+                        if (columnTypes[i].Contains("Int") || columnTypes[i] == "Byte")
                         {
                             int result;
                             int.TryParse(rows[n][i].ToString(), out result);

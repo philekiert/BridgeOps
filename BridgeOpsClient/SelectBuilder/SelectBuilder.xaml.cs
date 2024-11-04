@@ -181,6 +181,20 @@ namespace BridgeOpsClient
 
         private void btnExportAllPages_Click(object sender, RoutedEventArgs e)
         {
+            // Pages can't have duplicate names in Excel worksheets.
+            HashSet<string> tabNames = new();
+            foreach (TabItem ti in tabControl.Items)
+            {
+                string tabName = ti.Header.ToString()!;
+                if (tabNames.Contains(tabName))
+                {
+                    App.DisplayError("Tabs must have unique names in order to export all as spreadsheet.");
+                    return;
+                }
+                tabNames.Add(tabName);
+            }
+
+
             XLWorkbook xl = new();
 
             foreach (TabItem tab in tabControl.Items)
@@ -195,7 +209,7 @@ namespace BridgeOpsClient
                 }
                 else if (GetBuilder(tab) is PageSelectStatement pss)
                 {
-                    if (!pss.Run(out columnNames, out rows, true))
+                    if (!pss.Run(out columnNames, out rows))
                         return;
                 }
                 else

@@ -743,7 +743,7 @@ namespace BridgeOpsClient
                                     // Reduce the size of the rect slightly for drawing so the pen is on the inside.
                                     dc.DrawRectangle(brushSolid, borderSelected,
                                         new Rect(area.X + .5d, area.Y + .5d,
-                                                 area.Width - 1, area.Height - 1));
+                                                 (area.Width >= 1d ? area.Width - 1d : area.Width), area.Height - 1));
                                     textBrush = PrintBrushFromLuminance(brushSolid);
                                     thickBorder = true;
                                 }
@@ -795,7 +795,7 @@ namespace BridgeOpsClient
                                 if (area.Width > 8)
                                 {
                                     // Draw title.
-                                    FormattedText title = new($"{c.title} ({c.id.ToString()})" ,
+                                    FormattedText title = new($"{c.title} (C-{c.id.ToString()})" ,
                                                               CultureInfo.CurrentCulture,
                                                               FlowDirection.LeftToRight,
                                                               segoeUISemiBold,

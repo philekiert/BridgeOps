@@ -76,7 +76,7 @@ namespace BridgeOpsClient
             UpdateMultiple updateMultiple = new(identity, table, columns,
                                                 idColumn, dtgOutput.GetCurrentlySelectedIDs(), true);
             if (updateMultiple.ShowDialog() == true)
-                Run(out _, out _, true);
+                Run(out _, out _);
             // Error message for failed updates are displayed by the UpdateMultiple window.
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -112,7 +112,7 @@ namespace BridgeOpsClient
                 MainWindow.pageDatabase != null)
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
-                Run(out _, out _, true);
+                Run(out _, out _);
             }
         }
 
@@ -141,64 +141,63 @@ namespace BridgeOpsClient
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
-            Run(out _, out _, true);
+            Run(out _, out _);
         }
 
-        public bool Run(out List<string?> columnNames, out List<List<object?>> rows, bool fillGrid)
+        public bool Run(out List<string?> columnNames, out List<List<object?>> rows)
         {
-            // Send request here and return false if it doesnt work.
             columnNames = new();
             rows = new();
-            // -----------------
+            if (!App.SendSelectStatement(txtStatement.Text, out columnNames, out rows))
+                return false;
 
-            if (fillGrid)
-                try
+            try
+            {
+                relevantTable = RelevantTable.None;
+                dtgOutput.Update(columnNames, rows);
+                int permissionRelevancy = -1;
+                if (cmbRelevancy.Text == "Organisation")
                 {
-                    relevantTable = RelevantTable.None;
-                    dtgOutput.Update(columnNames, rows);
-                    int permissionRelevancy = -1;
-                    if (cmbRelevancy.Text == "Organisation")
-                    {
-                        relevantTable = RelevantTable.Organisation;
-                        permissionRelevancy = Glo.PERMISSION_RECORDS;
-                    }
-                    else if (cmbRelevancy.Text == "Asset")
-                    {
-                        relevantTable = RelevantTable.Asset;
-                        permissionRelevancy = Glo.PERMISSION_RECORDS;
-                    }
-                    else if (cmbRelevancy.Text == "Contact")
-                    {
-                        relevantTable = RelevantTable.Contact;
-                        permissionRelevancy = Glo.PERMISSION_RECORDS;
-                    }
-                    else if (cmbRelevancy.Text == "Conference")
-                    {
-                        relevantTable = RelevantTable.Conference;
-                        permissionRelevancy = Glo.PERMISSION_RECORDS;
-                    }
-                    else if (cmbRelevancy.Text == "Recurrence")
-                    {
-                        relevantTable = RelevantTable.Recurrence;
-                        permissionRelevancy = Glo.PERMISSION_RECORDS;
-                    }
-                    else if (cmbRelevancy.Text == "Resource")
-                    {
-                        relevantTable = RelevantTable.Resource;
-                        permissionRelevancy = Glo.PERMISSION_RECORDS;
-                    }
-                    btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
-                                                  App.sd.deletePermissions[permissionRelevancy];
-                    btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
-                                                  App.sd.editPermissions[permissionRelevancy];
-                    SetStatusBar(rows.Count, columnNames.Count);
+                    relevantTable = RelevantTable.Organisation;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
                 }
-                catch (Exception e)
+                else if (cmbRelevancy.Text == "Asset")
                 {
-                    App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
-                    SetStatusBar();
-                    return false;
+                    relevantTable = RelevantTable.Asset;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
                 }
+                else if (cmbRelevancy.Text == "Contact")
+                {
+                    relevantTable = RelevantTable.Contact;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
+                }
+                else if (cmbRelevancy.Text == "Conference")
+                {
+                    relevantTable = RelevantTable.Conference;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
+                }
+                else if (cmbRelevancy.Text == "Recurrence")
+                {
+                    relevantTable = RelevantTable.Recurrence;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
+                }
+                else if (cmbRelevancy.Text == "Resource")
+                {
+                    relevantTable = RelevantTable.Resource;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
+                }
+                btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
+                                              App.sd.deletePermissions[permissionRelevancy];
+                btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
+                                              App.sd.editPermissions[permissionRelevancy];
+                SetStatusBar(rows.Count, columnNames.Count);
+            }
+            catch (Exception e)
+            {
+                App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
+                SetStatusBar();
+                return false;
+            }
             return true;
         }
 

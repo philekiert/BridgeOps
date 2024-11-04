@@ -228,6 +228,20 @@ namespace BridgeOpsClient.CustomControls
                         header.Binding = new Binding(string.Format("items[{0}]", count))
                         { Converter = new BooleanToYesNoConverter() };
                     }
+                    else if ((col.type != null && col.type.ToUpper().Contains("INT")) ||
+                              dataType == typeof(Int16) || dataType == typeof(Int32))
+                    {
+                        if (s.Replace(' ', '_').EndsWith(Glo.Tab.CONFERENCE_ID))
+                        {
+                            header.Binding = new Binding(string.Format("items[{0}]", count))
+                            { Converter = new ConfIdToString() };
+                        }
+                        else if (s.Replace(' ', '_').EndsWith(Glo.Tab.RECURRENCE_ID))
+                        {
+                            header.Binding = new Binding(string.Format("items[{0}]", count))
+                            { Converter = new RecIDsToString() };
+                        }
+                    }
                     else
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                 }
@@ -290,12 +304,47 @@ namespace BridgeOpsClient.CustomControls
 
         // Present bools in line with the rest of the application.
         public class BooleanToYesNoConverter : IValueConverter
-
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
                 if (value is bool boolValue)
                     return boolValue ? "Yes" : "No";
+                return "";
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is string stringValue)
+                    return stringValue.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                return false;
+            }
+        }
+
+        // Present bools in line with the rest of the application.
+        public class ConfIdToString : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is int id)
+                    return "C-" + id.ToString();
+                return "";
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is string stringValue)
+                    return stringValue.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                return false;
+            }
+        }
+
+        // Present bools in line with the rest of the application.
+        public class RecIDsToString : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is int id)
+                    return "R-" + id.ToString();
                 return "";
             }
 
@@ -327,6 +376,10 @@ namespace BridgeOpsClient.CustomControls
             if (id == null)
                 return "";
             return id;
+        }
+        public object? GetCurrentlySelectedCellAsObject(int column)
+        {
+            return ((Row)dtg.SelectedItem).items[column];
         }
         public List<string> GetCurrentlySelectedIDs()
         {

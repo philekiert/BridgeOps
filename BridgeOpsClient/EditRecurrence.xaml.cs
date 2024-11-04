@@ -53,7 +53,7 @@ namespace BridgeOpsClient
             btnCancel = dtg.AddContextMenuItem("Cancel", false, btnCancel_Click);
             btnDeleteConference = dtg.AddContextMenuItem("Delete Conference", false, btnDeleteConference_Click);
 
-            Title = "Recurrence - " + id.ToString();
+            Title = "Recurrence R-" + id.ToString();
 
             dtg.ContextMenuOpening += Dtg_ContextMenuOpening;
 
@@ -130,7 +130,7 @@ namespace BridgeOpsClient
                 // If you change the position of cancelled, make sure to udpate it in the ContextMenuOpening function.
                 List<string?> columnNames = new()
                 {
-                    "ID",
+                    Glo.Tab.CONFERENCE_ID,
                     ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference),
                     "Day",
                     "Start",
