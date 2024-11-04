@@ -1932,6 +1932,8 @@ internal class BridgeOpsAgent
                 // If resources were updated, clients need to know to pull a fresh batch.
                 if (target == Glo.CLIENT_UPDATE_RESOURCE)
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                else if (target == Glo.CLIENT_UPDATE_ORGANISATION)
+                    SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -2072,7 +2074,7 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                     if (req.table == "Resource")
                         SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-                    else if (req.table == "Conference")
+                    else if (req.table == "Conference" || req.table == "Organisation")
                         SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
                 }
             }
@@ -2141,7 +2143,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (req.table == "Resource")
                     SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
-                else if (req.table == "Conference")
+                else if (req.table == "Conference" || req.table == "Organisation")
                     SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
@@ -2937,7 +2939,7 @@ internal class BridgeOpsAgent
                         sessionID = sessionID,
                         columnRecordID = columnRecordID,
                         conferenceID = conferenceID,
-                        resourceID = Convert.ToInt32(row[2]!),
+                        resourceID = Convert.ToInt32(row[1]!),
                         resourceRow = Convert.ToInt32(row[2]!),
                         recurrenceID = Glo.Fun.GetInt32FromNullableObject(row[3]),
                         recurrenceName = (string?)row[resourceNameStart],
