@@ -638,7 +638,15 @@ GROUP BY
 	Conference.{Glo.Tab.CONFERENCE_END}
 ");
 
-            Writer.Message("\nCreating admin login...");
+            Writer.Message("\nCreating read-only user account for custom select statements...");
+            SendCommandSQL($@"
+CREATE LOGIN reader WITH PASSWORD = 'reader';
+USE BridgeManager;
+CREATE USER reader FOR LOGIN reader;
+ALTER ROLE db_datareader ADD MEMBER reader;
+");
+
+            Writer.Message("\nCreating Bridge Manager admin login...");
             SendCommandSQL(string.Format("INSERT INTO Login (Username, Password, Admin, {0}, {1}, {2}, {3}) " +
                                          "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 1, " +
                                                   "{4}, {4}, {4}, 1);",

@@ -10,7 +10,7 @@
          d:DesignHeight="450" d:DesignWidth="800"
          Background="#303236"
          FontFamily="pack://application:,,,/Resources/Fonts/Roboto Mono/#Roboto Mono"
-         FontSize="12"
+         FontSize="11"
          Foreground="#eee"
          ScrollViewer.HorizontalScrollBarVisibility="Auto"
          ScrollViewer.VerticalScrollBarVisibility="Auto"

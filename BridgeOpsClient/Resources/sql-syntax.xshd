@@ -12,11 +12,11 @@
     <Color name="String" foreground="#A3BE8C" exampleText="string text = &quot;Hello, World!&quot;"/>
     <Color name="String2" foreground="#A3BE8C" exampleText="string text = &quot;Hello, World!&quot;"/>
 
-    <Color name="Keyword" fontWeight="bold" foreground="#81A1C1" exampleText="SELECT"/>
+    <Color name="Keyword" fontWeight="600" foreground="#81A1C1" exampleText="SELECT"/>
     <Color name="Keyword1" fontWeight="normal" foreground="#81A1C1" exampleText="NOCOUNT"/>
-    <Color name="GoKeyword" fontWeight="bold" foreground="#81A1C1" exampleText="GO"/>
+    <Color name="GoKeyword" fontWeight="600" foreground="#81A1C1" exampleText="GO"/>
 
-    <Color name="MethodCall" foreground="#8FBCBB" fontWeight="bold" />
+    <Color name="MethodCall" foreground="#8FBCBB" fontWeight="600" />
 
     <Color name="Variable" foreground="#D08770" exampleText="@Variable" />
     <Color name="Variable1" foreground="#D08770" exampleText="@@Variable" />
@@ -29,8 +29,8 @@
     <Color name="ObjectReferenceInBrackets" foreground="#88C0D0" exampleText="[Customer].[Name]" />
     <Color name="ObjectReferenceInBrackets1" foreground="#88C0D0" exampleText="[dbo].[Customer].[Name]" />
 
-    <Color name="CommentMarkerSetTodo" foreground="#81A1C1" fontWeight="bold" />
-    <Color name="CommentMarkerSetHackUndone" foreground="#81A1C1" fontWeight="bold" />
+    <Color name="CommentMarkerSetTodo" foreground="#81A1C1" fontWeight="600" />
+    <Color name="CommentMarkerSetHackUndone" foreground="#81A1C1" fontWeight="600" />
 
     <RuleSet name="CommentMarkerSet">
         <Keywords color="CommentMarkerSetTodo">

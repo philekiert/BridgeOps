@@ -622,7 +622,8 @@ internal class BridgeOpsAgent
         get
         {
             return $"server=localhost\\{sqlServerName};" +
-                    "integrated security=SSPI;" +
+                    "User Id=reader;" +
+                    "Password=reader;" +
                     "encrypt=false;" +
                     "database=BridgeManager;" +
                     "Application Name=BridgeManagerAgent;" +

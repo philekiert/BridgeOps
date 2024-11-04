@@ -22,6 +22,7 @@ using System.Globalization;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.ComponentModel;
+using static System.Resources.ResXFileRef;
 
 
 namespace BridgeOpsClient.CustomControls
@@ -220,8 +221,8 @@ namespace BridgeOpsClient.CustomControls
                               (col.type.ToUpper() == "TIMESPAN" || col.type.ToUpper() == "TIME")) ||
                              dataType == typeof(TimeSpan))
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count));
-                        header.Binding.StringFormat = "{0:hh\\:mm}";
+                        header.Binding = new Binding(string.Format("items[{0}]", count))
+                        { Converter = new TimeSpanToDuration() };
                     }
                     else if ((col.type != null &&
                               (col.type.ToUpper().StartsWith("BOOL") || col.type.ToUpper() == "BIT")) ||
@@ -324,7 +325,7 @@ namespace BridgeOpsClient.CustomControls
             }
         }
 
-        // Present bools in line with the rest of the application.
+        // Present conference IDs beginning with C-.
         public class ConfIdToString : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -337,12 +338,12 @@ namespace BridgeOpsClient.CustomControls
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             {
                 if (value is string stringValue)
-                    return stringValue.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                    return int.Parse(stringValue.Substring(2));
                 return false;
             }
         }
 
-        // Present bools in line with the rest of the application.
+        // Present recurrence IDs beginning with R-.
         public class RecIDsToString : IValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -355,7 +356,25 @@ namespace BridgeOpsClient.CustomControls
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             {
                 if (value is string stringValue)
-                    return stringValue.Equals("Yes", StringComparison.OrdinalIgnoreCase);
+                    return int.Parse(stringValue.Substring(2));
+                return false;
+            }
+        }
+
+        // Allow TimeSpans to exceed 23:59.
+        public class TimeSpanToDuration : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is TimeSpan ts) // Yyyyya...
+                    return $"{ts.TotalHours:00}:{ts.Minutes:00}";
+                return "";
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is string stringValue)
+                    return TimeSpan.Parse(stringValue);
                 return false;
             }
         }

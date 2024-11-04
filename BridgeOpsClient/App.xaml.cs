@@ -2376,6 +2376,8 @@ namespace BridgeOpsClient
                     types[i] = JsonTypes.Unknown;
             }
 
+            HashSet<int> durationOverrides = new();
+
             for (int n = 0; n < rows.Count; ++n)
             {
 #pragma warning disable CS8600
@@ -2395,6 +2397,8 @@ namespace BridgeOpsClient
                         case JsonTypes.DateTime:
                             DateTime dt;
                             DateTime.TryParse(rows[n][i].ToString(), out dt);
+                            if (dt.Year == 1900 && !durationOverrides.Contains(i))
+                                durationOverrides.Add(i);
                             rows[n][i] = dt;
                             break;
                         case JsonTypes.TimeSpan:
@@ -2414,6 +2418,19 @@ namespace BridgeOpsClient
                 }
 #pragma warning restore CS8600
 #pragma warning restore CS8602
+            }
+
+            DateTime baseline = new DateTime(1900, 1, 1);
+            List<object?> row;
+            foreach (int i in durationOverrides)
+            {
+                columnTypes[i] = "TimeSpan";
+                for (int n = 0; n < rows.Count; ++n)
+                {
+                    row = rows[n];
+                    if (row[i] != null)
+                        row[i] = ((DateTime)row[i]!) - baseline;
+                }
             }
         }
 

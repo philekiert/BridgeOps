@@ -29,6 +29,7 @@
             <Label Content="Table ID Relevancy" Grid.Row="1" Grid.Column="0" Margin="5 0 0 0"/>
             <ComboBox x:Name="cmbRelevancy" Grid.Row="1" Grid.Column="1" Margin="10 0 10 0" Height="24" Width="100"
                       HorizontalAlignment="Left" SelectedIndex="0">
+                <ComboBoxItem Content="None"/>
                 <ComboBoxItem Content="Organisation"/>
                 <ComboBoxItem Content="Asset"/>
                 <ComboBoxItem Content="Contact"/>
