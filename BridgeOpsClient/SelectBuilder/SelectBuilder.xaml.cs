@@ -26,11 +26,14 @@ namespace BridgeOpsClient
 {
     public partial class SelectBuilder : CustomWindow
     {
-        public SelectBuilder()
+        public SelectBuilder(bool startWithBuilder)
         {
             InitializeComponent();
 
-            AddTab();
+            if (startWithBuilder)
+                AddTab();
+            else
+                AddTabCode();
 
             PresetLoad(true);
             cmbPresets.SelectedIndex = 0;
@@ -43,7 +46,7 @@ namespace BridgeOpsClient
         {
             PageSelectBuilder pageSelectBuilder;
             if (copy)
-                pageSelectBuilder = CloneBuilderTab(GetBuilder((TabItem)tabControl.SelectedItem));
+                pageSelectBuilder = CloneBuilderTab((PageSelectBuilder)GetBuilder((TabItem)tabControl.SelectedItem));
             else
                 pageSelectBuilder = new();
 
@@ -56,22 +59,49 @@ namespace BridgeOpsClient
             tabControl.Items.Add(tabItem);
             tabControl.SelectedItem = tabItem;
 
+            btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
+
             return pageSelectBuilder;
         }
 
-        PageSelectBuilder GetBuilder(TabItem tabItem)
+        private PageSelectStatement AddTabCode() { return AddTabCode(false); }
+        private PageSelectStatement AddTabCode(bool copy)
         {
-            return (PageSelectBuilder)((Frame)(tabItem.Content)).Content;
+            PageSelectStatement pageSelectStatement;
+            if (copy)
+                pageSelectStatement = CloneBuilderTab((PageSelectStatement)GetBuilder(
+                                                       (TabItem)tabControl.SelectedItem));
+            else
+                pageSelectStatement = new();
+
+            Frame frame = new() { Content = pageSelectStatement };
+            TabItem tabItem = new()
+            {
+                Content = frame,
+                Header = "SQL Query"
+            };
+            tabControl.Items.Add(tabItem);
+            tabControl.SelectedItem = tabItem;
+
+            btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
+
+            return pageSelectStatement;
+        }
+
+
+        object GetBuilder(TabItem tabItem)
+        {
+            return ((Frame)(tabItem.Content)).Content;
         }
 
         private void btnAddTab_Click(object sender, RoutedEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
-                AddTab(true);
+            bool copy = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
+            if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
+                AddTabCode(copy);
             else
-                AddTab();
-            if (tabControl.Items.Count > 1)
-                btnRemoveTab.IsEnabled = true;
+                AddTab(copy);
 
             ToggleMoveButtons();
         }
@@ -87,6 +117,8 @@ namespace BridgeOpsClient
             blockTabInfoUpdate = false;
 
             tabControl.SelectedIndex = selectedIndex < tabControl.Items.Count ? selectedIndex : selectedIndex - 0;
+
+            btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
 
             ToggleMoveButtons();
         }
@@ -155,10 +187,23 @@ namespace BridgeOpsClient
             {
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (!GetBuilder(tab).Run(out columnNames, out rows, true))
-                    return;
 
-                PageSelectBuilder builder = GetBuilder(tab);
+                if (GetBuilder(tab) is PageSelectBuilder psb)
+                {
+                    if (!psb.Run(out columnNames, out rows, true))
+                        return;
+                }
+                else if (GetBuilder(tab) is PageSelectStatement pss)
+                {
+                    if (!pss.Run(out columnNames, out rows, true))
+                        return;
+                }
+                else
+                {
+                    App.DisplayError("Unable to extract data from tabs.");
+                    return;
+                }
+
                 IXLWorksheet sheet = xl.AddWorksheet((string)tab.Header);
 
                 // Add headers.
@@ -255,6 +300,15 @@ namespace BridgeOpsClient
 
             return clone;
         }
+        private PageSelectStatement CloneBuilderTab(PageSelectStatement old)
+        {
+            PageSelectStatement clone = new();
+
+            clone.txtStatement.Text = old.txtStatement.Text;
+            clone.cmbRelevancy.SelectedIndex = old.cmbRelevancy.SelectedIndex;
+
+            return clone;
+        }
 
         private void ApplyLoadedPreset(string jsonString)
         {
@@ -275,6 +329,19 @@ namespace BridgeOpsClient
                 for (int i = 0; i < totalTabs; ++i)
                 {
                     JsonObject tab = json[i.ToString()].AsObject();
+
+                    // Statement tabs are much simpler. Check for Type key to maintain backwards compatibility.
+                    if (tab.ContainsKey("Type") && tab["Type"].GetValue<string>() == "Statement")
+                    {
+                        PageSelectStatement statement = AddTabCode();
+                        ((TabItem)tabControl.Items[i]).Header = tab["Name"].GetValue<string>();
+                        statement.txtStatement.Text = tab["Statement"].GetValue<string>();
+                        statement.cmbRelevancy.Text = tab["Relevancy"].GetValue<string>();
+
+                        continue;
+                    }
+
+                    // Builder tabs.
                     PageSelectBuilder pageSelectBuilder = AddTab();
                     ((TabItem)tabControl.Items[i]).Header = tab["Name"].GetValue<string>();
                     pageSelectBuilder.cmbTable.Text = tab["Table"].GetValue<string>();
@@ -352,58 +419,69 @@ namespace BridgeOpsClient
             {
                 JsonObject jsonTab = new();
                 jsonTab["Name"] = (string)tabItem.Header;
-                PageSelectBuilder pageSelectBuilder = (PageSelectBuilder)((Frame)(tabItem.Content)).Content;
-                jsonTab["Table"] = pageSelectBuilder.cmbTable.Text;
-                jsonTab["Distinct"] = pageSelectBuilder.chkDistinct.IsChecked == true;
-                jsonTab["JoinCount"] = pageSelectBuilder.joins.Count;
-                jsonTab["ColumnCount"] = pageSelectBuilder.columns.Count;
-                jsonTab["WhereCount"] = pageSelectBuilder.wheres.Count;
-                jsonTab["OrderByCount"] = pageSelectBuilder.orderBys.Count;
-                for (int i = 0; i < pageSelectBuilder.joins.Count; ++i)
+
+                if (GetBuilder(tabItem) is PageSelectStatement statement)
                 {
-                    PageSelectBuilderJoin join = pageSelectBuilder.Join(i);
-                    JsonObject jsonJoin = new();
-                    jsonJoin["Table"] = join.cmbTable.Text;
-                    if (join.cmbColumn1.Text == "")
-                        jsonJoin["Column1"] = "";
-                    else
-                        jsonJoin["Column1"] = pageSelectBuilder.GetProperColumnName(join.cmbTable.Text + "." +
-                                                                                    join.cmbColumn1.Text);
-                    jsonJoin["Column2"] = pageSelectBuilder.GetProperColumnName(join.cmbColumn2.Text);
-                    jsonJoin["Type"] = join.cmbType.Text;
-                    jsonTab["Join" + i.ToString()] = jsonJoin;
+                    jsonTab["Type"] = "Statement";
+                    jsonTab["Statement"] = statement.txtStatement.Text;
+                    jsonTab["Relevancy"] = statement.cmbRelevancy.Text;
                 }
-                for (int i = 0; i < pageSelectBuilder.columns.Count; ++i)
+                else
                 {
-                    PageSelectBuilderColumn column = pageSelectBuilder.Column(i);
-                    JsonObject jsonColumn = new();
-                    jsonColumn["Column"] = pageSelectBuilder.GetProperColumnName(column.cmbColumn.Text);
-                    jsonColumn["Alias"] = column.txtAlias.Text;
-                    jsonTab["Column" + i.ToString()] = jsonColumn;
-                }
-                for (int i = 0; i < pageSelectBuilder.wheres.Count; ++i)
-                {
-                    PageSelectBuilderWhere where = pageSelectBuilder.Where(i);
-                    JsonObject jsonWhere = new();
-                    jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
-                    jsonWhere["Operator"] = where.cmbOperator.Text;
-                    jsonWhere["ValueText"] = where.txtValue.Text;
-                    jsonWhere["ValueAllowed"] = where.cmbValue.Text;
-                    jsonWhere["ValueNumber"] = where.numValue.Text;
-                    jsonWhere["ValueDateTime"] = where.dtmValue.GetDateTime();
-                    jsonWhere["ValueDate"] = where.datValue.SelectedDate;
-                    TimeSpan? ts = where.timValue.GetTime();
-                    jsonWhere["ValueTime"] = ts == null ? null : ((TimeSpan)ts).Ticks;
-                    jsonWhere["ValueBool"] = where.chkValue.IsChecked == true;
-                    jsonTab["Where" + i.ToString()] = jsonWhere;
-                }
-                for (int i = 0; i < pageSelectBuilder.orderBys.Count; ++i)
-                {
-                    PageSelectBuilderOrderBy orderBy = pageSelectBuilder.OrderBy(i);
-                    JsonObject jsonOrderBy = new();
-                    jsonOrderBy["Column"] = pageSelectBuilder.GetProperColumnName(orderBy.cmbOrderBy.Text);
-                    jsonOrderBy["AscDesc"] = orderBy.cmbAscDesc.Text;
-                    jsonTab["OrderBy" + i.ToString()] = jsonOrderBy;
+                    PageSelectBuilder pageSelectBuilder = (PageSelectBuilder)((Frame)(tabItem.Content)).Content;
+                    jsonTab["Type"] = "Builder";
+                    jsonTab["Table"] = pageSelectBuilder.cmbTable.Text;
+                    jsonTab["Distinct"] = pageSelectBuilder.chkDistinct.IsChecked == true;
+                    jsonTab["JoinCount"] = pageSelectBuilder.joins.Count;
+                    jsonTab["ColumnCount"] = pageSelectBuilder.columns.Count;
+                    jsonTab["WhereCount"] = pageSelectBuilder.wheres.Count;
+                    jsonTab["OrderByCount"] = pageSelectBuilder.orderBys.Count;
+                    for (int i = 0; i < pageSelectBuilder.joins.Count; ++i)
+                    {
+                        PageSelectBuilderJoin join = pageSelectBuilder.Join(i);
+                        JsonObject jsonJoin = new();
+                        jsonJoin["Table"] = join.cmbTable.Text;
+                        if (join.cmbColumn1.Text == "")
+                            jsonJoin["Column1"] = "";
+                        else
+                            jsonJoin["Column1"] = pageSelectBuilder.GetProperColumnName(join.cmbTable.Text + "." +
+                                                                                        join.cmbColumn1.Text);
+                        jsonJoin["Column2"] = pageSelectBuilder.GetProperColumnName(join.cmbColumn2.Text);
+                        jsonJoin["Type"] = join.cmbType.Text;
+                        jsonTab["Join" + i.ToString()] = jsonJoin;
+                    }
+                    for (int i = 0; i < pageSelectBuilder.columns.Count; ++i)
+                    {
+                        PageSelectBuilderColumn column = pageSelectBuilder.Column(i);
+                        JsonObject jsonColumn = new();
+                        jsonColumn["Column"] = pageSelectBuilder.GetProperColumnName(column.cmbColumn.Text);
+                        jsonColumn["Alias"] = column.txtAlias.Text;
+                        jsonTab["Column" + i.ToString()] = jsonColumn;
+                    }
+                    for (int i = 0; i < pageSelectBuilder.wheres.Count; ++i)
+                    {
+                        PageSelectBuilderWhere where = pageSelectBuilder.Where(i);
+                        JsonObject jsonWhere = new();
+                        jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
+                        jsonWhere["Operator"] = where.cmbOperator.Text;
+                        jsonWhere["ValueText"] = where.txtValue.Text;
+                        jsonWhere["ValueAllowed"] = where.cmbValue.Text;
+                        jsonWhere["ValueNumber"] = where.numValue.Text;
+                        jsonWhere["ValueDateTime"] = where.dtmValue.GetDateTime();
+                        jsonWhere["ValueDate"] = where.datValue.SelectedDate;
+                        TimeSpan? ts = where.timValue.GetTime();
+                        jsonWhere["ValueTime"] = ts == null ? null : ((TimeSpan)ts).Ticks;
+                        jsonWhere["ValueBool"] = where.chkValue.IsChecked == true;
+                        jsonTab["Where" + i.ToString()] = jsonWhere;
+                    }
+                    for (int i = 0; i < pageSelectBuilder.orderBys.Count; ++i)
+                    {
+                        PageSelectBuilderOrderBy orderBy = pageSelectBuilder.OrderBy(i);
+                        JsonObject jsonOrderBy = new();
+                        jsonOrderBy["Column"] = pageSelectBuilder.GetProperColumnName(orderBy.cmbOrderBy.Text);
+                        jsonOrderBy["AscDesc"] = orderBy.cmbAscDesc.Text;
+                        jsonTab["OrderBy" + i.ToString()] = jsonOrderBy;
+                    }
                 }
 
                 json[tabIndex.ToString()] = jsonTab;

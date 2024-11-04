@@ -772,18 +772,18 @@ namespace BridgeOpsClient
 
             if (relevantTable == RelevantTable.Organisation)
                 App.EditOrganisation(dtgOutput.GetCurrentlySelectedID());
-            if (relevantTable == RelevantTable.Asset)
+            else if (relevantTable == RelevantTable.Asset)
                 App.EditAsset(dtgOutput.GetCurrentlySelectedID());
-            if (relevantTable == RelevantTable.Contact)
+            else if (relevantTable == RelevantTable.Contact)
                 App.EditContact(dtgOutput.GetCurrentlySelectedID());
-            if (relevantTable == RelevantTable.Conference)
+            else if (relevantTable == RelevantTable.Conference)
             {
                 int id;
                 if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
                     return;
                 App.EditConference(id);
             }
-            if (relevantTable == RelevantTable.Recurrence)
+            else if (relevantTable == RelevantTable.Recurrence)
             {
                 int id;
                 if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
@@ -791,7 +791,7 @@ namespace BridgeOpsClient
                 EditRecurrence editRec = new(id);
                 editRec.Show();
             }
-            if (relevantTable == RelevantTable.Resource)
+            else if (relevantTable == RelevantTable.Resource)
                 App.EditResource(dtgOutput.GetCurrentlySelectedID());
         }
     }

@@ -48,6 +48,8 @@ namespace BridgeOpsClient.CustomControls
                     SyntaxHighlighting = highlighting;
                 }
             }
+
+            
         }
     }
 }

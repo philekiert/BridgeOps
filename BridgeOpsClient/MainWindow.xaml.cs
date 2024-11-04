@@ -357,7 +357,13 @@ namespace BridgeOpsClient
 
         private void menuSelect_Click(object sender, RoutedEventArgs e)
         {
-            SelectBuilder selectBuilder = new();
+            SelectBuilder selectBuilder = new(true);
+            selectBuilder.Show();
+        }
+
+        private void menuSelectStatement_Click(object sender, RoutedEventArgs e)
+        {
+            SelectBuilder selectBuilder = new(false);
             selectBuilder.Show();
         }
 

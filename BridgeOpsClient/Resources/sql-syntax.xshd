@@ -21,6 +21,8 @@
     <Color name="Variable" foreground="#D08770" exampleText="@Variable" />
     <Color name="Variable1" foreground="#D08770" exampleText="@@Variable" />
 
+    <Color name="Table" fontWeight="bold" foreground="#ddd" exampleText="Organisation" />
+
     <Color name="ObjectReference" foreground="#88C0D0" exampleText="Customer.Name" />
     <Color name="ObjectReference1" foreground="#88C0D0" exampleText="dbo.Customer.Name" />
 
@@ -41,7 +43,7 @@
         </Keywords>
     </RuleSet>
 
-    <RuleSet  ignoreCase="true">
+    <RuleSet ignoreCase="true">
         <Span color="String" multiline="true" >
             <Begin>'</Begin>
             <End>'</End>
@@ -54,10 +56,23 @@
 
         <!-- span for escape sequences -->
         <Span  color="Comment" begin="--" end="\n" ruleSet="CommentMarkerSet"/>
-        <Span color="Comment"  multiline="true" ruleSet="CommentMarkerSet">
+        <Span color="Comment" multiline="true" ruleSet="CommentMarkerSet">
             <Begin>/\*</Begin>
             <End>\*/</End>
         </Span>
+
+        <Keywords color="Table">
+            <Word>Organisation</Word>
+            <Word>OrganisationChange</Word>
+            <Word>Asset</Word>
+            <Word>AssetChange</Word>
+            <Word>Contact</Word>
+            <Word>OrganisationContacts</Word>
+            <Word>Conference</Word>
+            <Word>Connection</Word>
+            <Word>Recurrence</Word>
+            <Word>Resource</Word>
+        </Keywords>
 
         <Keywords color="Keyword" >
             <Word>ABORT</Word>
@@ -259,10 +274,12 @@
 
         <Rule color="ObjectReference1">([\d\w]+)\.([\d\w]+)\.([\d\w]+)</Rule>
         <Rule color="ObjectReference">([\d\w]+)\.([\d\w]+)</Rule>
+        <Rule color="ObjectReference">\.([\d\w]+)</Rule>
 
         <Rule color="ObjectReferenceInBrackets1">([\d\w]+)\.([\d\w]+)\.([\d\w]+)</Rule>
         <Rule color="ObjectReferenceInBrackets">\[([\d\w]+)\]\.\[([\d\w]+)\]\.\[([\d\w]+)\]</Rule>
         <Rule color="ObjectReferenceInBrackets">\[([\d\w]+)\]\.\[([\d\w]+)\]</Rule>
+        <Rule color="ObjectReferenceInBrackets">\.\[([\d\w]+)\]</Rule>
 
         <Rule color="Punctuation">
       [?,.;()\[\]{}+\-/%*&lt;&gt;^+~!|&amp;]+

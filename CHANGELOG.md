@@ -1,6 +1,6 @@
 # Changelog
-
-
+  
+  
 ## 0.6.0
 ### Added
 - Conference scheduling now enabled for users.
@@ -9,8 +9,9 @@
 ### Fixed
 - Number entry fields now correctly disable their increment/decrement buttons if the user lacks edit permissions.
 - Data table rows will no longer expand to fit multi-line contents.
+- Fixed != operator not working for fields with dropdown lists in the select query builder.
   
-
+  
 ## 0.5.4
 ### Added
 - Each user's database view pane configuration is now persistent across sessions.

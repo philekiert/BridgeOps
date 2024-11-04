@@ -14,5 +14,5 @@
          Foreground="#eee"
          ScrollViewer.HorizontalScrollBarVisibility="Auto"
          ScrollViewer.VerticalScrollBarVisibility="Auto"
-         >
+         Padding="5 5 5 5">
 </avalonedit:TextEditor>
