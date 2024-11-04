@@ -83,6 +83,8 @@ namespace BridgeOpsClient
             tabControl.Items.Add(tabItem);
             tabControl.SelectedItem = tabItem;
 
+            pageSelectStatement.txtStatement.Focus();
+
             btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
 
             return pageSelectStatement;

@@ -54,6 +54,7 @@
                 <Label x:Name="lblColumns" Padding="15 0 0 0"/>
                 <Label x:Name="lblSelected" Padding="15 0 0 0"/>
             </StackPanel>
+            <Label Grid.Row="2" x:Name="lblRelevancy" Margin="0 -12 15 0" HorizontalAlignment="Right"/>
         </Grid>
     </Grid>
 </Page>

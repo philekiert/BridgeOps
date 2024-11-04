@@ -2354,46 +2354,62 @@ namespace BridgeOpsClient
             }
         }
 
+        enum JsonTypes { Number, DateTime, TimeSpan, Boolean, String, Unknown }
         static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes,
                                                                        List<List<object?>> rows)
         {
-            // This could be a lot more efficient by storing these bools, come back to this.
+            JsonTypes[] types = new JsonTypes[columnTypes.Count];
+
+            for (int i = 0; i < columnTypes.Count; ++i)
+            {
+                if (columnTypes[i]!.Contains("Int") || columnTypes[i] == "Byte")
+                    types[i] = JsonTypes.Number;
+                else if (columnTypes[i] == "DateTime")
+                    types[i] = JsonTypes.DateTime;
+                else if (columnTypes[i] == "TimeSpan")
+                    types[i] = JsonTypes.TimeSpan;
+                else if (columnTypes[i] == "Boolean")
+                    types[i] = JsonTypes.Boolean;
+                else if (columnTypes[i] == "String")
+                    types[i] = JsonTypes.String;
+                else
+                    types[i] = JsonTypes.Unknown;
+            }
+
             for (int n = 0; n < rows.Count; ++n)
             {
 #pragma warning disable CS8600
 #pragma warning disable CS8602
                 for (int i = 0; i < columnTypes.Count; ++i)
                 {
-                    if (rows[n][i] != null)
+                    if (rows[n][i] == null)
+                        continue;
+
+                    switch (types[i])
                     {
-                        if (columnTypes[i].Contains("Int") || columnTypes[i] == "Byte")
-                        {
-                            int result;
-                            int.TryParse(rows[n][i].ToString(), out result);
-                            rows[n][i] = result;
-                        }
-                        else if (columnTypes[i] == "DateTime")
-                        {
+                        case JsonTypes.Number:
+                            int resultI;
+                            int.TryParse(rows[n][i].ToString(), out resultI);
+                            rows[n][i] = resultI;
+                            break;
+                        case JsonTypes.DateTime:
                             DateTime dt;
                             DateTime.TryParse(rows[n][i].ToString(), out dt);
                             rows[n][i] = dt;
-                        }
-                        else if (columnTypes[i] == "TimeSpan")
-                        {
+                            break;
+                        case JsonTypes.TimeSpan:
                             TimeSpan ts;
                             TimeSpan.TryParse(rows[n][i].ToString(), out ts);
                             rows[n][i] = ts;
-                        }
-                        else if (columnTypes[i] == "Boolean")
-                        {
-                            bool result;
-                            bool.TryParse(rows[n][i].ToString(), out result);
-                            rows[n][i] = result;
-                        }
-                        else if (columnTypes[i] == "String")
-                        {
+                            break;
+                        case JsonTypes.Boolean:
+                            bool resultB;
+                            bool.TryParse(rows[n][i].ToString(), out resultB);
+                            rows[n][i] = resultB;
+                            break;
+                        case JsonTypes.String:
                             rows[n][i] = ((JsonValue)rows[n][i]).ToString();
-                        }
+                            break;
                     }
                 }
 #pragma warning restore CS8600

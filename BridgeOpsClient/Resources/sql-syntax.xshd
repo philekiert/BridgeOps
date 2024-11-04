@@ -21,7 +21,7 @@
     <Color name="Variable" foreground="#D08770" exampleText="@Variable" />
     <Color name="Variable1" foreground="#D08770" exampleText="@@Variable" />
 
-    <Color name="Table" fontWeight="bold" foreground="#ddd" exampleText="Organisation" />
+    <Color name="Table" fontStyle="italic" foreground="#ddd" exampleText="Organisation" />
 
     <Color name="ObjectReference" foreground="#88C0D0" exampleText="Customer.Name" />
     <Color name="ObjectReference1" foreground="#88C0D0" exampleText="dbo.Customer.Name" />

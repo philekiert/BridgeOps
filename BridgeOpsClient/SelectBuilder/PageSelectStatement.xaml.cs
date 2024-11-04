@@ -218,6 +218,9 @@ namespace BridgeOpsClient
 
             lblRows.Content = "Rows: " + vals[0].ToString();
             lblColumns.Content = "Columns: " + vals[1].ToString();
+
+            lblRelevancy.Content = "Relevancy: " + cmbRelevancy.Text;
+
             dtgResults_SelectionChanged(dtgOutput, null);
         }
         // Updated the selected row count.
