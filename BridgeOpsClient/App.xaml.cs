@@ -1622,6 +1622,10 @@ namespace BridgeOpsClient
         }
         public static bool SendSelectRequest(SelectRequest req,
                                              out List<string?> columnNames, out List<List<object?>> rows)
+        { return SendSelectRequest(req, out columnNames, out rows, out _); }
+        public static bool SendSelectRequest(SelectRequest req,
+                                             out List<string?> columnNames, out List<List<object?>> rows,
+                                             out List<string?> columnTypes)
         {
             lock (streamLock)
             {
@@ -1638,11 +1642,13 @@ namespace BridgeOpsClient
                             {
                                 SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 columnNames = result.columnNames;
+                                columnTypes = result.columnTypes;
                                 rows = result.rows;
                                 ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
                                 return true;
                             }
                             columnNames = new();
+                            columnTypes = new();
                             rows = new();
                             if (response == Glo.CLIENT_SESSION_INVALID)
                             {
@@ -1653,6 +1659,7 @@ namespace BridgeOpsClient
                                 DisplayError("The SQL query could not be run. See error:\n\n" +
                                              sr.ReadString(stream));
                                 columnNames = new();
+                                columnTypes = new();
                                 rows = new();
                                 return false;
 
@@ -1664,6 +1671,7 @@ namespace BridgeOpsClient
                     {
                         DisplayError("Could not run or return query.");
                         columnNames = new();
+                        columnTypes = new();
                         rows = new();
                         return false;
                     }
@@ -1676,6 +1684,10 @@ namespace BridgeOpsClient
         }
         public static bool SendSelectStatement(string statement,
                                                out List<string?> columnNames, out List<List<object?>> rows)
+        { return SendSelectStatement(statement, out columnNames, out rows, out _); }
+        public static bool SendSelectStatement(string statement,
+                                               out List<string?> columnNames, out List<List<object?>> rows,
+                                               out List<string?> columnTypes)
         {
             lock (streamLock)
             {
@@ -1694,11 +1706,13 @@ namespace BridgeOpsClient
                             {
                                 SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                 columnNames = result.columnNames;
+                                columnTypes = result.columnTypes;
                                 rows = result.rows;
                                 ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, rows);
                                 return true;
                             }
                             columnNames = new();
+                            columnTypes = new();
                             rows = new();
                             if (response == Glo.CLIENT_SESSION_INVALID)
                             {
@@ -1709,6 +1723,7 @@ namespace BridgeOpsClient
                                 DisplayError("The SQL query could not be run. See error:\n\n" +
                                              sr.ReadString(stream));
                                 columnNames = new();
+                                columnTypes = new();
                                 rows = new();
                                 return false;
 
@@ -1720,6 +1735,7 @@ namespace BridgeOpsClient
                     {
                         DisplayError("Could not run or return query.");
                         columnNames = new();
+                        columnTypes = new();
                         rows = new();
                         return false;
                     }
@@ -2364,7 +2380,7 @@ namespace BridgeOpsClient
             {
                 if (columnTypes[i]!.Contains("Int") || columnTypes[i] == "Byte")
                     types[i] = JsonTypes.Number;
-                else if (columnTypes[i] == "DateTime")
+                else if (columnTypes[i] == "Date" || columnTypes[i] == "DateTime")
                     types[i] = JsonTypes.DateTime;
                 else if (columnTypes[i] == "TimeSpan")
                     types[i] = JsonTypes.TimeSpan;

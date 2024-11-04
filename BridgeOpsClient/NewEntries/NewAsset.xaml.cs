@@ -155,7 +155,7 @@ namespace BridgeOpsClient
                         row[2] = "[deleted]";
                 dtgChangeLog.maxLengthOverrides = new Dictionary<string, int> { { "Reason", -1 } };
                 dtgChangeLog.Update(new List<OrderedDictionary>()
-                                   { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows,
+                                   { ColumnRecord.assetChange, ColumnRecord.login }, columnNames, rows, new(),
                                    Glo.Tab.CHANGE_ID);
             }
         }

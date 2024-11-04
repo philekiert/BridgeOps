@@ -92,13 +92,16 @@ namespace BridgeOpsClient
             btnClear.IsEnabled = false;
 
             // Add a few extras for conferences, handled separately in the search functions.
-            cmbColumn.Items.Add(new ComboBoxItem()
-            { Content = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO, ColumnRecord.organisation) });
-            cmbColumn.Items.Add(new ComboBoxItem()
-            { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF, ColumnRecord.organisation) });
-            cmbColumn.Items.Add(new ComboBoxItem()
-            { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
-            fieldValues.AddRange(new string[] { "", "", "" });
+            if (cmbTable.SelectedIndex == 3)
+            {
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO, ColumnRecord.organisation) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF, ColumnRecord.organisation) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
+                fieldValues.AddRange(new string[] { "", "", "" });
+            }
 
 
             foreach (DictionaryEntry de in table)

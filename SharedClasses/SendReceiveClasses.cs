@@ -2658,8 +2658,14 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             foreach (DataRow row in schema.Rows)
             {
                 columnNames.Add(row.Field<string>("ColumnName"));
-                Type? t = row.Field<Type>("DataType");
-                columnTypes.Add(t == null ? null : t.Name);
+                // We need to differentiate dates, or they get lost in translaction back to the client.
+                if (row.Field<string>("DataTypeName") == "date")
+                    columnTypes.Add("Date");
+                else
+                {
+                    Type? t = row.Field<Type>("DataType");
+                    columnTypes.Add(t == null ? null : t.Name);
+                }
             }
 
             rows = new();

@@ -206,6 +206,8 @@ public static class Glo
 
         public const string CONFERENCE_ADD_CONNECTIONS = "Connection_Count";
         public const string CONFERENCE_ADD_HOST_DIAL_NO = "Host_Dial_No";
+        public const string CONFERENCE_ADD_START_DATE = "Start_Date";
+        public const string CONFERENCE_ADD_END_DATE = "End_Date";
         public const string CONFERENCE_ADD_START_TIME = "Start_Time";
         public const string CONFERENCE_ADD_END_TIME = "End_Time";
         public const string CONFERENCE_ADD_DURATION = "Duration";

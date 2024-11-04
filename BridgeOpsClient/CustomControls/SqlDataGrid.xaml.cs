@@ -131,18 +131,23 @@ namespace BridgeOpsClient.CustomControls
         // I have allowed more than one dictionary to be fed to this array, because sometimes you want a select result
         // that joins two tables. The downside is that tables sharing column names need to use the same type and
         // friendly name. I can't see this being an issue, but note it for future reference.
+        public void Update(List<string?> columnNames, List<List<object?>> rows, HashSet<int> dateOnlyColumns)
+        {
+            Update(new List<OrderedDictionary>(), columnNames, rows, dateOnlyColumns);
+        }
         public void Update(List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
-            Update(new List<OrderedDictionary>(), columnNames, rows, omitColumns);
+            Update(new List<OrderedDictionary>(), columnNames, rows, new(), omitColumns);
         }
         public void Update(OrderedDictionary tableColDefs,
                            List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
         {
             Update(new List<OrderedDictionary>() { tableColDefs },
-                   columnNames, rows, omitColumns);
+                   columnNames, rows, new(), omitColumns);
         }
         public void Update(List<OrderedDictionary> tableColDefs,
-                           List<string?> columnNames, List<List<object?>> rows, params string[] omitColumns)
+                           List<string?> columnNames, List<List<object?>> rows, HashSet<int> dateCols,
+                           params string[] omitColumns)
         {
             // Add any columns to omit to a dictionary for fast lookup.
             Dictionary<string, bool> columnstoOmit = new();
@@ -206,7 +211,7 @@ namespace BridgeOpsClient.CustomControls
 
                     header.Header = ColumnRecord.GetPrintName(s, col);
                     header.IsReadOnly = true;
-                    if (col.type != null && col.type.ToUpper() == "DATE")
+                    if (col.type != null && col.type.ToUpper() == "DATE" || dateCols.Contains(count))
                     {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy}";

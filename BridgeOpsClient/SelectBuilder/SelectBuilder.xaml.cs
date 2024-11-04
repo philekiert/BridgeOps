@@ -202,16 +202,17 @@ namespace BridgeOpsClient
             foreach (TabItem tab in tabControl.Items)
             {
                 List<string?> columnNames;
+                List<string?> columnTypes; // Not currently used, but may be if dates need times removing.
                 List<List<object?>> rows;
 
                 if (GetBuilder(tab) is PageSelectBuilder psb)
                 {
-                    if (!psb.Run(out columnNames, out rows, true))
+                    if (!psb.Run(out columnNames, out columnTypes, out rows, true))
                         return;
                 }
                 else if (GetBuilder(tab) is PageSelectStatement pss)
                 {
-                    if (!pss.Run(out columnNames, out rows))
+                    if (!pss.Run(out columnNames, out columnTypes, out rows))
                         return;
                 }
                 else

@@ -73,7 +73,7 @@ namespace BridgeOpsClient
             UpdateMultiple updateMultiple = new(identity, table, columns,
                                                 idColumn, dtgOutput.GetCurrentlySelectedIDs(), true);
             if (updateMultiple.ShowDialog() == true)
-                Run(out _, out _, true, true);
+                Run(out _, out _, out _, true, true);
             // Error message for failed updates are displayed by the UpdateMultiple window.
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -109,7 +109,7 @@ namespace BridgeOpsClient
                 MainWindow.pageDatabase != null)
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
-                Run(out _, out _, true, true);
+                Run(out _, out _, out _, true, true);
             }
         }
 
@@ -651,29 +651,37 @@ namespace BridgeOpsClient
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
-            Run(out _, out _, true);
+            Run(out _, out _, out _, true);
         }
 
-        public bool Run(out List<string?> columnNames, out List<List<object?>> rows, bool fillGrid)
+        public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows,
+                        bool fillGrid)
         {
-            return Run(out columnNames, out rows, fillGrid, false);
+            return Run(out columnNames, out columnTypes, out rows, fillGrid, false);
         }
-        public bool Run(out List<string?> columnNames, out List<List<object?>> rows, bool fillGrid, bool useLast)
+        public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows,
+                        bool fillGrid, bool useLast)
         {
             if (useLast || BuildQuery())
             {
                 if (!useLast)
                     DisplayCode();
                 tabOutput.Focus();
-                App.SendSelectRequest(selectRequest, out columnNames, out rows);
+                App.SendSelectRequest(selectRequest, out columnNames, out rows, out columnTypes);
                 if (columnNames.Count == chosenColumnNames.Count)
                     for (int i = 0; i < columnNames.Count; ++i)
                         columnNames[i] = chosenColumnNames[i];
+
+                HashSet<int> dateCols = new();
+                for (int i = 0; i < columnTypes.Count; ++i)
+                    if (columnTypes[i] == "Date")
+                        dateCols.Add(i);
+
                 if (fillGrid)
                     try
                     {
                         relevantTable = RelevantTable.None;
-                        dtgOutput.Update(columnNames, rows);
+                        dtgOutput.Update(columnNames, rows, dateCols);
                         int permissionRelevancy = -1;
                         if (selectRequest.columns[0] == $"Organisation.{Glo.Tab.ORGANISATION_ID}" ||
                             selectRequest.columns[0] == $"OrganisationChange.{Glo.Tab.ORGANISATION_ID}")
@@ -722,6 +730,7 @@ namespace BridgeOpsClient
                 return true;
             }
             columnNames = new();
+            columnTypes = new();
             rows = new();
             return false;
         }

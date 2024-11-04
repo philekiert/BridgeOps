@@ -76,7 +76,7 @@ namespace BridgeOpsClient
             UpdateMultiple updateMultiple = new(identity, table, columns,
                                                 idColumn, dtgOutput.GetCurrentlySelectedIDs(), true);
             if (updateMultiple.ShowDialog() == true)
-                Run(out _, out _);
+                Run(out _, out _, out _);
             // Error message for failed updates are displayed by the UpdateMultiple window.
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -112,7 +112,7 @@ namespace BridgeOpsClient
                 MainWindow.pageDatabase != null)
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
-                Run(out _, out _);
+                Run(out _, out _, out _);
             }
         }
 
@@ -141,20 +141,26 @@ namespace BridgeOpsClient
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
-            Run(out _, out _);
+            Run(out _, out _, out _);
         }
 
-        public bool Run(out List<string?> columnNames, out List<List<object?>> rows)
+        public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows)
         {
             columnNames = new();
+            columnTypes = new();
             rows = new();
-            if (!App.SendSelectStatement(txtStatement.Text, out columnNames, out rows))
+            if (!App.SendSelectStatement(txtStatement.Text, out columnNames, out rows, out columnTypes))
                 return false;
+
+            HashSet<int> dateCols = new();
+            for (int i = 0; i < columnTypes.Count; ++i)
+                if (columnTypes[i] == "Date")
+                    dateCols.Add(i);
 
             try
             {
                 relevantTable = RelevantTable.None;
-                dtgOutput.Update(columnNames, rows);
+                dtgOutput.Update(columnNames, rows, dateCols);
                 int permissionRelevancy = -1;
                 if (cmbRelevancy.Text == "Organisation")
                 {
