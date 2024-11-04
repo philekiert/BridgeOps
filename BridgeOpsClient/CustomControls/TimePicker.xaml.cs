@@ -20,7 +20,7 @@ namespace BridgeOpsClient.CustomControls
         private TimeSpan max = new(23, 59, 0);
         public void SetMaxValue(TimeSpan max)
         {
-            if (max.Hours > 99)
+            if (max.TotalHours > 99)
                 max = new(99, max.Minutes, 0);
             else if (max < new TimeSpan(0, 2, 0))
                 max = new TimeSpan(0, 1, 0);
@@ -69,7 +69,7 @@ namespace BridgeOpsClient.CustomControls
             if (time != correctedTime)
             {
                 int selection = txt.SelectionStart;
-                txt.Text = correctedTime.ToString("hh\\:mm");
+                txt.Text = $"{correctedTime.TotalHours:00}:{correctedTime.Minutes}";
                 // Shouldn't trigger if the user has erased both characters.
                 txt.SelectionStart = selection;
             }
