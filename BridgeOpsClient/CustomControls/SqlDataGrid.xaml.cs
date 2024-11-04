@@ -201,6 +201,8 @@ namespace BridgeOpsClient.CustomControls
                             break;
                         }
 
+                    string actualHeadername = s.Replace(' ', '_');
+
                     header.Header = ColumnRecord.GetPrintName(s, col);
                     header.IsReadOnly = true;
                     if (col.type != null && col.type.ToUpper() == "DATE")
@@ -228,15 +230,17 @@ namespace BridgeOpsClient.CustomControls
                         header.Binding = new Binding(string.Format("items[{0}]", count))
                         { Converter = new BooleanToYesNoConverter() };
                     }
-                    else if ((col.type != null && col.type.ToUpper().Contains("INT")) ||
-                              dataType == typeof(Int16) || dataType == typeof(Int32))
+                    else if ((actualHeadername.EndsWith(Glo.Tab.CONFERENCE_ID) ||
+                              actualHeadername.EndsWith(Glo.Tab.RECURRENCE_ID)) &&
+                             ((col.type != null && col.type.ToUpper().Contains("INT")) ||
+                              dataType == typeof(Int16) || dataType == typeof(Int32)))
                     {
-                        if (s.Replace(' ', '_').EndsWith(Glo.Tab.CONFERENCE_ID))
+                        if (actualHeadername.EndsWith(Glo.Tab.CONFERENCE_ID))
                         {
                             header.Binding = new Binding(string.Format("items[{0}]", count))
                             { Converter = new ConfIdToString() };
                         }
-                        else if (s.Replace(' ', '_').EndsWith(Glo.Tab.RECURRENCE_ID))
+                        else if (actualHeadername.EndsWith(Glo.Tab.RECURRENCE_ID))
                         {
                             header.Binding = new Binding(string.Format("items[{0}]", count))
                             { Converter = new RecIDsToString() };

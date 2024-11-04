@@ -204,6 +204,13 @@ public static class Glo
         public const string CONFERENCE_EDIT_LOGIN = "Edit_Login_ID";
         public const string CONFERENCE_EDIT_TIME = "Edit_Time";
 
+        public const string CONFERENCE_ADD_CONNECTIONS = "Connection_Count";
+        public const string CONFERENCE_ADD_HOST_DIAL_NO = "Host_Dial_No";
+        public const string CONFERENCE_ADD_START_TIME = "Start_Time";
+        public const string CONFERENCE_ADD_END_TIME = "End_Time";
+        public const string CONFERENCE_ADD_DURATION = "Duration";
+        public const string CONFERENCE_ADD_IS_TEST = "Is_Test";
+
         public const string CONNECTION_ID = "Connection_ID";
         public const string CONNECTION_IS_MANAGED = "Is_Managed";
         public const string CONNECTION_TIME_FROM = "Connection_Time";

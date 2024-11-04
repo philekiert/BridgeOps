@@ -69,6 +69,7 @@
             <Word>Contact</Word>
             <Word>OrganisationContacts</Word>
             <Word>Conference</Word>
+            <Word>ConferenceAdditional</Word>
             <Word>Connection</Word>
             <Word>Recurrence</Word>
             <Word>Resource</Word>

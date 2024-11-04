@@ -607,6 +607,37 @@ public class DatabaseCreator
             SendCommandSQL(OrderString("Contact"));
             SendCommandSQL(OrderString("Conference"));
 
+            Writer.Message("\nCreating view for additional conference information...");
+            SendCommandSQL($@"
+CREATE VIEW ConferenceAdditional AS
+WITH HostInfo AS (
+SELECT Conference.{Glo.Tab.CONFERENCE_ID}, Connection.{Glo.Tab.DIAL_NO}
+FROM
+	Conference  
+LEFT JOIN
+	Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = Connection.{Glo.Tab.CONFERENCE_ID}
+	WHERE Connection.Row = 1
+)
+
+SELECT
+	Conference.{Glo.Tab.CONFERENCE_ID},
+	HostInfo.{Glo.Tab.DIAL_NO} AS {Glo.Tab.CONFERENCE_ADD_HOST_DIAL_NO},
+	COUNT(Connection.{Glo.Tab.DIAL_NO}) AS {Glo.Tab.CONFERENCE_ADD_CONNECTIONS},
+	CONVERT(TIME, Conference.{Glo.Tab.CONFERENCE_START}) AS {Glo.Tab.CONFERENCE_ADD_START_TIME},
+	CONVERT(TIME, Conference.{Glo.Tab.CONFERENCE_END}) AS {Glo.Tab.CONFERENCE_ADD_END_TIME},
+	Conference.{Glo.Tab.CONFERENCE_END} - Conference.{Glo.Tab.CONFERENCE_START} AS {Glo.Tab.CONFERENCE_ADD_DURATION}
+FROM
+	Conference
+LEFT JOIN HostInfo ON Conference.{Glo.Tab.CONFERENCE_ID} = HostInfo.{Glo.Tab.CONFERENCE_ID}
+LEFT JOIN Connection ON Conference.{Glo.Tab.CONFERENCE_ID} = Connection.{Glo.Tab.CONFERENCE_ID}
+LEFT JOIN Organisation ON Organisation.{Glo.Tab.DIAL_NO} = Connection.{Glo.Tab.DIAL_NO}
+GROUP BY
+	Conference.{Glo.Tab.CONFERENCE_ID},
+	HostInfo.{Glo.Tab.DIAL_NO},
+	Conference.{Glo.Tab.CONFERENCE_START},
+	Conference.{Glo.Tab.CONFERENCE_END}
+");
+
             Writer.Message("\nCreating admin login...");
             SendCommandSQL(string.Format("INSERT INTO Login (Username, Password, Admin, {0}, {1}, {2}, {3}) " +
                                          "VALUES ('admin', HASHBYTES('SHA2_512', 'admin'), 1, " +

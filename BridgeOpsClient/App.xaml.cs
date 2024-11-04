@@ -2357,6 +2357,7 @@ namespace BridgeOpsClient
         static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes,
                                                                        List<List<object?>> rows)
         {
+            // This could be a lot more efficient by storing these bools, come back to this.
             for (int n = 0; n < rows.Count; ++n)
             {
 #pragma warning disable CS8600
