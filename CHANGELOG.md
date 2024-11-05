@@ -4,14 +4,17 @@
 ## 0.6.0
 ### Added
 - Conference scheduling now enabled for users.
+- Users can now query all necessary tables from the query builder.
 - Added a feature to enable typing in a completely custom SQL statement in addition to the select query builder.
+- Added syntax highlighting to all the SQL code spaces.
 ### Changed
-- Time entry fields now display as a single textbox rather than two.
+- Time entry fields now display as a single textbox rather than two to improve usability.
 ### Fixed
 - Number entry fields now correctly disable their increment/decrement buttons if the user lacks edit permissions.
 - Data table rows will no longer expand to fit multi-line contents.
 - Fixed != operator not working for fields with dropdown lists in the select query builder.
 - The program will no longer crash if you attempt to export multiple query pages to a spreadsheet with identical tab names.
+- Date fields will now correctly display without the time of 00:00 in the query builder window.
   
   
 ## 0.5.4

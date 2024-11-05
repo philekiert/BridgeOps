@@ -23,6 +23,7 @@ namespace BridgeOpsClient
     public partial class NewConference : CustomWindow
     {
         string id = "";
+        int? recurrenceID = null;
         bool edit = false;
         bool cancelled = false;
 
@@ -83,8 +84,13 @@ namespace BridgeOpsClient
             }
             if (conf.recurrenceID != null)
             {
-                lblRecurrence.Content = "Recurrence: " + conf.recurrenceID.ToString() + " - " +
-                                      (conf.recurrenceName == null ? "[no name]" : conf.recurrenceName);
+                string recID = "R-" + conf.recurrenceID.ToString()!;
+                if (conf.recurrenceName != null)
+                    btnRecurrence.Content = $"{conf.recurrenceName} ({recID})";
+                else
+                    btnRecurrence.Content = recID;
+                recurrenceID = conf.recurrenceID;
+                btnRecurrence.IsEnabled = true;
             }
 
             edit = true;
@@ -832,6 +838,15 @@ namespace BridgeOpsClient
 
             if (e.Key == Key.Escape)
                 Close();
+        }
+
+        private void btnRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            if (recurrenceID != null)
+            {
+                EditRecurrence editRec = new((int)recurrenceID);
+                editRec.Show();
+            }
         }
     }
 }

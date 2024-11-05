@@ -41,7 +41,7 @@
             <ComboBoxItem Content="Organisation"/>
             <ComboBoxItem Content="Contact"/>
             <ComboBoxItem Content="Asset"/>
-            <!--<ComboBoxItem Content="Conference"/>-->
+            <ComboBoxItem Content="Conference"/>
         </ComboBox>
         <Label Grid.Row="1" Grid.Column="0" Content="Column Name"/>
         <TextBox Grid.Row="1" Grid.Column="1" x:Name="txtColumnName" MaxLength="128" TextChanged="InputHandler"/>

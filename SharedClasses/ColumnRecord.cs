@@ -571,7 +571,6 @@ public static class ColumnRecord
                 !OrderTable(conference, conferenceOrder, orderedConference))
                 return false;
 
-
             // Populate the friendly name reversal dictionaries.
             foreach (DictionaryEntry de in organisation)
                 organisationFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
@@ -598,10 +597,26 @@ public static class ColumnRecord
 
             // Very last of all, fabricate a ConferenceAdditional stand-in.
             conferenceAdditional.Add(Glo.Tab.CONFERENCE_ID, conference[Glo.Tab.CONFERENCE_ID]);
-            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTIONS,
-                                     new Column("INT", Int32.MaxValue, new string[0], "", false));
             conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_HOST_DIAL_NO, organisation[Glo.Tab.DIAL_NO]);
             conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_IS_TEST, connection[Glo.Tab.CONNECTION_IS_TEST]);
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTIONS,
+                                     new Column("INT", Int32.MaxValue, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED,
+                                     new Column("INT", Int32.MaxValue, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_START,
+                                     new Column("DATETIME", 0, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_END,
+                                     new Column("DATETIME", 0, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_START_DATE,
+                                     new Column("DATE", 0, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_END_DATE,
+                                     new Column("DATE", 0, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_START_TIME,
+                                     new Column("TIMESPAN", 0, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_END_TIME,
+                                     new Column("TIMESPAN", 0, new string[0], "", false));
+            conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_DURATION,
+                                     new Column("TIMESPAN", 0, new string[0], "", false));
             conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_START_DATE,
                                      new Column("DATE", 0, new string[0], "", false));
             conferenceAdditional.Add(Glo.Tab.CONFERENCE_ADD_END_DATE,
@@ -615,12 +630,28 @@ public static class ColumnRecord
 
             conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ID,
                                                          Glo.Tab.CONFERENCE_ID);
-            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTIONS,
-                                                         Glo.Tab.CONFERENCE_ADD_CONNECTIONS);
             conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_HOST_DIAL_NO,
                                                          Glo.Tab.CONFERENCE_ADD_HOST_DIAL_NO);
             conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_IS_TEST,
                                                          Glo.Tab.CONFERENCE_ADD_IS_TEST);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTIONS,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTIONS);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_START,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_START);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_END,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_END);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_START_DATE,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_START_DATE);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_END_DATE,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_END_DATE);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_START_TIME,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_START_TIME);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_END_TIME,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_END_TIME);
+            conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_CONNECTED_DURATION,
+                                                         Glo.Tab.CONFERENCE_ADD_CONNECTED_DURATION);
             conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_START_DATE,
                                                          Glo.Tab.CONFERENCE_ADD_START_DATE);
             conferenceAdditionalFriendlyNameReversal.Add(Glo.Tab.CONFERENCE_ADD_END_DATE,

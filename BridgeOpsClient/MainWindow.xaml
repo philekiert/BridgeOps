@@ -82,8 +82,7 @@
             </Grid.ColumnDefinitions>
             <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click" IsTabStop="False"/>
             <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click" IsTabStop="False"/>
-            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"
-                    Margin="2 2 10 2"/>
+            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"/>
         </Grid>
         <Grid x:Name="grdConfData" Grid.Row="2" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>

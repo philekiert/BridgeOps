@@ -371,8 +371,8 @@ namespace BridgeOpsClient.CustomControls
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
-                if (value is TimeSpan ts) // Yyyyya...
-                    return $"{ts.TotalHours:00}:{ts.Minutes:00}";
+                if (value is TimeSpan ts)
+                    return $"{((int)ts.TotalHours):00}:{ts.Minutes:00}";
                 return "";
             }
 

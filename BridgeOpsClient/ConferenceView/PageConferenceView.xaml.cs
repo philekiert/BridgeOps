@@ -366,6 +366,7 @@ namespace BridgeOpsClient
             public bool test = false;
             public HashSet<string> dialNos = new();
             public bool hasUnclosedConnection = false;
+            public int closedConnections = 0;
 
             public bool isGhost = false; // Used for deciding whether or not a conference is a copy representation.
 

@@ -204,14 +204,22 @@ public static class Glo
         public const string CONFERENCE_EDIT_LOGIN = "Edit_Login_ID";
         public const string CONFERENCE_EDIT_TIME = "Edit_Time";
 
-        public const string CONFERENCE_ADD_CONNECTIONS = "Connection_Count";
         public const string CONFERENCE_ADD_HOST_DIAL_NO = "Host_Dial_No";
+        public const string CONFERENCE_ADD_IS_TEST = "Is_Test";
+        public const string CONFERENCE_ADD_CONNECTIONS = "Connection_Count";
+        public const string CONFERENCE_ADD_CONNECTED = "Connected_Count";
+        public const string CONFERENCE_ADD_CONNECTED_START = "Connected_Start";
+        public const string CONFERENCE_ADD_CONNECTED_END = "Connected_End";
+        public const string CONFERENCE_ADD_CONNECTED_START_DATE = "Connected_Start_Date";
+        public const string CONFERENCE_ADD_CONNECTED_END_DATE = "Connected_End_Date";
+        public const string CONFERENCE_ADD_CONNECTED_START_TIME = "Connected_Start_Time";
+        public const string CONFERENCE_ADD_CONNECTED_END_TIME = "Connected_End_Time";
+        public const string CONFERENCE_ADD_CONNECTED_DURATION = "Connected_Duration";
         public const string CONFERENCE_ADD_START_DATE = "Start_Date";
         public const string CONFERENCE_ADD_END_DATE = "End_Date";
         public const string CONFERENCE_ADD_START_TIME = "Start_Time";
         public const string CONFERENCE_ADD_END_TIME = "End_Time";
         public const string CONFERENCE_ADD_DURATION = "Duration";
-        public const string CONFERENCE_ADD_IS_TEST = "Is_Test";
 
         public const string CONNECTION_ID = "Connection_ID";
         public const string CONNECTION_IS_MANAGED = "Is_Managed";

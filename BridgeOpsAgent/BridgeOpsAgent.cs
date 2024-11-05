@@ -2887,11 +2887,15 @@ internal class BridgeOpsAgent
                                         $"f.{Glo.Tab.CONFERENCE_CLOSURE}, " +
                                         $"n.{Glo.Tab.DIAL_NO}, " +
                                         $"n.{Glo.Tab.CONNECTION_IS_TEST}, " +
-                                        // If connection has been start and closed or neither:
+                                        // If a connection has been start and closed or neither:
                                         $"CASE WHEN (n.{Glo.Tab.CONNECTION_TIME_FROM} IS NULL " +
                                                $"AND n.{Glo.Tab.CONNECTION_TIME_TO} IS NULL) " +
                                                $"OR (n.{Glo.Tab.CONNECTION_TIME_FROM} IS NOT NULL " +
                                                $"AND n.{Glo.Tab.CONNECTION_TIME_TO} IS NOT NULL) " +
+                                              "THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END, " +
+                                        // If a connection has been started and closed:
+                                        $"CASE WHEN n.{Glo.Tab.CONNECTION_TIME_FROM} IS NOT NULL " +
+                                               $"AND n.{Glo.Tab.CONNECTION_TIME_TO} IS NOT NULL " +
                                               "THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END " +
                                   "FROM Conference AS f " +
                                  $"LEFT JOIN Connection AS n ON f.{Glo.Tab.CONFERENCE_ID} = " +
@@ -3005,6 +3009,7 @@ internal class BridgeOpsAgent
                         editTime = (DateTime?)row[12]!,
                         notes = (string?)row[13]!,
                         additionalCols = new(),
+                        additionalNeedsQuotes = additionalNeedsQuotes,
                         additionalValTypes = new(),
                         additionalVals = new(),
                         additionalValObjects = new(),
@@ -3021,7 +3026,6 @@ internal class BridgeOpsAgent
                         conf.additionalCols.Add(result.columnNames[i]!);
                         conf.additionalValTypes.Add(result.columnTypes[i]);
                         conf.additionalValObjects.Add(row[i]);
-                        conf.additionalNeedsQuotes = additionalNeedsQuotes;
                         conf.additionalVals.Add(SqlAssist.ConvertObjectToSqlString(row[i]));
                     }
 

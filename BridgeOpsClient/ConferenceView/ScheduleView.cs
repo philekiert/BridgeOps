@@ -628,7 +628,8 @@ namespace BridgeOpsClient
                                 }
                                 else if (c.end < now)
                                 {
-                                    if (c.closure == "Succeeded" && !c.hasUnclosedConnection)
+                                    if (c.closure == "Succeeded" &&
+                                        !c.hasUnclosedConnection && c.closedConnections > 1)
                                     {
                                         brush = brsConferenceEnded;
                                         brushHover = brsConferenceEndedHover;
@@ -636,7 +637,8 @@ namespace BridgeOpsClient
                                         border = penConferenceEndedBorder;
                                         borderSelected.Brush = brsConferenceEndedBorder;
                                     }
-                                    else if (c.closure == "Degraded" && !c.hasUnclosedConnection)
+                                    else if (c.closure == "Degraded" &&
+                                             !c.hasUnclosedConnection && c.closedConnections > 1)
                                     {
                                         brush = brsConferenceDegraded;
                                         brushHover = brsConferenceDegradedHover;
@@ -709,6 +711,17 @@ namespace BridgeOpsClient
                                         status.Add(times);
                                         status.Add("Dial Count: " + c.dialNos.Count.ToString());
                                         statusBold.AddRange(new bool[] { false, false, false });
+
+                                        if (c.recurrenceName != null)
+                                        {
+                                            status.Add("Recurrence: " + c.recurrenceName);
+                                            statusBold.Add(false);
+                                        }
+                                        else if (c.recurrenceID != null)
+                                        {
+                                            status.Add("Recurrence: R-" + c.recurrenceID.ToString());
+                                            statusBold.Add(false);
+                                        }
                                     }
 
                                     isMouseOverConference = true;
@@ -817,6 +830,22 @@ namespace BridgeOpsClient
                                                                  textBrush,
                                                                  VisualTreeHelper.GetDpi(this).PixelsPerDip);
                                         dc.DrawText(time, new(startX + 5, startY + zoomResourceSensitivity));
+                                    }
+
+                                    // Draw recurrence.
+                                    if (area.Height > 35 && c.recurrenceID != null)
+                                    {
+                                        string recStr = "R-" + c.recurrenceID.ToString();
+                                        if (c.recurrenceName != null)
+                                            recStr = c.recurrenceName + " (" + recStr + ")";
+                                        FormattedText rec = new(recStr,
+                                                                CultureInfo.CurrentCulture,
+                                                                FlowDirection.LeftToRight,
+                                                                segoeUI,
+                                                                12,
+                                                                textBrush,
+                                                                VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                                        dc.DrawText(rec, new(startX + 5, startY + (zoomResourceSensitivity * 2d - 2)));
                                     }
                                 }
 

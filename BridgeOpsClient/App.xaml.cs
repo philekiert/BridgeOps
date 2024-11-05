@@ -2071,6 +2071,8 @@ namespace BridgeOpsClient
                                             c.test = true;
                                         if ((bool?)row[12] == false)
                                             c.hasUnclosedConnection = true;
+                                        if ((bool?)row[13] == true)
+                                            ++c.closedConnections;
                                     }
                                 }
                                 return true;
