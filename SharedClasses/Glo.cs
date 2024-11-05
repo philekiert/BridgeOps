@@ -57,6 +57,7 @@ public static class Glo
     public const string CONFIG_NETWORK = "network-config.txt";
     public const string CONFIG_NETWORK_CLIENT = "server";
     public const string CONFIG_SQL_SERVER_NAME = "sql-server-name.txt";
+    public const string CONFIG_SQL_SERVER_READER = "sql-reader.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
     public const string CONFIG_HEADERS = "section-headers";

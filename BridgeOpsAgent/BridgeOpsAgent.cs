@@ -606,6 +606,7 @@ internal class BridgeOpsAgent
 
     // Apart from the console generating the the database, Agent is the only one that needs access to SQL Server.
     private static string sqlServerName = Glo.SQL_SERVER_NAME_DEFAULT;
+    private static string[] sqlServerReader = new string[] { "reader", "reader" };
     private static string ConnectionString
     {
         get
@@ -622,8 +623,8 @@ internal class BridgeOpsAgent
         get
         {
             return $"server=localhost\\{sqlServerName};" +
-                    "User Id=reader;" +
-                    "Password=reader;" +
+                   $"User Id={sqlServerReader[0]};" +
+                   $"Password={sqlServerReader[1]};" +
                     "encrypt=false;" +
                     "database=BridgeManager;" +
                     "Application Name=BridgeManagerAgent;" +
@@ -652,6 +653,24 @@ internal class BridgeOpsAgent
             else
                 LogError($"Unable to locate \"BridgeManager/{Glo.CONFIG_SQL_SERVER_NAME}\". " +
                          $"Connecting using default SLQ Server instance name: {sqlServerName}.");
+
+            string serverReaderFile = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SQL_SERVER_READER);
+            // Get the name of the SQL server instance.
+            if (File.Exists(serverReaderFile))
+            {
+                string[] readerLines = File.ReadAllLines(serverReaderFile);
+                if (readerLines.Length != 2 || readerLines[0].Length < 1 || readerLines[1].Length < 1)
+                    LogError($"Information in \"BridgeManager/{Glo.CONFIG_SQL_SERVER_READER}\" is invalid. " +
+                             $"Using defaults of 'reader' for username and password.");
+                else
+                    sqlServerReader = readerLines;
+            }
+            else
+            {
+                LogError($"Unable to locate \"BridgeManager/{Glo.CONFIG_SQL_SERVER_READER}\". " +
+                         $"Creating new file using defaults of 'reader' for username and password.");
+                File.WriteAllText(serverReaderFile, $"reader{Glo.NL}reader");
+            }
 
             SqlConnection sqlConnect = new(ConnectionString);
 
