@@ -302,9 +302,14 @@ namespace BridgeOpsClient
             Grid.SetColumnSpan(grid.Children[1], centre ? 5 : 1);
         }
         public void AssignMenuBar(Menu menu, double topPadding)
+        { AssignMenuBar(menu, null, topPadding); }
+        public void AssignMenuBar(Menu menu, StackPanel? tools, double topPadding)
         {
-            menuBar.Child = menu;
-            menuBar.Padding = new(15, topPadding, 0, 0);
+            StackPanel stk = new()
+            {
+                Orientation = Orientation.Horizontal
+            };
+
             Brush background = (Brush)Application.Current.Resources.MergedDictionaries[0]["brushTitleBar"];
             menu.Background = background;
             menu.Foreground = (Brush)Application.Current.Resources.MergedDictionaries[0]["brushTitleBarForeground"];
@@ -314,6 +319,19 @@ namespace BridgeOpsClient
                     foreach (UIElement u in mi1.Items)
                         if (u is MenuItem mi2)
                             mi2.Foreground = Brushes.Black;
+            stk.Children.Add(menu);
+
+            if (tools != null)
+            {
+                tools.Margin = new Thickness(25, 0, 0, 0);
+                stk.Children.Add(tools);
+                foreach (object o in tools.Children)
+                    if (o is Button b)
+                        WindowChrome.SetIsHitTestVisibleInChrome(b, true);
+            }
+
+            menuBar.Child = stk;
+            menuBar.Padding = new(15, topPadding, 0, 0);
             WindowChrome.SetIsHitTestVisibleInChrome(menuBar, false);
             foreach (IInputElement iie in menu.Items)
                 WindowChrome.SetIsHitTestVisibleInChrome(iie, true);

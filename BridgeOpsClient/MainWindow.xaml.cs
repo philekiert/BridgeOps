@@ -77,8 +77,10 @@ namespace BridgeOpsClient
             grdConfData.Focus();
 
             grdMain.Children.Remove(menuBar);
+            grdMain.Children.Remove(stkPaneButtons);
             grdMain.RowDefinitions[0].Height = new(0);
-            AssignMenuBar(menuBar, 0);
+            grdMain.RowDefinitions[1].Height = new(0);
+            AssignMenuBar(menuBar, stkPaneButtons, 0);
             if (ScheduleView.PrintColorFromLuminance((Color)Application.Current.Resources.MergedDictionaries[0]["colorTitleBar"]) == Colors.White)
                 SetIcon("/Resources/Icons/x20TitleBarIconDark.png");
             else
@@ -254,8 +256,6 @@ namespace BridgeOpsClient
                 menuUserLogOut.IsEnabled = loggedIn;
         }
 
-        /* This is surely needlessly verbose, will optimise later if time allows. Removing and re-adding the columns
-         * was the only way I could get it all to work. */
         public static double oldConfWidth = 1;
         public static double oldDataWidth = 1;
         public static int viewState = 2; // 0: Conference, 1: Mixed, 2: Data

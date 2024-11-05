@@ -59,31 +59,18 @@
                 <MenuItem Header="_Select Statement" Click="menuSelectStatement_Click"/>
             </MenuItem>
         </Menu>
-        <Grid Grid.Row="1" Margin="0 5 0 0" Grid.ColumnSpan="2">
-            <Grid.Resources>
-                <Style TargetType="Button">
-                    <Setter Property="Width" Value="20"/>
-                    <Setter Property="Height" Value="20"/>
-                    <Setter Property="Margin" Value="2"/>
-                    <Setter Property="Padding" Value="0 -2 0 0"/>
-                </Style>
-                <Style TargetType="ColumnDefinition">
-                    <Setter Property="Width" Value="Auto"/>
-                </Style>
-            </Grid.Resources>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click" IsTabStop="False"/>
-            <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click" IsTabStop="False"/>
-            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"/>
-        </Grid>
+        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" x:Name="stkPaneButtons"
+                    Orientation="Horizontal">
+            <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click" IsTabStop="False"
+                    Style="{StaticResource toolbar-button}" Height="22" Width="22"
+                    Padding="0 0 0 2" Margin="0 0 0 0"/>
+            <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click" IsTabStop="False"
+                    Style="{StaticResource toolbar-button}" Height="22" Width="22"
+                    Padding="0 0 1 2" Margin="-1 0 0 0"/>
+            <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"
+                    Style="{StaticResource toolbar-button}" Height="22" Width="22"
+                    Padding="0 0 0 2" Margin="-1 0 0 0"/>
+        </StackPanel>
         <Grid x:Name="grdConfData" Grid.Row="2" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*" MinWidth="200"/>
