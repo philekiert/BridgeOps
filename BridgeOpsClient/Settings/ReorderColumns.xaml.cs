@@ -24,10 +24,6 @@ namespace BridgeOpsClient
         public ReorderColumns()
         {
             InitializeComponent();
-#if !DEBUG
-            // Remove the conference table order for release versions.
-            cmbTable.Items.RemoveAt(2);
-#endif
 
             GetEntryLists();
             ChangeTable();

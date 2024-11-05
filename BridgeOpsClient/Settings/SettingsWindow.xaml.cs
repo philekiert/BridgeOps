@@ -235,7 +235,7 @@ namespace BridgeOpsClient
                 AddTable("Organisation", ColumnRecord.orderedOrganisation, new[] { Glo.Tab.ORGANISATION_AVAILABLE });
                 AddTable("Asset", ColumnRecord.orderedAsset, new string[0]);
                 AddTable("Contact", ColumnRecord.orderedContact, new string[0]);
-#if DEBUG
+
                 // All mentions of the conference table are currently removed in release versions.
                 AddTable("Conference", ColumnRecord.orderedConference, new[] { Glo.Tab.CONFERENCE_ID,
                                                                                Glo.Tab.CONFERENCE_CANCELLED,
@@ -250,7 +250,7 @@ namespace BridgeOpsClient
                                                                                Glo.Tab.CONFERENCE_EDIT_TIME,
                                                                                Glo.Tab.ORGANISATION_REF,
                                                                                Glo.Tab.RECURRENCE_ID  });
-#endif
+
                 AddTable("Login", ColumnRecord.login, new[] { Glo.Tab.LOGIN_ADMIN,
                                                               Glo.Tab.LOGIN_CREATE_PERMISSIONS,
                                                               Glo.Tab.LOGIN_DELETE_PERMISSIONS,

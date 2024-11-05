@@ -59,16 +59,6 @@ namespace BridgeOpsClient
             }
 
             InitializeComponent();
-#if !DEBUG
-            // Hide mention of resources in release build.
-            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
-            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
-            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
-            ((MenuItem)((MenuItem)menuBar.Items[1]).Items[0]).Items.RemoveAt(3);
-
-            // Hide the conference bar buttons.
-            grdMain.RowDefinitions[1].Height = new GridLength(0);
-#endif
 
             pageDatabase = new PageDatabase(this);
             frameConf.Content = new PageConferenceView();
@@ -89,9 +79,7 @@ namespace BridgeOpsClient
             MinWidth = CONF_PANE_MIN_WIDTH + 16 + DATA_PANE_MIN_WIDTH;
 
             mixedPaneRedrawOverride = true;
-#if !DEBUG
-            viewState = 2;
-#endif 
+
             ApplyViewState();
             GreyOutPermissions();
         }

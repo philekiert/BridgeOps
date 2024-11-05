@@ -800,11 +800,7 @@ namespace BridgeOpsClient
                     try
                     {
                         // Set defaults.
-#if DEBUG
                         BridgeOpsClient.MainWindow.viewState = 1;
-#else
-                        BridgeOpsClient.MainWindow.viewState = 2;
-#endif
 
                         stream.WriteByte(Glo.CLIENT_PULL_USER_SETTINGS);
                         {
