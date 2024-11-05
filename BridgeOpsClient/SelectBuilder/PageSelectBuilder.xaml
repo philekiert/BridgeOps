@@ -50,6 +50,7 @@
                 <ComboBoxItem Content="Contact"/>
                 <ComboBoxItem Content="Connection"/>
                 <ComboBoxItem Content="Conference"/>
+                <ComboBoxItem Content="ConferenceAdditional"/>
                 <ComboBoxItem Content="Recurrence"/>
                 <ComboBoxItem Content="Resource"/>
                 <ComboBoxItem Content="Login"/>

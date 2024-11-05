@@ -431,7 +431,6 @@ namespace BridgeOpsClient
                         tableNames.Add(s);
                 }
 
-
             List<string> columnList = new();
             foreach (string s in tableNames)
             {
