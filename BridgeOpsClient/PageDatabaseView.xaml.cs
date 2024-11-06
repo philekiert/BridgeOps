@@ -172,7 +172,7 @@ namespace BridgeOpsClient
             {
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (lastSearchWide && App.SelectWide(table, txtSearch.Text,
+                if (lastSearchWide && App.SelectWide(table, lastWideValue,
                                                      out columnNames, out rows, lastSearchHistorical))
                 {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
@@ -409,11 +409,14 @@ namespace BridgeOpsClient
             {
                 Glo.Tab.CONFERENCE_ID,
                 ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference),
+                "Recurrence",
                 "Day",
                 "Start",
                 "End",
                 "Duration",
-                "Host",
+                "Host No",
+                "Host Ref",
+                "Connections",
                 "Cancelled",
                 "Test",
                 ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference)
@@ -435,11 +438,16 @@ namespace BridgeOpsClient
                 end = (DateTime)c.end!;
                 data.Add(new() { c.conferenceID,
                                  c.title,
+                                 c.recurrenceID == null ? null :
+                                    (c.recurrenceName == null ? ("R-" + c.recurrenceID.ToString()) :
+                                        $"{c.recurrenceName} (R-{c.recurrenceID})"),
                                  start.DayOfWeek.ToString(),
                                  c.start,
                                  c.end,
                                  c.end - c.start,
                                  c.connections.Count == 0 ? null : c.connections[0].dialNo,
+                                 c.connections.Count == 0 ? null : c.connections[0].orgReference,
+                                 c.connections.Count,
                                  c.cancelled,
                                  test,
                                  c.notes

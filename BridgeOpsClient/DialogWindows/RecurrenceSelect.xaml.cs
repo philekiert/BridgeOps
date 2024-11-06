@@ -75,6 +75,7 @@ namespace BridgeOpsClient
             foreach (DateTime date in dates)
             {
                 Conference c = toClone.CloneForNewInsert(App.sd.sessionID, ColumnRecord.columnRecordID);
+                c.closure = null;
                 DateTime start = (DateTime)c.start!;
                 TimeSpan length = (DateTime)c.end! - start;
                 toClone.start = date.Date + start.TimeOfDay;

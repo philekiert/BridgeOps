@@ -38,6 +38,7 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             dtg.EnableMultiSelect();
+            dtg.identity = 10;
 
             // Set permissions.
             btnAdd.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
@@ -75,7 +76,7 @@ namespace BridgeOpsClient
             {
                 btnCancel.Header = "Uncancel";
                 foreach (CustomControls.SqlDataGrid.Row row in dtg.dtg.SelectedItems)
-                    if ((bool?)row.items[6] != true)
+                    if ((bool?)row.items[8] != true)
                     {
                         btnCancel.Header = "Cancel";
                         break;
@@ -118,7 +119,7 @@ namespace BridgeOpsClient
             }
             catch
             {
-                // Shouldn't ever get here - it's the primary key, so should never be null or anything but an INT.
+                // Shouldn't get here - it's the primary key, so should never be null or anything but an INT above 0.
                 return Abort();
             }
 
@@ -136,7 +137,9 @@ namespace BridgeOpsClient
                     "Start",
                     "End",
                     "Duration",
-                    "Host",
+                    "Host No",
+                    "Host Ref",
+                    "Connections",
                     "Cancelled",
                     "Test",
                     ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference),
@@ -165,6 +168,8 @@ namespace BridgeOpsClient
                         c.end,
                         c.end - c.start,
                         c.connections.Count == 0 ? null : c.connections[0].dialNo,
+                        c.connections.Count == 0 ? null : c.connections[0].orgReference,
+                        c.connections.Count,
                         c.cancelled,
                         test,
                         c.notes
@@ -286,8 +291,9 @@ namespace BridgeOpsClient
 
             if (App.SendUpdate(Glo.CLIENT_UPDATE_RECURRENCE, r))
             {
-                MainWindow.RepeatSearches(9);
                 App.DisplayError("Save successful.");
+                MainWindow.RepeatSearches(8);
+                MainWindow.RepeatSearches(7);
             }
             else
                 App.DisplayError("Save unsuccessful.");
@@ -343,7 +349,7 @@ namespace BridgeOpsClient
         {
             if (App.DeleteConfirm(false) && App.SendDelete("Recurrence", Glo.Tab.RECURRENCE_ID, id.ToString(), false))
             {
-                MainWindow.RepeatSearches(9);
+                MainWindow.RepeatSearches(8);
                 Close();
                 return;
             }

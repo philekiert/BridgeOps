@@ -100,11 +100,7 @@ namespace BridgeOpsClient
 
             cancelled = conf.cancelled == true;
             if (cancelled)
-            {
-                btnCancel.Content = "Uncancel";
-                btnCancel.Width = 66;
                 grdMain.RowDefinitions[0].Height = new(20);
-            }
 
             cmbClosure.Text = conf.closure;
 
@@ -158,7 +154,6 @@ namespace BridgeOpsClient
             ditConference.RememberStartingValues();
 
             // Apply permissions.
-            btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
             if (!App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 btnSave.IsEnabled = false;
@@ -698,7 +693,7 @@ namespace BridgeOpsClient
             if (end == null)
                 return App.Abort("Must select an end date and time.");
             if (start >= end)
-                return App.Abort("End cannot be before the start date and time.");
+                return App.Abort("End time must be greater than the start time.");
             int indexResourceNameSplit = cmbResource.Text.LastIndexOf(' ');
             string resourceName;
             int resourceID = -1;
@@ -814,20 +809,6 @@ namespace BridgeOpsClient
                 dontScroll = false;
             }
             lastScroll = ((ScrollViewer)sender).HorizontalOffset;
-        }
-
-        private void btnDelete_Click(object sender, RoutedEventArgs e)
-        {
-            if (App.DisplayQuestion("Are you sure?", "Delete Conference", DialogWindows.DialogBox.Buttons.YesNo))
-                if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, id, false))
-                    Close();
-        }
-
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
-        {
-            if (App.DisplayQuestion("Are you sure? Any unsaved changes will be lost.", "Close Conference",
-                                    DialogWindows.DialogBox.Buttons.YesNo))
-                Close();
         }
 
         private void CustomWindow_KeyDown(object sender, KeyEventArgs e)

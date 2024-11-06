@@ -324,17 +324,6 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
-            mnuScheduleAdjustTime.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleAdjustConnections.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleSetHost.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleCancel.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleAddToRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleRemoveFromRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-            mnuScheduleCreateRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] &&
-                                                    App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
-
             SetResources();
 
             tmrRender.Tick += TimerUpdate;
@@ -349,6 +338,20 @@ namespace BridgeOpsClient
             schView.conferenceView = this;
 
             MainWindow.pageConferenceViews.Add(this);
+        }
+
+        public void EnforcePermissions()
+        {
+            mnuScheduleAdjustTime.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleAdjustConnections.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleSetHost.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleCancel.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleAddToRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleRemoveFromRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            mnuScheduleCreateRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] &&
+                                                    App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
         }
 
         public class Conference

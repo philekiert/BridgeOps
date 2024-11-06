@@ -352,6 +352,9 @@ namespace BridgeOpsClient
 
                         sd.sessionID = result.Replace(Glo.CLIENT_LOGIN_ACCEPT, "");
 
+                        foreach (var view in BridgeOpsClient.MainWindow.pageConferenceViews)
+                            view.EnforcePermissions();
+
                         return Glo.CLIENT_LOGIN_ACCEPT;
                     }
                     else
@@ -811,31 +814,31 @@ namespace BridgeOpsClient
                             string[] settings = result.Split("\n");
 
                             double dVal;
-                            if (settings[0] != "")
+                            try
                             {
-                                try
+                                for (int i = 0; i < us.dataOrder.Length; ++i)
                                 {
-                                    for (int i = 0; i < us.dataOrder.Length; ++i)
-                                    {
-                                        // Order strings.
-                                        us.dataOrder[i] = settings[i].Split(';').ToList();
-                                        us.dataWidths[i].Clear();
-                                        us.dataHidden[i].Clear();
+                                    if (settings[i] == "")
+                                        continue;
 
-                                        // Hidden bools.
-                                        int index = i + us.dataOrder.Length;
-                                        foreach (string s in settings[index].Split(';'))
-                                            us.dataHidden[i].Add(s == "True");
+                                    // Order strings.
+                                    us.dataOrder[i] = settings[i].Split(';').ToList();
+                                    us.dataWidths[i].Clear();
+                                    us.dataHidden[i].Clear();
 
-                                        // Width ints.
-                                        index += us.dataOrder.Length;
-                                        foreach (string s in settings[index].Split(';'))
-                                            if (double.TryParse(s, out dVal) && dVal >= 0)
-                                                us.dataWidths[i].Add(dVal);
-                                    }
+                                    // Hidden bools.
+                                    int index = i + us.dataOrder.Length;
+                                    foreach (string s in settings[index].Split(';'))
+                                        us.dataHidden[i].Add(s == "True");
+
+                                    // Width ints.
+                                    index += us.dataOrder.Length;
+                                    foreach (string s in settings[index].Split(';'))
+                                        if (double.TryParse(s, out dVal) && dVal >= 0)
+                                            us.dataWidths[i].Add(dVal);
                                 }
-                                catch { }
                             }
+                            catch { }
 
                             // Conference view width, database view width, then view state.
                             int next = settings.Length - 2;
@@ -2564,9 +2567,10 @@ namespace BridgeOpsClient
         //                 7  Conference
         //                 8  Recurrence
         //                 9  Resource
-        public List<string>[] dataOrder = new List<string>[10];
-        public List<bool>[] dataHidden = new List<bool>[10];
-        public List<double>[] dataWidths = new List<double>[10];
+        //                 10  Conference (Recurrence menu)
+        public List<string>[] dataOrder = new List<string>[11];
+        public List<bool>[] dataHidden = new List<bool>[11];
+        public List<double>[] dataWidths = new List<double>[11];
 
         public bool settingsPulled = false;
 

@@ -38,6 +38,8 @@ namespace BridgeOpsClient
             {
                 DialogResult = true;
                 Close();
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches(8);
             }
         }
     }

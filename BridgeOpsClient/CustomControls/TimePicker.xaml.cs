@@ -78,9 +78,29 @@ namespace BridgeOpsClient.CustomControls
 
         private void txt_LostFocus(object sender, RoutedEventArgs e)
         {
-            // This used to forcefully set a value if the TextBox was empty, but we want to be able to set null values.
-            while (((TextBox)sender).Text.Length < 2 && ((TextBox)sender).Text.Length != 0)
-                ((TextBox)sender).Text = '0' + ((TextBox)sender).Text;
+            // Tidy up if possible, otherwise set to blank.
+
+            if (txt.Text.Length < 3)
+            {
+                txt.Text = "";
+                return;
+            }
+
+            if (int.TryParse(txt.Text, out _) && !txt.Text.Contains(':') &&
+                txt.Text.Length < 5)
+                txt.Text = txt.Text.Insert(txt.Text.Length - 2, ":");
+
+            TimeSpan ts;
+            if (!TimeSpan.TryParse(txt.Text, out ts))
+            {
+                txt.Text = "";
+                return;
+            }
+
+            if (ts > max)
+                ts = max;
+
+            txt.Text = $"{ts.Hours:00}:{ts.Minutes:00}";
         }
 
         private void txt_PreviewTextInput(object sender, TextCompositionEventArgs e)

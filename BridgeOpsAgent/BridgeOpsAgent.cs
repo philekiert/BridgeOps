@@ -173,6 +173,12 @@ internal class BridgeOpsAgent
         {
             bool sent = false;
 
+            // Not super happy about this, but immediate notifications ended up with things being carried
+            // out ahead of SQL changes being made somewhow. No idea how, as the transactions all commit
+            // before sending the notification, so there's something going on that I don't understand. Will
+            // look further into it when I get time.
+            Thread.Sleep(20);
+
             if (ipAddess == null)
                 return sent;
 
@@ -2976,8 +2982,11 @@ internal class BridgeOpsAgent
                                    $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME}, " +
                                    $"r.{Glo.Tab.RECURRENCE_NAME}, " +
                                    $"{connectionColsStr}, " +
-                                   $"o.{Glo.Tab.ORGANISATION_ID}, o.{Glo.Tab.ORGANISATION_REF}, " +
-                                   $"o.{Glo.Tab.ORGANISATION_NAME} " +
+                                   $"o.{Glo.Tab.ORGANISATION_ID}, " +
+                                   $"CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 " +
+                                        $"THEN o.{Glo.Tab.ORGANISATION_REF} ELSE NULL END, " +
+                                   $"CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 " +
+                                        $"THEN o.{Glo.Tab.ORGANISATION_NAME} ELSE NULL END " +
                               $"FROM Conference c " +
                               $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
                               $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +

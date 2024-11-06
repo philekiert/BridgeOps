@@ -84,13 +84,13 @@ namespace BridgeOpsClient
             GreyOutPermissions();
 
             // DELETE !!!
-            stkPaneButtons.Visibility = Visibility.Collapsed;
+            //stkPaneButtons.Visibility = Visibility.Collapsed;
         }
 
         public void ApplyViewState()
         {
             // DELETE !!!
-            viewState = 2;
+            //viewState = 2;
 
             // Set default view here:
             if (viewState == 0)
@@ -117,9 +117,9 @@ namespace BridgeOpsClient
             menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
 
             // DELETE !!!
-            menuDatabaseNewConference.IsEnabled = false;
-            menuDatabaseNewRecurrence.IsEnabled = false;
-            menuDatabaseNewResource.IsEnabled = false;
+            //menuDatabaseNewConference.IsEnabled = false;
+            //menuDatabaseNewRecurrence.IsEnabled = false;
+            //menuDatabaseNewResource.IsEnabled = false;
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)

@@ -12,7 +12,6 @@ using System.Windows.Input;
 
 namespace BridgeOpsClient
 {
-
     public class ScheduleView : Canvas
     {
         public PageConferenceView? conferenceView;
@@ -81,11 +80,16 @@ namespace BridgeOpsClient
         Brush brsConferenceDegradedBorder;
         Brush brsConferenceDegradedHover;
         Brush brsConferenceDegradedSolid;
+        Brush brsConferenceNoShow;
+        Brush brsConferenceNoShowBorder;
+        Brush brsConferenceNoShowHover;
+        Brush brsConferenceNoShowSolid;
         Brush brsOverflow;
         Brush brsOverflowCheck;
         Pen penConferenceBorder;
         Pen penConferenceDegradedBorder;
         Pen penConferenceFailedBorder;
+        Pen penConferenceNoShowBorder;
         Pen penConferenceTestBorder;
         Pen penConferenceEndedBorder;
         Pen penStylus;
@@ -134,6 +138,7 @@ namespace BridgeOpsClient
             Color clrTest = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceTest"];
             Color clrEnded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceEnded"];
             Color clrDegraded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceDegraded"];
+            Color clrNoShow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceNoShow"];
             Color clrOverflow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWarning"];
             Color clrOverflowCheck = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCheck"];
 
@@ -171,6 +176,16 @@ namespace BridgeOpsClient
             clrDegraded.A = 150;
             brsConferenceDegraded = new SolidColorBrush(clrDegraded);
 
+            // No Show
+            brsConferenceNoShowSolid = new SolidColorBrush(clrNoShow);
+            brsConferenceNoShowBorder = new SolidColorBrush(Color.FromRgb((byte)(clrNoShow.R * .5f),
+                                                                             (byte)(clrNoShow.G * .5f),
+                                                                             (byte)(clrNoShow.B * .5f)));
+            clrNoShow.A = 200;
+            brsConferenceNoShowHover = new SolidColorBrush(clrNoShow);
+            clrNoShow.A = 150;
+            brsConferenceNoShow = new SolidColorBrush(clrNoShow);
+
             // Test
             brsConferenceTestSolid = new SolidColorBrush(clrTest);
             brsConferenceTestBorder = new SolidColorBrush(Color.FromRgb((byte)(clrTest.R * .5f),
@@ -194,6 +209,7 @@ namespace BridgeOpsClient
             penConferenceBorder = new Pen(brsConferenceBorder, 1);
             penConferenceDegradedBorder = new Pen(brsConferenceDegradedBorder, 1);
             penConferenceFailedBorder = new Pen(brsConferenceFailedBorder, 1);
+            penConferenceNoShowBorder = new Pen(brsConferenceNoShowBorder, 1);
             penConferenceTestBorder = new Pen(brsConferenceTestBorder, 1);
             penConferenceEndedBorder = new Pen(brsConferenceEndedBorder, 1);
             brsOverflow = new SolidColorBrush(clrOverflow);
@@ -221,6 +237,12 @@ namespace BridgeOpsClient
             brsConferenceDegradedSolid.Freeze();
             brsConferenceDegradedBorder.Freeze();
             penConferenceDegradedBorder.Freeze();
+
+            brsConferenceNoShow.Freeze();
+            brsConferenceNoShowHover.Freeze();
+            brsConferenceNoShowSolid.Freeze();
+            brsConferenceNoShowBorder.Freeze();
+            penConferenceNoShowBorder.Freeze();
 
             brsConferenceTest.Freeze();
             brsConferenceTestHover.Freeze();
@@ -626,7 +648,15 @@ namespace BridgeOpsClient
                                     border = penConferenceTestBorder;
                                     borderSelected.Brush = brsConferenceTestBorder;
                                 }
-                                else if (c.end < now)
+                                else if (c.end < now && c.closedConnections < 2 && c.closure != "Failed")
+                                {
+                                    brush = brsConferenceNoShow;
+                                    brushHover = brsConferenceNoShowHover;
+                                    brushSolid = brsConferenceNoShowSolid;
+                                    border = penConferenceNoShowBorder;
+                                    borderSelected.Brush = brsConferenceNoShowBorder;
+                                }
+                                else if (c.start < now)
                                 {
                                     if (c.closure == "Succeeded" &&
                                         !c.hasUnclosedConnection && c.closedConnections > 1)

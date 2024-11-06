@@ -63,13 +63,13 @@
                     Orientation="Horizontal">
             <Button x:Name="btnConfPane" Grid.Column="0" Content="]-" Click="btnConfPane_Click" IsTabStop="False"
                     Style="{StaticResource toolbar-button}" Height="22" Width="22"
-                    Padding="0 0 0 2" Margin="0 0 0 0"/>
+                    Padding="1 0 0 2" Margin="0 0 0 0" FontWeight="Bold" Foreground="#333333"/>
             <Button x:Name="btnMixedPane" Grid.Column="1" Content="][" Click="btnMixedPane_Click" IsTabStop="False"
                     Style="{StaticResource toolbar-button}" Height="22" Width="22"
-                    Padding="0 0 1 2" Margin="-1 0 0 0"/>
+                    Padding="1 0 0 2" Margin="-1 0 0 0" FontWeight="Bold" Foreground="#333333"/>
             <Button x:Name="btnDataPane" Grid.Column="2" Content="-[" Click="btnDataPane_Click" IsTabStop="False"
                     Style="{StaticResource toolbar-button}" Height="22" Width="22"
-                    Padding="0 0 0 2" Margin="-1 0 0 0"/>
+                    Padding="0 0 0 2" Margin="-1 0 0 0" FontWeight="Bold" Foreground="#333333"/>
         </StackPanel>
         <Grid x:Name="grdConfData" Grid.Row="2" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
