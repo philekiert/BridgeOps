@@ -417,6 +417,7 @@ namespace BridgeOpsClient
                 "Host No",
                 "Host Ref",
                 "Connections",
+                "Closure",
                 "Cancelled",
                 "Test",
                 ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference)
@@ -448,6 +449,7 @@ namespace BridgeOpsClient
                                  c.connections.Count == 0 ? null : c.connections[0].dialNo,
                                  c.connections.Count == 0 ? null : c.connections[0].orgReference,
                                  c.connections.Count,
+                                 c.closure,
                                  c.cancelled,
                                  test,
                                  c.notes

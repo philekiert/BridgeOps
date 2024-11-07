@@ -749,8 +749,8 @@ namespace BridgeOpsClient
                 if (!c.dtpDisconnected.DateVisible && c.dtpDisconnected.GetTime() != null)
                     confC.disconnected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpDisconnected.GetTime()!.Value.Ticks);
 
-                if (confC.connected != null && confC.disconnected != null && confC.connected > confC.disconnected)
-                    return App.Abort("Connection times must be before disconnection times.");
+                if (confC.connected != null && confC.disconnected != null && confC.connected >= confC.disconnected)
+                    return App.Abort("Disconnection times must be later than connection times.");
 
                 conferenceConnections.Add(confC);
             }

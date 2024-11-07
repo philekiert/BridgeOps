@@ -443,13 +443,18 @@ namespace BridgeOpsClient
                                     int connections = 0;
                                     int confs = 0;
 
+                                    string connectionSuffix = ri.connectionCapacity == Int32.MaxValue ? "" :
+                                                              $"/{ri.connectionCapacity}";
+                                    string conferenceSuffix = ri.conferenceCapacity == Int16.MaxValue ? "" :
+                                                              $"/{ri.conferenceCapacity}";
+
                                     // If completely empty, still draw a big rectangle and some 0s.
                                     if (ri.capacityChangePoints.Count == 0)
                                     {
                                         Rect r = new(0, startY, ActualWidth, endY - startY);
                                         dc.DrawRectangle(brsOverflowCheck, null, r);
-                                        status.Add("Connections:  0/" + ri.connectionCapacity);
-                                        status.Add("Conferences:  0/" + ri.conferenceCapacity);
+                                        status.Add("Connections:  0" + connectionSuffix);
+                                        status.Add("Conferences:  0" + conferenceSuffix);
                                         statusBold.Add(false);
                                         statusBold.Add(false);
                                         statusContext = StatusContext.Overflow;
@@ -499,8 +504,8 @@ namespace BridgeOpsClient
 
                                                 // Write messages to status bar.
                                                 statusContext = StatusContext.Overflow;
-                                                status.Add($"Connections:  {connections}/{ri.connectionCapacity}");
-                                                status.Add($"Conferences:  {confs}/{ri.conferenceCapacity}");
+                                                status.Add($"Connections:  {connections}{connectionSuffix}");
+                                                status.Add($"Conferences:  {confs}{conferenceSuffix}");
                                                 statusBold.Add(connections > ri.connectionCapacity);
                                                 statusBold.Add(confs > ri.conferenceCapacity);
                                                 break;
@@ -648,7 +653,7 @@ namespace BridgeOpsClient
                                     border = penConferenceTestBorder;
                                     borderSelected.Brush = brsConferenceTestBorder;
                                 }
-                                else if (c.end < now && c.closedConnections < 2 && c.closure != "Failed")
+                                else if (c.closure == "No Show")
                                 {
                                     brush = brsConferenceNoShow;
                                     brushHover = brsConferenceNoShowHover;
@@ -658,7 +663,7 @@ namespace BridgeOpsClient
                                 }
                                 else if (c.start < now)
                                 {
-                                    if (c.closure == "Succeeded" &&
+                                    if (c.closure == "Successful" &&
                                         !c.hasUnclosedConnection && c.closedConnections > 1)
                                     {
                                         brush = brsConferenceEnded;
