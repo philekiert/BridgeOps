@@ -588,6 +588,9 @@ namespace BridgeOpsClient.CustomControls
 
         private void dtg_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            if (e.ChangedButton != MouseButton.Left)
+                return;
+
             MouseButtonEventArgs newE = new MouseButtonEventArgs(e.MouseDevice, e.Timestamp, e.ChangedButton)
             {
                 RoutedEvent = CustomDoubleClickEvent

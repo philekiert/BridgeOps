@@ -869,7 +869,7 @@ namespace BridgeOpsClient
 
                 // Enable or disable the the edit recurrence button.
                 bool addToRec = selectionMade;
-                bool removeFromRec = selectionMade;
+                bool removeFromRec = false;
                 bool createRec = selectionMade;
                 bool editRec = selectionMade;
 
