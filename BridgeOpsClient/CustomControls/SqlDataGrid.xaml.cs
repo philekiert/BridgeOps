@@ -737,12 +737,14 @@ namespace BridgeOpsClient.CustomControls
             else
                 mnuData.Items.Add(item);
         }
-        public void AddSeparator(bool top)
+        public Separator AddSeparator(bool top)
         {
+            Separator sep = new();
             if (top)
-                mnuData.Items.Insert(0, new Separator());
+                mnuData.Items.Insert(0, sep);
             else
-                mnuData.Items.Add(new Separator());
+                mnuData.Items.Add(sep);
+            return sep;
         }
         public void ToggleContextMenuItem(string text, bool enabled)
         {

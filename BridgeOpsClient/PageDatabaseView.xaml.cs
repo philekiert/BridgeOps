@@ -35,6 +35,21 @@ namespace BridgeOpsClient
         // Values need to be stored for multi-field searches.
         List<string> fieldValues = new();
 
+        Separator sepConf;
+        MenuItem btnCancel;
+        MenuItem btnAdjustTime;
+        MenuItem btnAdjustConns;
+        MenuItem btnSetHost;
+        MenuItem btnGoTo;
+        Separator sepRec;
+        MenuItem btnConfCreateRecurrence;
+        MenuItem btnConfAddToRecurrence;
+        MenuItem btnConfRemoveFromRecurrence;
+        MenuItem btnConfEditRecurrence;
+
+        MenuItem btnUpdate;
+        MenuItem btnDelete;
+
         public PageDatabaseView(PageDatabase containingPage, Frame containingFrame)
         {
             InitializeComponent();
@@ -54,10 +69,49 @@ namespace BridgeOpsClient
             dtgResults.AddWipeButton();
             dtgResults.WipeCallback = WipeCallback;
 
-            dtgResults.AddContextMenuItem("Update Selected", false, btnUpdate_Click).IsEnabled =
-                App.sd.editPermissions[Glo.PERMISSION_RECORDS];
-            dtgResults.AddContextMenuItem("Delete Selected", false, btnDelete_Click).IsEnabled =
-                App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
+            btnUpdate = dtgResults.AddContextMenuItem("Update Selected", false, btnUpdate_Click);
+            btnDelete = dtgResults.AddContextMenuItem("Delete Selected", false, btnDelete_Click);
+            sepConf = dtgResults.AddSeparator(false);
+            btnCancel = dtgResults.AddContextMenuItem("Cancel", false, btnCancel_Click);
+            btnAdjustTime = dtgResults.AddContextMenuItem("Adjust Time", false, btnAdjustTime_Click);
+            btnAdjustConns = dtgResults.AddContextMenuItem("Adjust Connections", false, btnAdjustConns_Click);
+            btnSetHost = dtgResults.AddContextMenuItem("Set Host", false, btnSetHost_Click);
+            btnGoTo = dtgResults.AddContextMenuItem("Go To", false, btnGoTo_Click);
+            sepRec = dtgResults.AddSeparator(false);
+            btnConfAddToRecurrence = dtgResults.AddContextMenuItem("Add To Recurrence",
+                                                                   false, btnConfAddToRecurrence_Click);
+            btnConfCreateRecurrence = dtgResults.AddContextMenuItem("Create Recurrence",
+                                                                    false, btnConfCreateRecurrence_Click);
+            btnConfRemoveFromRecurrence = dtgResults.AddContextMenuItem("Remove From Recurrence",
+                                                                        false, btnConfRemoveFromRecurrence_Click);
+            btnConfEditRecurrence = dtgResults.AddContextMenuItem("View Recurrence",
+                                                                  false, btnConfEditRecurrence_Click);
+        }
+
+        public void EnforcePermissions()
+        {
+            if (dtgResults.identity == -1)
+            {
+                btnUpdate.IsEnabled = false;
+                btnDelete.IsEnabled = false;
+            }
+            if (dtgResults.identity == 7 || dtgResults.identity == 8)
+            {
+                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+            }
+            if (dtgResults.identity == 9)
+            {
+                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RESOURCES];
+                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RESOURCES];
+            }
+
+            btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RECORDS];
+            btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
+            btnConfAddToRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnConfRemoveFromRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            btnConfCreateRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] &&
+                                                App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
         }
 
         public RowDefinition GetRowDefinitionForFrame()
@@ -683,6 +737,12 @@ namespace BridgeOpsClient
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
+            if (dtgResults.dtg.SelectedItems.Count < 1)
+            {
+                App.DisplayError("You must select at least one item to delete.");
+                return;
+            }
+
             if (!App.DeleteConfirm(dtgResults.dtg.SelectedItems.Count > 1))
                 return;
 
@@ -766,6 +826,269 @@ namespace BridgeOpsClient
         private void btnRemovePane_Click(object sender, RoutedEventArgs e)
         {
             containingPage.RemovePane(containingFrame);
+        }
+
+        private void dtgResults_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            EnforcePermissions();
+
+            bool selectionMade = dtgResults.dtg.SelectedItems.Count > 0;
+            btnDelete.IsEnabled = btnDelete.IsEnabled && selectionMade;
+            btnUpdate.IsEnabled = btnDelete.IsEnabled && selectionMade;
+
+            if (dtgResults.identity == 7)
+            {
+                // Figure out cancel button text.
+                btnCancel.Header = "Uncancel";
+                foreach (CustomControls.SqlDataGrid.Row row in dtgResults.dtg.SelectedItems)
+                    if ((bool?)row.items[11] != true)
+                    {
+                        btnCancel.Header = "Cancel";
+                        break;
+                    }
+
+                List<string?> recNames = new();
+                foreach (CustomControls.SqlDataGrid.Row row in dtgResults.dtg.SelectedItems)
+                    recNames.Add((string?)row.items[2]);
+
+                sepConf.Visibility = Visibility.Visible;
+                btnCancel.Visibility = Visibility.Visible;
+                btnAdjustTime.Visibility = Visibility.Visible;
+                btnAdjustConns.Visibility = Visibility.Visible;
+                btnSetHost.Visibility = Visibility.Visible;
+                btnGoTo.Visibility = Visibility.Visible;
+
+                btnCancel.IsEnabled = selectionMade;
+                if (!selectionMade) btnCancel.Header = "Cancel";
+                btnAdjustTime.IsEnabled = selectionMade;
+                btnAdjustConns.IsEnabled = selectionMade;
+                btnSetHost.IsEnabled = selectionMade;
+                btnGoTo.IsEnabled = recNames.Count == 1;
+
+                sepRec.Visibility = Visibility.Collapsed;
+
+                // Enable or disable the the edit recurrence button.
+                bool addToRec = selectionMade;
+                bool removeFromRec = selectionMade;
+                bool createRec = selectionMade;
+                bool editRec = selectionMade;
+
+                if (selectionMade)
+                {
+                    sepRec.Visibility = Visibility.Visible;
+                    string? cur;
+                    int idIndex;
+                    for (int n = 0; n < recNames.Count; ++n)
+                    {
+                        cur = recNames[n];
+                        if (cur != null)
+                        {
+                            // extract the ID.
+                            if (cur.EndsWith(')'))
+                            {
+                                idIndex = cur.LastIndexOf('(') + 3; // Get rid of the "(R-"
+                                recNames[n] = cur.Substring(idIndex, cur.Length - (idIndex + 1));
+                            }
+                        }
+                    }
+
+                    foreach (string? s in recNames)
+                        if (s != null)
+                        {
+                            addToRec = false;
+                            createRec = false;
+                            removeFromRec = true;
+                            break;
+                        }
+
+                    if (recNames[0] == null)
+                    {
+                        editRec = false;
+                        recID = null;
+                    }
+                    else
+                    {
+                        recID = recNames[0];
+                        for (int i = 1; i < recNames.Count; ++i)
+                            if (recNames[i] != recID)
+                            {
+                                editRec = false;
+                                break;
+                            }
+                    }
+                }
+
+                btnConfAddToRecurrence.Visibility = addToRec ? Visibility.Visible : Visibility.Collapsed;
+                btnConfCreateRecurrence.Visibility = createRec ? Visibility.Visible : Visibility.Collapsed;
+                btnConfRemoveFromRecurrence.Visibility = removeFromRec ? Visibility.Visible : Visibility.Collapsed;
+                btnConfEditRecurrence.Visibility = editRec ? Visibility.Visible : Visibility.Collapsed;
+            }
+            else
+            {
+                sepConf.Visibility = Visibility.Collapsed;
+                btnCancel.Visibility = Visibility.Collapsed;
+                btnAdjustTime.Visibility = Visibility.Collapsed;
+                btnAdjustConns.Visibility = Visibility.Collapsed;
+                btnSetHost.Visibility = Visibility.Collapsed;
+                btnGoTo.Visibility = Visibility.Collapsed;
+                sepRec.Visibility = Visibility.Collapsed;
+                btnConfAddToRecurrence.Visibility = Visibility.Collapsed;
+                btnConfCreateRecurrence.Visibility = Visibility.Collapsed;
+                btnConfRemoveFromRecurrence.Visibility = Visibility.Collapsed;
+                btnConfEditRecurrence.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                bool uncancel = btnCancel.Header.ToString() == "Uncancel";
+
+                List<string> ids = dtgResults.GetCurrentlySelectedIDs();
+                if (ids.Count == 0)
+                    return;
+
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+                                        "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
+                                        new() { uncancel ? "0" : "1" },
+                                        new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
+                if (App.SendUpdate(req))
+                    MainWindow.RepeatSearches(7);
+            }
+            catch { } // No catch required due to intended inactivity on a conference disappearing and error
+                      // messages in App.Update().
+        }
+        private void btnAdjustTime_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtgResults.GetCurrentlySelectedIDs();
+            if (ids.Count == 0)
+                return;
+            DialogWindows.AdjustConferenceTimes adjust = new(ids);
+            adjust.ShowDialog();
+        }
+        private void btnAdjustConns_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtgResults.GetCurrentlySelectedIDs();
+            if (ids.Count == 0)
+                return;
+            DialogWindows.AdjustConferenceConnections adjust = new(ids);
+            adjust.ShowDialog();
+        }
+        private void btnSetHost_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> idsStr = dtgResults.GetCurrentlySelectedIDs();
+            if (idsStr.Count == 0)
+                return;
+            List<int> ids = new();
+            try
+            {
+                foreach (string s in idsStr)
+                    ids.Add(int.Parse(s));
+            }
+            catch { return; }
+
+            SelectResult res;
+            if (App.SendConnectionSelectRequest(ids.Select(i => i.ToString()).ToList(), out res))
+            {
+                string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
+                string orgRefFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_REF]!);
+                string orgNameFriendly = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME,
+                                            (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
+                res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
+
+                LinkRecord lr = new(res.columnNames, res.rows, 0);
+                lr.ShowDialog();
+
+                if (lr.id == null)
+                    return;
+
+                ConferenceAdjustment ca = new();
+                ca.intent = ConferenceAdjustment.Intent.Host;
+                ca.dialHost = lr.id;
+                ca.ids = ids;
+
+                // Error will display in the below function if it fails.
+                if (App.SendConferenceAdjustment(ca))
+                    MainWindow.RepeatSearches(7);
+            }
+        }
+        private void btnGoTo_Click(object sender, RoutedEventArgs e)
+        {
+            string id = dtgResults.GetCurrentlySelectedID();
+            List<Conference> selectResult;
+            if (!App.SendConferenceSelectRequest(new() { id }, out selectResult))
+                return;
+            if (selectResult.Count != 1)
+                return;
+
+            foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                view.schView.scheduleTime = (DateTime)selectResult[0].start!;
+        }
+
+        string? recID = "";
+        private void btnConfCreateRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtgResults.GetCurrentlySelectedIDs();
+            if (ids.Count == 0)
+                return;
+
+            NewRecurrence newRec = new();
+            newRec.ShowDialog();
+            if (newRec.DialogResult == true && newRec.returnID != "")
+            {
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                        new() { Glo.Tab.RECURRENCE_ID }, new() { newRec.returnID }, new() { false },
+                                        Glo.Tab.CONFERENCE_ID, ids, false);
+                if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                    MainWindow.RepeatSearches(7);
+            }
+        }
+        private void btnConfAddToRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtgResults.GetCurrentlySelectedIDs();
+            if (ids.Count == 0)
+                return;
+
+            LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
+            lr.ShowDialog();
+            if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
+            {
+                App.DisplayError("ID could not be ascertained from the record.");
+                return;
+            }
+
+            UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                    new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
+                                    Glo.Tab.CONFERENCE_ID, ids, false);
+            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                MainWindow.RepeatSearches(7);
+        }
+        private void btnConfRemoveFromRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            List<string> ids = dtgResults.GetCurrentlySelectedIDs();
+            if (ids.Count == 0)
+                return;
+
+            UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                    new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
+                                    Glo.Tab.CONFERENCE_ID, ids, false);
+            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                MainWindow.RepeatSearches(7);
+        }
+        private void btnConfEditRecurrence_Click(object sender, RoutedEventArgs e)
+        {
+            if (recID == null)
+                return;
+
+            try
+            {
+                EditRecurrence editRec = new(int.Parse(recID));
+                editRec.Show();
+            }
+            catch { }
         }
     }
 }

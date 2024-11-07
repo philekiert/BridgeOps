@@ -150,7 +150,7 @@ namespace BridgeOpsClient.DialogWindows
 
             if (App.SendConferenceAdjustment(req))
             {
-                Close();
+                App.RepeatSearches(7);
                 return true;
             }
             else

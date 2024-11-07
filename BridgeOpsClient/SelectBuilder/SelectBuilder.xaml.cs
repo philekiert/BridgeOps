@@ -386,6 +386,8 @@ namespace BridgeOpsClient
                     {
                         JsonObject whereObj = tab["Where" + w.ToString()].AsObject();
                         var where = pageSelectBuilder.AddWhere();
+                        if (whereObj.ContainsKey("AndOr")) // Delete this once the reports downstairs are all updated.
+                            where.cmbAndOr.Text = whereObj["AndOr"].GetValue<string>();
                         where.cmbColumn.Text = GetFriendlyName(whereObj["Column"].GetValue<string>(), true);
                         where.cmbOperator.Text = whereObj["Operator"].GetValue<string>();
                         where.txtValue.Text = whereObj["ValueText"].GetValue<string>();
@@ -479,6 +481,7 @@ namespace BridgeOpsClient
                     {
                         PageSelectBuilderWhere where = pageSelectBuilder.Where(i);
                         JsonObject jsonWhere = new();
+                        jsonWhere["AndOr"] = where.cmbAndOr.Text;
                         jsonWhere["Column"] = pageSelectBuilder.GetProperColumnName(where.cmbColumn.Text);
                         jsonWhere["Operator"] = where.cmbOperator.Text;
                         jsonWhere["ValueText"] = where.txtValue.Text;

@@ -30,6 +30,7 @@ namespace BridgeOpsClient
         MenuItem btnSetHost;
         MenuItem btnCancel;
         MenuItem btnDeleteConference;
+        MenuItem btnGoTo;
 
         public EditRecurrence(int id)
         {
@@ -53,6 +54,7 @@ namespace BridgeOpsClient
             btnSetHost = dtg.AddContextMenuItem("Set Host", false, btnSetHost_Click);
             btnCancel = dtg.AddContextMenuItem("Cancel", false, btnCancel_Click);
             btnDeleteConference = dtg.AddContextMenuItem("Delete Conference", false, btnDeleteConference_Click);
+            btnGoTo = dtg.AddContextMenuItem("Go To", false, btnGoTo_Click);
 
             Title = "Recurrence R-" + id.ToString();
 
@@ -70,6 +72,7 @@ namespace BridgeOpsClient
             btnSetHost.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnCancel.IsEnabled = selectedSomething && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnDeleteConference.IsEnabled = selectedSomething && App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+            btnGoTo.IsEnabled = dtg.dtg.SelectedItems.Count == 1;
 
             btnCancel.Header = "Cancel";
             if (selectedSomething)
@@ -357,6 +360,19 @@ namespace BridgeOpsClient
             }
 
             // App.SendDelete will present any errors necessary.
+        }
+
+        private void btnGoTo_Click(object sender, RoutedEventArgs e)
+        {
+            string id = dtg.GetCurrentlySelectedID();
+            List<Conference> selectResult;
+            if (!App.SendConferenceSelectRequest(new() { id }, out selectResult))
+                return;
+            if (selectResult.Count != 1)
+                return;
+
+            foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                view.schView.scheduleTime = (DateTime)selectResult[0].start!;
         }
 
         private void dtg_SelectionChanged(object sender, RoutedEventArgs e)

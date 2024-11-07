@@ -157,6 +157,13 @@ namespace BridgeOpsClient
             }
         }
 
+        public static void RepeatSearches(params int[] identities)
+        {
+            if (mainWindow != null)
+                foreach (int i in identities)
+                    BridgeOpsClient.MainWindow.RepeatSearches(i);
+        }
+
         public static string documentsFolder = "";
         public static string networkConfigFile = "";
 

@@ -15,6 +15,7 @@
 - Fixed != operator not working for fields with dropdown lists in the select query builder.
 - The program will no longer crash if you attempt to export multiple query pages to a spreadsheet with identical tab names.
 - Date fields will now correctly display without the time of 00:00 in the query builder window.
+- AND/OR selection now saves and loads in presets instead of reverting to their default state of 'AND'.
   
   
 ## 0.5.4

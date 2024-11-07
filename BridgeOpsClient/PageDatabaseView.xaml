@@ -72,7 +72,8 @@
             <custom:SqlDataGrid x:Name="dtgResults" Grid.Row="1" IsTabStop="False"
                                 Width="{Binding ActualWidth, ElementName=pageGrid}"
                                 Height="{Binding ActualHeight, ElementName=resultsArea}"
-                                SelectionChanged="dtgResults_SelectionChanged"/>
+                                SelectionChanged="dtgResults_SelectionChanged"
+                                ContextMenuOpening="dtgResults_ContextMenuOpening"/>
         </Grid>
 
         <!-- Status -->
