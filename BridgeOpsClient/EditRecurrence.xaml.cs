@@ -371,8 +371,17 @@ namespace BridgeOpsClient
             if (selectResult.Count != 1)
                 return;
 
+            Conference c = selectResult[0];
+
             foreach (PageConferenceView view in MainWindow.pageConferenceViews)
-                view.schView.scheduleTime = (DateTime)selectResult[0].start!;
+            {
+                ScheduleView sv = view.schView;
+                sv.scheduleTime = (DateTime)c.start!;
+                sv.scrollResource = sv.GetScrollYfromResource(c.resourceID, c.resourceRow) -
+                                                              (sv.ActualHeight * .5d - sv.zoomResourceCurrent * .5d);
+                sv.EnforceResourceScrollLimits();
+                view.updateScrollBar = true;
+            }
         }
 
         private void dtg_SelectionChanged(object sender, RoutedEventArgs e)

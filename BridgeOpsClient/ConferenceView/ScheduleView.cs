@@ -1145,6 +1145,12 @@ namespace BridgeOpsClient
             double y = row * zoomResourceCurrent;
             return y - DisplayResourceScroll();
         }
+        public double GetScrollYfromResource(int resourceID, int resourceRow)
+        {
+            double row = conferenceView!.GetResourceRowInView(resourceID, resourceRow);
+            double y = row * zoomResourceCurrent;
+            return y;
+        }
         public int GetRowFromResource(int resourceID, int resourceRow)
         {
             return GetRowFromY(GetYfromResource(resourceID, resourceRow), true);

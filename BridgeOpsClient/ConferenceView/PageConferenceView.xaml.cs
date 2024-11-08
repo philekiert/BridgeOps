@@ -25,7 +25,6 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xaml;
 using static BridgeOpsClient.PageConferenceView;
-using static System.Windows.Forms.AxHost;
 
 namespace BridgeOpsClient
 {
