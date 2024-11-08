@@ -167,10 +167,12 @@ namespace BridgeOpsClient
         public static string documentsFolder = "";
         public static string networkConfigFile = "";
 
+        public static string? currentDir;
+
         public App()
         {
             // Set current working directory.
-            string? currentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            currentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
             currentDir = Path.GetDirectoryName(currentDir);
             if (currentDir == null)
                 DisplayError("Could not get working directory for application.");

@@ -57,6 +57,8 @@
                 <Separator/>
                 <MenuItem Header="Select _Query Builder" Click="menuSelect_Click"/>
                 <MenuItem Header="_Select Statement" Click="menuSelectStatement_Click"/>
+                <Separator/>
+                <MenuItem Header="_RPT Exporter" Click="menuRPTExporter_Click" x:Name="menuRPTExporter"/>
             </MenuItem>
         </Menu>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" x:Name="stkPaneButtons"

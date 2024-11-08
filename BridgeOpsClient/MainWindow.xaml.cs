@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net;
@@ -45,6 +46,8 @@ namespace BridgeOpsClient
                 pageDatabase.RepeatSearches(identity);
         }
 
+        string? rptExporterLocation = null;
+
         public MainWindow()
         {
             App.mainWindow = this;
@@ -59,6 +62,12 @@ namespace BridgeOpsClient
             }
 
             InitializeComponent();
+
+            // Look for RPT Exporter and grey out if it isn't found.
+            if (App.currentDir != null)
+                rptExporterLocation = App.currentDir + "/RPT Exporter/RPT Exporter.exe";
+            if (!(rptExporterLocation != null && System.IO.File.Exists(rptExporterLocation)))
+                menuRPTExporter.IsEnabled = false;
 
             pageDatabase = new PageDatabase(this);
             frameConf.Content = new PageConferenceView();
@@ -384,6 +393,24 @@ namespace BridgeOpsClient
         {
             foreach (PageConferenceView view in pageConferenceViews)
                 view.CancelAllDrags(view.schView);
+        }
+
+        private void menuRPTExporter_Click(object sender, RoutedEventArgs e)
+        {
+            if (!System.IO.File.Exists(rptExporterLocation))
+            {
+                App.DisplayError("Unable to locate ./RPT Exporter/RPT Exporter.exe");
+                return;
+            }
+
+            try
+            {
+                Process.Start(rptExporterLocation);
+            }
+            catch
+            {
+                App.DisplayError("Could not load RPT Exporter.exe");
+            }
         }
     }
 }
