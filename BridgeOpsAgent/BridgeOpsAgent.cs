@@ -3273,11 +3273,17 @@ internal class BridgeOpsAgent
         {
             ConferenceAdjustment req = sr.Deserialise<ConferenceAdjustment>(sr.ReadString(stream));
 
-            if (!CheckSessionValidity(req.sessionID, columnRecordID))
+            lock (clientSessions)
             {
-                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
-                return;
+                if (!CheckSessionValidity(req.sessionID, columnRecordID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+                else
+                    req.editLoginID = clientSessions[req.sessionID].loginID;
             }
+            req.editTime = DateTime.Now;
 
             if (!CheckSessionPermission(clientSessions[req.sessionID],
                                         Glo.PERMISSION_CONFERENCES, Glo.PERMISSION_EDIT))

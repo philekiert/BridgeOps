@@ -2270,6 +2270,7 @@ namespace BridgeOpsClient
         {
             req.sessionID = sd.sessionID;
             req.columnRecordID = ColumnRecord.columnRecordID;
+
             lock (streamLock)
             {
                 using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);

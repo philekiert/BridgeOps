@@ -1919,6 +1919,9 @@ END
         public int columnRecordID;
         public List<int> ids;
 
+        public int? editLoginID;
+        public DateTime? editTime;
+
         public bool resolveRowClashes;
         public bool overrideDialNoClashes;
         public bool overrideResourceOverflows;
@@ -1965,6 +1968,7 @@ END
             Prepare();
 
             List<string> idStr = ids.Select(i => i.ToString()).ToList();
+            string idCat = string.Join(", ", idStr);
             List<string> commands = new();
 
             if (intent == Intent.Times)
@@ -2013,22 +2017,21 @@ END
                     timeSets.Add($"{Glo.Tab.CONFERENCE_END} = " +
                                  $"DATEADD(MINUTE, {((TimeSpan)move).TotalMinutes}, {Glo.Tab.CONFERENCE_END})");
                 }
+                timeSets.Add($"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {editLoginID}");
+                timeSets.Add($"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL((DateTime)editTime!)}'");
 
                 if (timeSets.Count > 0)
                     com += $"{string.Join(", ", timeSets)} " +
-                           $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)});";
+                           $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat});";
 
                 commands.Add(com);
             }
 
             else if (intent == Intent.Connections)
             {
-
                 // Removals need to be carried out before, otherwise additions could potentially violate constraints.
                 if (removals != null && removals.Count > 0)
                 {
-                    string idCat = string.Join(", ", idStr);
-
                     // This isn't the most efficient way I expect, but hey, we'll never have more than 255! And
                     // in practice, probably never more than three or four.
                     foreach (Connection c in removals)
@@ -2055,7 +2058,6 @@ AND {Glo.Tab.CONNECTION_IS_TEST} = {(c.isTest ? "1" : "0")};
                         }
                     }
 
-
                     // Insert each new row, skipping any where the conference already has that dial no.
                     commands.Add($@"
 MERGE INTO Connection AS target
@@ -2070,6 +2072,11 @@ INSERT ({Glo.Tab.CONFERENCE_ID}, {Glo.Tab.DIAL_NO},
 VALUES (source.{Glo.Tab.CONFERENCE_ID}, source.{Glo.Tab.DIAL_NO}, source.{Glo.Tab.CONNECTION_IS_MANAGED},
         source.{Glo.Tab.CONNECTION_IS_TEST}, source.{Glo.Tab.CONNECTION_ROW});
 ");
+
+                    commands.Add($"UPDATE Conference SET " +
+                                 $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {editLoginID}, " +
+                                 $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL((DateTime)editTime!)}' " +
+                                 $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat});");
                 }
 
                 if ((additions != null && additions.Count > 0) ||
@@ -2083,6 +2090,11 @@ VALUES (source.{Glo.Tab.CONFERENCE_ID}, source.{Glo.Tab.DIAL_NO}, source.{Glo.Ta
                 commands.Add($"UPDATE Connection SET {Glo.Tab.CONNECTION_ROW} = 0 " +
                              $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)}) " +
                                $"AND {Glo.Tab.DIAL_NO} = '{dialHost}';");
+
+                commands.Add($"UPDATE Conference SET " +
+                             $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {editLoginID}, " +
+                             $"{Glo.Tab.CONFERENCE_EDIT_TIME} = '{SqlAssist.DateTimeToSQL((DateTime)editTime!)}' " +
+                             $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat});");
 
                 // ReseatAllConnections() will amend this to 1 and nudge all other connections down if needed.
                 commands.Add(ReseatAllConnections());
