@@ -1281,12 +1281,18 @@ namespace BridgeOpsClient
 
         private void btnDayPrevious_Click(object sender, RoutedEventArgs e)
         {
-            schView.scheduleTime = schView.scheduleTime.AddDays(-1);
+            if (ShiftDown())
+                schView.scheduleTime = schView.scheduleTime.AddDays(-7);
+            else
+                schView.scheduleTime = schView.scheduleTime.AddDays(-1);
         }
 
         private void btnDayNext_Click(object sender, RoutedEventArgs e)
         {
-            schView.scheduleTime = schView.scheduleTime.AddDays(1);
+            if (ShiftDown())
+                schView.scheduleTime = schView.scheduleTime.AddDays(7);
+            else
+                schView.scheduleTime = schView.scheduleTime.AddDays(1);
         }
 
         private void schView_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
