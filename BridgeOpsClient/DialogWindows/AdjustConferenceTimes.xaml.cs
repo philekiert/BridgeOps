@@ -159,7 +159,8 @@ namespace BridgeOpsClient.DialogWindows
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Adjust();
+            if (Adjust())
+                Close();
         }
     }
 }

@@ -1,6 +1,15 @@
 # Changelog
   
   
+## 0.6.1
+### Added
+- A function to launch an RPT exporter with the name "./RPT Exporter/RPT Exporter.exe", relative to Bridge Manager's executable.
+### Changed
+- The 'go-to conference' feature now scrolls vertically to the conference as well as horizontally.
+### Fixed
+- Conference adjustments using the 'Adjust Time' or 'Adjust Connections' menus now record the editing user.
+  
+  
 ## 0.6.0
 ### Added
 - Conference scheduling now enabled for users.

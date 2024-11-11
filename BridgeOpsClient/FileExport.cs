@@ -25,7 +25,7 @@ namespace BridgeOpsClient
             }
             if (!saveDialog.FileName.EndsWith(".xlsx") && !saveDialog.FileName.EndsWith(".xlsm"))
             {
-                App.DisplayError("Invalid file path");
+                App.DisplayError("Invalid file extension.");
                 fileName = "";
                 return false;
             }

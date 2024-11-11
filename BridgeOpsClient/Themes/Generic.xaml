@@ -12,7 +12,7 @@
     <Color x:Key="colorMaximiseButton">#556383</Color>
     <Color x:Key="colorClose">#e0e2e8</Color>
     <Color x:Key="colorCloseButton">#f54e80</Color>
-    <Color x:Key="colorWindowBorder">#aaa</Color>
+    <Color x:Key="colorWindowBorder">#AAAAAA</Color>
     <!--<Color x:Key="colorTitleBar">#3B4557</Color>
     <Color x:Key="colorTitleBarBorder">#24282F</Color>
     <Color x:Key="colorTitleBarForeGround">#eee</Color>

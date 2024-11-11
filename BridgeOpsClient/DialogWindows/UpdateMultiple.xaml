@@ -15,7 +15,7 @@
         </DataTemplate>
         <DataTemplate x:Key="fieldSelector">
             <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" Width="200"
-                      SelectionChanged="ComboBox_SelectionChanged"/>
+                      SelectionChanged="ComboBox_SelectionChanged" Height="24"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldTxt">
             <TextBox Grid.Column="2" Margin="0 10 10 10" VerticalContentAlignment="Center" MinWidth="200" Height="24"/>
