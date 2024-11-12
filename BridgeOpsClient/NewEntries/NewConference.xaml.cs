@@ -29,8 +29,6 @@ namespace BridgeOpsClient
 
         public NewConference()
         {
-            MaxHeight = 400;
-
             InitializeComponent();
 
             // Get the closure options. Currently these are static, but there are plans to add options later on and I
@@ -180,12 +178,13 @@ namespace BridgeOpsClient
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            App.WindowClosed();
-        }
-
-        private void Window_ContentRendered(object sender, EventArgs e)
-        {
-            MaxHeight = double.PositiveInfinity;
+            if (WindowState != WindowState.Maximized)
+            {
+                Settings.Default.ConfWinSizeX = Width;
+                Settings.Default.ConfWinSizeY = Height;
+                Settings.Default.Save();
+                App.WindowClosed();
+            }
         }
 
         public class Connection
@@ -624,7 +623,8 @@ namespace BridgeOpsClient
             ResetConnectionGridRows();
         }
 
-        bool SingleDay { get { return dtpStart.GetDate() == dtpEnd.GetDate(); } }
+        public bool SingleDay { get { return dtpStart.GetDate() == dtpEnd.GetDate(); } }
+        public const double CrossDayPreferredWidth = 1100;
         private void ToggleConnectionDates(object? sender, SelectionChangedEventArgs? e)
         {
             bool singleDay = SingleDay;
@@ -643,8 +643,9 @@ namespace BridgeOpsClient
             }
             else
             {
-                if (Width < 1100) // Widen the window or the user will certainly need to scroll to read site names.
-                    Width = 1100;
+                // Widen the window or the user will certainly need to scroll to read site names.
+                if (Width < CrossDayPreferredWidth)
+                    Width = CrossDayPreferredWidth;
                 grdHeaders.ColumnDefinitions[3].Width = new GridLength(175);
                 grdHeaders.ColumnDefinitions[4].Width = new GridLength(175);
                 grdHeaders.ColumnDefinitions[3].MaxWidth = 175;

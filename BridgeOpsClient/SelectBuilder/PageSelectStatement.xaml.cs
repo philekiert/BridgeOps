@@ -256,7 +256,7 @@ namespace BridgeOpsClient
                 int id;
                 if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
                     return;
-                App.EditConference(id);
+                App.EditConference(id, App.mainWindow);
             }
             else if (relevantTable == RelevantTable.Recurrence)
             {

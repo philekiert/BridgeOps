@@ -771,7 +771,7 @@ namespace BridgeOpsClient
                 DateTime time = schView.SnapDateTime(schView.GetDateTimeFromX(mouseX));
                 int resource = schView.GetRowFromY(mouseY, true);
                 if (schView.currentConference != null)
-                    App.EditConference(schView.currentConference.id);
+                    App.EditConference(schView.currentConference.id, App.mainWindow);
                 else if (resource != -1)
                 {
                     NewConference newConf = new(GetResourceFromSelectedRow(resource), time);

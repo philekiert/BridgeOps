@@ -85,7 +85,7 @@
                     <Image Source="/Resources/Icons/02ZoomIn.png" Width="22" Height="22"/>
                 </Button.Content>
             </Button>
-            <Label Grid.Column="3" Content="↕" FontSize="17" Padding="0 0 2 0" Margin="0 7 0 0"/>
+            <Label Grid.Column="3" Content="↕" FontSize="17" Padding="0 1 2 0" Margin="0 7 0 0"/>
             <Button Grid.Column="4" x:Name="btnResourceZoomOut" Click="btnResourceZoomOut_Click"
                     VerticalAlignment="Bottom" Style="{StaticResource toolbar-button}" HorizontalAlignment="Left">
                 <Button.Content>

@@ -627,7 +627,7 @@ namespace BridgeOpsClient
             return true;
         }
 
-        public static bool EditConference(int id)
+        public static bool EditConference(int id, Window? owner)
         {
             List<SendReceiveClasses.Conference> confs;
             if (SendConferenceSelectRequest(new() { id.ToString() }, out confs))
@@ -640,6 +640,16 @@ namespace BridgeOpsClient
                 else
                 {
                     NewConference newConf = new(confs[0]);
+                    if (Settings.Default.ConfWinSizeX > 0d)
+                    {
+                        newConf.Width = Settings.Default.ConfWinSizeX;
+                        // Set this again here if needed, as we'll have overriden it with the line above.
+                        if (!newConf.SingleDay && newConf.Width < 1100)
+                            newConf.Width = NewConference.CrossDayPreferredWidth;
+                    }
+                    if (Settings.Default.ConfWinSizeY > 0d)
+                        newConf.Height = Settings.Default.ConfWinSizeY;
+                    newConf.Owner = owner;
                     newConf.ShowDialog();
                     return true;
                 }
