@@ -518,26 +518,27 @@ namespace BridgeOpsClient
                     }
 
                     // Draw any dial number clash regions while we're here.
-                    for (int i = 0; i < clashRegionAlternations.Count; i += 2)
-                    {
-                        DateTime s = clashRegionAlternations[i];
-                        DateTime e = clashRegionAlternations[i + 1];
-
-                        // Skip if out of frame.
-                        if (e > start && s < end)
+                    if (Keyboard.IsKeyDown(Key.D))
+                        for (int i = 0; i < clashRegionAlternations.Count; i += 2)
                         {
-                            // Only draw as far as necessary.
-                            if (s < start)
-                                s = start;
-                            if (e > end)
-                                e = end;
+                            DateTime s = clashRegionAlternations[i];
+                            DateTime e = clashRegionAlternations[i + 1];
 
-                            double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
-                            double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
-                            Rect r = new(startPoint, 0, endPoint - startPoint, ActualHeight);
-                            dc.DrawRectangle(brsOverflow, null, r);
+                            // Skip if out of frame.
+                            if (e > start && s < end)
+                            {
+                                // Only draw as far as necessary.
+                                if (s < start)
+                                    s = start;
+                                if (e > end)
+                                    e = end;
+
+                                double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                                double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                                Rect r = new(startPoint, 0, endPoint - startPoint, ActualHeight);
+                                dc.DrawRectangle(brsOverflow, null, r);
+                            }
                         }
-                    }
                 }
 
                 // Get the start time, rounded down to the nearest increment.
@@ -843,7 +844,7 @@ namespace BridgeOpsClient
                                 if (area.Width > 8)
                                 {
                                     // Draw title.
-                                    FormattedText title = new($"{c.title} (C-{c.id.ToString()})" ,
+                                    FormattedText title = new($"{c.title} (C-{c.id.ToString()})",
                                                               CultureInfo.CurrentCulture,
                                                               FlowDirection.LeftToRight,
                                                               segoeUISemiBold,
