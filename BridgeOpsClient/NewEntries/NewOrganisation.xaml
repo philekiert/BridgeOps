@@ -43,11 +43,11 @@
                     <Label Content="Organisation Reference" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgRef"
-                             TextChanged="ValueChanged" />
+                             TextChanged="ValueChanged" Height="24"/>
                     <Label Content="Parent Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 4 10 4"
-                              SelectionChanged="ValueChanged" Height="20" Padding="4 2 4 2"/>
+                              SelectionChanged="ValueChanged" Height="24" Padding="4 2 4 2"/>
                     <Label Content="Organisation Name" Grid.Row="2" Grid.Column="0" x:Name="lblName"
                            VerticalAlignment="Top" FontWeight="SemiBold"/>
                     <TextBox Grid.Row="2" Grid.Column="1" x:Name="txtName" Height="37" VerticalContentAlignment="Top"
@@ -61,7 +61,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="AUto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" x:Name="txtDialNo" TextChanged="ValueChanged"/>
+                        <TextBox Grid.Column="0" x:Name="txtDialNo" TextChanged="ValueChanged" Height="24"/>
                         <Label Content="Available for Conferences" Grid.Column="1" x:Name="lblAvailable"
                            VerticalAlignment="Center" Margin="10 0 5 0"/>
                         <CheckBox Grid.Column="2" x:Name="chkAvailable" Margin="0 1 10 0" VerticalAlignment="Center"

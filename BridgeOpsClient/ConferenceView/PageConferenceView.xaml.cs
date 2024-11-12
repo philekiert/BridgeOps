@@ -1279,19 +1279,23 @@ namespace BridgeOpsClient
             RedrawResources();
         }
 
-        private void btnDayPrevious_Click(object sender, RoutedEventArgs e)
+        private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
-            if (ShiftDown())
+            if (sender == btnMonthPrevious)
+                schView.scheduleTime = schView.scheduleTime.AddMonths(-1);
+            else if (sender == btnWeekPrevious)
                 schView.scheduleTime = schView.scheduleTime.AddDays(-7);
-            else
+            else if (sender == btnDayPrevious)
                 schView.scheduleTime = schView.scheduleTime.AddDays(-1);
         }
 
-        private void btnDayNext_Click(object sender, RoutedEventArgs e)
+        private void btnNext_Click(object sender, RoutedEventArgs e)
         {
-            if (ShiftDown())
+            if (sender == btnMonthNext)
+                schView.scheduleTime = schView.scheduleTime.AddMonths(1);
+            else if (sender == btnWeekNext)
                 schView.scheduleTime = schView.scheduleTime.AddDays(7);
-            else
+            else if (sender == btnDayNext)
                 schView.scheduleTime = schView.scheduleTime.AddDays(1);
         }
 

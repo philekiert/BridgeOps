@@ -103,7 +103,7 @@ namespace BridgeOpsClient.CustomControls
                     {
                         DatePicker datInput = new();
                         datInput.Height = 24;
-                        datInput.Width = 110;
+                        datInput.Width = 100;
                         datInput.HorizontalAlignment = HorizontalAlignment.Left;
                         datInput.SetValue(Grid.ColumnProperty, 1);
                         datInput.SetValue(Grid.RowProperty, i + headerBump);

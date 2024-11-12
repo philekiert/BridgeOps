@@ -7,7 +7,8 @@
              mc:Ignorable="d" HorizontalAlignment="Left" VerticalAlignment="Center">
     <Grid Width="Auto" Height="24">
         <TextBox x:Name="txt" Grid.Column="0" MaxLength="5" Width="41" Padding="3 0 0 0"
-                 VerticalAlignment="Center" LostFocus="txt_LostFocus" Height="20" Margin="0 0 0 0"
+                 VerticalAlignment="Center" LostFocus="txt_LostFocus" Height="24" Margin="0 0 0 0"
+                 VerticalContentAlignment="Center"
                  PreviewTextInput="txt_PreviewTextInput" GotKeyboardFocus="txt_GotKeyboardFocus"/>
     </Grid>
 </UserControl>

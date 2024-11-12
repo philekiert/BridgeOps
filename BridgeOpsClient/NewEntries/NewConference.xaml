@@ -126,9 +126,9 @@
             <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtTitle" Margin="10 10 10 2" Height="24"
                      VerticalContentAlignment="Center"/>
             <Label Content="Start" Grid.Row="1" Grid.Column="0" x:Name="lblStart"/>
-            <custom:DateTimePicker Grid.Row="1" Grid.Column="1" x:Name="dtpStart"/>
+            <custom:DateTimePicker Grid.Row="1" Grid.Column="1" x:Name="dtpStart" Margin="8 2 0 2"/>
             <Label Content="End" Grid.Row="2" Grid.Column="0" x:Name="lblEnd"/>
-            <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="dtpEnd"/>
+            <custom:DateTimePicker Grid.Row="2" Grid.Column="1" x:Name="dtpEnd" Margin="8 2 0 2"/>
             <Label Content="Resource" Grid.Row="3" Grid.Column="0" x:Name="lblResource"/>
             <ComboBox Grid.Row="3" Grid.Column="1" x:Name="cmbResource" Margin="10 2 10 2"/>
             <Label Content="Closure" Grid.Row="4" Grid.Column="0" x:Name="lblClosure"/>

@@ -41,7 +41,7 @@
             <Label Content="Table" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
             <ComboBox x:Name="cmbTable" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
                       Margin="3 5 0 5" Width="150" MaxWidth="200" HorizontalAlignment="Left"
-                      SelectionChanged="cmbTable_SelectionChanged">
+                      SelectionChanged="cmbTable_SelectionChanged" Height="24">
                 <ComboBoxItem Content="Organisation"/>
                 <ComboBoxItem Content="OrganisationChange"/>
                 <ComboBoxItem Content="OrganisationContacts"/>

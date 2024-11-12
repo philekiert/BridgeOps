@@ -3,6 +3,14 @@
   
 ## 0.6.1
 ### Added
+- Skip buttons for weeks and months in addition to days.
+### Changed
+- Fresh icon set for the schedule view and some other elements.
+### Fixed
+  
+  
+## 0.6.1
+### Added
 - A function to launch an RPT exporter with the name "./RPT Exporter/RPT Exporter.exe", relative to Bridge Manager's executable.
 - The user may hold shift while clicking the forward/backward buttons in the schedule view to skip by weeks rather than days.
 ### Changed

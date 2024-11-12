@@ -18,6 +18,18 @@
   <ItemGroup>
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono-Italic.ttf" />
     <None Remove="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
+    <None Remove="Resources\Icons\01ZoomOut.png" />
+    <None Remove="Resources\Icons\02ZoomIn.png" />
+    <None Remove="Resources\Icons\03Minus.png" />
+    <None Remove="Resources\Icons\04Plus.png" />
+    <None Remove="Resources\Icons\05Forward1.png" />
+    <None Remove="Resources\Icons\06Forward2.png" />
+    <None Remove="Resources\Icons\07Forward3.png" />
+    <None Remove="Resources\Icons\08Backward1.png" />
+    <None Remove="Resources\Icons\09Backward2.png" />
+    <None Remove="Resources\Icons\10Backward3.png" />
+    <None Remove="Resources\Icons\11Date.png" />
+    <None Remove="Resources\Icons\12Today.png" />
     <None Remove="Resources\Icons\x20TitleBarIcon.png" />
     <None Remove="Resources\Icons\x20TitleBarIconDark.png" />
     <None Remove="Resources\sql-syntax.xshd" />
@@ -35,6 +47,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Icons\01ZoomOut.png" />
+    <Resource Include="Resources\Icons\02ZoomIn.png" />
+    <Resource Include="Resources\Icons\03Minus.png" />
+    <Resource Include="Resources\Icons\04Plus.png" />
+    <Resource Include="Resources\Icons\05Forward1.png" />
+    <Resource Include="Resources\Icons\06Forward2.png" />
+    <Resource Include="Resources\Icons\07Forward3.png" />
+    <Resource Include="Resources\Icons\08Backward1.png" />
+    <Resource Include="Resources\Icons\09Backward2.png" />
+    <Resource Include="Resources\Icons\10Backward3.png" />
+    <Resource Include="Resources\Icons\11Date.png" />
+    <Resource Include="Resources\Icons\12Today.png" />
     <Resource Include="Resources\Icons\BridgeManager.ico" />
   </ItemGroup>
 
