@@ -2296,7 +2296,17 @@ namespace BridgeOpsClient
 
                                 // If there was an overridable clash, ask first and then re-run the request if the
                                 // user desires.
-                                if (reason == Glo.DIAL_CLASH_WARNING)
+                                if (reason == Glo.ROW_CLASH_WARNING)
+                                {
+                                    if (RowClashConfirm())
+                                    {
+                                        stream.Close();
+                                        req.resolveRowClashes = true;
+                                        return SendConferenceAdjustment(req);
+                                    }
+                                    else return false;
+                                }
+                                else if (reason == Glo.DIAL_CLASH_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
                                     if (DialNoClashConfirm(res))

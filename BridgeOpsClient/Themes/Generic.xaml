@@ -168,7 +168,7 @@
                                  VerticalContentAlignment="Center"
                                  Padding="2 2 2 2"
                                  Margin="0"
-                                 Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:MM/dd/yyyy}'}"/>
+                                 Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:dd/MM/yyyy}'}"/>
                         <Button x:Name="PART_Button"
                                 HorizontalAlignment="Right"
                                 Grid.Column="0"
