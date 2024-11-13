@@ -55,7 +55,7 @@ namespace BridgeOpsClient.DialogWindows
                     chkMove.IsChecked = false;
                 }
             }
-            else if (sender == chkMove )
+            else if (sender == chkMove)
             {
                 bool isChecked = chkMove.IsChecked == true;
                 ToggleMove(isChecked);
@@ -150,6 +150,11 @@ namespace BridgeOpsClient.DialogWindows
 
             if (App.SendConferenceAdjustment(req))
             {
+                // Clear selection to make sure they are cleared from view in case of a particularly large move.
+                foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                    lock (view.schView.selectedConferences)
+                        view.schView.selectedConferences = new();
+
                 App.RepeatSearches(7);
                 return true;
             }

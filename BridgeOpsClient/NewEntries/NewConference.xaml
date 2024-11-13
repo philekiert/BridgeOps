@@ -7,9 +7,8 @@
                     xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
                     mc:Ignorable="d"
                     Title="New Conference" ResizeMode="CanResize"
-                    UseLayoutRounding="True" MinHeight="500" MinWidth="900" Width="850"
-                    Closed="Window_Closed" ContentRendered="Window_ContentRendered"
-                    KeyDown="CustomWindow_KeyDown">
+                    UseLayoutRounding="True" MinHeight="500" MinWidth="900" Width="850" Height="400"
+                    Closed="Window_Closed" KeyDown="CustomWindow_KeyDown">
     <Grid x:Name="grdMain">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="500"/>

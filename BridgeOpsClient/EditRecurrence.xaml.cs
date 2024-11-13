@@ -322,7 +322,7 @@ namespace BridgeOpsClient
             string editID = dtg.GetCurrentlySelectedID();
             int editIdInt;
             if (int.TryParse(editID, out editIdInt))
-                App.EditConference(editIdInt);
+                App.EditConference(editIdInt, this);
             else
                 App.DisplayError("Unable to discern the conference ID from the selected row.");
         }

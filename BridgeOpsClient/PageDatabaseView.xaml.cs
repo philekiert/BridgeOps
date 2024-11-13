@@ -803,7 +803,7 @@ namespace BridgeOpsClient
                     int id;
                     if (!int.TryParse(currentID, out id))
                         return;
-                    App.EditConference(id);
+                    App.EditConference(id, App.mainWindow);
                 }
                 if (dtgResults.identity == 8)
                 {

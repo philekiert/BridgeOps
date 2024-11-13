@@ -6,7 +6,9 @@
 - Skip buttons for weeks and months in addition to days.
 ### Changed
 - Fresh icon set for the schedule view and some other elements.
+- The dial clash warning regions are now hidden behind the D key.
 ### Fixed
+- Fixed error where row clashes were not resolving themselves when making conference time adjustments using the 'Adjust Time' tool.
   
   
 ## 0.6.1

@@ -3301,8 +3301,7 @@ internal class BridgeOpsAgent
             // No need to check for clashes when adjusting the host, as this won't modify anything relevant.
             if (req.intent != ConferenceAdjustment.Intent.Host)
             {
-                if (!req.resolveRowClashes)
-                    coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect, req.resolveRowClashes));
+                coms.Add(Conference.SqlCheckForRowClashes(req.ids, sqlConnect, req.resolveRowClashes));
                 if (!req.overrideDialNoClashes)
                     coms.Add(Conference.SqlCheckForDialNoClashes(req.ids, sqlConnect));
                 if (!req.overrideResourceOverflows)
