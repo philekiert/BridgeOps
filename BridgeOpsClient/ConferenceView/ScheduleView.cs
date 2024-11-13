@@ -26,7 +26,7 @@ namespace BridgeOpsClient
         public int zoomTime = 70;
         public double zoomTimeCurrent = 70d; // Used for smooth Lerp()ing.
         public DateTime zoomTimeTarget = DateTime.Now;
-        public int zoomTimeMinimum = 10; // How many pixels an hour can be reduced to.
+        public int zoomTimeMinimum = 5; // How many pixels an hour can be reduced to.
         public int zoomTimeMaximum = 210;
         public int zoomTimeSensitivity = 10;
         public int zoomResource = 40;
@@ -86,6 +86,7 @@ namespace BridgeOpsClient
         Brush brsConferenceNoShowSolid;
         Brush brsOverflow;
         Brush brsOverflowCheck;
+        Brush brsWeekend;
         Pen penConferenceBorder;
         Pen penConferenceDegradedBorder;
         Pen penConferenceFailedBorder;
@@ -141,6 +142,7 @@ namespace BridgeOpsClient
             Color clrNoShow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceNoShow"];
             Color clrOverflow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWarning"];
             Color clrOverflowCheck = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCheck"];
+            Color clrWeekend = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWeekend"];
 
             // Conference
             brsConferenceSolid = new SolidColorBrush(clrConference);
@@ -214,6 +216,7 @@ namespace BridgeOpsClient
             penConferenceEndedBorder = new Pen(brsConferenceEndedBorder, 1);
             brsOverflow = new SolidColorBrush(clrOverflow);
             brsOverflowCheck = new SolidColorBrush(clrOverflowCheck);
+            brsWeekend = new SolidColorBrush(clrWeekend);
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
@@ -257,6 +260,7 @@ namespace BridgeOpsClient
             penConferenceEndedBorder.Freeze();
 
             brsOverflow.Freeze();
+            brsWeekend.Freeze();
 
             scheduleTime = DateTime.Now;
             lastScheduleTime = scheduleTime;
@@ -389,6 +393,51 @@ namespace BridgeOpsClient
                 bool drawCursor = cursor != null &&
                                   (conferenceView.drag == PageConferenceView.Drag.None ||
                                    conferenceView.drag == PageConferenceView.Drag.Scroll);
+
+                // Draw any weekend or other grey warnings beneath the grid lines.
+                DateTime offDayCheck = new(start.Year, start.Month, start.Day);
+                DateTime offDayCheckEnd = new DateTime(end.Year, end.Month, end.Day).AddDays(1);
+                List<DateTime> offDayOnOff = new();
+                bool offDayOn = false;
+                while (offDayCheck < offDayCheckEnd || offDayOn)
+                {
+                    // Have to check days by day rather than < or > Saturday, because Microsoft erroneously thinks
+                    // the week starts on Sunday -_-
+                    if (!offDayOn && (offDayCheck.DayOfWeek == DayOfWeek.Saturday ||
+                                     offDayCheck.DayOfWeek == DayOfWeek.Sunday))
+                    {
+                        offDayOnOff.Add(offDayCheck);
+                        offDayOn = true;
+                    }
+                    else if (offDayOn && (offDayCheck.DayOfWeek != DayOfWeek.Saturday &&
+                                          offDayCheck.DayOfWeek != DayOfWeek.Sunday))
+                    {
+                        offDayOnOff.Add(offDayCheck);
+                        offDayOn = false;
+                    }
+                    offDayCheck = offDayCheck.AddDays(1);
+                }
+                for (int i = 0; i < offDayOnOff.Count; i += 2)
+                {
+                    DateTime s = offDayOnOff[i];
+                    DateTime e = offDayOnOff[i + 1];
+
+                    // Skip if out of frame.
+                    if (e > start && s < end)
+                    {
+                        // Only draw as far as necessary.
+                        if (s < start)
+                            s = start;
+                        if (e > end)
+                            e = end;
+
+                        double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                        double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                        Rect r = new(startPoint, 0, endPoint - startPoint, ActualHeight);
+                        dc.DrawRectangle(brsWeekend, null, r);
+                    }
+                }
+
 
 
                 // Draw any conference overflow warnings beneath the grid lines.
