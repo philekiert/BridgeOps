@@ -4,9 +4,11 @@
 ## 0.6.1
 ### Added
 - Skip buttons for weeks and months in addition to days.
+- Light grey shading for for days that fall on weekends.
 ### Changed
 - Fresh icon set for the schedule view and some other elements.
 - The dial clash warning regions are now hidden behind the D key.
+- Increased the maximum zoom out value in the scheduler.
 ### Fixed
 - Fixed error where row clashes were not resolving themselves when making conference time adjustments using the 'Adjust Time' tool.
   
