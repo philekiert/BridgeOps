@@ -1256,7 +1256,7 @@ namespace BridgeOpsClient
             schView.scrollResource = schView.ScrollMax() * scrollPercent;
         }
 
-        private void datePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        private void datePicker_CalendarClosed(object sender, RoutedEventArgs e)
         {
             if (datePicker.SelectedDate != null)
             {

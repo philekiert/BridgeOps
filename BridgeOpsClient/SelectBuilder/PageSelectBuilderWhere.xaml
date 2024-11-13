@@ -7,7 +7,7 @@
       xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
       mc:Ignorable="d" UseLayoutRounding="False">
 
-    <Grid Focusable="False">
+    <Grid Focusable="False" UseLayoutRounding="True">
         <Grid.Resources>
             <Style TargetType="ComboBox">
                 <Setter Property="Margin" Value="10 5 10 5"/>
@@ -52,11 +52,11 @@
         <ComboBox Grid.Row="0" Grid.Column="7" Width="200" x:Name="cmbValue" Margin="0 5 10 5"
                   Visibility="Collapsed" VerticalContentAlignment="Center" Height="24"/>
         <customcontrols:NumberEntry Grid.Row="0" Grid.Column="6" Margin="0 5 10 5" Width="190" x:Name="numValue"
-                                    Visibility="Visible"/>
+                                    Visibility="Collapsed"/>
         <customcontrols:DateTimePicker Grid.Row="0" Grid.Column="6" Margin="0 0 0 0" Width="190" x:Name="dtmValue"
                                        Visibility="Collapsed"/>
         <DatePicker Grid.Row="0" Grid.Column="6" Height="24" Padding="0 0 0 0" Margin="0 0 10 0"
-                    x:Name="datValue" Visibility="Collapsed"/>
+                    x:Name="datValue" Visibility="Visible"/>
         <customcontrols:TimePicker Grid.Row="0" Grid.Column="6" Margin="0 0 6 0" x:Name="timValue"
                                    Visibility="Collapsed"/>
         <CheckBox Grid.Row="0" Grid.Column="6" VerticalAlignment="Center" Margin="0 0 10 0" x:Name="chkValue" 

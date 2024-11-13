@@ -31,6 +31,7 @@
     <None Remove="Resources\Icons\11Date.png" />
     <None Remove="Resources\Icons\12Today.png" />
     <None Remove="Resources\Icons\13Save.png" />
+    <None Remove="Resources\Icons\14AddCode.png" />
     <None Remove="Resources\Icons\x20TitleBarIcon.png" />
     <None Remove="Resources\Icons\x20TitleBarIconDark.png" />
     <None Remove="Resources\sql-syntax.xshd" />
@@ -61,6 +62,7 @@
     <Resource Include="Resources\Icons\11Date.png" />
     <Resource Include="Resources\Icons\12Today.png" />
     <Resource Include="Resources\Icons\13Save.png" />
+    <Resource Include="Resources\Icons\14AddCode.png" />
     <Resource Include="Resources\Icons\BridgeManager.ico" />
   </ItemGroup>
 

@@ -26,7 +26,7 @@ namespace BridgeOpsClient
         public int zoomTime = 70;
         public double zoomTimeCurrent = 70d; // Used for smooth Lerp()ing.
         public DateTime zoomTimeTarget = DateTime.Now;
-        public int zoomTimeMinimum = 5; // How many pixels an hour can be reduced to.
+        public int zoomTimeMinimum = 6; // How many pixels an hour can be reduced to.
         public int zoomTimeMaximum = 210;
         public int zoomTimeSensitivity = 10;
         public int zoomResource = 40;
@@ -784,8 +784,8 @@ namespace BridgeOpsClient
                                     // Add
                                     string times;
                                     if (c.start.Date == c.end.Date)
-                                        times = c.start.ToString("hh:mm") + " - " +
-                                                c.end.ToString("hh:mm");
+                                        times = c.start.ToString("HH:mm") + " - " +
+                                                c.end.ToString("HH:mm");
                                     else
                                         times = c.start.ToString("dd/MM/yyyy hh:mm") + " - " +
                                                 c.end.ToString("dd/MM/yyyy hh:mm");

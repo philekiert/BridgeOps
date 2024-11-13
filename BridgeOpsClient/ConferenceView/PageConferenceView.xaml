@@ -99,7 +99,7 @@
                 </Button.Content>
             </Button>
             <DatePicker Grid.Column="6" x:Name="datePicker" Margin="0 9 0 0" BorderThickness="0"
-                        SelectedDateChanged="datePicker_SelectedDateChanged" HorizontalAlignment="Left">
+                        CalendarClosed="datePicker_CalendarClosed"  HorizontalAlignment="Left">
                 <DatePicker.Resources>
                     <Style TargetType="DatePickerTextBox">
                         <Setter Property="Visibility" Value="Collapsed"/>

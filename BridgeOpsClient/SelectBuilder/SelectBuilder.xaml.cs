@@ -99,11 +99,15 @@ namespace BridgeOpsClient
         private void btnAddTab_Click(object sender, RoutedEventArgs e)
         {
             bool copy = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            AddTab(copy);
 
-            if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
-                AddTabCode(copy);
-            else
-                AddTab(copy);
+            ToggleMoveButtons();
+        }
+
+        private void btnAddCodeTab_Click(object sender, RoutedEventArgs e)
+        {
+            bool copy = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            AddTabCode(copy);
 
             ToggleMoveButtons();
         }
@@ -121,6 +125,8 @@ namespace BridgeOpsClient
             tabControl.SelectedIndex = selectedIndex < tabControl.Items.Count ? selectedIndex : selectedIndex - 0;
 
             btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
+
+            txtTabName.Text = (string)((TabItem)tabControl.SelectedItem).Header;
 
             ToggleMoveButtons();
         }

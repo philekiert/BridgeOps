@@ -77,7 +77,7 @@
     <Color x:Key="colorConferenceNoShow">#99A</Color>
     <Color x:Key="colorConferenceCheck">#32646464</Color>
     <Color x:Key="colorConferenceWarning">#32C04155</Color>
-    <Color x:Key="colorConferenceWeekend">#e4e6e9</Color>
+    <Color x:Key="colorConferenceWeekend">#dddedf</Color>
     <SolidColorBrush x:Key="brushConference" Color="{StaticResource colorConference}"/>
     <SolidColorBrush x:Key="brushConferenceTest" Color="{StaticResource colorConferenceTest}"/>
     <SolidColorBrush x:Key="brushConferenceEnded" Color="{StaticResource colorConferenceEnded}"/>
@@ -157,7 +157,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="DatePicker">
-                    <Grid>
+                    <Grid UseLayoutRounding="True">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition/>
                             <ColumnDefinition Width="Auto" />

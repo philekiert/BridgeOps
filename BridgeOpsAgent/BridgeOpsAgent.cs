@@ -18,7 +18,6 @@ using System.Text.Json.Nodes;
 using System.Threading.Channels;
 using System.Reflection.PortableExecutable;
 using System.Xml.Schema;
-using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 using System.Collections.Specialized;
 using System.Collections;
 

@@ -1,16 +1,18 @@
 # Changelog
   
   
-## 0.6.1
+## 0.6.2
 ### Added
 - Skip buttons for weeks and months in addition to days.
 - Light grey shading for for days that fall on weekends.
+- A dedicated button for adding a code page to the query builder window.
 ### Changed
 - Fresh icon set for the schedule view and some other elements.
 - The dial clash warning regions are now hidden behind the D key.
 - Increased the maximum zoom out value in the scheduler.
 ### Fixed
 - Fixed error where row clashes were not resolving themselves when making conference time adjustments using the 'Adjust Time' tool.
+- Fixed a bug preventing the select data button in the schedule view from working correctly in some cases.
   
   
 ## 0.6.1
