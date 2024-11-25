@@ -265,7 +265,7 @@ namespace BridgeOpsClient
             // The resize border interferes with the clickable area for dragging restoring the window when maximised.
             var windowChrome = new WindowChrome
             {
-                // I have no idea why - 5, but it overshoots otherwise. Possible the border thickness size is included.
+                // I have no idea why - 5, but it overshoots otherwise. Possibly the border thickness size is included.
                 CaptionHeight = titleBarHeight - 5,
                 ResizeBorderThickness = new Thickness(maximised ? 0 : 7)
             };
@@ -437,6 +437,16 @@ namespace BridgeOpsClient
                 grid.ColumnDefinitions[3].Width = new GridLength(0);
                 ((Border)grid.Children[5]).Background = ((Border)grid.Children[3]).Background;
                 ((Border)grid.Children[6]).Background = ((Border)grid.Children[3]).Background;
+            }
+            if (ResizeMode != ResizeMode.CanResize && ResizeMode != ResizeMode.CanResizeWithGrip)
+            {
+                var windowChrome = new WindowChrome
+                {
+                    // I have no idea why - 5, but it overshoots otherwise. Possibly the border thickness size is included.
+                    CaptionHeight = titleBarHeight - 5,
+                    ResizeBorderThickness = new Thickness(0)
+                };
+                WindowChrome.SetWindowChrome(this, windowChrome);
             }
 
             // Ensure that the window sits comfortably in the screen.
