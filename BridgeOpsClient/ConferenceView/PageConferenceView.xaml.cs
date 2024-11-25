@@ -864,6 +864,9 @@ namespace BridgeOpsClient
                         }
                     }
 
+                    if (drag == Drag.Move || drag == Drag.Resize)
+                        dragThresholdStart = Mouse.GetPosition(schView);
+
                     ((IInputElement)sender).CaptureMouse();
                 }
             }
@@ -1018,9 +1021,10 @@ namespace BridgeOpsClient
             }
         }
 
-        // These two methods can't be in MouseMove as they also need to be called when automatically drag-scrolling.
+        // This method can't be in MouseMove as they also need to be called when automatically drag-scrolling.
         // This means that MouseMove switches on dragMoved, and it's updated in the timer. dragMoved is also switched
         // on if the TimerUpdate caused the scroll to change while dragging.
+        Point dragThresholdStart = new();
         bool dragPositionChanged = false; // Switched on by MouseMove or when smooth scrolling.
         public bool dragMouseHasMoved = false; // Off until MouseMove, this is to prevent auto scrolling while double-clicking.
         Conference? currentAtStartOfDrag = null; // Make sure we retain the same primary selection while dragging.
@@ -1211,15 +1215,15 @@ namespace BridgeOpsClient
                 schView.SetCursor(-1d, -1d);
                 dragMouseHasMoved = true;
             }
-            else if (drag == Drag.Resize)
+            else if (drag == Drag.Resize || drag == Drag.Move)
             {
-                dragPositionChanged = true;
-                dragMouseHasMoved = true;
-            }
-            else if (drag == Drag.Move)
-            {
-                dragPositionChanged = true;
-                dragMouseHasMoved = true;
+                Point newMousePos = Mouse.GetPosition(schView);
+                double dif = (dragThresholdStart - newMousePos).Length;
+                if (dif > 3)
+                {
+                    dragPositionChanged = true;
+                    dragMouseHasMoved = true;
+                }
             }
             else if (drag == Drag.BoxSelect)
             {
