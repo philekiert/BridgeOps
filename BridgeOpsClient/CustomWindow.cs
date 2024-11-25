@@ -73,7 +73,7 @@ namespace BridgeOpsClient
             {
                 // I have no idea why - 5, but it overshoots otherwise. Possible the border thickness size is included.
                 CaptionHeight = titleBarHeight - 5,
-                ResizeBorderThickness = new Thickness(6)
+                ResizeBorderThickness = new Thickness(7)
             };
             WindowChrome.SetWindowChrome(this, windowChrome);
 
@@ -267,7 +267,7 @@ namespace BridgeOpsClient
             {
                 // I have no idea why - 5, but it overshoots otherwise. Possible the border thickness size is included.
                 CaptionHeight = titleBarHeight - 5,
-                ResizeBorderThickness = new Thickness(maximised ? 0 : 6)
+                ResizeBorderThickness = new Thickness(maximised ? 0 : 7)
             };
             WindowChrome.SetWindowChrome(this, windowChrome);
         }

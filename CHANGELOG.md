@@ -4,6 +4,8 @@
 ## 0.6.3
 ### Added
 - Added a 3px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
+### Changed
+- Reworked the button layout in the select query builder window.
   
   
 ## 0.6.2
