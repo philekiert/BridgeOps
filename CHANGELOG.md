@@ -1,6 +1,11 @@
 # Changelog
   
   
+## 0.6.3
+### Added
+- Added a 3px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
+  
+  
 ## 0.6.2
 ### Added
 - Skip buttons for weeks and months in addition to days.
