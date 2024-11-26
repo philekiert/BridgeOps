@@ -41,6 +41,8 @@ namespace BridgeOpsClient
             btnAddPreset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_REPORTS];
         }
 
+        public static Dictionary<string, object?> storedVariables = new();
+
         private PageSelectBuilder AddTab() { return AddTab(false); }
         private PageSelectBuilder AddTab(bool copy)
         {
@@ -90,7 +92,6 @@ namespace BridgeOpsClient
 
             return pageSelectStatement;
         }
-
 
         object GetBuilder(TabItem tabItem)
         {
@@ -190,6 +191,8 @@ namespace BridgeOpsClient
 
         private void btnRunAllPages_Click(object sender, RoutedEventArgs e)
         {
+            storedVariables.Clear();
+
             foreach (TabItem tab in tabControl.Items)
             {
                 List<string?> columnNames;
@@ -218,6 +221,8 @@ namespace BridgeOpsClient
 
         private void btnExportAllPages_Click(object sender, RoutedEventArgs e)
         {
+            storedVariables.Clear();
+
             // Pages can't have duplicate names in Excel worksheets.
             HashSet<string> tabNames = new();
             foreach (TabItem ti in tabControl.Items)

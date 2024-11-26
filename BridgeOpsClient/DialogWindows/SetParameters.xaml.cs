@@ -27,12 +27,14 @@ namespace BridgeOpsClient
         DataTemplate chkTemplate;
 
         List<PageSelectStatement.Param> paramList;
+        Dictionary<string, object?> duplicateParams = new();
 
         class FieldRow
         {
             public StackPanel stack;
             public Label description;
             public object value;
+            public string? variableName;
 
             public FieldRow(Label description, object value)
             {
@@ -66,6 +68,11 @@ namespace BridgeOpsClient
 
             foreach (var param in paramList)
             {
+                // If the value isn't null here, it means the user has already selected a value for this variable name
+                // under another page. Don't ask for a value again.
+                if (param.value != null)
+                    continue;
+
                 Label lbl = (Label)lblTemplate.LoadContent();
                 lbl.Content = param.name;
                 object field;
@@ -90,7 +97,17 @@ namespace BridgeOpsClient
 
                 FieldRow fieldRow = new FieldRow(lbl, field!);
                 rows.Add(fieldRow);
-                stkParams.Children.Add(fieldRow.stack);
+
+                if (param.variableName != null)
+                {
+                    fieldRow.variableName = param.variableName;
+
+                    if (!duplicateParams.ContainsKey(param.variableName))
+                    {
+                        stkParams.Children.Add(fieldRow.stack);
+                        duplicateParams.Add(param.variableName, null);
+                    }
+                }
             }
         }
 
@@ -117,56 +134,65 @@ namespace BridgeOpsClient
             {
                 object value;
 
-                if (row.value == null)
-                    return Abort($"You must select a value for all parameters.");
-
-                if (row.value is TextBox txt)
-                {
-                    if (txt.Text == "")
-                        return Abort($"You must select a value for all parameters.");
-                    value = txt.Text;
-                }
-                else if (row.value is ComboBox cmb)
-                {
-                    if (cmb.SelectedIndex < 0)
-                        return Abort($"You must select a value for all parameters.");
-                    value = cmb.Text;
-                }
-                else if (row.value is NumberEntry num)
-                {
-                    int? number = num.GetNumber();
-                    if (number == null)
-                        return Abort($"You must select a value for all parameters.");
-                    value = (int)number;
-                }
-                else if (row.value is DateTimePicker dtm)
-                {
-                    DateTime? dt = dtm.GetDateTime();
-                    if (dt == null)
-                        return Abort($"You must select a value for all parameters.");
-                    value = (DateTime)dt;
-                }
-                else if (row.value is DatePicker dat)
-                {
-                    if (dat.SelectedDate == null)
-                        return Abort($"You must select a value for all parameters.");
-                    value = (DateTime)dat.SelectedDate;
-                }
-                else if (row.value is TimePicker tim)
-                {
-                    TimeSpan? ts = tim.GetTime();
-                    if (ts == null)
-                        return Abort($"You must select a value for all parameters.");
-                    value = (TimeSpan)ts;
-                }
-                else if (row.value is CheckBox chk)
-                {
-                    if (chk.IsChecked == null)
-                        return Abort($"You must select a value for all parameters.");
-                    value = chk.IsChecked == true;
-                }
+                if (row.variableName != null &&
+                    duplicateParams.ContainsKey(row.variableName) && duplicateParams[row.variableName] != null)
+                    value = duplicateParams[row.variableName]!;
                 else
-                    return Abort($"You must select a value for all parameters.");
+                {
+                    if (row.value == null)
+                        return Abort($"You must select a value for all parameters.");
+
+                    if (row.value is TextBox txt)
+                    {
+                        if (txt.Text == "")
+                            return Abort($"You must select a value for all parameters.");
+                        value = txt.Text;
+                    }
+                    else if (row.value is ComboBox cmb)
+                    {
+                        if (cmb.SelectedIndex < 0)
+                            return Abort($"You must select a value for all parameters.");
+                        value = cmb.Text;
+                    }
+                    else if (row.value is NumberEntry num)
+                    {
+                        int? number = num.GetNumber();
+                        if (number == null)
+                            return Abort($"You must select a value for all parameters.");
+                        value = (int)number;
+                    }
+                    else if (row.value is DateTimePicker dtm)
+                    {
+                        DateTime? dt = dtm.GetDateTime();
+                        if (dt == null)
+                            return Abort($"You must select a value for all parameters.");
+                        value = (DateTime)dt;
+                    }
+                    else if (row.value is DatePicker dat)
+                    {
+                        if (dat.SelectedDate == null)
+                            return Abort($"You must select a value for all parameters.");
+                        value = (DateTime)dat.SelectedDate;
+                    }
+                    else if (row.value is TimePicker tim)
+                    {
+                        TimeSpan? ts = tim.GetTime();
+                        if (ts == null)
+                            return Abort($"You must select a value for all parameters.");
+                        value = (TimeSpan)ts;
+                    }
+                    else if (row.value is CheckBox chk)
+                    {
+                        if (chk.IsChecked == null)
+                            return Abort($"You must select a value for all parameters.");
+                        value = chk.IsChecked == true;
+                    }
+                    else
+                        return Abort($"You must select a value for all parameters.");
+
+                    if (row.variableName != null && duplicateParams.ContainsKey(row.variableName))
+                        duplicateParams[row.variableName] = value;
+                }
 
                 paramList[i].value = value;
 

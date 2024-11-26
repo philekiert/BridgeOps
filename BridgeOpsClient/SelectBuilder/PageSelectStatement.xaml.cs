@@ -144,6 +144,7 @@ namespace BridgeOpsClient
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
+            SelectBuilder.storedVariables.Clear();
             Run(out _, out _, out _);
         }
 
@@ -155,6 +156,7 @@ namespace BridgeOpsClient
             public int position;
             public string name = "";
             public object? value;
+            public string? variableName = null;
 
             // Used to track where to replace the parameter with the value.
             public int start;
@@ -205,7 +207,7 @@ namespace BridgeOpsClient
             int n = 0;
             foreach (string[] strs in stringsToCheck)
             {
-                if (strs.Length != 3)
+                if (!(strs.Length == 3 || strs.Length == 4))
                     continue;
 
                 Param param = new();
@@ -228,6 +230,14 @@ namespace BridgeOpsClient
                     continue;
 
                 param.name = strs[2];
+                if (strs.Length == 4)
+                {
+                    param.variableName = strs[3];
+                    if (SelectBuilder.storedVariables.ContainsKey(param.variableName))
+                        param.value = SelectBuilder.storedVariables[param.variableName];
+                    // If it's the first time we're seeing this variable name, we'll add it to the dictionary once we
+                    // have the value from the SetParameters dialog.
+                }
                 param.start = startsAndLengths[n][0];
                 param.length = startsAndLengths[n][1];
                 param.unorderedPosition = n;
@@ -243,10 +253,25 @@ namespace BridgeOpsClient
                 return true;
             }
 
-            SetParameters setParameters = new(pageName, paramList);
-            setParameters.ShowDialog();
-            if (setParameters.DialogResult == false)
-                return false;
+            bool paramsToSet = false;
+            foreach (Param p in paramList)
+                if (p.value == null)
+                {
+                    paramsToSet = true;
+                    break;
+                }
+            if (paramsToSet)
+            {
+                SetParameters setParameters = new(pageName, paramList);
+                setParameters.ShowDialog();
+                if (setParameters.DialogResult == false)
+                    return false;
+            }
+
+            // Store any variables that might have been assigned values for the first time.
+            foreach (Param p in paramList)
+                if (p.variableName != null && !SelectBuilder.storedVariables.ContainsKey(p.variableName))
+                    SelectBuilder.storedVariables.Add(p.variableName, p.value);
 
             // Revert to the as-written order to make sure replacements work sequentially.
             paramList = paramList.OrderBy(i => i.unorderedPosition).ToList();
@@ -288,6 +313,8 @@ namespace BridgeOpsClient
 
         public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows)
         {
+
+
             columnNames = new();
             columnTypes = new();
             rows = new();
