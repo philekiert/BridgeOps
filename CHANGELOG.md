@@ -3,8 +3,9 @@
   
 ## 0.6.3
 ### Added
-- Added a 3px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
-- Added custom syntax for inserting user-friendly parameters into SQL statements.
+- A 3px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
+- Custom syntax for inserting user-friendly parameters into SQL statements.
+- A 'Run All Pages' button on the query builder to run all pages simultaneously.
 ### Changed
 - Reworked the button layout in the select query builder window.
 ### Fixed

@@ -84,6 +84,7 @@ namespace BridgeOpsClient
             tabControl.SelectedItem = tabItem;
 
             pageSelectStatement.txtStatement.Focus();
+            pageSelectStatement.tabItem = tabItem;
 
             btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
 
@@ -185,6 +186,34 @@ namespace BridgeOpsClient
         private void txtTabName_TextChanged(object sender, TextChangedEventArgs e)
         {
             ((TabItem)tabControl.SelectedItem).Header = txtTabName.Text;
+        }
+
+        private void btnRunAllPages_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (TabItem tab in tabControl.Items)
+            {
+                List<string?> columnNames;
+                List<string?> columnTypes; // Not currently used, but may be if dates need times removing.
+                List<List<object?>> rows;
+
+                if (GetBuilder(tab) is PageSelectBuilder psb)
+                {
+                    if (!psb.Run(out columnNames, out columnTypes, out rows, true))
+                        return;
+                }
+                else if (GetBuilder(tab) is PageSelectStatement pss)
+                {
+                    if (!pss.Run(out columnNames, out columnTypes, out rows))
+                        return;
+                }
+                else
+                {
+                    App.DisplayError("Unable to extract data from tabs.");
+                    return;
+                }
+            }
+
+            tabControl.SelectedIndex = tabControl.Items.Count - 1;
         }
 
         private void btnExportAllPages_Click(object sender, RoutedEventArgs e)

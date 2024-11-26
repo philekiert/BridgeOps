@@ -46,9 +46,12 @@ namespace BridgeOpsClient
         }
         List<FieldRow> rows = new List<FieldRow>();
 
-        public SetParameters(List<PageSelectStatement.Param> paramList)
+        public SetParameters(string? pageNme, List<PageSelectStatement.Param> paramList)
         {
             InitializeComponent();
+
+            if (pageNme != null)
+                lblTitle.Content = $"{pageNme} Parameters";
 
             this.paramList = paramList;
 

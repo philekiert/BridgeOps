@@ -60,7 +60,7 @@
                  VerticalContentAlignment="Center" TextChanged="txtTabName_TextChanged"
                  MaxLength="32" MaxLines="1"/>
         <Button x:Name="btnRunAllPages" Grid.Column="7" Width="100" Content="Run All Pages"
-                Height="24" Margin="20 10 5 10" Click="btnExportAllPages_Click"
+                Height="24" Margin="20 10 5 10" Click="btnRunAllPages_Click"
                 Style="{StaticResource primary-button}"/>
         <Button x:Name="btnExportAllPages" Grid.Column="8" Width="100" Content="Export All Pages"
                 Height="24" Margin="5 10 5 10" Click="btnExportAllPages_Click"

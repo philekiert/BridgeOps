@@ -21,6 +21,8 @@ namespace BridgeOpsClient
 {
     public partial class PageSelectStatement : Page
     {
+        public TabItem? tabItem;
+
         public PageSelectStatement()
         {
             InitializeComponent();
@@ -163,7 +165,7 @@ namespace BridgeOpsClient
         }
         List<Param> paramList = new();
 
-        private bool InsertParameters(string input, out string result)
+        private bool InsertParameters(string input, out string result, string? pageName)
         {
             paramList.Clear();
 
@@ -241,7 +243,7 @@ namespace BridgeOpsClient
                 return true;
             }
 
-            SetParameters setParameters = new(paramList);
+            SetParameters setParameters = new(pageName, paramList);
             setParameters.ShowDialog();
             if (setParameters.DialogResult == false)
                 return false;
@@ -291,7 +293,7 @@ namespace BridgeOpsClient
             rows = new();
 
             string final;
-            if (!InsertParameters(txtStatement.Text, out final))
+            if (!InsertParameters(txtStatement.Text, out final, tabItem == null ? null : tabItem.Header.ToString()))
                 return false;
 
             if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes))
