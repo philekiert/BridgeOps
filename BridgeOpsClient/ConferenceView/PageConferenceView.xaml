@@ -63,7 +63,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="24"/>
                 <ColumnDefinition Width="37"/>
-                <ColumnDefinition Width="23"/>
+                <ColumnDefinition Width="24"/>
                 <ColumnDefinition Width="35"/>
                 <ColumnDefinition Width="23"/>
                 <ColumnDefinition Width="23"/>

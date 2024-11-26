@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using BridgeOpsClient.CustomControls;
 using SendReceiveClasses;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
 
@@ -144,12 +145,156 @@ namespace BridgeOpsClient
             Run(out _, out _, out _);
         }
 
+        public class Param
+        {
+            public enum Type { Text, Number, DateTime, Date, Time, Bool }
+
+            public Type type;
+            public int position;
+            public string name = "";
+            public object? value;
+
+            // Used to track where to replace the parameter with the value.
+            public int start;
+            public int length;
+
+            // Used to revert to the original order ahead of replacements.
+            public int unorderedPosition;
+        }
+        List<Param> paramList = new();
+
+        private bool InsertParameters(string input, out string result)
+        {
+            paramList.Clear();
+
+            result = input;
+
+            List<string[]> stringsToCheck = new();
+            List<int[]> startsAndLengths = new();
+
+            for (int i = 0; i < input.Length; ++i)
+            {
+                if (input[i] == '{')
+                {
+                    // 9 is conveniently the minimum length of one of these parameters given a minimum type length
+                    // of 4 and max of 8. If this changes, you will need to rework this code to make sure you aren't
+                    // ruling out anything you shouldn't.
+                    if (input.Length > i + 9)
+                    {
+                        string sub = input.Substring(i + 1, 8);
+                        if (sub.StartsWith("date") || sub.StartsWith("datetime") || sub.StartsWith("time") ||
+                            sub.StartsWith("text") || sub.StartsWith("number") || sub.StartsWith("bool"))
+                        {
+                            int endIndex = input.Substring(i).IndexOf('}');
+
+                            if (endIndex > 0)
+                            {
+                                startsAndLengths.Add(new int[] { i, endIndex + 1 });
+                                stringsToCheck.Add(input.Substring(i + 1, endIndex - 1).Split(";;"));
+                                i = i + endIndex + 1;
+                            }
+                            else
+                                break;
+                        }
+                    }
+                }
+            }
+
+            int n = 0;
+            foreach (string[] strs in stringsToCheck)
+            {
+                if (strs.Length != 3)
+                    continue;
+
+                Param param = new();
+                if (strs[0] == "text")
+                    param.type = Param.Type.Text;
+                else if (strs[0] == "number")
+                    param.type = Param.Type.Number;
+                else if (strs[0] == "datetime")
+                    param.type = Param.Type.DateTime;
+                else if (strs[0] == "date")
+                    param.type = Param.Type.Date;
+                else if (strs[0] == "time")
+                    param.type = Param.Type.Time;
+                else if (strs[0] == "bool")
+                    param.type = Param.Type.Bool;
+                else
+                    continue;
+
+                if (!int.TryParse(strs[1], out param.position))
+                    continue;
+
+                param.name = strs[2];
+                param.start = startsAndLengths[n][0];
+                param.length = startsAndLengths[n][1];
+                param.unorderedPosition = n;
+                paramList.Add(param);
+                ++n;
+            }
+
+            paramList = paramList.OrderBy(i => i.position).ToList();
+
+            if (paramList.Count == 0)
+            {
+                result = input;
+                return true;
+            }
+
+            SetParameters setParameters = new(paramList);
+            setParameters.ShowDialog();
+            if (setParameters.DialogResult == false)
+                return false;
+
+            // Revert to the as-written order to make sure replacements work sequentially.
+            paramList = paramList.OrderBy(i => i.unorderedPosition).ToList();
+
+            // Because we're making replacements, we need to modify start indices for replacement starts.
+            int lengthMod = 0;
+
+            foreach (Param param in paramList)
+            {
+                if (param.value == null)
+                    return App.Abort("Not all parameter values could be read. Run cancelled.");
+
+                string value;
+                if (param.value is string txt)
+                    value = $"'{txt.Replace("'", "''")}'";
+                else if (param.value is int num)
+                    value = num.ToString();
+                else if (param.type is Param.Type.DateTime)
+                    value = SqlAssist.DateTimeToSQL((DateTime)param.value, false, true);
+                else if (param.type is Param.Type.Date)
+                    value = SqlAssist.DateTimeToSQL((DateTime)param.value, true, true);
+                else if (param.value is TimeSpan tsp)
+                    value = $"'{SqlAssist.TimeSpanToSQL(tsp)}'";
+                else if (param.value is bool boo)
+                    value = boo ? "1" : "0";
+                else
+                    return App.Abort("Not all parameter values could be read. Run cancelled.");
+
+                int originalLength = input.Length;
+                input = input.Remove(param.start - lengthMod, param.length);
+                input = input.Insert(param.start - lengthMod, value);
+
+                lengthMod += originalLength - input.Length;
+            }
+
+            result = input;
+            return true;
+        }
+
         public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows)
         {
             columnNames = new();
             columnTypes = new();
             rows = new();
-            if (!App.SendSelectStatement(txtStatement.Text, out columnNames, out rows, out columnTypes))
+
+            string final;
+            if (!InsertParameters(txtStatement.Text, out final))
+                return false;
+
+            if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes))
                 return false;
 
             HashSet<int> dateCols = new();

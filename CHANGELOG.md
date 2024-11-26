@@ -4,8 +4,12 @@
 ## 0.6.3
 ### Added
 - Added a 3px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
+- Added custom syntax for inserting user-friendly parameters into SQL statements.
 ### Changed
 - Reworked the button layout in the select query builder window.
+### Fixed
+- Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
+- Fixed the horizontal positioning of date inputs in the update window.
   
   
 ## 0.6.2
