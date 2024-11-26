@@ -529,7 +529,7 @@ public class DatabaseCreator
                            "AFTER DELETE AS UPDATE Conference SET Edit_Login_ID = NULL WHERE Edit_Login_ID IN (SELECT Login_ID FROM DELETED);");
             Writer.Message("Applying triggers to Connection table for Dial No updates and deletions...");
             SendCommandSQL("CREATE TRIGGER trg_updateConnDialNo ON Organisation " +
-                           "AFTER UPDATE AS UPDATE Connection SET Dial_No = (SELECT i.Dial_No FROM INSERTED i) FROM Connection c JOIN DELETED d ON c.Dial_No = d.Dial_No WHERE c.Is_Managed = 1;");
+                           "AFTER UPDATE AS UPDATE c SET c.Dial_No = i.Dial_No FROM Connection c JOIN DELETED d ON c.Dial_No = d.Dial_No JOIN INSERTED i ON d.Organisation_ID = i.Organisation_ID WHERE c.Is_Managed = 1;");
             SendCommandSQL("CREATE TRIGGER trg_deleteConnDialNo ON Organisation " +
                            "AFTER DELETE AS UPDATE Connection SET Is_Managed = 0 WHERE Dial_No IN (SELECT Dial_No FROM DELETED);"); // Doesnt matter if we catch unmanaged connections in this.
 
