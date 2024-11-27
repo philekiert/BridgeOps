@@ -6,12 +6,15 @@
 - A 3px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
 - Custom syntax for inserting user-friendly parameters into SQL statements.
 - A 'Run All Pages' button on the query builder to run all pages simultaneously.
+- A dedicated button for duplicating a page in the select query builder.
 ### Changed
 - Reworked the button layout in the select query builder window.
 ### Fixed
 - Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
 - Fixed the horizontal positioning of date inputs in the update window.
 - Stopped the schedule clash and overflow overlays appearing when the main window is in the background.
+- Stopped the query builder window hiding when viewing a conference opened from one of its data tables.
+- The application no longer crashes when attempting to duplicate a select statement page.
   
   
 ## 0.6.2
@@ -19,6 +22,7 @@
 - Skip buttons for weeks and months in addition to days.
 - Light grey shading for for days that fall on weekends.
 - A dedicated button for adding a code page to the query builder window.
+- The application now remembers the desired conference window size.
 ### Changed
 - Fresh icon set for the schedule view and some other elements.
 - The dial clash warning regions are now hidden behind the D key.

@@ -103,9 +103,16 @@ namespace BridgeOpsClient
 
         private void btnAddTab_Click(object sender, RoutedEventArgs e)
         {
-            bool copy = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-            AddTab(copy);
+            AddTab(false);
+            ToggleMoveButtons();
+        }
 
+        private void btnDuplicatePage_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetBuilder((TabItem)tabControl.SelectedItem) is PageSelectBuilder)
+                AddTab(true);
+            else if (GetBuilder((TabItem)tabControl.SelectedItem) is PageSelectStatement)
+                AddTabCode(true);
             ToggleMoveButtons();
         }
 

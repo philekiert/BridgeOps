@@ -49,7 +49,8 @@ namespace BridgeOpsClient.CustomControls
                 }
             }
 
-            
+            // Remove the corner radius as it's a bit buggy in some cases. It's also not consistent with the rest of the application.
+            TextArea.SelectionCornerRadius = 0;
         }
     }
 }

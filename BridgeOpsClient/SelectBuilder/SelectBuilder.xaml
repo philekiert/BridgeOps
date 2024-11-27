@@ -23,6 +23,7 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
@@ -41,58 +42,64 @@
                 <Image Source="/Resources/Icons/15AddCode.png"/>
             </Button.Content>
         </Button>
-        <Button x:Name="btnRemoveTab" Grid.Column="2" Click="btnRemoveTab_Click" ToolTip="Delete Page"
+        <Button x:Name="btnDuplicatePage" Grid.Column="2" Click="btnDuplicatePage_Click"
+                Margin="0 10 0 10" Style="{StaticResource toolbar-button}" ToolTip="Duplicate Current Page">
+            <Button.Content>
+                <Image Source="/Resources/Icons/16Duplicate.png"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="btnRemoveTab" Grid.Column="3" Click="btnRemoveTab_Click" ToolTip="Delete Page"
                 Margin="0 10 5 10" Style="{StaticResource minus-button}" IsEnabled="False"/>
-        <Button x:Name="btnMoveLeft" Grid.Column="3"  Click="btnMoveLeft_Click"
+        <Button x:Name="btnMoveLeft" Grid.Column="4"  Click="btnMoveLeft_Click"
                 Margin="5 10 0 10" Style="{StaticResource toolbar-button}" IsEnabled="False">
             <Button.Content>
                 <Image Source="/Resources/Icons/08Backward1.png"/>
             </Button.Content>
         </Button>
-        <Button x:Name="btnMoveRight" Grid.Column="4" Click="btnMoveRight_Click"
+        <Button x:Name="btnMoveRight" Grid.Column="5" Click="btnMoveRight_Click"
                 Margin="-1 10 5 10" Style="{StaticResource toolbar-button}" IsEnabled="False">
             <Button.Content>
                 <Image Source="/Resources/Icons/05Forward1.png"/>
             </Button.Content>
         </Button>
-        <Label x:Name="lblTabName" Content="Tab Name" Grid.Column="5" Width="Auto" Margin="10 10 10 10"/>
-        <TextBox x:Name="txtTabName" Grid.Column="6" Width="150" Margin="0 10 5 10" Height="24"
+        <Label x:Name="lblTabName" Content="Tab Name" Grid.Column="6" Width="Auto" Margin="10 10 10 10"/>
+        <TextBox x:Name="txtTabName" Grid.Column="7" Width="150" Margin="0 10 5 10" Height="24"
                  VerticalContentAlignment="Center" TextChanged="txtTabName_TextChanged"
                  MaxLength="32" MaxLines="1"/>
-        <Button x:Name="btnRunAllPages" Grid.Column="7" Width="100" Content="Run All Pages"
+        <Button x:Name="btnRunAllPages" Grid.Column="8" Width="100" Content="Run All Pages"
                 Height="24" Margin="20 10 5 10" Click="btnRunAllPages_Click"
                 Style="{StaticResource primary-button}"/>
-        <Button x:Name="btnExportAllPages" Grid.Column="8" Width="100" Content="Export All Pages"
+        <Button x:Name="btnExportAllPages" Grid.Column="9" Width="100" Content="Export All Pages"
                 Height="24" Margin="5 10 5 10" Click="btnExportAllPages_Click"
                 Style="{StaticResource primary-button}"/>
-        <Button x:Name="btnClearDown" Grid.Column="9" Content="Clear Pages" Click="btnClearDown_Click"
+        <Button x:Name="btnClearDown" Grid.Column="10" Content="Clear Pages" Click="btnClearDown_Click"
                 Padding="0 0 0 0" Margin="5 10 10 10" Width="70" Height="24"/>
 
         <!-- Preset Control -->
-        <Label Content="Preset" Grid.Column="10" VerticalAlignment="Center" Margin="10 10 10 10"
+        <Label Content="Preset" Grid.Column="11" VerticalAlignment="Center" Margin="10 10 10 10"
                HorizontalAlignment="Right"/>
-        <ComboBox x:Name="cmbPresets" Grid.Column="11" Margin="0 10 10 10" Width="250"
+        <ComboBox x:Name="cmbPresets" Grid.Column="12" Margin="0 10 10 10" Width="250"
                   SelectionChanged="cmbPresets_SelectionChanged"/>
-        <Button x:Name="btnAddPreset" Grid.Column="12" Click=
+        <Button x:Name="btnAddPreset" Grid.Column="13" Click=
                 "btnAddPreset_Click"
                 Margin="0 10 0 10" Style="{StaticResource toolbar-button}" ToolTip="Save As New">
             <Button.Content>
                 <Image Source="/Resources/Icons/14SaveAs.png"/>
             </Button.Content>
         </Button>
-        <Button x:Name="btnSaveChanges" Grid.Column="13" Click="btnSaveChanges_Click" ToolTip="Save Changes"
+        <Button x:Name="btnSaveChanges" Grid.Column="14" Click="btnSaveChanges_Click" ToolTip="Save Changes"
                 Margin="0 10 0 10" Style="{StaticResource toolbar-button}" IsEnabled="False">
             <Button.Content>
                 <Image Source="/Resources/Icons/13Save.png"/>
             </Button.Content>
         </Button>
-        <Button x:Name="btnRemovePreset" Grid.Column="14" Click="btnRemovePreset_Click" ToolTip="Delete Preset"
+        <Button x:Name="btnRemovePreset" Grid.Column="15" Click="btnRemovePreset_Click" ToolTip="Delete Preset"
                 Margin="0 10 5 10" Style="{StaticResource minus-button}" IsEnabled="False"/>
-        <Button x:Name="btnRenamePreset" Grid.Column="15" Width="56" Content="Rename"
+        <Button x:Name="btnRenamePreset" Grid.Column="16" Width="56" Content="Rename"
                 Height="24" Margin="5 10 10 10" Click="btnRenamePreset_Click" IsEnabled="False"/>
 
         <!-- Start of lower section -->
-        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="16" Background="Transparent"
+        <TabControl x:Name="tabControl" Grid.Row="1" Grid.ColumnSpan="17" Background="Transparent"
                     SelectionChanged="tabControl_SelectionChanged" BorderThickness="0 1 0 0" Margin="-1 0 0 0"
                     Padding="0 0 0 0">
         </TabControl>
