@@ -108,6 +108,8 @@ namespace BridgeOpsClient
                         duplicateParams.Add(param.variableName, null);
                     }
                 }
+                else
+                    stkParams.Children.Add(fieldRow.stack);
             }
         }
 

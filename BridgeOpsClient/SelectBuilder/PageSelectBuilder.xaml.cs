@@ -20,6 +20,8 @@ namespace BridgeOpsClient
 {
     public partial class PageSelectBuilder : Page
     {
+        public Window? builderWindow;
+
         public PageSelectBuilder()
         {
             InitializeComponent();
@@ -789,7 +791,7 @@ namespace BridgeOpsClient
                 int id;
                 if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
                     return;
-                App.EditConference(id, App.mainWindow);
+                App.EditConference(id, builderWindow);
             }
             else if (relevantTable == RelevantTable.Recurrence)
             {

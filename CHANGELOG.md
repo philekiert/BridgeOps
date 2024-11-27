@@ -11,6 +11,7 @@
 ### Fixed
 - Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
 - Fixed the horizontal positioning of date inputs in the update window.
+- Stopped the schedule clash and overflow overlays appearing when the main window is in the background.
   
   
 ## 0.6.2

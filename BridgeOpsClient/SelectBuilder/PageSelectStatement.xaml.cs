@@ -22,6 +22,7 @@ namespace BridgeOpsClient
     public partial class PageSelectStatement : Page
     {
         public TabItem? tabItem;
+        public Window? builderWindow;
 
         public PageSelectStatement()
         {
@@ -430,7 +431,7 @@ namespace BridgeOpsClient
                 int id;
                 if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
                     return;
-                App.EditConference(id, App.mainWindow);
+                App.EditConference(id, builderWindow);
             }
             else if (relevantTable == RelevantTable.Recurrence)
             {
