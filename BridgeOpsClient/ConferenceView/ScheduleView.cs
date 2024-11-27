@@ -46,6 +46,7 @@ namespace BridgeOpsClient
 
         public DateTime lastScheduleTime = new();
         public DateTime scheduleTime = new();
+        public DateTime scheduleTimeSmooth = new();
         public double lastScrollResource = 0f;
         public double scrollResource = 0f;
 

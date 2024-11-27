@@ -253,10 +253,14 @@ namespace BridgeOpsClient
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
+            if (!App.DisplayQuestion("Are you sure sure?", "Cancel", DialogWindows.DialogBox.Buttons.YesNo))
+                return;
+
             try
             {
                 bool uncancel = btnCancel.Header.ToString() == "Uncancel";
                 List<string> ids = dtg.GetCurrentlySelectedIDs();
+
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },

@@ -951,6 +951,8 @@ namespace BridgeOpsClient
                 List<string> ids = dtgResults.GetCurrentlySelectedIDs();
                 if (ids.Count == 0)
                     return;
+                if (!App.DisplayQuestion("Are you sure sure?", "Cancel", DialogWindows.DialogBox.Buttons.YesNo))
+                    return;
 
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
