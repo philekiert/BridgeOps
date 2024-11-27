@@ -71,8 +71,8 @@ namespace BridgeOpsClient
             // Set WindowChrome properties
             var windowChrome = new WindowChrome
             {
-                // I have no idea why - 5, but it overshoots otherwise. Possible the border thickness size is included.
-                CaptionHeight = titleBarHeight - 5,
+                // - 6 to account for the possible resize border.
+                CaptionHeight = titleBarHeight - 6,
                 ResizeBorderThickness = new Thickness(7)
             };
             WindowChrome.SetWindowChrome(this, windowChrome);
@@ -262,11 +262,13 @@ namespace BridgeOpsClient
             // Disable the border to make sure buttons are clickable right at the top of the screen when maximised.
             windowBorder.BorderThickness = new(maximised ? 0 : 1);
 
+            bool resizable = (ResizeMode == ResizeMode.CanResize || ResizeMode == ResizeMode.CanResizeWithGrip);
+
             // The resize border interferes with the clickable area for dragging restoring the window when maximised.
             var windowChrome = new WindowChrome
             {
-                // I have no idea why - 5, but it overshoots otherwise. Possibly the border thickness size is included.
-                CaptionHeight = titleBarHeight - 5,
+                // - 6 to account for the possible resize border.
+                CaptionHeight = resizable && !maximised ? titleBarHeight - 6 : titleBarHeight,
                 ResizeBorderThickness = new Thickness(maximised ? 0 : 7)
             };
             WindowChrome.SetWindowChrome(this, windowChrome);
@@ -442,8 +444,7 @@ namespace BridgeOpsClient
             {
                 var windowChrome = new WindowChrome
                 {
-                    // I have no idea why - 5, but it overshoots otherwise. Possibly the border thickness size is included.
-                    CaptionHeight = titleBarHeight - 5,
+                    CaptionHeight = titleBarHeight,
                     ResizeBorderThickness = new Thickness(0)
                 };
                 WindowChrome.SetWindowChrome(this, windowChrome);

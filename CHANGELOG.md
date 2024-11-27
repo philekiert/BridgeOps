@@ -12,6 +12,7 @@
 ### Fixed
 - Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
 - Fixed the horizontal positioning of date inputs in the update window.
+- Fixed an issue where the title bar was not clickable in the bottom 5 pixels of non-resizable window title bars.
 - Stopped the schedule clash and overflow overlays appearing when the main window is in the background.
 - Stopped the query builder window hiding when viewing a conference opened from one of its data tables.
 - The application no longer crashes when attempting to duplicate a select statement page.
