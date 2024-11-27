@@ -442,6 +442,9 @@ namespace BridgeOpsClient
 
                 // Draw any conference overflow warnings beneath the grid lines.
 
+                bool dDown = App.mainWindow != null && Keyboard.IsKeyDown(Key.D) && App.mainWindow.IsActive;
+                bool rDown = App.mainWindow != null && Keyboard.IsKeyDown(Key.R) && App.mainWindow.IsActive;
+
                 lock (resources)
                 {
                     foreach (ResourceInfo ri in resources.Values)
@@ -480,7 +483,7 @@ namespace BridgeOpsClient
                             }
 
                             // Draw the capacity highlight overlay, regardless of overflow.
-                            if (drawCursor && (Keyboard.IsKeyDown(Key.R)))
+                            if (drawCursor && rDown)
                             {
                                 int hoveredRow = GetRowFromY(cursor!.Value.Y, true);
                                 int resourceTopRow = GetRowFromY(GetYfromResource(ri.id, 0), true);
@@ -567,7 +570,7 @@ namespace BridgeOpsClient
                     }
 
                     // Draw any dial number clash regions while we're here.
-                    if (Keyboard.IsKeyDown(Key.D))
+                    if (dDown)
                         for (int i = 0; i < clashRegionAlternations.Count; i += 2)
                         {
                             DateTime s = clashRegionAlternations[i];
@@ -647,8 +650,6 @@ namespace BridgeOpsClient
                 // Draw conferences.
                 bool resizeCursorSet = false;
                 bool isMouseOverConference = false;
-
-                bool dDown = Keyboard.IsKeyDown(Key.D);
 
                 lock (conferenceListLock)
                     lock (clashIDs)
