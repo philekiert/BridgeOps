@@ -7,6 +7,7 @@
 - Custom syntax for inserting user-friendly parameters into SQL statements.
 - A 'Run All Pages' button on the query builder to run all pages simultaneously.
 - A dedicated button for duplicating a page in the select query builder.
+- Conference searches in the database and recurrence views now include the resource name and row.
 ### Changed
 - Reworked the button layout in the select query builder window.
 ### Fixed

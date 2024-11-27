@@ -57,6 +57,6 @@
         <customcontrols:TimePicker x:Name="timEndTime" Grid.Column="1" Grid.Row="2" Margin="0 0 0 15"/>
         <customcontrols:TimePicker x:Name="timLength" Grid.Column="1" Grid.Row="3" />
         <Button Content="Adjust" Grid.Row="4" Grid.ColumnSpan="2" HorizontalAlignment="Left"
-                Height="20" Width="70" Margin="0 20 0 0" Click="Button_Click"/>
+                Height="24" Width="70" Margin="0 20 0 0" Click="Button_Click"/>
     </Grid>
 </local:CustomWindow>

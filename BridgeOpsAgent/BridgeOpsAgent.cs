@@ -2979,6 +2979,7 @@ internal class BridgeOpsAgent
             sqlConnect.Open();
             SqlCommand com = new($"SELECT {string.Join(", ", conferenceColNames)}, " +
                                    $"cl.{Glo.Tab.LOGIN_USERNAME}, el.{Glo.Tab.LOGIN_USERNAME}, " +
+                                   $"rc.{Glo.Tab.RESOURCE_NAME}, " +
                                    $"r.{Glo.Tab.RECURRENCE_NAME}, " +
                                    $"{connectionColsStr}, " +
                                    $"o.{Glo.Tab.ORGANISATION_ID}, " +
@@ -2986,7 +2987,8 @@ internal class BridgeOpsAgent
                                         $"THEN o.{Glo.Tab.ORGANISATION_REF} ELSE NULL END, " +
                                    $"CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 " +
                                         $"THEN o.{Glo.Tab.ORGANISATION_NAME} ELSE NULL END " +
-                              $"FROM Conference c " +
+                              $"FROM Conference c "+
+                              $"LEFT JOIN Resource rc ON c.{Glo.Tab.RESOURCE_ID} = rc.{Glo.Tab.RESOURCE_ID} " +
                               $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
                               $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +
                               $"LEFT JOIN Recurrence r ON c.{Glo.Tab.RECURRENCE_ID} = r.{Glo.Tab.RECURRENCE_ID} " +
@@ -3007,7 +3009,8 @@ internal class BridgeOpsAgent
             // Store these indices as we'll be using them a lot.
             int usernamesStart = conferenceColNames.Count;
             int resourceNameStart = usernamesStart + 2;
-            int connStart = usernamesStart + 3;
+            int recurrenceNameStart = resourceNameStart + 1;
+            int connStart = recurrenceNameStart + 1;
 
             foreach (List<object?> row in result.rows)
             {
@@ -3022,9 +3025,10 @@ internal class BridgeOpsAgent
                         columnRecordID = columnRecordID,
                         conferenceID = conferenceID,
                         resourceID = Convert.ToInt32(row[1]!),
+                        resourceName = (string?)row[resourceNameStart],
                         resourceRow = Convert.ToInt32(row[2]!),
                         recurrenceID = Glo.Fun.GetInt32FromNullableObject(row[3]),
-                        recurrenceName = (string?)row[resourceNameStart],
+                        recurrenceName = (string?)row[recurrenceNameStart],
                         title = (string?)row[4]!,
                         start = (DateTime)row[5]!,
                         end = (DateTime)row[6]!,

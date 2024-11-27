@@ -57,6 +57,6 @@
         <customcontrols:SqlDataGrid x:Name="dtgRemove" Grid.Row="5" Margin="-10 0 -10 0" AddCheckBoxes="True"/>
 
         <Button x:Name="btnAdjust" Content="Adjust" Grid.Row="6" Click="btnAdjust_Click"
-                Margin="5 10 0 10" Width="80" HorizontalAlignment="Left"/>
+                Margin="5 10 0 10" Width="80" HorizontalAlignment="Left" Height="24"/>
     </Grid>
 </local:CustomWindow>

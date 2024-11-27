@@ -1351,6 +1351,7 @@ namespace SendReceiveClasses
         public int columnRecordID;
         public int? conferenceID;
         public int resourceID;
+        public string? resourceName;
         public int resourceRow;
         public int? recurrenceID;
         public string? recurrenceName;
@@ -1388,13 +1389,14 @@ namespace SendReceiveClasses
             this.columnRecordID = columnRecordID;
             conferenceID = null;
             this.resourceID = resourceID;
+            resourceName = null;
             this.resourceRow = resourceRow;
-            this.recurrenceID = null;
-            this.recurrenceName = null;
+            recurrenceID = null;
+            recurrenceName = null;
             this.title = title;
             this.start = start;
             this.end = end;
-            this.closure = null;
+            closure = null;
             cancelled = null;
             this.createLoginID = createLoginID;
             createTime = null;

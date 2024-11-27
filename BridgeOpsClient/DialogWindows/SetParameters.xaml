@@ -6,17 +6,17 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Set Parameters" SizeToContent="Height" ResizeMode="NoResize"
-        MinWidth="500" MaxWidth="500" WindowStartupLocation="CenterScreen">
+        Title="Set Parameters" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        MinWidth="200" MaxWidth="502" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <DataTemplate x:Key="fieldLbl">
-            <Label Margin="10 10 10 0" Padding="0 5 5 0" Width="200" HorizontalAlignment="Left" FontWeight="SemiBold"/>
+            <Label Margin="10 10 10 0" Padding="0 5 5 0" MaxWidth="480" HorizontalAlignment="Left" FontWeight="SemiBold"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldTxt">
-            <TextBox Margin="10 10 10 10" VerticalContentAlignment="Center" MinWidth="200" Height="24"/>
+            <TextBox Margin="10 10 10 10" VerticalContentAlignment="Center" Width="480" Height="24"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldCmb">
-            <ComboBox Margin="10 10 10 10" MinWidth="200"/>
+            <ComboBox Margin="10 10 10 10" Width="480"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldDtm">
             <customcontrols:DateTimePicker Margin="10 10 10 10"/>
@@ -28,7 +28,7 @@
             <customcontrols:TimePicker Margin="10 10 10 10"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldNum">
-            <customcontrols:NumberEntry Margin="10 10 10 10"/>
+            <customcontrols:NumberEntry Margin="10 10 10 10" Width="480"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldChk">
             <CheckBox Margin="10 10 10 10" VerticalAlignment="Center"/>
@@ -43,7 +43,7 @@
         </Grid.RowDefinitions>
 
         <Label x:Name="lblTitle" Content="Parameters" FontWeight="SemiBold" Margin="10 10 10 10" FontSize="14"
-               BorderThickness="0 0 0 1" BorderBrush="CornflowerBlue" Padding="0 5 5 5"/>
+               BorderThickness="0 0 0 1" BorderBrush="CornflowerBlue" Padding="0 5 25 5"/>
 
         <!-- Fields Section -->
         <ScrollViewer Grid.Row="2" MaxWidth="790" MaxHeight="600" MinHeight="100"
@@ -55,7 +55,7 @@
 
         <!-- Update -->
         <Button x:Name="btnExport" Content="Run" Grid.Row="3" Grid.Column="0"
-                HorizontalAlignment="Left" Height="24" Width="60" Margin="10 20 10 10"
+                HorizontalAlignment="Stretch" Height="24" Margin="10 20 10 10"
                 Click="btnExport_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </local:CustomWindow>

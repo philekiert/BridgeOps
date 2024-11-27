@@ -474,6 +474,7 @@ namespace BridgeOpsClient
                 "Closure",
                 "Cancelled",
                 "Test",
+                "Resource",
                 ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference)
             };
             List<List<object?>> data = new();
@@ -506,6 +507,8 @@ namespace BridgeOpsClient
                                  c.closure,
                                  c.cancelled,
                                  test,
+                                 c.resourceName == null ? (c.resourceRow + 1).ToString() :
+                                                          $"{c.resourceName} {c.resourceRow + 1}",
                                  c.notes
                                });
             }

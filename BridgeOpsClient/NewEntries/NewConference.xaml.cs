@@ -113,10 +113,8 @@ namespace BridgeOpsClient
             dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
             dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
-            // Set build the resource name for the dropdown.
-            string resourceName = "";
-            if (PageConferenceView.resources.ContainsKey(conf.resourceID))
-                resourceName = PageConferenceView.resources[conf.resourceID].name;
+            // Build the resource name for the dropdown.
+            string resourceName = conf.resourceName == null ? "" : conf.resourceName;
             resourceName += " " + (conf.resourceRow + 1).ToString();
 
             cmbResource.Text = resourceName;

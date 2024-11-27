@@ -27,17 +27,17 @@
         <StackPanel Grid.Column="1" Grid.RowSpan="2">
             <Label Content="Name" FontWeight="SemiBold" Margin="0 5 0 -5"/>
             <TextBox x:Name="txtName" Margin="5 10 10 10" Height="40"/>
-            <Button x:Name="btnAdd" Content="Add Conferences" Margin="5 10 10 10" Click="btnAdd_Click"/>
+            <Button x:Name="btnAdd" Content="Add Conferences" Margin="5 10 10 10" Click="btnAdd_Click" Height="24"/>
             <Button x:Name="btnRemove" Content="Remove Conferences" Margin="5 0 10 10" Click="btnRemove_Click"
-                    IsEnabled="False"/>
+                    IsEnabled="False" Height="24"/>
             <Button x:Name="btnDuplicate" Content="Duplicate Conference" Margin="5 0 10 10" Click="btnDuplicate_Click"
-                    IsEnabled="False" Style="{StaticResource primary-button}"/>
+                    IsEnabled="False" Style="{StaticResource primary-button}" Height="24"/>
         </StackPanel>
 
         <StackPanel Grid.Column="1" Grid.Row="3" VerticalAlignment="Bottom">
-            <Button x:Name="btnSave" Content="Save Name &amp; Notes" Height="20" Margin="5 10 10 0"
+            <Button x:Name="btnSave" Content="Save Name &amp; Notes" Height="24" Margin="5 10 10 0"
                     Click="btnSave_Click" Style="{StaticResource primary-button}"/>
-            <Button x:Name="btnDelete" Content="Delete Recurrence" Height="20" Margin="5 10 10 10"
+            <Button x:Name="btnDelete" Content="Delete Recurrence" Height="24" Margin="5 10 10 10"
                     Click="btnDelete_Click"/>
         </StackPanel>
     </Grid>

@@ -113,6 +113,6 @@
             </StackPanel>
         </StackPanel>
         <Button Content="Duplicate" Grid.Row="6" Margin="10 16 10 16" Style="{StaticResource primary-button}"
-                Width="80" HorizontalAlignment="Left" Click="Button_Click"/>
+                Width="80" HorizontalAlignment="Left" Click="Button_Click" Height="24"/>
     </Grid>
 </local:CustomWindow>
