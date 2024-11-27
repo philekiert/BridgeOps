@@ -218,8 +218,6 @@ namespace BridgeOpsClient
                     return;
                 }
             }
-
-            tabControl.SelectedIndex = tabControl.Items.Count - 1;
         }
 
         private void btnExportAllPages_Click(object sender, RoutedEventArgs e)
