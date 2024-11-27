@@ -18,6 +18,7 @@
 - Stopped the schedule clash and overflow overlays appearing when the main window is in the background.
 - Stopped the query builder window hiding when viewing a conference opened from one of its data tables.
 - The application no longer crashes when attempting to duplicate a select statement page.
+- Selection count is now reported correctly in the query builder output table.
   
   
 ## 0.6.2

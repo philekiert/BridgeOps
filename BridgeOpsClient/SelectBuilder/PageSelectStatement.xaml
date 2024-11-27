@@ -47,7 +47,8 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="25"/>
             </Grid.RowDefinitions>
-            <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"/>
+            <customcontrols:SqlDataGrid x:Name="dtgOutput" CustomDoubleClick="dtgOutput_CustomDoubleClick"
+                                        SelectionChanged="dtgResults_SelectionChanged"/>
             <Border Margin="10 -10 10 0" Height="23" Grid.Row="2" Background="#edeeef" VerticalAlignment="Top"
                 CornerRadius="0 0 4 4" BorderThickness="1 0 1 1" BorderBrush="#ccc"/>
             <StackPanel Grid.Row="2" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
