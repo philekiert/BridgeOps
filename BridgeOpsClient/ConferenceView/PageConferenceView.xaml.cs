@@ -1219,7 +1219,7 @@ namespace BridgeOpsClient
             {
                 Point newMousePos = Mouse.GetPosition(schView);
                 double dif = (dragThresholdStart - newMousePos).Length;
-                if (dif > 3)
+                if (dif > 8)
                 {
                     dragPositionChanged = true;
                     dragMouseHasMoved = true;
