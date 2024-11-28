@@ -20,6 +20,7 @@ namespace BridgeOpsClient
         DataTemplate lblTemplate;
         DataTemplate txtTemplate;
         DataTemplate cmbTemplate;
+        DataTemplate lstTemplate;
         DataTemplate numTemplate;
         DataTemplate dtmTemplate;
         DataTemplate datTemplate;
@@ -60,6 +61,7 @@ namespace BridgeOpsClient
             lblTemplate = (DataTemplate)FindResource("fieldLbl");
             txtTemplate = (DataTemplate)FindResource("fieldTxt");
             cmbTemplate = (DataTemplate)FindResource("fieldCmb");
+            lstTemplate = (DataTemplate)FindResource("fieldLst");
             numTemplate = (DataTemplate)FindResource("fieldNum");
             dtmTemplate = (DataTemplate)FindResource("fieldDtm");
             datTemplate = (DataTemplate)FindResource("fieldDat");
@@ -78,10 +80,42 @@ namespace BridgeOpsClient
                 object field;
                 if (param.type == PageSelectStatement.Param.Type.Text)
                     field = (TextBox)txtTemplate.LoadContent();
-                //else if (types[n] == "textOption")
-                //    field = cmbTemplate.LoadContent() as ComboBox;
-                //else if (types[n] == "textOptions")
-                //{ }// Not yet implemented
+                else if (param.type == PageSelectStatement.Param.Type.Dropdown)
+                {
+                    field = (ComboBox)cmbTemplate.LoadContent();
+                    ((ComboBox)field).ItemsSource = param.allowed;
+                }
+                else if (param.type == PageSelectStatement.Param.Type.Checklist)
+                {
+                    ScrollViewer scrl = (ScrollViewer)lstTemplate.LoadContent();
+                    Grid grd = (Grid)scrl.Content;
+                    if (param.allowed != null)
+                    {
+                        int i = 0;
+                        foreach (string s in param.allowed)
+                        {
+                            grd.RowDefinitions.Add(new() { Height = new(24) });
+                            CheckBox chk = new()
+                            {
+                                Margin = new(5, 4, 5, 0)
+                            };
+                            Label option = new()
+                            {
+                                VerticalAlignment = VerticalAlignment.Center,
+                                Padding = new(5, 0, 5, 0),
+                                Content = s
+                            };
+                            Grid.SetColumn(chk, 0);
+                            Grid.SetColumn(option, 1);
+                            Grid.SetRow(chk, i);
+                            Grid.SetRow(option, i);
+                            grd.Children.Add(chk);
+                            grd.Children.Add(option);
+                            ++i;
+                        }
+                    }
+                    field = scrl;
+                }
                 else if (param.type == PageSelectStatement.Param.Type.Number)
                     field = (NumberEntry)numTemplate.LoadContent();
                 else if (param.type == PageSelectStatement.Param.Type.DateTime)
@@ -148,13 +182,26 @@ namespace BridgeOpsClient
                     {
                         if (txt.Text == "")
                             return Abort($"You must select a value for all parameters.");
-                        value = txt.Text;
+                        value = txt.Text.Replace("'", "''");
                     }
                     else if (row.value is ComboBox cmb)
                     {
                         if (cmb.SelectedIndex < 0)
                             return Abort($"You must select a value for all parameters.");
-                        value = cmb.Text;
+                        value = cmb.Text.Replace("'", "''");
+                    }
+                    else if (row.value is ScrollViewer scrl)
+                    {
+                        Grid grd = (Grid)scrl.Content;
+                        List<string> values = new();
+                        for (int r = 0; r < grd.Children.Count; r += 2)
+                        {
+                            if (((CheckBox)grd.Children[r]).IsChecked == true)
+                                values.Add(((string)((Label)grd.Children[r + 1]).Content).Replace("'", "''"));
+                        }
+                        if (values.Count == 0)
+                            return Abort($"Checkbox lists must have at least one item selected.");
+                        value = $"('{string.Join("', '", values)}')";
                     }
                     else if (row.value is NumberEntry num)
                     {

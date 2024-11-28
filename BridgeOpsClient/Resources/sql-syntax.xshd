@@ -47,9 +47,12 @@
 
   <RuleSet name="Parameters">
     <Span color="Parameter">
-      <Begin>\{(date|datetime|time|number|text|bool);;(\d+);;</Begin>
+      <Begin>\{(date|datetime|time|number|text|bool|dropdown|checklist),,(\d+),,</Begin>
       <End>\}</End>
     </Span>
+    <Rule color="Parameter">
+      \{,,.+?\}
+    </Rule>
   </RuleSet>
 
   <RuleSet ignoreCase="true">

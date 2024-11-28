@@ -151,13 +151,14 @@ namespace BridgeOpsClient
 
         public class Param
         {
-            public enum Type { Text, Number, DateTime, Date, Time, Bool }
+            public enum Type { Text, Number, DateTime, Date, Time, Bool, Dropdown, Checklist }
 
             public Type type;
             public int position;
             public string name = "";
-            public object? value;
+            public object? value = null;
             public string? variableName = null;
+            public string[]? allowed = null;
 
             // Used to track where to replace the parameter with the value.
             public int start;
@@ -165,12 +166,31 @@ namespace BridgeOpsClient
 
             // Used to revert to the original order ahead of replacements.
             public int unorderedPosition;
+
+            public Param Clone(int start, int length, int unorderedPosition)
+            {
+                return new()
+                {
+                    type = type,
+                    position = position,
+                    name = name,
+                    value = value,
+                    variableName = variableName,
+                    allowed = allowed,
+                    start = start,
+                    length = length,
+                    unorderedPosition = unorderedPosition
+                };
+            }
         }
         List<Param> paramList = new();
+
+        Dictionary<string, Param> paramVariables = new();
 
         private bool InsertParameters(string input, out string result, string? pageName)
         {
             paramList.Clear();
+            paramVariables.Clear();
 
             result = input;
 
@@ -181,21 +201,26 @@ namespace BridgeOpsClient
             {
                 if (input[i] == '{')
                 {
-                    // 9 is conveniently the minimum length of one of these parameters given a minimum type length
-                    // of 4 and max of 8. If this changes, you will need to rework this code to make sure you aren't
-                    // ruling out anything you shouldn't.
-                    if (input.Length > i + 9)
+                    string theRest = input.Substring(i);
+                    if (input.Length > i + 5 && theRest.StartsWith("{,,") && theRest.Contains("}"))
                     {
-                        string sub = input.Substring(i + 1, 8);
-                        if (sub.StartsWith("date") || sub.StartsWith("datetime") || sub.StartsWith("time") ||
+                        int endIndex = theRest.IndexOf("}");
+                        startsAndLengths.Add(new int[] { i, endIndex + 1 });
+                        stringsToCheck.Add(new string[1] { input.Substring(i, endIndex + 1) });
+                    }
+                    else if (input.Length > i + 9)
+                    {
+                        string sub = input.Substring(i + 1, 9);
+                        if (sub.StartsWith("checklist") || sub.StartsWith("dropdown") ||
+                            sub.StartsWith("date") || sub.StartsWith("datetime") || sub.StartsWith("time") ||
                             sub.StartsWith("text") || sub.StartsWith("number") || sub.StartsWith("bool"))
                         {
-                            int endIndex = input.Substring(i).IndexOf('}');
+                            int endIndex = theRest.IndexOf('}');
 
                             if (endIndex > 0)
                             {
                                 startsAndLengths.Add(new int[] { i, endIndex + 1 });
-                                stringsToCheck.Add(input.Substring(i + 1, endIndex - 1).Split(";;"));
+                                stringsToCheck.Add(input.Substring(i + 1, endIndex - 1).Split(",,"));
                                 i = i + endIndex + 1;
                             }
                             else
@@ -208,8 +233,26 @@ namespace BridgeOpsClient
             int n = 0;
             foreach (string[] strs in stringsToCheck)
             {
-                if (!(strs.Length == 3 || strs.Length == 4))
+                if (strs.Length == 1 && strs[0].StartsWith("{,,") && strs[0].EndsWith("}"))
+                {
+                    // The string in between has to be at least one character in length here, or it wouldn't have been
+                    // picked up in the for loop above.
+                    string varName = strs[0].Substring(3, strs[0].Length - 4);
+                    if (paramVariables.ContainsKey(varName))
+                        paramList.Add(paramVariables[varName].Clone(startsAndLengths[n][0], startsAndLengths[n][1],
+                                                                    n));
+                    ++n;
                     continue;
+                }
+
+                bool valueList = strs[0] == "dropdown" || strs[0] == "checklist";
+                if (!(((strs.Length == 3 && !valueList) || strs.Length == 4) ||
+                      (strs.Length == 5 && valueList) ||
+                      (strs.Length == 1)))
+                {
+                    ++n;
+                    continue;
+                }
 
                 Param param = new();
                 if (strs[0] == "text")
@@ -224,6 +267,10 @@ namespace BridgeOpsClient
                     param.type = Param.Type.Time;
                 else if (strs[0] == "bool")
                     param.type = Param.Type.Bool;
+                else if (strs[0] == "dropdown")
+                    param.type = Param.Type.Dropdown;
+                else if (strs[0] == "checklist")
+                    param.type = Param.Type.Checklist;
                 else
                     continue;
 
@@ -231,7 +278,11 @@ namespace BridgeOpsClient
                     continue;
 
                 param.name = strs[2];
-                if (strs.Length == 4)
+                // Allowed list comes after variable name, but the variable name may not be present so we need to
+                // record this.
+                bool variableNamePresent = (strs.Length == 4 && !valueList) || (strs.Length == 5 && valueList);
+
+                if (variableNamePresent)
                 {
                     param.variableName = strs[3];
                     if (SelectBuilder.storedVariables.ContainsKey(param.variableName))
@@ -239,10 +290,55 @@ namespace BridgeOpsClient
                     // If it's the first time we're seeing this variable name, we'll add it to the dictionary once we
                     // have the value from the SetParameters dialog.
                 }
+                if (valueList)
+                {
+                    List<string> values = new();
+                    string str = strs.Last();
+                    foreach (string s in str.Split(";;"))
+                    {
+                        bool allowed = s.StartsWith("$$");
+                        bool queryValues = s.StartsWith("??");
+                        if (allowed || queryValues)
+                        {
+                            string[] tc = s.Split('.');
+                            if (tc.Length != 2)
+                                param.allowed = null;
+                            else
+                            {
+                                if (allowed)
+                                {
+                                    var column = ColumnRecord.GetColumnNullable(tc[0].Substring(2), tc[1]);
+                                    if (column != null)
+                                        values.AddRange(column.Value.allowed);
+                                }
+                                else
+                                {
+                                    List<List<object?>> rows;
+                                    // This seems like a weird way to run this, but it's so SQL Server doesn't kick up
+                                    // two separate errors for the same column name if the user got it wrong, one for
+                                    // the select statement and one for the NOT NULL condition.
+                                    App.SendSelectStatement($"WITH Rows AS (SELECT DISTINCT {tc[1]} AS Col " +
+                                                                            $"FROM {tc[0].Substring(2)})\n" +
+                                                            $"SELECT Col FROM Rows WHERE Col IS NOT NULL;",
+                                                            out _, out rows);
+                                    if (rows.Count > 0)
+                                        values.AddRange(rows.Select(s => s[0]!.ToString()!));
+                                }
+                            }
+                        }
+                        else
+                            values.Add(s);
+                    }
+
+                    param.allowed = values.ToArray();
+                }
+
                 param.start = startsAndLengths[n][0];
                 param.length = startsAndLengths[n][1];
                 param.unorderedPosition = n;
                 paramList.Add(param);
+                if (param.variableName != null && !paramVariables.ContainsKey(param.variableName))
+                    paramVariables.Add(param.variableName, param);
                 ++n;
             }
 
@@ -287,7 +383,7 @@ namespace BridgeOpsClient
 
                 string value;
                 if (param.value is string txt)
-                    value = $"'{txt.Replace("'", "''")}'";
+                    value = txt; //  :)
                 else if (param.value is int num)
                     value = num.ToString();
                 else if (param.type is Param.Type.DateTime)
@@ -314,8 +410,6 @@ namespace BridgeOpsClient
 
         public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows)
         {
-
-
             columnNames = new();
             columnTypes = new();
             rows = new();
