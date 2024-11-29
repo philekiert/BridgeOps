@@ -3,26 +3,32 @@
   
 ## 0.6.3
 ### Added
-- An 8px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
-- Custom syntax for inserting user-friendly parameters into SQL statements.
-- A 'Run All Pages' button on the query builder to run all pages simultaneously.
-- A dedicated button for duplicating a page in the select query builder.
-- Conference searches in the database and recurrence views now include the resource name and row.
-- Added new icons to icon set.
-- A dedicated colour for cancelled conferences, currently pink.
+- Client
+  - An 8px drag threshold to prevent accidental moves and resizes while selecting conferences or double clicking.
+  - Custom syntax for inserting user-friendly parameters into SQL statements.
+  - A 'Run All Pages' button on the query builder to run all pages simultaneously.
+  - A dedicated button for duplicating a page in the select query builder.
+  - Conference searches in the database and recurrence views now include the resource name and row.
+  - Added new icons to icon set.
+  - A dedicated colour for cancelled conferences, currently pink.
 ### Changed
-- Reworked the button layout in the select query builder window.
-- Conference moves now also move the connection dates if the move exceeds one day.
+- Client
+  - Reworked the button layout in the select query builder window.
+- Agent
+  - Conference moves now also move the connection dates if the move exceeds one day.
 ### Fixed
-- Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
-- Fixed the horizontal positioning of date inputs in the update window.
-- Fixed an issue where the title bar was not clickable in the bottom 5 pixels of non-resizable window title bars.
-- Stopped the schedule clash and overflow overlays appearing when the main window is in the background.
-- Stopped the query builder window hiding when viewing a conference opened from one of its data tables.
-- The application no longer crashes when attempting to duplicate a select statement page.
-- Selection count is now reported correctly in the query builder output table.
-- Loading query builder presets now correctly updates the tab name textbox.
-- Resolved an issue where connection dates couldn't be set if they differed from a single-day conference's date.
+- Client
+  - Fixed the horizontal positioning of date inputs in the update window.
+  - Fixed an issue where the title bar was not clickable in the bottom 5 pixels of non-resizable window title bars.
+  - Stopped the schedule clash and overflow overlays appearing when the main window is in the background.
+  - Stopped the query builder window hiding when viewing a conference opened from one of its data tables.
+  - The application no longer crashes when attempting to duplicate a select statement page.
+  - Selection count is now reported correctly in the query builder output table.
+  - Loading query builder presets now correctly updates the tab name textbox.
+  - Resolved an issue where connection dates couldn't be set if they differed from a single-day conference's date.
+  - Fixed a bug where date pickers were expecting typed-in dates in the American format of mm/dd/yyyy.
+- Agent
+  - Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
   
   
 ## 0.6.2
