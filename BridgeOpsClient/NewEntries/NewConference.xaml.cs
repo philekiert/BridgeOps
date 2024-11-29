@@ -108,11 +108,6 @@ namespace BridgeOpsClient
             if (conf.end != null)
                 dtpEnd.SetDateTime((DateTime)conf.end);
 
-            // Add methods to create space for date pickers if needed.
-            ToggleConnectionDates(null, null);
-            dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
-            dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
-
             // Build the resource name for the dropdown.
             string resourceName = conf.resourceName == null ? "" : conf.resourceName;
             resourceName += " " + (conf.resourceRow + 1).ToString();
@@ -170,6 +165,11 @@ namespace BridgeOpsClient
             }
             else
                 btnSave.IsEnabled = true;
+
+            // Add methods to create space for date pickers if needed.
+            ToggleConnectionDates(null, null);
+            dtpStart.datePicker.SelectedDateChanged += ToggleConnectionDates;
+            dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
             Title = "Conference C-" + id;
         }
@@ -623,9 +623,29 @@ namespace BridgeOpsClient
 
         public bool SingleDay { get { return dtpStart.GetDate() == dtpEnd.GetDate(); } }
         public const double CrossDayPreferredWidth = 1100;
+        bool toggleDatesOverride = false;
         private void ToggleConnectionDates(object? sender, SelectionChangedEventArgs? e)
         {
-            bool singleDay = SingleDay;
+            bool singleDay = true;
+            foreach (var c in connections)
+            {
+                DateTime? connected = c.dtpConnected.datePicker.SelectedDate;
+                DateTime? disconnected = c.dtpDisconnected.datePicker.SelectedDate;
+                DateTime? confStart = dtpStart.datePicker.SelectedDate;
+                DateTime? confEnd = dtpEnd.datePicker.SelectedDate;
+                if ((connected != null && (connected.Value.Date != confStart ||
+                                           connected.Value.Date != confEnd)) ||
+                    (disconnected != null && (disconnected.Value.Date != confStart ||
+                                              disconnected.Value.Date != confEnd)))
+                {
+                    singleDay = false;
+                    break;
+                }
+
+            }
+            if (singleDay)
+                singleDay = SingleDay;
+
             foreach (Connection c in connections)
                 c.ToggleDateVisible(!singleDay);
             if (singleDay)
