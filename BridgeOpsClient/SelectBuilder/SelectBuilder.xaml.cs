@@ -661,6 +661,7 @@ namespace BridgeOpsClient
 
                 if (!skipPresetLoad)
                     PresetLoad(false);
+                txtTabName.Text = (string)(((TabItem)tabControl.Items[0]).Header);
             }
             lastSelectedIndex = cmbPresets.SelectedIndex;
         }

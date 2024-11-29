@@ -80,7 +80,7 @@
     <Color x:Key="colorConferenceWarning">#32C04155</Color>
     <Color x:Key="colorConferenceWeekend">#dddedf</Color>
     <SolidColorBrush x:Key="brushConference" Color="{StaticResource colorConference}"/>
-    <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConferenceCancelled}"/>
+    <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConference}"/>
     <SolidColorBrush x:Key="brushConferenceTest" Color="{StaticResource colorConferenceTest}"/>
     <SolidColorBrush x:Key="brushConferenceEnded" Color="{StaticResource colorConferenceEnded}"/>
     <SolidColorBrush x:Key="brushConferenceFailed" Color="{StaticResource colorConferenceFailed}"/>

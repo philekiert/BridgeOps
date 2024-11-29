@@ -9,6 +9,7 @@
 - A dedicated button for duplicating a page in the select query builder.
 - Conference searches in the database and recurrence views now include the resource name and row.
 - Added new icons to icon set.
+- A dedicated colour for cancelled conferences, currently pink.
 ### Changed
 - Reworked the button layout in the select query builder window.
 ### Fixed
@@ -19,6 +20,7 @@
 - Stopped the query builder window hiding when viewing a conference opened from one of its data tables.
 - The application no longer crashes when attempting to duplicate a select statement page.
 - Selection count is now reported correctly in the query builder output table.
+- Loading query builder presets now correctly updates the tab name textbox.
   
   
 ## 0.6.2
