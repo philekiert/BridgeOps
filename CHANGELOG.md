@@ -12,6 +12,7 @@
 - A dedicated colour for cancelled conferences, currently pink.
 ### Changed
 - Reworked the button layout in the select query builder window.
+- Conference moves now also move the connection dates if the move exceeds one day.
 ### Fixed
 - Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
 - Fixed the horizontal positioning of date inputs in the update window.
@@ -21,6 +22,7 @@
 - The application no longer crashes when attempting to duplicate a select statement page.
 - Selection count is now reported correctly in the query builder output table.
 - Loading query builder presets now correctly updates the tab name textbox.
+- Resolved an issue where connection dates couldn't be set if they differed from a single-day conference's date.
   
   
 ## 0.6.2

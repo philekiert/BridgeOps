@@ -156,6 +156,8 @@
     </Style>
 
     <Style TargetType="DatePicker">
+        <Setter Property="SelectedDateFormat" Value="Long"/>
+        <Setter Property="Language" Value="en-GB"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="DatePicker">
