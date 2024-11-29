@@ -2030,20 +2030,20 @@ END
                 commands.Add(com);
 
                 // Connections
-                timeSets = new();
-                com = "UPDATE Connection SET ";
-
-                if (move != null && move.Value.Days > 0)
+                if (move != null && move.Value.Days != 0)
                 {
+                    timeSets = new();
+                    com = "UPDATE Connection SET ";
+
                     timeSets.Add($"{Glo.Tab.CONNECTION_TIME_FROM} = " +
                                  $"DATEADD(DAY, {((TimeSpan)move).Days}, {Glo.Tab.CONNECTION_TIME_FROM})");
                     timeSets.Add($"{Glo.Tab.CONNECTION_TIME_TO} = " +
                                  $"DATEADD(DAY, {((TimeSpan)move).Days}, {Glo.Tab.CONNECTION_TIME_TO})");
-                }
 
-                if (timeSets.Count > 0)
-                    com += $"{string.Join(", ", timeSets)} " +
-                           $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat});";
+                    if (timeSets.Count > 0)
+                        com += $"{string.Join(", ", timeSets)} " +
+                               $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat});";
+                }
 
                 commands.Add(com);
             }
