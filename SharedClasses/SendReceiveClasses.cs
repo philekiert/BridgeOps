@@ -2043,9 +2043,9 @@ END
                     if (timeSets.Count > 0)
                         com += $"{string.Join(", ", timeSets)} " +
                                $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat});";
-                }
 
-                commands.Add(com);
+                    commands.Add(com);
+                }
             }
 
             else if (intent == Intent.Connections)
