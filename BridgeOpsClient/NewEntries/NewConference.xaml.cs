@@ -90,6 +90,11 @@ namespace BridgeOpsClient
                 recurrenceID = conf.recurrenceID;
                 btnRecurrence.IsEnabled = true;
             }
+            else
+            {
+                btnRecurrence.Content = "Add to Existing";
+                btnRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+            }
 
             edit = true;
             id = conf.conferenceID.ToString()!;
@@ -846,6 +851,46 @@ namespace BridgeOpsClient
             {
                 EditRecurrence editRec = new((int)recurrenceID);
                 editRec.Show();
+            }
+            else
+            {
+                LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
+                lr.Owner = this;
+                lr.ShowDialog();
+                int recID;
+                if (lr.id == "" || !int.TryParse(lr.id, out recID))
+                    return;
+
+                UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
+                                        new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
+                                        Glo.Tab.CONFERENCE_ID, new List<string> { id }, false);
+                if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                {
+                    MainWindow.RepeatSearches(7);
+                    recurrenceID = recID;
+                    List<List<object?>> rows;
+                    if (App.Select("Recurrence", new() { Glo.Tab.RECURRENCE_NAME },
+                                   new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { Conditional.Equals },
+                                   out _, out rows, false, false))
+                    {
+                        try
+                        {
+                            string? recName = (string?)rows[0][0];
+
+                            if (recName != null)
+                                btnRecurrence.Content = $"{recName} (R-{recID})";
+                            else
+                                btnRecurrence.Content = $"R-{recID}";
+                            btnRecurrence.IsEnabled = true;
+                        }
+                        catch
+                        {
+                            App.DisplayError("Something went wrong. The recurrence can not be found.");
+                            btnRecurrence.Content = "";
+                            btnRecurrence.IsEnabled = false;
+                        }
+                    }
+                }
             }
         }
     }

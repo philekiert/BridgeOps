@@ -28,7 +28,7 @@
   - Resolved an issue where connection dates couldn't be set if they differed from a single-day conference's date.
   - Fixed a bug where date pickers were expecting typed-in dates in the American format of mm/dd/yyyy.
 - Agent
-  - Fixed a bug that sometimes prevented updates on organisations that were in multiple conferences.
+  - Fixed a bug that would sometimes prevent updates on organisations that were in multiple conferences.
   
   
 ## 0.6.2
