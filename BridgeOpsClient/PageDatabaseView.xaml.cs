@@ -154,7 +154,26 @@ namespace BridgeOpsClient
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF, ColumnRecord.organisation) });
                 cmbColumn.Items.Add(new ComboBoxItem()
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_ID, ColumnRecord.conference) });
                 fieldValues.AddRange(new string[] { "", "", "" });
+            }
+            // Same for recurrences.
+            if (cmbTable.SelectedIndex == 4)
+            {
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO, ColumnRecord.organisation) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_REF, ColumnRecord.organisation) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_ID, ColumnRecord.conference) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference) });
+                cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.RECURRENCE_ID, ColumnRecord.recurrence) });
+                fieldValues.AddRange(new string[] { "", "", "", "", "", "" });
             }
 
 
@@ -222,6 +241,15 @@ namespace BridgeOpsClient
                 else
                     SetStatusBar();
             }
+            else if (dtgResults.identity == 8 && recurrenceSelectRequest != null)
+            {
+                List<string?> colNames = new();
+                List<List<object?>> rows = new();
+                if (App.SendSelectRequest((SelectRequest)recurrenceSelectRequest, out colNames, out rows))
+                    PopulateRecurrencesFromSelect(colNames, rows);
+                else
+                    SetStatusBar();
+            }
             else if (dtgResults.identity != -1)
             {
                 List<string?> columnNames;
@@ -248,6 +276,8 @@ namespace BridgeOpsClient
 
         int lastConferenceSearchSelectCount = 0;
         SelectRequest? conferenceSelectRequest = null;
+        int lastRecurrenceSearchSelectCount = 0;
+        SelectRequest? recurrenceSelectRequest = null;
 
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -294,7 +324,9 @@ namespace BridgeOpsClient
             }
             else if (cmbTable.Text == "Recurrence")
             {
+                // Special case further down.
                 identity = 8;
+                // Not used, but set to keep the Visual Studio happy with assignments.
                 tableColDefs = ColumnRecord.recurrence;
                 nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
             }
@@ -305,7 +337,7 @@ namespace BridgeOpsClient
                 nameReversals = ColumnRecord.resourceFriendlyNameReversal;
             }
 
-            if (identity != 7) // Conference searches are a tad more complicated.
+            if (identity != 7 && identity != 8) // Conference and recurrence searches are a tad more complicated.
             {
                 List<string> selectColumns = new();
                 List<string> selectValues = new();
@@ -353,12 +385,15 @@ namespace BridgeOpsClient
                     SetStatusBar();
             }
 
-            // Special case if conference search:
+            // Special case if conference or recurrence search:
             else
             {
                 try
                 {
-                    SearchConferences(false);
+                    if (identity == 7)
+                        SearchConferences(false);
+                    else if (identity == 8)
+                        SearchRecurrences(false);
                 }
                 catch
                 {
@@ -432,6 +467,7 @@ namespace BridgeOpsClient
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());
+            req.autoRecIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);
 
             List<string?> colNames = new();
             List<List<object?>> rows = new();
@@ -522,6 +558,84 @@ namespace BridgeOpsClient
                 SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount);
         }
 
+        private void SearchRecurrences(bool wide)
+        {
+            Dictionary<string, string> nameReversals = ColumnRecord.organisationFriendlyNameReversal;
+            List<string> selectColumns = new();
+            List<string?> selectValues = new();
+            List<string> operators = new();
+            List<bool> needsQuotes = new();
+            List<string> andOrs = new();
+            string prefix = "Organisation.";
+
+            for (int n = 0; n < fieldValues.Count; ++n)
+            {
+                if (n == 3)
+                {
+                    prefix = "Conference.";
+                    nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
+                }
+                if (n == 5)
+                {
+                    prefix = "Recurrence.";
+                    nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
+                }
+
+                if (wide || fieldValues[n] != "")
+                {
+                    // Should only trigger on no selection.
+                    string colName = (string)((ComboBoxItem)cmbColumn.Items[n]).Content;
+
+                    selectColumns.Add(prefix + nameReversals[colName]);
+                    selectValues.Add("%" + (wide ? txtSearch.Text : fieldValues[n]) + "%");
+                    operators.Add("LIKE");
+                    needsQuotes.Add(true);
+                    andOrs.Add(wide ? "OR" : "AND");
+                }
+            }
+
+            if (andOrs.Count > 0)
+                andOrs.RemoveAt(0); // This needs to be one fewer than the rest.
+
+            SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, "Recurrence", true,
+                                    new() { "Conference", "Connection", "Organisation" },
+                                    new() { "Conference." + Glo.Tab.RECURRENCE_ID,
+                                            "Connection." + Glo.Tab.CONFERENCE_ID,
+                                            "Organisation." + Glo.Tab.DIAL_NO },
+                                    new() { "Recurrence." + Glo.Tab.RECURRENCE_ID,
+                                            "Conference." + Glo.Tab.CONFERENCE_ID,
+                                            "Connection." + Glo.Tab.DIAL_NO },
+                                    new() { "LEFT", "LEFT", "LEFT" },
+                                    new() { "Recurrence." + Glo.Tab.RECURRENCE_ID,
+                                            "Recurrence." + Glo.Tab.RECURRENCE_NAME}, new() { "", "" },
+                                    selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
+                                    new(), new());
+            req.autoConfIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);
+            req.autoRecIdPrefix = wide || selectColumns.Contains("Recurrence." + Glo.Tab.RECURRENCE_ID);
+
+            List<string?> colNames = new();
+            List<List<object?>> rows = new();
+            if (App.SendSelectRequest(req, out colNames, out rows))
+            {
+                lastRecurrenceSearchSelectCount = selectColumns.Count;
+                lastSearchWide = true;
+                PopulateRecurrencesFromSelect(colNames, rows);
+                recurrenceSelectRequest = req;
+            }
+            else
+                SetStatusBar();
+        }
+        private void PopulateRecurrencesFromSelect(List<string?> colNames, List<List<object?>> rows)
+        {
+            dtgResults.identity = 8;
+            dtgResults.Update(colNames, rows);
+
+            if (lastSearchWide)
+                SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1);
+            else
+                SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount);
+        }
+
         // Wide search on either enter or click.
         private void WideSearch(int identity)
         {
@@ -560,7 +674,7 @@ namespace BridgeOpsClient
                 nameReversals = ColumnRecord.resourceFriendlyNameReversal;
             }
 
-            if (identity != 7) // Conference searches are a tad more complicated.
+            if (identity != 7 && identity != 8) // Conference and recurrence searches are a tad more complicated.
             {
                 // Error message is displayed by App.SelectAll() if something goes wrong.
                 List<string?> columnNames;
@@ -582,12 +696,16 @@ namespace BridgeOpsClient
             }
             else
             {
-                SearchConferences(true);
+                if (identity == 7)
+                    SearchConferences(true);
+                else if (identity == 8)
+                    SearchRecurrences(true);
             }
         }
         private void btnWideSearch_Click(object sender, RoutedEventArgs e)
         {
             int identity = cmbTable.SelectedIndex;
+            // This is because some identities aren't used in the table select and only for data grid column layouts.
             if (identity > 2)
                 identity += 4;
 
@@ -596,6 +714,7 @@ namespace BridgeOpsClient
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
             int identity = cmbTable.SelectedIndex;
+            // This is because some identities aren't used in the table select and only for data grid column layouts.
             if (identity > 2)
                 identity += 4;
 

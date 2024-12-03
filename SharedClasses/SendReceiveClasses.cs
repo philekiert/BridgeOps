@@ -2495,6 +2495,10 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public List<string> orderBy;
         public List<bool> orderByAsc;
 
+        // Some conference or recurrence searches want to automatically account for C- or R-.
+        public bool? autoConfIdPrefix = null;
+        public bool? autoRecIdPrefix = null;
+
         public SelectRequest(string sessionID, int columnRecordID,
                              string table, bool distinct,
                              List<string> joinTables,
@@ -2543,6 +2547,29 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                 whereOperators.Clear();
             SqlAssist.SecureValue(whereValues);
             SqlAssist.SecureColumn(orderBy);
+
+            // Conference and Resource IDs need some special attention.
+            if (whereValues.Count > 0)
+            {
+                if ((table == "Conference" || joinTables.Contains("Conference")) && autoConfIdPrefix == true)
+                {
+                    int idCol = whereColumns.IndexOf(Glo.Tab.CONFERENCE_ID);
+                    whereValues.Add("%" + whereValues[idCol == -1 ? 0 : idCol] + "%");
+                    whereColumns.Add($"'C-' + CAST(Conference.{Glo.Tab.CONFERENCE_ID} AS VARCHAR(MAX))");
+                    whereAndOrs.Add("OR");
+                    whereOperators.Add("LIKE");
+                    whereValueTypesNeedQuotes.Add(true);
+                }
+                if ((table == "Recurrence" || joinTables.Contains("Recurrence")) && autoRecIdPrefix == true)
+                {
+                    int idCol = whereColumns.IndexOf(Glo.Tab.RECURRENCE_ID);
+                    whereValues.Add("%" + whereValues[idCol == -1 ? 0 : idCol] + "%");
+                    whereColumns.Add($"'R-' + CAST(Recurrence.{Glo.Tab.RECURRENCE_ID} AS VARCHAR(MAX))");
+                    whereAndOrs.Add("OR");
+                    whereOperators.Add("LIKE");
+                    whereValueTypesNeedQuotes.Add(true);
+                }
+            }
         }
 
         public bool Validate()

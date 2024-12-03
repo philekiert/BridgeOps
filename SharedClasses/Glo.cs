@@ -326,6 +326,9 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_CREATION_TIME ||
                      column == Glo.Tab.CONFERENCE_EDIT_LOGIN ||
                      column == Glo.Tab.CONFERENCE_EDIT_TIME)) ||
+                  (table == "Recurrence" &&
+                    (column == Glo.Tab.RECURRENCE_ID ||
+                     column == Glo.Tab.RECURRENCE_NAME)) ||
                    (table == "Login" &&
                     (column == Glo.Tab.LOGIN_ID ||
                      column == Glo.Tab.LOGIN_USERNAME ||

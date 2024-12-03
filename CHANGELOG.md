@@ -1,6 +1,18 @@
 # Changelog
   
   
+## 0.6.4
+### Added
+- The ability to add a conference to an existing recurrence from the conference booking window.
+- Added the following search options:
+  - Conference by conference ID
+  - Recurrence by organisation information such as dial number or reference
+  - Recurrence by conference ID
+  - Recurrence by recurrence ID
+### Fixed
+- Disallowed renaming of recurrence columns, as this stopped some application functions working properly.
+  
+  
 ## 0.6.3
 ### Added
 - Client
