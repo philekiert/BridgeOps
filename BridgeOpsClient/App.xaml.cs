@@ -61,6 +61,17 @@ namespace BridgeOpsClient
             }
             catch { return false; }
         }
+        public static bool DisplayQuestion(string error, string title, DialogWindows.DialogBox.Buttons buttons,
+                                           Window owner)
+        {
+            try
+            {
+                DialogWindows.DialogBox dialog = new(error, title, buttons);
+                dialog.Owner = owner;
+                return dialog.ShowDialog() == true;
+            }
+            catch { return false; }
+        }
         public static bool DeleteConfirm(bool multiple)
         {
             try
