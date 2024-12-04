@@ -412,5 +412,13 @@ namespace BridgeOpsClient
                 App.DisplayError("Could not load RPT Exporter.exe");
             }
         }
+
+        private void CustomWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (App.Current.Windows.Count > 1 &&
+                !App.DisplayQuestion("Are you sure you wish to log out?",
+                                     "Closing Application", DialogWindows.DialogBox.Buttons.YesNo))
+                e.Cancel = true;
+        }
     }
 }

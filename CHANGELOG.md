@@ -9,6 +9,7 @@
   - Recurrence by organisation information such as dial number or reference
   - Recurrence by conference ID
   - Recurrence by recurrence ID
+- A logout warning on closing the application when there are other windows open other than the main window.
 ### Fixed
 - Disallowed renaming of recurrence columns, as this stopped some application functions working properly.
   
