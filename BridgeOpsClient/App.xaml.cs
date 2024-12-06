@@ -25,6 +25,14 @@ namespace BridgeOpsClient
     {
         public static bool IsLoggedIn { get { return sd.sessionID != ""; } }
 
+        public static Window? GetActiveWindow()
+        {
+            foreach (Window w in App.Current.Windows)
+                if (w.IsActive)
+                    return w;
+            return null;
+        }
+
         public static string ErrorConcat(string error, string additional)
         {
             return additional == "" ? error : $"{error} See error:\n\n{additional}";

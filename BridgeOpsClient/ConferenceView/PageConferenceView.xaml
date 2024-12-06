@@ -168,7 +168,7 @@
                                          MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"/>
             </Grid>
             <GridSplitter Grid.Column="0" Width="5"/>
-            <local:ScheduleView Grid.Column="1" x:Name="schView" Background="White"
+            <local:ScheduleView Grid.Column="1" x:Name="schView" Background="#eee"
                                 MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
                                 PreviewMouseWheel="schView_PreviewMouseWheel"

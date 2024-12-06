@@ -138,16 +138,34 @@ namespace BridgeOpsClient
             penCursor = new Pen(brsCursor, 1.4);
             brsStylus = new SolidColorBrush(Color.FromArgb(100, 0, 0, 0));
             brsStylusFade = new LinearGradientBrush(Color.FromArgb(100, 0, 0, 0), Color.FromArgb(0, 0, 0, 0), 90);
-            Color clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConference"];
-            Color clrCancelled = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCancelled"];
-            Color clrFailed = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceFailed"];
-            Color clrTest = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceTest"];
-            Color clrEnded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceEnded"];
-            Color clrDegraded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceDegraded"];
-            Color clrNoShow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceNoShow"];
-            Color clrOverflow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWarning"];
-            Color clrOverflowCheck = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCheck"];
-            Color clrWeekend = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWeekend"];
+
+            // Annoying that these have to be initialised in a try/catch block, but this is to resolve an annoying
+            // hiccup in the WPF designer due to Application.Current being unavailable until runtime.
+            Color clrConference = new();
+            Color clrCancelled = new();
+            Color clrFailed = new();
+            Color clrTest = new();
+            Color clrEnded = new();
+            Color clrDegraded = new();
+            Color clrNoShow = new();
+            Color clrOverflow = new();
+            Color clrOverflowCheck = new();
+            Color clrWeekend = new();
+            try
+            {
+                clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConference"];
+                clrCancelled = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCancelled"];
+                clrFailed = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceFailed"];
+                clrTest = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceTest"];
+                clrEnded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceEnded"];
+                clrDegraded = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceDegraded"];
+                clrNoShow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceNoShow"];
+                clrOverflow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWarning"];
+                clrOverflowCheck = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCheck"];
+                clrWeekend = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWeekend"];
+            }
+            catch
+            { }
 
             // Conference
             brsConferenceSolid = new SolidColorBrush(clrConference);
