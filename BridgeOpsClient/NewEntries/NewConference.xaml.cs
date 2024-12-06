@@ -628,7 +628,6 @@ namespace BridgeOpsClient
 
         public bool SingleDay { get { return dtpStart.GetDate() == dtpEnd.GetDate(); } }
         public const double CrossDayPreferredWidth = 1100;
-        bool toggleDatesOverride = false;
         private void ToggleConnectionDates(object? sender, SelectionChangedEventArgs? e)
         {
             bool singleDay = true;

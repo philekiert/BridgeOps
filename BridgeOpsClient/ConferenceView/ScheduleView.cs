@@ -59,6 +59,7 @@ namespace BridgeOpsClient
         Pen penCursor;
         Brush brsStylus;
         LinearGradientBrush brsStylusFade;
+        Brush brsBackground;
         Brush brsConference;
         Brush brsConferenceBorder;
         Brush brsConferenceHover;
@@ -141,6 +142,7 @@ namespace BridgeOpsClient
 
             // Annoying that these have to be initialised in a try/catch block, but this is to resolve an annoying
             // hiccup in the WPF designer due to Application.Current being unavailable until runtime.
+            Color clrBackground = new();
             Color clrConference = new();
             Color clrCancelled = new();
             Color clrFailed = new();
@@ -153,6 +155,7 @@ namespace BridgeOpsClient
             Color clrWeekend = new();
             try
             {
+                clrBackground = (Color)Application.Current.Resources.MergedDictionaries[0]["colorBackgroundSchedule"];
                 clrConference = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConference"];
                 clrCancelled = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCancelled"];
                 clrFailed = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceFailed"];
@@ -166,6 +169,7 @@ namespace BridgeOpsClient
             }
             catch
             { }
+            brsBackground = new SolidColorBrush(clrBackground);
 
             // Conference
             brsConferenceSolid = new SolidColorBrush(clrConference);
@@ -353,7 +357,7 @@ namespace BridgeOpsClient
                 DateTime now = DateTime.Now;
 
                 // Background
-                dc.DrawRectangle(Brushes.White, new Pen(Brushes.LightGray, 1),
+                dc.DrawRectangle(brsBackground, new Pen(Brushes.LightGray, 1),
                                  new Rect(0d, .5d, ActualWidth - .5d, ActualHeight - .5d));
 
                 // Reduce zoom sensitivity the further out you get.
@@ -364,7 +368,6 @@ namespace BridgeOpsClient
                 double maxLineDepth = MaxLineDepth(zoomResourceDisplay);
 
                 // Prepare shades and brushes.
-
                 double shadeFive = (zoomTimeDisplay - 65) / 700f;
                 MathHelper.Clamp(ref shadeFive, 0f, .075f);
                 shadeFive *= 255f;

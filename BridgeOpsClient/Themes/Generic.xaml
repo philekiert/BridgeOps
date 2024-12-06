@@ -69,6 +69,7 @@
     <SolidColorBrush x:Key="brushStatusBarBorder" Color="{StaticResource colorStatusBarBorder}"/>
 
     <!-- Conferencing -->
+    <Color x:Key="colorBackgroundSchedule">#f3f4f6</Color>
     <Color x:Key="colorConference">#86AEEA</Color>
     <Color x:Key="colorConferenceCancelled">#DC57B4</Color>
     <Color x:Key="colorConferenceTest">#484b6a</Color>
@@ -79,6 +80,7 @@
     <Color x:Key="colorConferenceCheck">#32646464</Color>
     <Color x:Key="colorConferenceWarning">#32C04155</Color>
     <Color x:Key="colorConferenceWeekend">#dddedf</Color>
+    <SolidColorBrush x:Key="brushBackgroundSchedule" Color="{StaticResource colorBackgroundSchedule}"/>
     <SolidColorBrush x:Key="brushConference" Color="{StaticResource colorConference}"/>
     <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConference}"/>
     <SolidColorBrush x:Key="brushConferenceTest" Color="{StaticResource colorConferenceTest}"/>
