@@ -92,7 +92,7 @@ namespace BridgeOpsClient
             return false;
         }
 
-        public static bool RowClashConfirm()
+        public static bool RowClashConfirm(Window? owner)
         {
             try
             {
@@ -104,7 +104,7 @@ namespace BridgeOpsClient
             }
             catch { return false; }
         }
-        public static bool DialNoClashConfirm(SelectResult selectRes)
+        public static bool DialNoClashConfirm(SelectResult selectRes, Window? owner)
         {
             try
             {
@@ -120,7 +120,7 @@ namespace BridgeOpsClient
 
 
         }
-        public static bool ResourceOverflowConfirm(SelectResult selectRes)
+        public static bool ResourceOverflowConfirm(SelectResult selectRes, Window? owner)
         {
             try
             {
@@ -1059,7 +1059,7 @@ namespace BridgeOpsClient
                             if (reason == Glo.ROW_CLASH_WARNING)
                             {
                                 returnID = "";
-                                if (RowClashConfirm())
+                                if (RowClashConfirm(owner))
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise,
@@ -1072,7 +1072,7 @@ namespace BridgeOpsClient
                             {
                                 returnID = "";
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DialNoClashConfirm(res))
+                                if (DialNoClashConfirm(res, owner))
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise,
@@ -1085,7 +1085,7 @@ namespace BridgeOpsClient
                             {
                                 returnID = "";
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (ResourceOverflowConfirm(res))
+                                if (ResourceOverflowConfirm(res, owner))
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise,
@@ -1230,7 +1230,7 @@ namespace BridgeOpsClient
                             // user desires.
                             if (reason == Glo.ROW_CLASH_WARNING)
                             {
-                                if (RowClashConfirm())
+                                if (RowClashConfirm(owner))
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise,
@@ -1242,7 +1242,7 @@ namespace BridgeOpsClient
                             else if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DialNoClashConfirm(res))
+                                if (DialNoClashConfirm(res, owner))
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise,
@@ -1254,7 +1254,7 @@ namespace BridgeOpsClient
                             else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (ResourceOverflowConfirm(res))
+                                if (ResourceOverflowConfirm(res, owner))
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise,
@@ -1377,7 +1377,7 @@ namespace BridgeOpsClient
                             // user desires.
                             if (reason == Glo.ROW_CLASH_WARNING)
                             {
-                                if (RowClashConfirm())
+                                if (RowClashConfirm(owner))
                                 {
                                     stream.Close();
                                     return SendUpdate(req, true, overrideDialNoClashes, overrideResourceOverflows,
@@ -1388,7 +1388,7 @@ namespace BridgeOpsClient
                             else if (reason == Glo.DIAL_CLASH_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (DialNoClashConfirm(res))
+                                if (DialNoClashConfirm(res, owner))
                                 {
                                     stream.Close();
                                     return SendUpdate(req, resolveRowClashes, true, overrideResourceOverflows,
@@ -1399,7 +1399,7 @@ namespace BridgeOpsClient
                             else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                             {
                                 SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                if (ResourceOverflowConfirm(res))
+                                if (ResourceOverflowConfirm(res, owner))
                                 {
                                     stream.Close();
                                     return SendUpdate(req, resolveRowClashes, overrideDialNoClashes, true,
@@ -2194,7 +2194,7 @@ namespace BridgeOpsClient
                                 // user desires.
                                 if (reason == Glo.ROW_CLASH_WARNING)
                                 {
-                                    if (RowClashConfirm())
+                                    if (RowClashConfirm(owner))
                                     {
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
@@ -2207,7 +2207,7 @@ namespace BridgeOpsClient
                                 else if (reason == Glo.DIAL_CLASH_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                    if (DialNoClashConfirm(res))
+                                    if (DialNoClashConfirm(res, owner))
                                     {
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
@@ -2220,7 +2220,7 @@ namespace BridgeOpsClient
                                 else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                    if (ResourceOverflowConfirm(res))
+                                    if (ResourceOverflowConfirm(res, owner))
                                     {
                                         stream.Close();
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
@@ -2341,7 +2341,7 @@ namespace BridgeOpsClient
                                 // user desires.
                                 if (reason == Glo.ROW_CLASH_WARNING)
                                 {
-                                    if (RowClashConfirm())
+                                    if (RowClashConfirm(owner))
                                     {
                                         stream.Close();
                                         req.resolveRowClashes = true;
@@ -2352,7 +2352,7 @@ namespace BridgeOpsClient
                                 else if (reason == Glo.DIAL_CLASH_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                    if (DialNoClashConfirm(res))
+                                    if (DialNoClashConfirm(res, owner))
                                     {
                                         stream.Close();
                                         req.overrideDialNoClashes = true;
@@ -2363,7 +2363,7 @@ namespace BridgeOpsClient
                                 else if (reason == Glo.RESOURCE_OVERFLOW_WARNING)
                                 {
                                     SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                    if (ResourceOverflowConfirm(res))
+                                    if (ResourceOverflowConfirm(res, owner))
                                     {
                                         stream.Close();
                                         req.overrideResourceOverflows = true;
