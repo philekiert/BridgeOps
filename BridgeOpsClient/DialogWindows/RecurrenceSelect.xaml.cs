@@ -65,7 +65,7 @@ namespace BridgeOpsClient
                 return;
 
             List<Conference> selReturn;
-            if (!App.SendConferenceSelectRequest(new() { id }, out selReturn))
+            if (!App.SendConferenceSelectRequest(new() { id }, out selReturn, this))
                 return;
             if (selReturn.Count != 1)
                 return;
@@ -84,7 +84,7 @@ namespace BridgeOpsClient
                 duplicates.Add(toClone.CloneForNewInsert(App.sd.sessionID, ColumnRecord.columnRecordID));
             }
 
-            if (App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, duplicates))
+            if (App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, duplicates, this))
                 Close();
         }
 
@@ -110,7 +110,7 @@ namespace BridgeOpsClient
             // Confirm everything is selected for weekly recurrences, if chosen.
             if (cmbChoice.SelectedIndex == 0)
                 if (numWeeks.GetNumber() == null || datWeeklyStart.SelectedDate == null || selectedWeekdays.Count == 0)
-                    return App.Abort(abortMessage);
+                    return App.Abort(abortMessage, this);
                 else
                     startDate = (DateTime)datWeeklyStart.SelectedDate;
 
@@ -119,7 +119,7 @@ namespace BridgeOpsClient
                 if ((datMonthlyStart.SelectedDate == null || numMonths.GetNumber() == null) ||
                     (rdbMonthlyDate.IsChecked != true && rdbMonthlyNth.IsChecked != true) ||
                     (rdbMonthlyDate.IsChecked == true && numMonthlyDate.GetNumber() == null))
-                return App.Abort(abortMessage);
+                return App.Abort(abortMessage, this);
             else
                 startDate = (DateTime)datMonthlyStart.SelectedDate;
 
@@ -129,16 +129,16 @@ namespace BridgeOpsClient
             else if ((rdbEndAfter.IsChecked == true && numEnd.GetNumber() != null))
                 maxOccurrences = (int)numEnd.GetNumber()!;
             else
-                return App.Abort(abortMessage);
+                return App.Abort(abortMessage, this);
 
             DateTime current = startDate; // Start date has to have been assigned going by the above code.
 
             if (startDate <= DateTime.Now.Date)
-                return App.Abort("Duplication can not begin earlier than tomorrow.");
+                return App.Abort("Duplication can not begin earlier than tomorrow.", this);
             if (endDate < startDate)
                 return App.Abort($"Recurrence can not end before it begins, as this would require time-travel " +
                                  $"technology not available in Bridge Manager {Glo.VersionNumber}." +
-                                 $"\n\nCheck for updates before trying again.");
+                                 $"\n\nCheck for updates before trying again.", this);
             // Weekly
             if (cmbChoice.SelectedIndex == 0)
             {

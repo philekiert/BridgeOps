@@ -45,7 +45,7 @@ namespace BridgeOpsClient
         {
             if (dtgOutput.dtg.SelectedItems.Count < 1)
             {
-                App.DisplayError("You must select at least one item to update.");
+                App.DisplayError("You must select at least one item to update.", builderWindow);
                 return;
             }
 
@@ -85,7 +85,7 @@ namespace BridgeOpsClient
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1))
+            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1, App.mainWindow))
                 return;
 
             string table;
@@ -112,7 +112,7 @@ namespace BridgeOpsClient
             else
                 return;
 
-            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true) &&
+            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true, App.mainWindow) &&
                 MainWindow.pageDatabase != null)
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
@@ -320,7 +320,7 @@ namespace BridgeOpsClient
                                     App.SendSelectStatement($"WITH Rows AS (SELECT DISTINCT {tc[1]} AS Col " +
                                                                             $"FROM {tc[0].Substring(2)})\n" +
                                                             $"SELECT Col FROM Rows WHERE Col IS NOT NULL;",
-                                                            out _, out rows);
+                                                            out _, out rows, App.mainWindow);
                                     if (rows.Count > 0)
                                         values.AddRange(rows.Select(s => s[0]!.ToString()!));
                                 }
@@ -379,7 +379,7 @@ namespace BridgeOpsClient
             foreach (Param param in paramList)
             {
                 if (param.value == null)
-                    return App.Abort("Not all parameter values could be read. Run cancelled.");
+                    return App.Abort("Not all parameter values could be read. Run cancelled.", builderWindow);
 
                 string value;
                 if (param.value is string txt)
@@ -395,7 +395,7 @@ namespace BridgeOpsClient
                 else if (param.value is bool boo)
                     value = boo ? "1" : "0";
                 else
-                    return App.Abort("Not all parameter values could be read. Run cancelled.");
+                    return App.Abort("Not all parameter values could be read. Run cancelled.", builderWindow);
 
                 int originalLength = input.Length;
                 input = input.Remove(param.start - lengthMod, param.length);
@@ -418,7 +418,7 @@ namespace BridgeOpsClient
             if (!InsertParameters(txtStatement.Text, out final, tabItem == null ? null : tabItem.Header.ToString()))
                 return false;
 
-            if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes))
+            if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes, App.mainWindow))
                 return false;
 
             HashSet<int> dateCols = new();
@@ -469,7 +469,7 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
+                App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message, builderWindow);
                 SetStatusBar();
                 return false;
             }
@@ -515,11 +515,11 @@ namespace BridgeOpsClient
                 return;
 
             if (relevantTable == RelevantTable.Organisation)
-                App.EditOrganisation(dtgOutput.GetCurrentlySelectedID());
+                App.EditOrganisation(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Asset)
-                App.EditAsset(dtgOutput.GetCurrentlySelectedID());
+                App.EditAsset(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Contact)
-                App.EditContact(dtgOutput.GetCurrentlySelectedID());
+                App.EditContact(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Conference)
             {
                 int id;
@@ -536,7 +536,7 @@ namespace BridgeOpsClient
                 editRec.Show();
             }
             else if (relevantTable == RelevantTable.Resource)
-                App.EditResource(dtgOutput.GetCurrentlySelectedID());
+                App.EditResource(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
         }
     }
 }

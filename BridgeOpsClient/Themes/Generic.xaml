@@ -69,7 +69,7 @@
     <SolidColorBrush x:Key="brushStatusBarBorder" Color="{StaticResource colorStatusBarBorder}"/>
 
     <!-- Conferencing -->
-    <Color x:Key="colorBackgroundSchedule">#f3f4f6</Color>
+    <Color x:Key="colorBackgroundSchedule">#f0f0f1</Color>
     <Color x:Key="colorConference">#86AEEA</Color>
     <Color x:Key="colorConferenceCancelled">#DC57B4</Color>
     <Color x:Key="colorConferenceTest">#484b6a</Color>

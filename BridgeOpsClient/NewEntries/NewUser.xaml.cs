@@ -173,59 +173,59 @@ namespace BridgeOpsClient
 
             if (txtUsername.Text == "")
             {
-                App.DisplayError("You must input a value for Username ID");
+                App.DisplayError("You must input a value for Username ID", this);
                 return;
             }
             else if (txtPassword.Password != txtPasswordConfirm.Password)
             {
-                App.DisplayError("Passwords do not match.");
+                App.DisplayError("Passwords do not match.", this);
                 return;
             }
 
 
-            if (App.SendInsert(Glo.CLIENT_NEW_LOGIN, GetLoginFromForm()))
+            if (App.SendInsert(Glo.CLIENT_NEW_LOGIN, GetLoginFromForm(), this))
             {
                 didSomething = true;
                 Close();
             }
             else
-                App.DisplayError("Could not create new user.");
+                App.DisplayError("Could not create new user.", this);
         }
 
         private void btnEdit_Click(object sender, RoutedEventArgs e)
         {
             if (txtUsername.Text == "")
             {
-                App.DisplayError("You must input a value for Username ID");
+                App.DisplayError("You must input a value for Username ID", this);
                 return;
             }
             else if (txtPassword.Password != txtPasswordConfirm.Password)
             {
-                App.DisplayError("Passwords do not match.");
+                App.DisplayError("Passwords do not match.", this);
                 return;
             }
 
-            if (App.SendUpdate(Glo.CLIENT_UPDATE_LOGIN, GetLoginFromForm()))
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_LOGIN, GetLoginFromForm(), this))
             {
                 didSomething = true;
                 Close();
             }
             else
-                App.DisplayError("Could not update user.");
+                App.DisplayError("Could not update user.", this);
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
-            if (App.SendDelete("Login", Glo.Tab.LOGIN_ID, id.ToString(), false))
+            if (App.SendDelete("Login", Glo.Tab.LOGIN_ID, id.ToString(), false, this))
             {
                 didSomething = true;
                 Close();
             }
             else
-                App.DisplayError("Could not delete contact.");
+                App.DisplayError("Could not delete contact.", this);
         }
 
         // Check for changes whenever the user interacts with a control.

@@ -28,7 +28,7 @@ namespace BridgeOpsClient
         {
             if (!int.TryParse(id, out this.id))
             {
-                App.DisplayError("Could not discern resource ID.");
+                App.DisplayError("Could not discern resource ID.", this);
             }
 
             InitializeComponent();
@@ -75,22 +75,22 @@ namespace BridgeOpsClient
             int? rowsAdd = numRowsAdditional.GetNumber();
             if (connCap == null || confCap == null || rowsAdd == null)
             {
-                App.DisplayError("Must input capacity values.");
+                App.DisplayError("Must input capacity values.", this);
                 return;
             }
             if (connCap > connMax || connCap < 1)
             {
-                App.DisplayError("Connection capacity must be between 1 and " + connMax + ".");
+                App.DisplayError("Connection capacity must be between 1 and " + connMax + ".", this);
                 return;
             }
             if (confCap > confMax || confCap < 1)
             {
-                App.DisplayError("Conference capacity must be between 1 and " + confMax + ".");
+                App.DisplayError("Conference capacity must be between 1 and " + confMax + ".", this);
                 return;
             }
             if (rowsAdd > rowsMax || rowsAdd < 0)
             {
-                App.DisplayError("Additional placement rows must be between 0 and " + rowsMax + ".");
+                App.DisplayError("Additional placement rows must be between 0 and " + rowsMax + ".", this);
                 return;
             }
 
@@ -101,17 +101,17 @@ namespace BridgeOpsClient
 
             bool success = false;
             if (id < 0)
-                success = App.SendInsert(Glo.CLIENT_NEW_RESOURCE, nr);
+                success = App.SendInsert(Glo.CLIENT_NEW_RESOURCE, nr, this);
             else
             {
                 nr.resourceID = id;
-                success = App.SendUpdate(Glo.CLIENT_UPDATE_RESOURCE, nr);
+                success = App.SendUpdate(Glo.CLIENT_UPDATE_RESOURCE, nr, this);
             }
 
             if (success)
             {
                 Close();
-                App.PullResourceInformation();
+                App.PullResourceInformation(this);
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(9);
             }
@@ -125,16 +125,16 @@ namespace BridgeOpsClient
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
             if (id < 0)
             {
-                App.DisplayError("Could not discern ID from resource.");
+                App.DisplayError("Could not discern ID from resource.", this);
                 return;
             }
 
-            if (App.SendDelete("Resource", Glo.Tab.RESOURCE_ID, id.ToString(), false))
+            if (App.SendDelete("Resource", Glo.Tab.RESOURCE_ID, id.ToString(), false, this))
             {
                 Close();
                 if (MainWindow.pageDatabase != null)

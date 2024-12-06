@@ -52,7 +52,7 @@ namespace BridgeOpsClient
         {
             if (pwdNew.Password != pwdConfirm.Password)
             {
-                App.DisplayError("New passwords must match.");
+                App.DisplayError("New passwords must match.", this);
                 return;
             }
 
@@ -75,17 +75,17 @@ namespace BridgeOpsClient
                             App.SessionInvalidated();
                             return;
                         case Glo.CLIENT_INSUFFICIENT_PERMISSIONS:
-                            App.DisplayError(App.PERMISSION_DENIED);
+                            App.DisplayError(App.PERMISSION_DENIED, this);
                             return;
                         case Glo.CLIENT_REQUEST_FAILED:
-                            App.DisplayError("Incorrect password.");
+                            App.DisplayError("Incorrect password.", this);
                             return;
                         case Glo.CLIENT_REQUEST_SUCCESS:
-                            App.DisplayError("Password changed successfully.");
+                            App.DisplayError("Password changed successfully.", this);
                             Close();
                             break;
                         default:
-                            App.DisplayError("Something went wrong.");
+                            App.DisplayError("Something went wrong.", this);
                             break;
                     }
                 }

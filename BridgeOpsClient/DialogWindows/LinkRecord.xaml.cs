@@ -53,7 +53,7 @@ namespace BridgeOpsClient
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (App.SelectAll(table, out columnNames, out rows, false))
+            if (App.SelectAll(table, out columnNames, out rows, false, this))
                 dtg.Update(columns, columnNames, rows);
             dtg.CustomDoubleClick += dtg_DoubleClick;
 
@@ -70,7 +70,7 @@ namespace BridgeOpsClient
             // Error message is displayed by App.SelectAll() if something goes wrong.
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (App.SelectAll(table, out columnNames, out rows, false))
+            if (App.SelectAll(table, out columnNames, out rows, false, this))
             {
                 try
                 {

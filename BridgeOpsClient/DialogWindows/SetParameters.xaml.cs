@@ -160,7 +160,7 @@ namespace BridgeOpsClient
         {
             bool Abort(string message)
             {
-                App.DisplayError(this, message);
+                App.DisplayError(message, this);
                 return false;
             }
 

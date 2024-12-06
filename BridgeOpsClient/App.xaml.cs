@@ -11,8 +11,10 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Threading;
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Irony;
 using SendReceiveClasses;
@@ -37,18 +39,18 @@ namespace BridgeOpsClient
         {
             return additional == "" ? error : $"{error} See error:\n\n{additional}";
         }
-        public static void DisplayError(string error) { DisplayError(error, ""); }
-        public static void DisplayError(string error, string title)
-        {
-            try
-            {
-                DialogWindows.DialogBox dialog = new(error, title);
-                dialog.ShowDialog();
-            }
-            catch { }
-        }
-        public static void DisplayError(Window owner, string error) { DisplayError(owner, error, ""); }
-        public static void DisplayError(Window owner, string error, string title)
+        //public static void DisplayError(string error) { DisplayError(error, ""); }
+        //public static void DisplayError(string error, string title)
+        //{
+        //    try
+        //    {
+        //        DialogWindows.DialogBox dialog = new(error, title);
+        //        dialog.ShowDialog();
+        //    }
+        //    catch { }
+        //}
+        public static void DisplayError(string error, Window? owner) { DisplayError(error, "", owner); }
+        public static void DisplayError(string error, string title, Window? owner)
         {
             try
             {
@@ -60,17 +62,8 @@ namespace BridgeOpsClient
         }
         public enum QuestionOptions
         { YesNo, OKCancel }
-        public static bool DisplayQuestion(string error, string title, DialogWindows.DialogBox.Buttons buttons)
-        {
-            try
-            {
-                DialogWindows.DialogBox dialog = new(error, title, buttons);
-                return dialog.ShowDialog() == true;
-            }
-            catch { return false; }
-        }
         public static bool DisplayQuestion(string error, string title, DialogWindows.DialogBox.Buttons buttons,
-                                           Window owner)
+                                           Window? owner)
         {
             try
             {
@@ -80,22 +73,22 @@ namespace BridgeOpsClient
             }
             catch { return false; }
         }
-        public static bool DeleteConfirm(bool multiple)
+        public static bool DeleteConfirm(bool multiple, Window? owner)
         {
             try
             {
                 return DisplayQuestion("Are you sure? It will be impossible to recover " +
                                   $"{(multiple ? "these items." : "this item.")}",
                                    "Confirm Deletion",
-                                   DialogWindows.DialogBox.Buttons.YesNo);
+                                   DialogWindows.DialogBox.Buttons.YesNo, owner);
             }
             catch { return false; }
         }
 
-        // This is a handy function to have, as a lot of other functions display an error and then return false.
-        public static bool Abort(string message)
+        //This is a handy function to have, as a lot of other functions display an error and then return false.
+        public static bool Abort(string message, Window? owner)
         {
-            DisplayError(message);
+            DisplayError(message, owner);
             return false;
         }
 
@@ -195,7 +188,7 @@ namespace BridgeOpsClient
             currentDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
             currentDir = Path.GetDirectoryName(currentDir);
             if (currentDir == null)
-                DisplayError("Could not get working directory for application.");
+                DisplayError("Could not get working directory for application.", mainWindow);
             else
                 Environment.CurrentDirectory = currentDir;
 
@@ -226,14 +219,15 @@ namespace BridgeOpsClient
                 catch
                 {
                     DisplayError("Could not initiate TCP listener. Please check network adapter is enabled and " +
-                                    "reload the application.");
+                                 "reload the application.", mainWindow);
                     Environment.Exit(1);
                 }
             }
             catch
             {
                 DisplayError("Something went wrong when applying the network settings. " +
-                             "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).");
+                             "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).",
+                             GetActiveWindow());
                 sd.SetServerIP("127.0.0.1");
                 sd.portInbound = Glo.PORT_INBOUND_DEFAULT;
                 sd.portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
@@ -297,18 +291,18 @@ namespace BridgeOpsClient
                     int fncByte = stream.ReadByte();
                     if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
                     {
-                        if (!PullColumnRecord())
+                        if (!PullColumnRecord(mainWindow))
                             DisplayError("The column record is out of date, but a new one could not be pulled. " +
-                                            "Logging out.");
+                                            "Logging out.", mainWindow);
                         else
                         {
                             DisplayError("Column record has been updated. It would be advisable to restart the " +
-                                            "application.");
+                                            "application.", mainWindow);
                         }
                     }
                     else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
                     {
-                        PullResourceInformation();
+                        PullResourceInformation(mainWindow);
                     }
                     else if (fncByte == Glo.SERVER_CLIENT_NUDGE)
                     {
@@ -346,7 +340,7 @@ namespace BridgeOpsClient
 
         private void ApplicationExit(object sender, EventArgs e)
         {
-            LogOut();
+            LogOut(mainWindow);
         }
 
         public static string LogIn(string username, string password)
@@ -398,11 +392,11 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool LogOut()
+        public static bool LogOut(Window? owner)
         {
-            return LogOut(sd.loginID);
+            return LogOut(sd.loginID, owner);
         }
-        public static bool LogOut(int loginID) // Used for logging out either self or others.
+        public static bool LogOut(int loginID, Window? owner) // Used for logging out either self or others.
         {
             try
             {
@@ -459,11 +453,11 @@ namespace BridgeOpsClient
                             {
                                 string response = sr.ReadString(stream);
                                 if (response == Glo.CLIENT_LOGOUT_SESSION_NOT_FOUND)
-                                    DisplayError("Could not find this user's session.");
+                                    DisplayError("Could not find this user's session.", owner);
                                 else if (response == Glo.CLIENT_LOGOUT_ACCEPT)
-                                    DisplayError("User logged out successfully");
+                                    DisplayError("User logged out successfully", owner);
                                 else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS.ToString())
-                                    DisplayError("You do not have the required permissions for this action");
+                                    DisplayError("You do not have the required permissions for this action", owner);
                                 else
                                     throw new Exception();
                             }
@@ -488,21 +482,21 @@ namespace BridgeOpsClient
             }
             catch
             {
-                DisplayError("Something went wrong.");
+                DisplayError("Something went wrong.", owner);
                 return false;
             }
         }
 
-        public static string[] GetOrganisationList(out bool successful)
+        public static string[] GetOrganisationList(out bool successful, Window? owner)
         {
             string[]? organisationArray = SelectColumnPrimary("Organisation", Glo.Tab.ORGANISATION_REF,
-                                                              out successful);
+                                                              out successful, owner);
             if (!successful)
                 return new string[0];
 
             if (organisationArray == null)
             {
-                DisplayError("Could not pull organisation list from server.");
+                DisplayError("Could not pull organisation list from server.", owner);
                 successful = false;
                 return new string[0];
             }
@@ -518,25 +512,25 @@ namespace BridgeOpsClient
                 mainWindow.ToggleLogInOut(false);
                 if (mainWindow.IsLoaded)
                     // Specify the owner as the main window, otherwise the user might miss it if called from a timer.
-                    DisplayError((Window)mainWindow,
-                                 "Session is no longer valid. Please copy any unsaved work, then log back in.");
+                    DisplayError("Session is no longer valid. Please copy any unsaved work, then log back in.",
+                                 mainWindow);
             }
 
             // Some methods want to invalidate and then go no further, returning false.
             return false;
         }
 
-        public static bool EditOrganisation(string id)
+        public static bool EditOrganisation(string id, Window? owner)
         {
             int idInt;
             if (!int.TryParse(id, out idInt))
             {
-                DisplayError("Could not discern record ID.");
+                DisplayError("Could not discern record ID.", owner);
                 return false;
             }
 
             bool couldGetOrgList = false;
-            List<string> organisationList = GetOrganisationList(out couldGetOrgList).ToList();
+            List<string> organisationList = GetOrganisationList(out couldGetOrgList, owner).ToList();
             organisationList.Insert(0, "");
             if (!couldGetOrgList)
                 return false;
@@ -548,7 +542,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.ORGANISATION_ID },
                            new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows, true, false))
+                           out columnNames, out rows, true, false, owner))
             {
                 if (rows.Count > 0)
                 {
@@ -562,26 +556,26 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        DisplayError("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.", owner);
                     }
                 }
                 else
-                    DisplayError("Could no longer retrieve record.");
+                    DisplayError("Could no longer retrieve record.", owner);
             }
             return true;
         }
 
-        public static bool EditAsset(string id)
+        public static bool EditAsset(string id, Window? owner)
         {
             int idInt;
             if (!int.TryParse(id, out idInt))
             {
-                DisplayError("Could not discern record ID.");
+                DisplayError("Could not discern record ID.", owner);
                 return false;
             }
 
             bool couldGetOrgList;
-            List<string> organisationList = GetOrganisationList(out couldGetOrgList).ToList();
+            List<string> organisationList = GetOrganisationList(out couldGetOrgList, owner).ToList();
             organisationList.Insert(0, "");
             if (!couldGetOrgList)
                 return false;
@@ -593,7 +587,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.ASSET_ID },
                            new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows, true, false))
+                           out columnNames, out rows, true, false, owner))
             {
                 if (rows.Count > 0)
                 {
@@ -607,16 +601,16 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        DisplayError("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.", owner);
                     }
                 }
                 else
-                    DisplayError("Could no longer retrieve record.");
+                    DisplayError("Could no longer retrieve record.", owner);
             }
             return true;
         }
 
-        public static bool EditContact(string id)
+        public static bool EditContact(string id, Window? owner)
         {
             List<string?> columnNames;
             List<List<object?>> rows;
@@ -625,7 +619,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.CONTACT_ID },
                            new List<string> { id.ToString() },
                            new List<Conditional> { Conditional.Equals },
-                           out columnNames, out rows, true, false))
+                           out columnNames, out rows, true, false, owner))
             {
                 if (rows.Count > 0)
                 {
@@ -638,11 +632,11 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        DisplayError("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.", owner);
                     }
                 }
                 else
-                    DisplayError("Could no longer retrieve record.");
+                    DisplayError("Could no longer retrieve record.", owner);
             }
             return true;
         }
@@ -650,11 +644,12 @@ namespace BridgeOpsClient
         public static bool EditConference(int id, Window? owner)
         {
             List<SendReceiveClasses.Conference> confs;
-            if (SendConferenceSelectRequest(new() { id.ToString() }, out confs))
+            if (SendConferenceSelectRequest(new() { id.ToString() }, out confs, owner))
             {
                 if (confs.Count == 0)
                 {
-                    DisplayError("It appears this conference no longer exists. Perhaps the archives are incomplete?");
+                    DisplayError("It appears this conference no longer exists. Perhaps the archives are incomplete?",
+                                 owner);
                     return false;
                 }
                 else
@@ -679,7 +674,7 @@ namespace BridgeOpsClient
                 return false;
         }
 
-        public static bool EditResource(string id)
+        public static bool EditResource(string id, Window? owner)
         {
             List<List<object?>> rows;
             if (App.Select("Resource",
@@ -687,7 +682,7 @@ namespace BridgeOpsClient
                            new List<string> { Glo.Tab.RESOURCE_ID },
                            new List<string> { id.ToString() },
                            new List<Conditional> { Conditional.Equals },
-                           out _, out rows, true, false))
+                           out _, out rows, true, false, owner))
             {
                 if (rows.Count > 0)
                 {
@@ -700,17 +695,17 @@ namespace BridgeOpsClient
                     }
                     else
                     {
-                        DisplayError("Incorrect number of fields received.");
+                        DisplayError("Incorrect number of fields received.", owner);
                     }
                 }
                 else
-                    DisplayError("Could no longer retrieve resource.");
+                    DisplayError("Could no longer retrieve resource.", owner);
             }
             return true;
         }
 
         static bool columnRecordPulInProgress = false;
-        public static bool PullColumnRecord()
+        public static bool PullColumnRecord(Window? owner)
         {
             if (columnRecordPulInProgress)
                 Thread.Sleep(20);
@@ -737,7 +732,7 @@ namespace BridgeOpsClient
                             }
                             else
                             {
-                                DisplayError("Could not pull column record.");
+                                DisplayError("Could not pull column record.", owner);
                                 return false;
                             }
                         }
@@ -762,7 +757,7 @@ namespace BridgeOpsClient
         }
 
         static bool resourcePullInProgress = false;
-        public static bool PullResourceInformation()
+        public static bool PullResourceInformation(Window? owner)
         {
             if (resourcePullInProgress)
                 Thread.Sleep(20);
@@ -770,7 +765,7 @@ namespace BridgeOpsClient
 
             List<string?> columnNames;
             List<List<object?>> rows;
-            if (SelectAll("Resource", out columnNames, out rows, false))
+            if (SelectAll("Resource", out columnNames, out rows, false, owner))
             {
                 try
                 {
@@ -925,25 +920,26 @@ namespace BridgeOpsClient
             return true;
         }
 
-        public static bool SendInsert(byte fncByte, object toSerialise)
+        public static bool SendInsert(byte fncByte, object toSerialise, Window? owner)
         {
-            return SendInsert(fncByte, toSerialise, false, false, false, out _);
+            return SendInsert(fncByte, toSerialise, false, false, false, out _, owner);
         }
         public static bool SendInsert(byte fncByte, object toSerialise,
                                       bool resolveRowClashes,
-                                      bool overrideDialNoClashes, bool overrideResourceOverflows)
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows, Window? owner)
         {
             return SendInsert(fncByte, toSerialise,
-                              resolveRowClashes, overrideDialNoClashes, overrideResourceOverflows, out _);
+                              resolveRowClashes, overrideDialNoClashes, overrideResourceOverflows, out _, owner);
         }
 
-        public static bool SendInsert(byte fncByte, object toSerialise, out string returnID)
+        public static bool SendInsert(byte fncByte, object toSerialise, out string returnID, Window? owner)
         {
-            return SendInsert(fncByte, toSerialise, false, false, false, out returnID);
+            return SendInsert(fncByte, toSerialise, false, false, false, out returnID, owner);
         }
         public static bool SendInsert(byte fncByte, object toSerialise,
                                       bool resolveRowClashes,
-                                      bool overrideDialNoClashes, bool overrideResourceOverflows, out string returnID)
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows, out string returnID,
+                                      Window? owner)
         {
             // Carry out soft duplicate checks if needed.
             try
@@ -1001,7 +997,7 @@ namespace BridgeOpsClient
 
                     if (columnsToSend.Count > 0 &&
                         !SoftDuplicateCheck(table, "", new(), false,
-                                            columnsToSend, valuesToSend, needsQuotesToSend))
+                                            columnsToSend, valuesToSend, needsQuotesToSend, owner))
                     {
                         returnID = "";
                         return false;
@@ -1010,7 +1006,7 @@ namespace BridgeOpsClient
             }
             catch
             {
-                DisplayError("Soft duplicate check could not be carried out. Cancelling save.");
+                DisplayError("Soft duplicate check could not be carried out. Cancelling save.", owner);
                 returnID = "";
                 return false;
             }
@@ -1049,11 +1045,11 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            DisplayError(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED, owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_FOREIGN_KEY)
                         {
-                            DisplayError("The foreign key could no longer be found.");
+                            DisplayError("The foreign key could no longer be found.", owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
@@ -1067,7 +1063,8 @@ namespace BridgeOpsClient
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise,
-                                                      true, overrideDialNoClashes, overrideResourceOverflows);
+                                                      true, overrideDialNoClashes, overrideResourceOverflows,
+                                                      owner);
                                 }
                                 else return false;
                             }
@@ -1079,7 +1076,8 @@ namespace BridgeOpsClient
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise,
-                                                      resolveRowClashes, true, overrideResourceOverflows);
+                                                      resolveRowClashes, true, overrideResourceOverflows,
+                                                      owner);
                                 }
                                 else return false;
                             }
@@ -1091,12 +1089,13 @@ namespace BridgeOpsClient
                                 {
                                     stream.Close();
                                     return SendInsert(fncByte, toSerialise,
-                                                      resolveRowClashes, overrideDialNoClashes, true);
+                                                      resolveRowClashes, overrideDialNoClashes, true,
+                                                      owner);
                                 }
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not insert new record.", reason));
+                                DisplayError(ErrorConcat("Could not insert new record.", reason), owner);
                         }
                     }
                     returnID = "";
@@ -1114,11 +1113,11 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendUpdate(byte fncByte, object toSerialise)
-        { return SendUpdate(fncByte, toSerialise, false, false, false); }
+        public static bool SendUpdate(byte fncByte, object toSerialise, Window? owner)
+        { return SendUpdate(fncByte, toSerialise, false, false, false, owner); }
         public static bool SendUpdate(byte fncByte, object toSerialise,
                                       bool resolveRowClashes,
-                                      bool overrideDialNoClashes, bool overrideResourceOverflows)
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows, Window? owner)
         {
             // Carry out soft duplicate checks if needed.
             try
@@ -1186,13 +1185,13 @@ namespace BridgeOpsClient
 
                     if (columnsToSend.Count > 0 &&
                         !SoftDuplicateCheck(table, idColumn, new() { id }, false,
-                                            columnsToSend, valuesToSend, needsQuotesToSend))
+                                            columnsToSend, valuesToSend, needsQuotesToSend, owner))
                         return false;
                 }
             }
             catch
             {
-                DisplayError("Soft duplicate check could not be carried out. Cancelling save.");
+                DisplayError("Soft duplicate check could not be carried out. Cancelling save.", owner);
                 return false;
             }
 
@@ -1221,7 +1220,7 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            DisplayError(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED, owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
@@ -1235,7 +1234,8 @@ namespace BridgeOpsClient
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise,
-                                                      true, overrideDialNoClashes, overrideResourceOverflows);
+                                                      true, overrideDialNoClashes, overrideResourceOverflows,
+                                                      owner);
                                 }
                                 else return false;
                             }
@@ -1246,7 +1246,8 @@ namespace BridgeOpsClient
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise,
-                                                      resolveRowClashes, true, overrideResourceOverflows);
+                                                      resolveRowClashes, true, overrideResourceOverflows,
+                                                      owner);
                                 }
                                 else return false;
                             }
@@ -1257,12 +1258,13 @@ namespace BridgeOpsClient
                                 {
                                     stream.Close();
                                     return SendUpdate(fncByte, toSerialise,
-                                                      resolveRowClashes, overrideDialNoClashes, true);
+                                                      resolveRowClashes, overrideDialNoClashes, true,
+                                                      owner);
                                 }
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not update record.", reason));
+                                DisplayError(ErrorConcat("Could not update record.", reason), owner);
                             return false;
                         }
                     }
@@ -1270,7 +1272,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not run table update.");
+                    DisplayError("Could not run table update.", owner);
                     return false;
                 }
                 finally
@@ -1280,12 +1282,12 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendUpdate(UpdateRequest req)
-        { return SendUpdate(req, false, false, false); }
+        public static bool SendUpdate(UpdateRequest req, Window? owner)
+        { return SendUpdate(req, false, false, false, owner); }
         public static bool SendUpdate(UpdateRequest req,
                                       // Only in use for Conference updates:
                                       bool resolveRowClashes,
-                                      bool overrideDialNoClashes, bool overrideResourceOverflows)
+                                      bool overrideDialNoClashes, bool overrideResourceOverflows, Window? owner)
         {
             // Carry out soft duplicate checks if needed.
             try
@@ -1322,17 +1324,17 @@ namespace BridgeOpsClient
                         }
                         message.Append("\n\nAre you sure you wish to proceed?");
                         if (!DisplayQuestion(message.ToString(), "Soft Duplicate Check",
-                                             DialogWindows.DialogBox.Buttons.YesNo))
+                                             DialogWindows.DialogBox.Buttons.YesNo, owner))
                             return false;
                     }
                     else if (!SoftDuplicateCheck(req.table, req.idColumn, req.ids.Cast<string?>().ToList(),
-                                                 req.idQuotes, columnsToSend, valuesToSend, needsQuotesToSend))
+                                                 req.idQuotes, columnsToSend, valuesToSend, needsQuotesToSend, owner))
                         return false;
                 }
             }
             catch
             {
-                DisplayError("Soft duplicate check could not be carried out. Cancelling update.");
+                DisplayError("Soft duplicate check could not be carried out. Cancelling update.", owner);
                 return false;
             }
 
@@ -1361,11 +1363,11 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            DisplayError(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED, owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
                         {
-                            DisplayError("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.", owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
@@ -1378,7 +1380,8 @@ namespace BridgeOpsClient
                                 if (RowClashConfirm())
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, true, overrideDialNoClashes, overrideResourceOverflows);
+                                    return SendUpdate(req, true, overrideDialNoClashes, overrideResourceOverflows,
+                                                      owner);
                                 }
                                 else return false;
                             }
@@ -1388,7 +1391,8 @@ namespace BridgeOpsClient
                                 if (DialNoClashConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, resolveRowClashes, true, overrideResourceOverflows);
+                                    return SendUpdate(req, resolveRowClashes, true, overrideResourceOverflows,
+                                                      owner);
                                 }
                                 else return false;
                             }
@@ -1398,12 +1402,13 @@ namespace BridgeOpsClient
                                 if (ResourceOverflowConfirm(res))
                                 {
                                     stream.Close();
-                                    return SendUpdate(req, resolveRowClashes, overrideDialNoClashes, true);
+                                    return SendUpdate(req, resolveRowClashes, overrideDialNoClashes, true,
+                                                      owner);
                                 }
                                 else return false;
                             }
                             else
-                                DisplayError(ErrorConcat("Could not update record.", reason));
+                                DisplayError(ErrorConcat("Could not update record.", reason), owner);
                             return false;
                         }
                         else throw new Exception();
@@ -1412,7 +1417,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not update record.");
+                    DisplayError("Could not update record.", owner);
                     return false;
                 }
                 finally
@@ -1422,9 +1427,9 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendDelete(string table, string column, string id, bool isString)
-        { return SendDelete(table, column, new List<string>() { id }, isString); }
-        public static bool SendDelete(string table, string column, List<string> ids, bool isString)
+        public static bool SendDelete(string table, string column, string id, bool isString, Window? owner)
+        { return SendDelete(table, column, new List<string>() { id }, isString, owner); }
+        public static bool SendDelete(string table, string column, List<string> ids, bool isString, Window? owner)
         {
             lock (streamLock)
             {
@@ -1447,21 +1452,21 @@ namespace BridgeOpsClient
                         }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
-                            DisplayError(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED, owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
                         {
-                            DisplayError("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.", owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
                             string error = sr.ReadString(stream);
                             if (error.Contains("fk_ConfRecurrence"))
-                                DisplayError("Can not delete a recurrence with conferences still attached.");
+                                DisplayError("Can not delete a recurrence with conferences still attached.", owner);
                             else if (error.Contains("fk_ConfResource"))
-                                DisplayError("Can not delete a resource that currently holds conferences.");
+                                DisplayError("Can not delete a resource that currently holds conferences.", owner);
                             else
-                                DisplayError(ErrorConcat("Could not delete record.", sr.ReadString(stream)));
+                                DisplayError(ErrorConcat("Could not delete record.", sr.ReadString(stream)), owner);
                         }
                         else throw new Exception();
                     }
@@ -1469,7 +1474,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not delete record.");
+                    DisplayError("Could not delete record.", owner);
                     return false;
                 }
                 finally
@@ -1480,7 +1485,8 @@ namespace BridgeOpsClient
         }
 
         public static bool SoftDuplicateCheck(string table, string idColumn, List<string?> ids, bool idNeedsQuotes,
-                                              List<string> columns, List<string?> values, List<bool> needsQuotes)
+                                              List<string> columns, List<string?> values, List<bool> needsQuotes,
+                                              Window? owner)
         {
             lock (streamLock)
             {
@@ -1508,12 +1514,12 @@ namespace BridgeOpsClient
                             }
                             message.Append("\n\nAre you sure you wish to proceed?");
                             return DisplayQuestion(message.ToString(), "Soft Duplicate Check",
-                                                   DialogWindows.DialogBox.Buttons.YesNo);
+                                                   DialogWindows.DialogBox.Buttons.YesNo, owner);
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
                             DisplayError("The SQL query could not be run. See error:\n\n" +
-                                            sr.ReadString(stream));
+                                            sr.ReadString(stream), owner);
                             return false;
                         }
                         else if (response == Glo.CLIENT_SESSION_INVALID)
@@ -1524,7 +1530,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not run soft duplicate check.");
+                    DisplayError("Could not run soft duplicate check.", owner);
                     return false;
                 }
                 finally
@@ -1535,7 +1541,7 @@ namespace BridgeOpsClient
         }
 
         // Returns null if the operation failed, returns an array if successful, empty or otherwise.
-        public static string[]? SelectColumnPrimary(string table, string column, out bool successful)
+        public static string[]? SelectColumnPrimary(string table, string column, out bool successful, Window? owner)
         {
             lock (streamLock)
             {
@@ -1564,7 +1570,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not run or return query.");
+                    DisplayError("Could not run or return query.", owner);
                     successful = false;
                     return null;
                 }
@@ -1576,28 +1582,30 @@ namespace BridgeOpsClient
         }
 
         public static bool SelectAll(string table, out List<string?> columnNames, out List<List<object?>> rows,
-                                     bool historical)
+                                     bool historical, Window? owner)
         {
             return Select(table, new List<string> { "*" }, new(), new(), new(), out columnNames, out rows,
-                          true, historical);
+                          true, historical, owner);
         }
         public static bool SelectAll(string table, string likeColumn, string likeValue, Conditional conditional,
-                                     out List<string?> columnNames, out List<List<object?>> rows, bool historical)
+                                     out List<string?> columnNames, out List<List<object?>> rows, bool historical,
+                                     Window? owner)
         {
             return Select(table, new List<string> { "*" },
                           new List<string> { likeColumn }, new List<string> { likeValue },
                           new List<Conditional> { conditional },
-                          out columnNames, out rows, true, historical);
+                          out columnNames, out rows, true, historical, owner);
         }
         public static bool Select(string table, List<string> select,
-                                  out List<string?> columnNames, out List<List<object?>> rows, bool historical)
+                                  out List<string?> columnNames, out List<List<object?>> rows, bool historical,
+                                  Window? owner)
         {
-            return Select(table, select, new(), new(), new(), out columnNames, out rows, true, historical);
+            return Select(table, select, new(), new(), new(), out columnNames, out rows, true, historical, owner);
         }
         public static bool Select(string table, List<string> select,
                                   List<string> likeColumns, List<string> likeValues, List<Conditional> conditionals,
                                   out List<string?> columnNames, out List<List<object?>> rows,
-                                  bool and, bool historical)
+                                  bool and, bool historical, Window? owner)
         {
             // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
             // the columns must be stated in the correct order when populating the DataInputTable.
@@ -1646,7 +1654,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not run or return query.");
+                        DisplayError("Could not run or return query.", owner);
                         columnNames = new();
                         rows = new();
                         return false;
@@ -1659,11 +1667,12 @@ namespace BridgeOpsClient
             }
         }
         public static bool SendSelectRequest(SelectRequest req,
-                                             out List<string?> columnNames, out List<List<object?>> rows)
-        { return SendSelectRequest(req, out columnNames, out rows, out _); }
+                                             out List<string?> columnNames, out List<List<object?>> rows,
+                                             Window? owner)
+        { return SendSelectRequest(req, out columnNames, out rows, out _, owner); }
         public static bool SendSelectRequest(SelectRequest req,
                                              out List<string?> columnNames, out List<List<object?>> rows,
-                                             out List<string?> columnTypes)
+                                             out List<string?> columnTypes, Window? owner)
         {
             lock (streamLock)
             {
@@ -1695,7 +1704,7 @@ namespace BridgeOpsClient
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
                                 DisplayError("The SQL query could not be run. See error:\n\n" +
-                                             sr.ReadString(stream));
+                                             sr.ReadString(stream), owner);
                                 columnNames = new();
                                 columnTypes = new();
                                 rows = new();
@@ -1707,7 +1716,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not run or return query.");
+                        DisplayError("Could not run or return query.", owner);
                         columnNames = new();
                         columnTypes = new();
                         rows = new();
@@ -1721,11 +1730,12 @@ namespace BridgeOpsClient
             }
         }
         public static bool SendSelectStatement(string statement,
-                                               out List<string?> columnNames, out List<List<object?>> rows)
-        { return SendSelectStatement(statement, out columnNames, out rows, out _); }
+                                               out List<string?> columnNames, out List<List<object?>> rows,
+                                               Window? owner)
+        { return SendSelectStatement(statement, out columnNames, out rows, out _, owner); }
         public static bool SendSelectStatement(string statement,
                                                out List<string?> columnNames, out List<List<object?>> rows,
-                                               out List<string?> columnTypes)
+                                               out List<string?> columnTypes, Window? owner)
         {
             lock (streamLock)
             {
@@ -1759,7 +1769,7 @@ namespace BridgeOpsClient
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
                                 DisplayError("The SQL query could not be run. See error:\n\n" +
-                                             sr.ReadString(stream));
+                                             sr.ReadString(stream), owner);
                                 columnNames = new();
                                 columnTypes = new();
                                 rows = new();
@@ -1771,7 +1781,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not run or return query.");
+                        DisplayError("Could not run or return query.", owner);
                         columnNames = new();
                         columnTypes = new();
                         rows = new();
@@ -1787,7 +1797,7 @@ namespace BridgeOpsClient
 
         public static bool SelectWide(string table, string value,
                                       out List<string?> columnNames, out List<List<object?>> rows,
-                                      bool historical)
+                                      bool historical, Window? owner)
         {
             // For the Organisation, Asset, Conference and Contact tables that allow different column orders,
             // the columns must be stated in the correct order when populating the DataInputTable.
@@ -1831,7 +1841,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not run or return query.");
+                        DisplayError("Could not run or return query.", owner);
                         columnNames = new();
                         rows = new();
                         return false;
@@ -1844,7 +1854,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool LinkContact(string organisationRef, int contactID, bool unlink)
+        public static bool LinkContact(string organisationRef, int contactID, bool unlink, Window? owner)
         {
             lock (streamLock)
             {
@@ -1864,17 +1874,17 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_SESSION_INVALID)
                             return SessionInvalidated();
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                            DisplayError(PERMISSION_DENIED);
+                            DisplayError(PERMISSION_DENIED, owner);
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
-                            DisplayError(sr.ReadString(stream));
+                            DisplayError(sr.ReadString(stream), owner);
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
-                            DisplayError("The record could no longer be found.");
+                            DisplayError("The record could no longer be found.", owner);
                     }
                     return false;
                 }
                 catch
                 {
-                    DisplayError("Could not link or unlink contact to organisation.");
+                    DisplayError("Could not link or unlink contact to organisation.", owner);
                     return false;
                 }
                 finally
@@ -1885,7 +1895,8 @@ namespace BridgeOpsClient
         }
 
         public static bool LinkedContactSelect(string organisationID,
-                                               out List<string?> columnNames, out List<List<object?>> rows)
+                                               out List<string?> columnNames, out List<List<object?>> rows,
+                                               Window? owner)
         {
             lock (streamLock)
             {
@@ -1919,7 +1930,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not run or return query.");
+                    DisplayError("Could not run or return query.", owner);
                     columnNames = new();
                     rows = new();
                     return false;
@@ -1932,12 +1943,12 @@ namespace BridgeOpsClient
         }
 
         public static bool SelectHistory(string table, string id,
-                                         out List<string?> columnNames, out List<List<object?>> rows)
+                                         out List<string?> columnNames, out List<List<object?>> rows, Window? owner)
         {
             int idInt;
             if (!int.TryParse(id, out idInt))
             {
-                DisplayError("Could not run or return history list. ID doesn't appear to be an integer.");
+                DisplayError("Could not run or return history list. ID doesn't appear to be an integer.", owner);
                 columnNames = new();
                 rows = new();
                 return false;
@@ -1974,7 +1985,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not run or return history list.");
+                    DisplayError("Could not run or return history list.", owner);
                     columnNames = new();
                     rows = new();
                     return false;
@@ -1986,7 +1997,8 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool BuildHistorical(string table, string changeID, int recordID, out List<object?> data)
+        public static bool BuildHistorical(string table, string changeID, int recordID, out List<object?> data,
+                                           Window? owner)
         {
             lock (streamLock)
             {
@@ -2052,7 +2064,7 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    DisplayError("Could not run or return historical record.");
+                    DisplayError("Could not run or return historical record.", owner);
                     data = new();
                     return false;
                 }
@@ -2064,7 +2076,8 @@ namespace BridgeOpsClient
         }
 
         public static bool SendConferenceViewSearchRequest(DateTime start, DateTime end,
-                                                           Dictionary<int, PageConferenceView.Conference> confs)
+                                                           Dictionary<int, PageConferenceView.Conference> confs,
+                                                           Window? owner)
         {
             lock (streamLock)
             {
@@ -2122,7 +2135,7 @@ namespace BridgeOpsClient
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
                                 DisplayError("The SQL query could not be run. See error:\n\n" +
-                                                sr.ReadString(stream));
+                                                sr.ReadString(stream), owner);
                                 return false;
                             }
                         }
@@ -2130,7 +2143,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not run or return query.");
+                        DisplayError("Could not run or return query.", owner);
                         return false;
                     }
                     finally
@@ -2146,7 +2159,7 @@ namespace BridgeOpsClient
                                                           List<int> resourceIDs, List<int> resourceRows,
                                                           bool resolveRowClashes,
                                                           bool overrideDialNoClashes,
-                                                          bool overrideResourceOverflows)
+                                                          bool overrideResourceOverflows, Window? owner)
         {
             lock (streamLock)
             {
@@ -2187,7 +2200,7 @@ namespace BridgeOpsClient
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               true, overrideDialNoClashes,
-                                                                              overrideResourceOverflows);
+                                                                              overrideResourceOverflows, owner);
                                     }
                                     else return false;
                                 }
@@ -2200,7 +2213,7 @@ namespace BridgeOpsClient
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               resolveRowClashes, true,
-                                                                              overrideResourceOverflows);
+                                                                              overrideResourceOverflows, owner);
                                     }
                                     else return false;
                                 }
@@ -2213,12 +2226,12 @@ namespace BridgeOpsClient
                                         return SendConferenceQuickMoveRequest(duplicate, conferenceIDs,
                                                                               starts, ends, resourceIDs, resourceRows,
                                                                               resolveRowClashes, overrideDialNoClashes,
-                                                                              true);
+                                                                              true, owner);
                                     }
                                     else return false;
                                 }
                                 else
-                                    DisplayError("Could not carry out move. See error:\n\n" + reason);
+                                    DisplayError("Could not carry out move. See error:\n\n" + reason, owner);
                                 return false;
                             }
                         }
@@ -2226,7 +2239,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not move conference.");
+                        DisplayError("Could not move conference.", owner);
                         return false;
                     }
                     finally
@@ -2238,7 +2251,7 @@ namespace BridgeOpsClient
         }
 
         public static bool SendConferenceSelectRequest(List<string> conferenceIDs,
-                                                       out List<SendReceiveClasses.Conference> confs)
+                                                       out List<SendReceiveClasses.Conference> confs, Window? owner)
         {
             if (conferenceIDs.Count == 0)
             {
@@ -2275,7 +2288,7 @@ namespace BridgeOpsClient
                             else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                             {
                                 DisplayError("The conferences could not be selected. See error:\n\n" +
-                                                sr.ReadString(stream));
+                                                sr.ReadString(stream), owner);
                                 confs = new();
                                 return false;
                             }
@@ -2284,7 +2297,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not run or return conference query.");
+                        DisplayError("Could not run or return conference query.", owner);
                         confs = new();
                         return false;
                     }
@@ -2296,7 +2309,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendConferenceAdjustment(ConferenceAdjustment req)
+        public static bool SendConferenceAdjustment(ConferenceAdjustment req, Window? owner)
         {
             req.sessionID = sd.sessionID;
             req.columnRecordID = ColumnRecord.columnRecordID;
@@ -2332,7 +2345,7 @@ namespace BridgeOpsClient
                                     {
                                         stream.Close();
                                         req.resolveRowClashes = true;
-                                        return SendConferenceAdjustment(req);
+                                        return SendConferenceAdjustment(req, owner);
                                     }
                                     else return false;
                                 }
@@ -2343,7 +2356,7 @@ namespace BridgeOpsClient
                                     {
                                         stream.Close();
                                         req.overrideDialNoClashes = true;
-                                        return SendConferenceAdjustment(req);
+                                        return SendConferenceAdjustment(req, owner);
                                     }
                                     else return false;
                                 }
@@ -2354,19 +2367,19 @@ namespace BridgeOpsClient
                                     {
                                         stream.Close();
                                         req.overrideResourceOverflows = true;
-                                        return SendConferenceAdjustment(req);
+                                        return SendConferenceAdjustment(req, owner);
                                     }
                                     else return false;
                                 }
                                 else
-                                    DisplayError(ErrorConcat("Could not update record.", reason));
+                                    DisplayError(ErrorConcat("Could not update record.", reason), owner);
                             }
                         }
                         throw new Exception();
                     }
                     catch
                     {
-                        DisplayError("Could not run conference adjustment.");
+                        DisplayError("Could not run conference adjustment.", owner);
                         return false;
                     }
                     finally
@@ -2377,7 +2390,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendConnectionSelectRequest(List<string> conferenceIDs, out SelectResult res)
+        public static bool SendConnectionSelectRequest(List<string> conferenceIDs, out SelectResult res, Window? owner)
         {
             lock (streamLock)
             {
@@ -2401,7 +2414,8 @@ namespace BridgeOpsClient
                             SessionInvalidated();
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            DisplayError(ErrorConcat("Could not select connection list.", sr.ReadString(stream)));
+                            DisplayError(ErrorConcat("Could not select connection list.", sr.ReadString(stream)),
+                                         owner);
                             res = new();
                             return false;
                         }
@@ -2409,7 +2423,7 @@ namespace BridgeOpsClient
                     }
                     catch
                     {
-                        DisplayError("Could not select connection list.");
+                        DisplayError("Could not select connection list.", owner);
                         res = new();
                         return false;
                     }
@@ -2501,7 +2515,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool SendJsonObject(byte fncByte, JsonObject jsonObject)
+        public static bool SendJsonObject(byte fncByte, JsonObject jsonObject, Window? owner)
         {
             try
             {
@@ -2532,7 +2546,7 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                DisplayError(ErrorConcat("Unable to send Json Object to agent.", e.Message));
+                DisplayError(ErrorConcat("Unable to send Json Object to agent.", e.Message), owner);
                 return false;
             }
         }
@@ -2544,14 +2558,20 @@ namespace BridgeOpsClient
             if (Application.Current.Windows.Count == 0 ||
                 !Current.Windows.OfType<BridgeOpsClient.MainWindow>().Any())
             {
-                LogOut();
+                LogOut(mainWindow);
                 Environment.Exit(0);
             }
         }
 
-
-        //   C O N F E R E N C I N G
-        //public static 
+        public static Window? GetParentWindow(DependencyObject child)
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            while (parentObject != null && !(parentObject is Window))
+                parentObject = VisualTreeHelper.GetParent(parentObject);
+            if (parentObject == null)
+                return null;
+            return parentObject as Window;
+        }
     }
 
     public class SessionDetails

@@ -168,7 +168,7 @@
                                          MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"/>
             </Grid>
             <GridSplitter Grid.Column="0" Width="5"/>
-            <local:ScheduleView Grid.Column="1" x:Name="schView" Background="#eee"
+            <local:ScheduleView Grid.Column="1" x:Name="schView"
                                 MouseDown="schView_MouseDown" MouseUp="schView_MouseUp"
                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
                                 PreviewMouseWheel="schView_PreviewMouseWheel"
@@ -203,9 +203,10 @@
                     </ContextMenu>
                 </Canvas.ContextMenu>
             </local:ScheduleView>
-            <!-- The order of these elements seems to affect the render order, so the rule has to be here. -->
+            <!-- The order of these elements seems to affect the render order, so the ruler has to be here. -->
             <local:ScheduleRuler Grid.Row="0" x:Name="schRuler" Grid.Column="1" VerticalAlignment="Top" Height="44"
-                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave" MouseEnter="schView_MouseLeave"/>
+                                 MouseMove="schView_MouseMove" MouseLeave="schView_MouseLeave"
+                                 MouseEnter="schView_MouseLeave"/>
             <ScrollBar x:Name="scrollBar" Grid.Row="1" Grid.Column="2"
                            Loaded="scrollBar_Loaded" Scroll="scrollBar_Scroll"
                            SizeChanged="scrollBar_SizeChanged" Margin="0 44 0 0"/>

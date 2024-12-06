@@ -40,7 +40,7 @@ namespace BridgeOpsClient
         {
             if (dtgOutput.dtg.SelectedItems.Count < 1)
             {
-                App.DisplayError("You must select at least one item to update.");
+                App.DisplayError("You must select at least one item to update.", builderWindow);
                 return;
             }
 
@@ -80,7 +80,7 @@ namespace BridgeOpsClient
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1))
+            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1, App.mainWindow))
                 return;
 
             string table;
@@ -107,7 +107,7 @@ namespace BridgeOpsClient
             else
                 return;
 
-            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true) &&
+            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true, App.mainWindow) &&
                 MainWindow.pageDatabase != null)
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
@@ -491,7 +491,7 @@ namespace BridgeOpsClient
 
             bool Abort(string message)
             {
-                App.DisplayError(message);
+                App.DisplayError(message, builderWindow);
                 return false;
             }
 
@@ -668,7 +668,7 @@ namespace BridgeOpsClient
                 if (!useLast)
                     DisplayCode();
                 tabOutput.Focus();
-                App.SendSelectRequest(selectRequest, out columnNames, out rows, out columnTypes);
+                App.SendSelectRequest(selectRequest, out columnNames, out rows, out columnTypes, App.mainWindow);
                 if (columnNames.Count == chosenColumnNames.Count)
                     for (int i = 0; i < columnNames.Count; ++i)
                         columnNames[i] = chosenColumnNames[i];
@@ -724,7 +724,7 @@ namespace BridgeOpsClient
                     }
                     catch (Exception e)
                     {
-                        App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message);
+                        App.DisplayError("Unable to update SqlDataGrid. See error:\n\n" + e.Message, builderWindow);
                         SetStatusBar();
                         return false;
                     }
@@ -781,11 +781,11 @@ namespace BridgeOpsClient
                 return;
 
             if (relevantTable == RelevantTable.Organisation)
-                App.EditOrganisation(dtgOutput.GetCurrentlySelectedID());
+                App.EditOrganisation(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Asset)
-                App.EditAsset(dtgOutput.GetCurrentlySelectedID());
+                App.EditAsset(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Contact)
-                App.EditContact(dtgOutput.GetCurrentlySelectedID());
+                App.EditContact(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Conference)
             {
                 int id;
@@ -802,7 +802,7 @@ namespace BridgeOpsClient
                 editRec.Show();
             }
             else if (relevantTable == RelevantTable.Resource)
-                App.EditResource(dtgOutput.GetCurrentlySelectedID());
+                App.EditResource(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
         }
     }
 }

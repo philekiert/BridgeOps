@@ -134,12 +134,12 @@ namespace BridgeOpsClient
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
         {
             bool successful;
-            string[]? organisationList = App.GetOrganisationList(out successful);
+            string[]? organisationList = App.GetOrganisationList(out successful, this);
             if (!successful)
                 return;
             if (organisationList == null)
             {
-                App.DisplayError("Could not pull organisation list from server.");
+                App.DisplayError("Could not pull organisation list from server.", this);
                 return;
             }
 
@@ -151,12 +151,12 @@ namespace BridgeOpsClient
         private void menuDatabaseNewAsset_Click(object sender, RoutedEventArgs e)
         {
             bool successful;
-            string[]? organisationList = App.GetOrganisationList(out successful);
+            string[]? organisationList = App.GetOrganisationList(out successful, this);
             if (!successful)
                 return;
             if (organisationList == null)
             {
-                App.DisplayError("Could not pull organisation list from server.");
+                App.DisplayError("Could not pull organisation list from server.", this);
                 return;
             }
 
@@ -202,7 +202,7 @@ namespace BridgeOpsClient
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)
         {
             if (App.IsLoggedIn)
-                App.DisplayError("Already logged in as " + App.sd.username + ".");
+                App.DisplayError("Already logged in as " + App.sd.username + ".", this);
             else
             {
                 LogIn logIn = new LogIn(this);
@@ -213,10 +213,10 @@ namespace BridgeOpsClient
         private void menuUserLogOut_Click(object sender, RoutedEventArgs e)
         {
             if (App.IsLoggedIn)
-                App.LogOut();
+                App.LogOut(this);
             else
             {
-                App.DisplayError("Not logged in.");
+                App.DisplayError("Not logged in.", this);
                 // Just to be safe:
                 ToggleLogInOut(false);
             }
@@ -234,11 +234,11 @@ namespace BridgeOpsClient
                                     "settings, such as hidden columns, column orders and columns " +
                                     "widths.\n• Reset pane layout.\n\nYou will need to log back in.",
                                     "Reset View Settings",
-                                    DialogWindows.DialogBox.Buttons.YesNo))
+                                    DialogWindows.DialogBox.Buttons.YesNo, this))
             {
                 // Reset settings before LogOut(), and they will be stored on the database as part of that method.
                 App.us = new UserSettings();
-                App.LogOut();
+                App.LogOut(this);
             }
         }
 
@@ -399,7 +399,7 @@ namespace BridgeOpsClient
         {
             if (!System.IO.File.Exists(rptExporterLocation))
             {
-                App.DisplayError("Unable to locate ./RPT Exporter/RPT Exporter.exe");
+                App.DisplayError("Unable to locate ./RPT Exporter/RPT Exporter.exe", this);
                 return;
             }
 
@@ -409,7 +409,7 @@ namespace BridgeOpsClient
             }
             catch
             {
-                App.DisplayError("Could not load RPT Exporter.exe");
+                App.DisplayError("Could not load RPT Exporter.exe", this);
             }
         }
 
@@ -417,7 +417,7 @@ namespace BridgeOpsClient
         {
             if (App.Current.Windows.Count > 1 &&
                 !App.DisplayQuestion("Are you sure you wish to log out?",
-                                     "Closing Application", DialogWindows.DialogBox.Buttons.YesNo))
+                                     "Closing Application", DialogWindows.DialogBox.Buttons.YesNo, this))
                 e.Cancel = true;
         }
     }

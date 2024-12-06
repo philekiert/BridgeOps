@@ -86,18 +86,18 @@ namespace BridgeOpsClient
             // Function automatically stores the session ID in App if logged in successfully.
             if (result == Glo.CLIENT_LOGIN_ACCEPT)
             {
-                if (App.PullColumnRecord())
+                if (App.PullColumnRecord(this))
                 {
                     // If Main window hasn't opened yet, the buttons will be null. If they aren't and MainWindow is
                     // still starting up, it will toggle the buttons correctly itself.
                     if (mainWindow.menuUserLogIn != null)
                         mainWindow.ToggleLogInOut(true);
 
-                    if (!App.PullResourceInformation())
+                    if (!App.PullResourceInformation(this))
                     {
                         App.DisplayError("Log in was successful, but could not pull resource information. Logging out. " +
-                                        "Please contact the software administrator.");
-                        App.LogOut();
+                                         "Please contact the software administrator.", this);
+                        App.LogOut(this);
                     }
                     else
                     {
@@ -110,8 +110,8 @@ namespace BridgeOpsClient
                 else
                 {
                     App.DisplayError("Log in was successful, but could not pull column record. Logging out. Please " +
-                                    "contact the software administrator.");
-                    App.LogOut();
+                                     "contact the software administrator.", this);
+                    App.LogOut(this);
                 }
 
                 // No need to warn if this fails, it will simply fail and be reset/rebuilt on the user's next logout.
@@ -123,18 +123,18 @@ namespace BridgeOpsClient
             else
             {
                 if (result == Glo.CLIENT_LOGIN_REJECT_USER_INVALID)
-                    App.DisplayError("Username or password invalid.");
+                    App.DisplayError("Username or password invalid.", this);
                 else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DUPLICATE)
                     App.DisplayError("User already logged in. If you believe this to be incorrect, please contact " +
-                                    "the software administrator immediately.");
+                                    "the software administrator immediately.", this);
                 else if (result == Glo.CLIENT_LOGIN_REJECT_IP_DUPLICATE)
                     App.DisplayError("IP address already associated with active session. Please try again in a " +
                                     "minute. If the problem does not resolve itself, contact the software " +
-                                    "administrator.");
+                                    "administrator.", this);
                 else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DISABLED)
-                    App.DisplayError("Account disabled, please speak to your administrator.");   
+                    App.DisplayError("Account disabled, please speak to your administrator.", this);   
                 else
-                    App.DisplayError("Could not connect to Agent.");
+                    App.DisplayError("Could not connect to Agent.", this);
 
                 ToggleNetworkSettings(sender, e);
             }

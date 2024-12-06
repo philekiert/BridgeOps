@@ -119,7 +119,7 @@ namespace BridgeOpsClient
 
             cmbResource.Text = resourceName;
             if (cmbResource.SelectedIndex == -1)
-                App.DisplayError("Could not determine resource name from conference record.");
+                App.DisplayError("Could not determine resource name from conference record.", this);
 
             // Add rows for all connections.
             for (int i = 0; i < conf.connections.Count; ++i)
@@ -497,7 +497,8 @@ namespace BridgeOpsClient
                 foreach (Connection c in connections)
                     if (c.dialNo == connection.txtSearch.Text && c != connection)
                     {
-                        App.DisplayError("Cannot add duplicate dial numbers to a conference.", "Duplicate Dial No");
+                        App.DisplayError("Cannot add duplicate dial numbers to a conference.", "Duplicate Dial No",
+                                         this);
                         return;
                     }
 
@@ -528,7 +529,7 @@ namespace BridgeOpsClient
                                         new() { true, true, false },
                                         new(), new(), new() { "OR", "AND" },
                                         new(), new());
-                App.SendSelectRequest(req, out _, out rows);
+                App.SendSelectRequest(req, out _, out rows, this);
 
                 if (rows.Count == 0 || rows[0].Count != 4)
                 {
@@ -593,7 +594,7 @@ namespace BridgeOpsClient
                 !App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 if (connection.orgId != null)
-                    App.EditOrganisation(connection.orgId.ToString()!);
+                    App.EditOrganisation(connection.orgId.ToString()!, App.mainWindow);
             }
             else
             {
@@ -691,7 +692,7 @@ namespace BridgeOpsClient
         {
             if (cmbResource.Text == "")
             {
-                App.DisplayError("You must select a resource.");
+                App.DisplayError("You must select a resource.", this);
                 return;
             }
 
@@ -708,15 +709,15 @@ namespace BridgeOpsClient
             // Vet all inputs.
 
             if (txtTitle.Text == null || txtTitle.Text == "")
-                return App.Abort("Must enter a conference title.");
+                return App.Abort("Must enter a conference title.", this);
             DateTime? start = dtpStart.GetDateTime();
             if (start == null)
-                return App.Abort("Must select a start date and time.");
+                return App.Abort("Must select a start date and time.", this);
             DateTime? end = dtpEnd.GetDateTime();
             if (end == null)
-                return App.Abort("Must select an end date and time.");
+                return App.Abort("Must select an end date and time.", this);
             if (start >= end)
-                return App.Abort("End time must be greater than the start time.");
+                return App.Abort("End time must be greater than the start time.", this);
             int indexResourceNameSplit = cmbResource.Text.LastIndexOf(' ');
             string resourceName;
             int resourceID = -1;
@@ -726,7 +727,7 @@ namespace BridgeOpsClient
                 resourceName = cmbResource.Text.Remove(indexResourceNameSplit);
                 if (resourceName == "" || !int.TryParse(cmbResource.Text.Substring(indexResourceNameSplit + 1),
                                                                                    out resourceRow))
-                    return App.Abort("Must select a valid resource.");
+                    return App.Abort("Must select a valid resource.", this);
                 --resourceRow; // Row names add 1 to the row number for user readability.
                 bool foundResource = false;
                 foreach (PageConferenceView.ResourceInfo ri in PageConferenceView.resources.Values)
@@ -739,7 +740,7 @@ namespace BridgeOpsClient
                     }
                 }
                 if (!foundResource)
-                    return App.Abort("Must select a valid resource.");
+                    return App.Abort("Must select a valid resource.", this);
             }
 
             // Set the ID as null if we're creating, otherwise use the ID.
@@ -748,7 +749,7 @@ namespace BridgeOpsClient
             if (!edit)
                 conferenceIdNullable = null;
             else if (!int.TryParse(id, out conferenceId))
-                return App.Abort("Could not determine conference ID.");
+                return App.Abort("Could not determine conference ID.", this);
             else
                 conferenceIdNullable = conferenceId;
 
@@ -756,7 +757,7 @@ namespace BridgeOpsClient
             foreach (Connection c in connections)
             {
                 if (c.dialNo == "" || c.txtSearch.Visibility == Visibility.Visible)
-                    return App.Abort("All connection rows must have a dial number selected.");
+                    return App.Abort("All connection rows must have a dial number selected.", this);
 
                 Conference.Connection confC = new Conference.Connection(conferenceIdNullable,
                                                                         c.dialNo, c.orgRef != null,
@@ -773,7 +774,7 @@ namespace BridgeOpsClient
                     confC.disconnected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpDisconnected.GetTime()!.Value.Ticks);
 
                 if (confC.connected != null && confC.disconnected != null && confC.connected >= confC.disconnected)
-                    return App.Abort("Disconnection times must be later than connection times.");
+                    return App.Abort("Disconnection times must be later than connection times.", this);
 
                 conferenceConnections.Add(confC);
             }
@@ -814,9 +815,9 @@ namespace BridgeOpsClient
                     SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.conference, c).type));
 
             if (edit)
-                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference, false, false, false);
+                return App.SendUpdate(Glo.CLIENT_UPDATE_CONFERENCE, conference, false, false, false, this);
             else
-                return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, new List<Conference>() { conference });
+                return App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, new List<Conference>() { conference }, this);
         }
 
         // Don't scroll to fit in the summary button if the user clicks one that extends out of view.
@@ -863,14 +864,14 @@ namespace BridgeOpsClient
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                         new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
                                         Glo.Tab.CONFERENCE_ID, new List<string> { id }, false);
-                if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                if (App.SendUpdate(req, true, true, true, this)) // Override all warnings as we're not moving anything.
                 {
                     MainWindow.RepeatSearches(7);
                     recurrenceID = recID;
                     List<List<object?>> rows;
                     if (App.Select("Recurrence", new() { Glo.Tab.RECURRENCE_NAME },
                                    new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { Conditional.Equals },
-                                   out _, out rows, false, false))
+                                   out _, out rows, false, false, this))
                     {
                         try
                         {
@@ -884,7 +885,7 @@ namespace BridgeOpsClient
                         }
                         catch
                         {
-                            App.DisplayError("Something went wrong. The recurrence can not be found.");
+                            App.DisplayError("Something went wrong. The recurrence can not be found.", this);
                             btnRecurrence.Content = "";
                             btnRecurrence.IsEnabled = false;
                         }

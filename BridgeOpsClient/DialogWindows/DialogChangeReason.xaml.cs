@@ -31,7 +31,7 @@ namespace BridgeOpsClient.DialogWindows
             }
             else
             {
-                App.DisplayError("Relevant table not known.");
+                App.DisplayError("Relevant table not known.", this);
                 DialogResult = false;
                 Close();
             }
@@ -63,7 +63,7 @@ namespace BridgeOpsClient.DialogWindows
             {
                 ChangeReasonUpdate update = new ChangeReasonUpdate(App.sd.sessionID, ColumnRecord.columnRecordID,
                                                                    table, changeID, txtReason.Text);
-                if (App.SendUpdate(Glo.CLIENT_UPDATE_CHANGE_REASON, update))
+                if (App.SendUpdate(Glo.CLIENT_UPDATE_CHANGE_REASON, update, this))
                 {
                     DialogResult = true;
                     Close();
@@ -73,7 +73,7 @@ namespace BridgeOpsClient.DialogWindows
                     DialogResult = false;
                     App.DisplayError("The correction could not be made. It could be that the connection to the agent " +
                                     "has been lost. If this error persists, please contact your software " +
-                                    "administrator.");
+                                    "administrator.", this);
                 }
             }
         }

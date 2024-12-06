@@ -22,7 +22,7 @@ namespace BridgeOpsClient.DialogWindows
         {
             if (ids.Count == 0)
             {
-                App.DisplayError("No conferences selected.");
+                App.DisplayError("No conferences selected.", this);
                 Close();
             }
 
@@ -118,7 +118,7 @@ namespace BridgeOpsClient.DialogWindows
             TimeSpan? length = timLength.GetTime();
 
             if (chkStartTime.IsChecked == true && startTime == null)
-                return App.Abort("Start time is checked, but no time has been entered.");
+                return App.Abort("Start time is checked, but no time has been entered.", this);
             if (chkMove.IsChecked == true)
             {
                 int? weeks = numWeeks.GetNumber();
@@ -129,14 +129,14 @@ namespace BridgeOpsClient.DialogWindows
                 int? minutes = numMinutes.GetNumber();
                 move = new((int)days, hours == null ? 0 : (int)hours, minutes == null ? 0 : (int)minutes, 0);
                 if (move == TimeSpan.Zero)
-                    return App.Abort("Move is checked, but the move amount is 0 or has not been entered.");
+                    return App.Abort("Move is checked, but the move amount is 0 or has not been entered.", this);
                 if (cmbMoveDirection.SelectedIndex == 1)
                     move = -move;
             }
             if (chkEndTime.IsChecked == true && endTime == null)
-                return App.Abort("End time is checked, but no time has been entered.");
+                return App.Abort("End time is checked, but no time has been entered.", this);
             if (chkLength.IsChecked == true && length == null)
-                return App.Abort("Length is checked, but no time has been entered.");
+                return App.Abort("Length is checked, but no time has been entered.", this);
 
             SendReceiveClasses.ConferenceAdjustment req = new();
             req.startTime = startTime;
@@ -148,7 +148,7 @@ namespace BridgeOpsClient.DialogWindows
 
             req.intent = SendReceiveClasses.ConferenceAdjustment.Intent.Times;
 
-            if (App.SendConferenceAdjustment(req))
+            if (App.SendConferenceAdjustment(req, this))
             {
                 // Clear selection to make sure they are cleared from view in case of a particularly large move.
                 foreach (PageConferenceView view in MainWindow.pageConferenceViews)

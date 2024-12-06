@@ -71,7 +71,7 @@ namespace BridgeOpsClient
                                                          Glo.Tab.LOGIN_USERNAME,
                                                          Glo.Tab.LOGIN_ADMIN,
                                                          Glo.Tab.LOGIN_ENABLED },
-                out columnNames, out rows, false))
+                out columnNames, out rows, false, this))
             {
                 columnNames.Add("Status");
                 columnNames[2] = "Type";
@@ -145,7 +145,7 @@ namespace BridgeOpsClient
                                    new() { Glo.Tab.LOGIN_ID },
                                    new() { id.ToString() },
                                    new() { SendReceiveClasses.Conditional.Equals },
-                                   out columnNames, out rows, true, false))
+                                   out columnNames, out rows, true, false, this))
                     {
                         if (rows.Count > 0)
                         {
@@ -159,14 +159,14 @@ namespace BridgeOpsClient
                                     PopulateUserList();
                             }
                             else
-                                App.DisplayError("Incorrect number of fields received.");
+                                App.DisplayError("Incorrect number of fields received.", this);
                         }
                         else
-                            App.DisplayError("Could no longer retrieve record.");
+                            App.DisplayError("Could no longer retrieve record.", this);
                     }
                 }
                 else
-                    App.DisplayError("User ID invalid.");
+                    App.DisplayError("User ID invalid.", this);
             }
         }
 
@@ -190,14 +190,14 @@ namespace BridgeOpsClient
             {
                 if (loginID == App.sd.loginID)
                 {
-                    App.DisplayError("You cannot log yourself out from here.");
+                    App.DisplayError("You cannot log yourself out from here.", this);
                     return;
                 }
-                App.LogOut(loginID);
+                App.LogOut(loginID, this);
                 PopulateUserList();
             }
             else
-                App.DisplayError("You must first select a user to log out.");
+                App.DisplayError("You must first select a user to log out.", this);
         }
 
 
@@ -269,7 +269,7 @@ namespace BridgeOpsClient
 
         private void btnColumnsRefresh_Click(object sender, RoutedEventArgs e)
         {
-            App.PullColumnRecord();
+            App.PullColumnRecord(this);
             PopulateColumnList();
         }
 
@@ -280,7 +280,7 @@ namespace BridgeOpsClient
             ColumnRecord.Column? col = ColumnRecord.GetColumnNullable(table, column);
             if (col == null)
             {
-                App.DisplayError("Something went wrong.");
+                App.DisplayError("Something went wrong.", this);
                 return;
             }
 
@@ -301,20 +301,21 @@ namespace BridgeOpsClient
 
         private void btnColumnRemove_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
             string table = dtgColumns.GetCurrentlySelectedCell(0);
             string column = dtgColumns.GetCurrentlySelectedCell(1);
             if (table == "" || column == "")
             {
-                App.DisplayError("You must first select a column to remove.");
+                App.DisplayError("You must first select a column to remove.", this);
                 return;
             }
 
             if (!Glo.Fun.ColumnRemovalAllowed(table, column))
             {
-                App.DisplayError("This column is integral to the running of the application, and cannot be removed.");
+                App.DisplayError("This column is integral to the running of the application, and cannot be removed.",
+                                 this);
                 return;
             }
 
@@ -342,7 +343,7 @@ namespace BridgeOpsClient
                                                     "There will be no way to retrieve this data, so it is advisable to back " +
                                                     "up the database before making changes that could result in data loss." +
                                                     "\n\nAre you sure you wish to proceed?",
-                                                    "Remove Column", DialogWindows.DialogBox.Buttons.OKCancel))
+                                                    "Remove Column", DialogWindows.DialogBox.Buttons.OKCancel, this))
                             {
                                 stream.WriteByte(Glo.CLIENT_CONFIRM);
                                 if (stream.ReadByte() != Glo.CLIENT_REQUEST_SUCCESS)
@@ -361,24 +362,24 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             // Shouldn't ever arrive here.
-                            App.DisplayError("Only admins can make table modifications.");
+                            App.DisplayError("Only admins can make table modifications.", this);
                             return;
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
                             App.DisplayError("The column could not be removed. See SQL error:\n\n" +
-                                            App.sr.ReadString(stream));
+                                            App.sr.ReadString(stream), this);
                             return;
                         }
                         else
                             throw new Exception();
                     }
                     else
-                        App.DisplayError("Could not create network stream.");
+                        App.DisplayError("Could not create network stream.", this);
                 }
                 catch
                 {
-                    App.DisplayError("Could not run table update.");
+                    App.DisplayError("Could not run table update.", this);
                     return;
                 }
                 finally
@@ -390,7 +391,7 @@ namespace BridgeOpsClient
 
         private void InitiateTableChange()
         {
-            App.PullColumnRecord();
+            App.PullColumnRecord(this);
             PopulateColumnList();
         }
 

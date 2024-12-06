@@ -227,17 +227,17 @@ namespace BridgeOpsClient
         {
             if (cmbTable.Text == "")
             {
-                App.DisplayError("Must select a table.");
+                App.DisplayError("Must select a table.", this);
                 return false;
             }
             if (txtColumnName.IsEnabled == true && txtColumnName.Text.Length == 0)
             {
-                App.DisplayError("Must input a column name.");
+                App.DisplayError("Must input a column name.", this);
                 return false;
             }
             if (cmbType.IsEnabled == true && cmbType.SelectedIndex == -1)
             {
-                App.DisplayError("Must select a column type.");
+                App.DisplayError("Must select a column type.", this);
                 return false;
             }
             if (txtLimit.IsEnabled == true)
@@ -247,18 +247,18 @@ namespace BridgeOpsClient
                 {
                     if (limit < 1)
                     {
-                        App.DisplayError("Max value must be greater than 0.");
+                        App.DisplayError("Max value must be greater than 0.", this);
                         return false;
                     }
                     if (limit > 65535)
                     {
-                        App.DisplayError("Max value must be less than 65536.");
+                        App.DisplayError("Max value must be less than 65536.", this);
                         return false;
                     }
                 }
                 else
                 {
-                    App.DisplayError("Invalid max value.");
+                    App.DisplayError("Invalid max value.", this);
                     return false;
                 }
             }
@@ -331,14 +331,14 @@ namespace BridgeOpsClient
                                                     "change, as if the change is successful, any data loss will be " +
                                                     "irreversible." +
                                                     "\n\nAre you sure you wish to proceed?",
-                                                    "Change Type", DialogWindows.DialogBox.Buttons.OKCancel))
+                                                    "Change Type", DialogWindows.DialogBox.Buttons.OKCancel, this))
                             {
                                 stream.WriteByte(Glo.CLIENT_CONFIRM);
                                 response = stream.ReadByte();
                                 if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                                 {
                                     App.DisplayError("The column could not be removed. See SQL error:\n\n" +
-                                                    App.sr.ReadString(stream));
+                                                    App.sr.ReadString(stream), this);
                                     return;
                                 }
                                 else if (response == Glo.CLIENT_REQUEST_SUCCESS)
@@ -362,24 +362,24 @@ namespace BridgeOpsClient
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
                         {
                             // Shouldn't ever arrive here.
-                            App.DisplayError("Only admins can make table alterations.");
+                            App.DisplayError("Only admins can make table alterations.", this);
                             return;
                         }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
                             App.DisplayError("The table alteration could not be made. See SQL error:\n\n" +
-                                            App.sr.ReadString(stream));
+                                            App.sr.ReadString(stream), this);
                             return;
                         }
                         else
                             throw new Exception();
                     }
                     else
-                        App.DisplayError("Could not create network stream.");
+                        App.DisplayError("Could not create network stream.", this);
                 }
                 catch
                 {
-                    App.DisplayError("Could not run table alteration.");
+                    App.DisplayError("Could not run table alteration.", this);
                     return;
                 }
                 finally

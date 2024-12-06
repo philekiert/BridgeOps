@@ -438,7 +438,7 @@ namespace BridgeOpsClient
         {
             lock (conferenceSearchThreadLock)
                 lock (App.streamLock)
-                    App.SendConferenceViewSearchRequest(searchStart, searchEnd, conferencesUpdate);
+                    App.SendConferenceViewSearchRequest(searchStart, searchEnd, conferencesUpdate, App.mainWindow);
 
             // Clone the updated dictionary into the dictionary list.
             lock (conferenceListLock)
@@ -940,7 +940,8 @@ namespace BridgeOpsClient
                     if (conferenceIDs.Count > 0)
                     {
                         if (!App.SendConferenceQuickMoveRequest(draggingGhosts, conferenceIDs, starts, ends,
-                                                                resourceIDs, resourceRows, true, false, false))
+                                                                resourceIDs, resourceRows, true, false, false,
+                                                                App.mainWindow))
                         {
                             if (wasDraggingResize)
                                 foreach (Conference c in schView.selectedConferences)
@@ -1580,7 +1581,7 @@ namespace BridgeOpsClient
                     ids.Add(c.id);
 
             SelectResult res;
-            if (App.SendConnectionSelectRequest(ids.Select(i => i.ToString()).ToList(), out res))
+            if (App.SendConnectionSelectRequest(ids.Select(i => i.ToString()).ToList(), out res, App.mainWindow))
             {
                 string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
                                             (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
@@ -1602,7 +1603,7 @@ namespace BridgeOpsClient
                 ca.ids = ids;
 
                 // Error will display in the below function if it fails.
-                if (App.SendConferenceAdjustment(ca))
+                if (App.SendConferenceAdjustment(ca, App.mainWindow))
                     MainWindow.RepeatSearches(7);
             }
         }
@@ -1625,8 +1626,8 @@ namespace BridgeOpsClient
                 if (ids.Count == 0)
                     return;
                 schView.selectedConferences.Clear();
-                if (App.DeleteConfirm(ids.Count > 1))
-                    if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false))
+                if (App.DeleteConfirm(ids.Count > 1, App.mainWindow))
+                    if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false, App.mainWindow))
                         MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
@@ -1652,7 +1653,7 @@ namespace BridgeOpsClient
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },
                                         new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
-                if (App.SendUpdate(req))
+                if (App.SendUpdate(req, App.mainWindow))
                     MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
@@ -1679,14 +1680,15 @@ namespace BridgeOpsClient
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
             {
-                App.DisplayError("ID could not be ascertained from the record.");
+                App.DisplayError("ID could not be ascertained from the record.", App.mainWindow);
                 return;
             }
 
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, ids, false);
-            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+            // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true, App.mainWindow))
                 MainWindow.RepeatSearches(7);
         }
 
@@ -1708,7 +1710,8 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, ids, false);
-            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+            // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true, App.mainWindow))
                 MainWindow.RepeatSearches(7);
         }
 
@@ -1755,7 +1758,8 @@ namespace BridgeOpsClient
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                         new() { Glo.Tab.RECURRENCE_ID }, new() { newRec.returnID }, new() { false },
                                         Glo.Tab.CONFERENCE_ID, ids, false);
-                if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                // Override all warnings as we're not moving anything.
+                if (App.SendUpdate(req, true, true, true, App.mainWindow))
                     MainWindow.RepeatSearches(7);
             }
         }
@@ -1803,13 +1807,14 @@ namespace BridgeOpsClient
                         relativePositions.Add(c.id, new(rowsInView[c.id] - topmost, c.start - earliest));
                     }
                 }
-                if (App.SendConferenceSelectRequest(confIDs, out copiedConferences) && copiedConferences.Count == 0)
+                if (App.SendConferenceSelectRequest(confIDs, out copiedConferences, App.mainWindow) &&
+                    copiedConferences.Count == 0)
                 {
                     relativePositions.Clear();
                     throw new();
                 }
             }
-            catch { App.DisplayError("Due to an unknown error, conference could not be copied."); }
+            catch { App.DisplayError("Due to an unknown error, conference could not be copied.", App.mainWindow); }
         }
 
         private void mnuSchedulePaste_Click(object? sender, RoutedEventArgs? e)
@@ -1829,7 +1834,8 @@ namespace BridgeOpsClient
                 ResourceInfo? r = GetResourceFromSelectedRow(startY + relativePositions[conf.conferenceID!.Value].row);
                 if (r == null)
                 {
-                    App.DisplayError("Copied conferences will not fit here as they would extend past the bottom row.");
+                    App.DisplayError("Copied conferences will not fit here as they would extend past the bottom row.",
+                                     App.mainWindow);
                     return;
                 }
 
@@ -1852,7 +1858,7 @@ namespace BridgeOpsClient
                 conferencesToPaste.Add(conf);
             }
 
-            if (App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conferencesToPaste))
+            if (App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, conferencesToPaste, App.mainWindow))
                 MainWindow.RepeatSearches(7);
         }
 

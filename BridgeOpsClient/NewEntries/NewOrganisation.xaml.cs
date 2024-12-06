@@ -1,4 +1,5 @@
 ﻿using BridgeOpsClient.DialogWindows;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
@@ -150,7 +151,7 @@ namespace BridgeOpsClient
             List<List<object?>> rows;
 
             if (App.SelectAll("Asset", Glo.Tab.ORGANISATION_REF, originalRef, Conditional.Equals,
-                              out columnNames, out rows, false))
+                              out columnNames, out rows, false, this))
                 dtgAssets.Update(ColumnRecord.asset, columnNames, rows, Glo.Tab.ORGANISATION_REF);
         }
         public void PopulateContacts()
@@ -162,7 +163,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.LinkedContactSelect(originalRef, out columnNames, out rows))
+            if (App.LinkedContactSelect(originalRef, out columnNames, out rows, this))
                 dtgContacts.Update(ColumnRecord.contact, columnNames, rows, Glo.Tab.CONTACT_ID);
         }
 
@@ -227,7 +228,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.SelectHistory("OrganisationChange", id.ToString(), out columnNames, out rows))
+            if (App.SelectHistory("OrganisationChange", id.ToString(), out columnNames, out rows, this))
             {
                 foreach (List<object?> row in rows)
                     if (row[2] == null)
@@ -246,7 +247,7 @@ namespace BridgeOpsClient
             {
                 if (txtOrgRef.Text == "")
                 {
-                    App.DisplayError($"You must input a value for {lblOrgID.Content}.");
+                    App.DisplayError($"You must input a value for {lblOrgID.Content}.", this);
                     return;
                 }
 
@@ -271,7 +272,7 @@ namespace BridgeOpsClient
                     newOrg.additionalNeedsQuotes.Add(
                         SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.organisation, c).type));
 
-                if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, newOrg))
+                if (App.SendInsert(Glo.CLIENT_NEW_ORGANISATION, newOrg, this))
                 {
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(0);
@@ -283,7 +284,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditOrganisation.disallowed.Count > 0)
                     message = ditOrganisation.disallowed[0];
-                App.DisplayError(message);
+                App.DisplayError(message, this);
             }
         }
 
@@ -293,7 +294,7 @@ namespace BridgeOpsClient
             {
                 if (txtOrgRef.Text == "")
                 {
-                    App.DisplayError("You must input a value for Organisation ID");
+                    App.DisplayError("You must input a value for Organisation ID", this);
                     return;
                 }
 
@@ -364,7 +365,7 @@ namespace BridgeOpsClient
                 if (result != null && result == true)
                 {
                     org.changeReason = reasonDialog.txtReason.Text;
-                    if (App.SendUpdate(Glo.CLIENT_UPDATE_ORGANISATION, org))
+                    if (App.SendUpdate(Glo.CLIENT_UPDATE_ORGANISATION, org, this))
                     {
                         if (MainWindow.pageDatabase != null)
                             MainWindow.pageDatabase.RepeatSearches(0);
@@ -388,16 +389,16 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditOrganisation.disallowed.Count > 0)
                     message = ditOrganisation.disallowed[0];
-                App.DisplayError(message);
+                App.DisplayError(message, this);
             }
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
-            if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id.ToString(), true))
+            if (App.SendDelete("Organisation", Glo.Tab.ORGANISATION_ID, id.ToString(), true, this))
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(0);
@@ -411,7 +412,7 @@ namespace BridgeOpsClient
             string currentID = dtgAssets.GetCurrentlySelectedID();
             if (currentID != "")
             {
-                App.EditAsset(dtgAssets.GetCurrentlySelectedID());
+                App.EditAsset(dtgAssets.GetCurrentlySelectedID(), this);
             }
         }
 
@@ -420,7 +421,7 @@ namespace BridgeOpsClient
         {
             string currentID = dtgContacts.GetCurrentlySelectedID();
             if (currentID != "")
-                App.EditContact(dtgContacts.GetCurrentlySelectedID());
+                App.EditContact(dtgContacts.GetCurrentlySelectedID(), this);
         }
 
         private void btnAssetNew_Click(object sender, RoutedEventArgs e)
@@ -456,7 +457,7 @@ namespace BridgeOpsClient
                                     assetIdInt, null, originalRef, null, new(), new(), new());
             asset.organisationRefChanged = true;
             asset.changeReason = "Added to organisation " + originalRef + ".";
-            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset, this))
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
@@ -471,20 +472,20 @@ namespace BridgeOpsClient
             int assetID;
             if (!int.TryParse(dtgAssets.GetCurrentlySelectedID(), out assetID))
             {
-                App.DisplayError("Could not discern asset ID from record.");
+                App.DisplayError("Could not discern asset ID from record.", this);
                 return;
             }
             Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
                                     assetID, null, null, null, new(), new(), new());
             asset.organisationRefChanged = true;
             asset.changeReason = "Removed from organisation " + originalRef + ".";
-            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset, this))
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
             }
             else
-                App.DisplayError("Could not update specified asset.");
+                App.DisplayError("Could not update specified asset.", this);
         }
 
         private void btnAssetsRefresh_Click(object sender, RoutedEventArgs e)
@@ -509,12 +510,12 @@ namespace BridgeOpsClient
                 if (int.TryParse(newContact.id, out contactID))
                 {
                     // Error message presented by LinkContact() if needed.
-                    App.LinkContact(originalRef, contactID, false);
+                    App.LinkContact(originalRef, contactID, false, this);
                     PopulateContacts();
                 }
                 else
                 {
-                    App.DisplayError("Contact could not be linked to organisation.");
+                    App.DisplayError("Contact could not be linked to organisation.", this);
                 }
             }
             // else the NewContact form was closed without being completed.
@@ -540,7 +541,7 @@ namespace BridgeOpsClient
                 return;
 
             // Error message handled in LinkContact().
-            if (App.LinkContact(originalRef, contactIdInt, false))
+            if (App.LinkContact(originalRef, contactIdInt, false, this))
                 PopulateContacts();
         }
 
@@ -553,13 +554,13 @@ namespace BridgeOpsClient
             int contactIdInt;
             if (contactID == null || !int.TryParse(contactID, out contactIdInt))
             {
-                App.DisplayError("Could not discern contact ID from record.");
+                App.DisplayError("Could not discern contact ID from record.", this);
                 return;
             }
-            if (App.LinkContact(originalRef, contactIdInt, true))
+            if (App.LinkContact(originalRef, contactIdInt, true, this))
                 PopulateContacts();
             else
-                App.DisplayError("Could not update specified asset.");
+                App.DisplayError("Could not update specified asset.", this);
         }
 
         private void btnContactsRefresh_Click(object sender, RoutedEventArgs e)
@@ -602,7 +603,7 @@ namespace BridgeOpsClient
                 return;
 
             // Error message will present itself in BuildHistorical() if needed.
-            if (App.BuildHistorical("Organisation", selectedID, id, out data))
+            if (App.BuildHistorical("Organisation", selectedID, id, out data, this))
             {
                 NewOrganisation viewOrg = new(id, dtgChangeLog.GetCurrentlySelectedCell(1));
                 viewOrg.PopulateExistingData(data);
@@ -646,7 +647,7 @@ namespace BridgeOpsClient
                     GetHistory();
             }
             else
-                App.DisplayError("Please select a change record.");
+                App.DisplayError("Please select a change record.", this);
         }
 
         private void Window_Closed(object sender, EventArgs e)

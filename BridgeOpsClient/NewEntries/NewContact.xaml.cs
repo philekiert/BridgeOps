@@ -120,7 +120,7 @@ namespace BridgeOpsClient
                     nc.additionalNeedsQuotes.Add(
                         SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.contact, c).type));
 
-                if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id))
+                if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id, this))
                 {
                     changeMade = true;
                     // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
@@ -137,7 +137,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditContact.disallowed.Count > 0)
                     message = ditContact.disallowed[0];
-                App.DisplayError(message);
+                App.DisplayError(message, this);
             }
         }
 
@@ -147,7 +147,7 @@ namespace BridgeOpsClient
             if (!int.TryParse(id, out idInt))
             {
                 // This should never trigger as the ID cannot be adjusted, but just to be diligent...
-                App.DisplayError("Contact ID is invalid, cannot edit record.");
+                App.DisplayError("Contact ID is invalid, cannot edit record.", this);
                 return;
             }
             if (ditContact.ScoopValues())
@@ -189,7 +189,7 @@ namespace BridgeOpsClient
                     contact.notesChanged = true;
                 }
 
-                if (App.SendUpdate(Glo.CLIENT_UPDATE_CONTACT, contact))
+                if (App.SendUpdate(Glo.CLIENT_UPDATE_CONTACT, contact, this))
                 {
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(2);
@@ -202,16 +202,16 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditContact.disallowed.Count > 0)
                     message = ditContact.disallowed[0];
-                App.DisplayError(message);
+                App.DisplayError(message, this);
             }
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
-            if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, id, false))
+            if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, id, false, this))
             {
                 changeMade = true;
                 if (MainWindow.pageDatabase != null)

@@ -26,7 +26,7 @@ namespace BridgeOpsClient.DialogWindows
 
             if (ids.Count == 0)
             {
-                App.DisplayError("No conferences selected.");
+                App.DisplayError("No conferences selected.", this);
                 Close();
             }
 
@@ -40,7 +40,7 @@ namespace BridgeOpsClient.DialogWindows
                                         (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
 
             SelectResult res;
-            if (!App.SendConnectionSelectRequest(ids, out res))
+            if (!App.SendConnectionSelectRequest(ids, out res, this))
                 Close();
 
             res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
@@ -56,11 +56,11 @@ namespace BridgeOpsClient.DialogWindows
 
             foreach (Connection c in connections)
                 if (c.dialNo == null || c.txtSearch.Visibility == Visibility.Visible)
-                    return App.Abort("All additions must have a dial number selected.");
+                    return App.Abort("All additions must have a dial number selected.", this);
 
             List<CustomControls.SqlDataGrid.Row> removals = dtgRemove.GetCheckedRows();
             if (connections.Count == 0 && removals.Count == 0)
-                return App.Abort("No changes to be made.");
+                return App.Abort("No changes to be made.", this);
 
             // Assemble connection additions.
             if (connections.Count > 0)
@@ -77,7 +77,7 @@ namespace BridgeOpsClient.DialogWindows
                     req.removals.Add(new((string)row.items[0]!, row.items[1] != null, (bool)row.items[3]! == true));
             }
 
-            if (App.SendConferenceAdjustment(req))
+            if (App.SendConferenceAdjustment(req, this))
             {
                 Close();
                 App.RepeatSearches(7);
@@ -300,7 +300,8 @@ namespace BridgeOpsClient.DialogWindows
                 foreach (Connection c in connections)
                     if (c.dialNo == connection.txtSearch.Text && c != connection)
                     {
-                        App.DisplayError("Cannot add duplicate dial numbers to a conference.", "Duplicate Dial No");
+                        App.DisplayError("Cannot add duplicate dial numbers to a conference.", "Duplicate Dial No",
+                                         this);
                         return;
                     }
 
@@ -331,7 +332,7 @@ namespace BridgeOpsClient.DialogWindows
                                         new() { true, true, false },
                                         new(), new(), new() { "OR", "AND" },
                                         new(), new());
-                App.SendSelectRequest(req, out _, out rows);
+                App.SendSelectRequest(req, out _, out rows, this);
 
                 if (rows.Count == 0 || rows[0].Count != 4)
                 {
@@ -392,7 +393,7 @@ namespace BridgeOpsClient.DialogWindows
                 !App.sd.editPermissions[Glo.PERMISSION_CONFERENCES])
             {
                 if (connection.orgId != null)
-                    App.EditOrganisation(connection.orgId.ToString()!);
+                    App.EditOrganisation(connection.orgId.ToString()!, this);
             }
             else
             {

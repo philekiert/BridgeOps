@@ -92,7 +92,7 @@ namespace BridgeOpsClient
             bool Abort()
             {
                 App.DisplayError("Something went wrong when attempting to retrieve the information for this " +
-                                 "conference group. Closing window.");
+                                 "conference group. Closing window.", this);
                 Close();
                 return false;
             }
@@ -100,7 +100,7 @@ namespace BridgeOpsClient
             List<List<object?>> recurrenceInfoRows;
             if (!App.Select("Recurrence", new() { Glo.Tab.RECURRENCE_NAME, Glo.Tab.NOTES },
                             new() { Glo.Tab.RECURRENCE_ID }, new() { id.ToString() }, new() { Conditional.Equals },
-                            out _, out recurrenceInfoRows, false, false))
+                            out _, out recurrenceInfoRows, false, false, this))
                 return Abort();
 
             if (recurrenceInfoRows[0][0] is string name)
@@ -111,7 +111,7 @@ namespace BridgeOpsClient
             List<List<object?>> confIdSelectRows;
             if (!App.Select("Conference", new() { Glo.Tab.CONFERENCE_ID },
                             new() { Glo.Tab.RECURRENCE_ID }, new() { id.ToString() }, new() { Conditional.Equals },
-                            out _, out confIdSelectRows, false, false))
+                            out _, out confIdSelectRows, false, false, this))
                 return Abort();
 
             List<string> confIDs = new();
@@ -128,7 +128,7 @@ namespace BridgeOpsClient
 
             if (confIDs.Count > 0)
             {
-                if (!App.SendConferenceSelectRequest(confIDs, out conferences))
+                if (!App.SendConferenceSelectRequest(confIDs, out conferences, this))
                     return Abort();
 
                 // If you change the position of cancelled, make sure to udpate it in the ContextMenuOpening function.
@@ -196,7 +196,7 @@ namespace BridgeOpsClient
         {
             if (dtg.dtg.SelectedItems.Count < 1)
             {
-                App.DisplayError("You must select at least one item to update.");
+                App.DisplayError("You must select at least one item to update.", this);
                 return;
             }
 
@@ -224,7 +224,7 @@ namespace BridgeOpsClient
             List<string> ids = dtg.GetCurrentlySelectedIDs();
 
             SelectResult res;
-            if (App.SendConnectionSelectRequest(ids, out res))
+            if (App.SendConnectionSelectRequest(ids, out res, this))
             {
                 string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
                                             (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
@@ -246,14 +246,14 @@ namespace BridgeOpsClient
                 ca.ids = ids.Select(int.Parse).ToList();
 
                 // Error will display in the below function if it fails.
-                if (App.SendConferenceAdjustment(ca))
+                if (App.SendConferenceAdjustment(ca, this))
                     MainWindow.RepeatSearches(7);
             }
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DisplayQuestion("Are you sure sure?", "Cancel", DialogWindows.DialogBox.Buttons.YesNo))
+            if (!App.DisplayQuestion("Are you sure sure?", "Cancel", DialogWindows.DialogBox.Buttons.YesNo, this))
                 return;
 
             try
@@ -265,7 +265,7 @@ namespace BridgeOpsClient
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },
                                         new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
-                if (App.SendUpdate(req))
+                if (App.SendUpdate(req, this))
                     MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
@@ -279,9 +279,9 @@ namespace BridgeOpsClient
                 List<string> ids = dtg.GetCurrentlySelectedIDs();
                 if (ids.Count == 0)
                     return;
-                if (App.DeleteConfirm(ids.Count > 1))
+                if (App.DeleteConfirm(ids.Count > 1, this))
                 {
-                    if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false))
+                    if (App.SendDelete("Conference", Glo.Tab.CONFERENCE_ID, ids, false, this))
                         MainWindow.RepeatSearches(7);
                 }
             }
@@ -301,14 +301,14 @@ namespace BridgeOpsClient
                 requireIdBack = false
             };
 
-            if (App.SendUpdate(Glo.CLIENT_UPDATE_RECURRENCE, r))
+            if (App.SendUpdate(Glo.CLIENT_UPDATE_RECURRENCE, r, this))
             {
-                App.DisplayError("Save successful.");
+                App.DisplayError("Save successful.", this);
                 MainWindow.RepeatSearches(8);
                 MainWindow.RepeatSearches(7);
             }
             else
-                App.DisplayError("Save unsuccessful.");
+                App.DisplayError("Save unsuccessful.", this);
         }
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)
@@ -320,7 +320,7 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, confIDs, false);
-            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true, this)) // Override all warnings as we're not moving anything.
                 MainWindow.RepeatSearches(7);
         }
 
@@ -331,7 +331,7 @@ namespace BridgeOpsClient
             if (int.TryParse(editID, out editIdInt))
                 App.EditConference(editIdInt, this);
             else
-                App.DisplayError("Unable to discern the conference ID from the selected row.");
+                App.DisplayError("Unable to discern the conference ID from the selected row.", this);
         }
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
@@ -346,20 +346,21 @@ namespace BridgeOpsClient
 
             if (lr.ids == null || lr.ids.Count == 0) // Error will display in LinkRecord if it couldn't get the ID.
             {
-                App.DisplayError("IDs could not be ascertained from the selected records.");
+                App.DisplayError("IDs could not be ascertained from the selected records.", this);
                 return;
             }
 
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { id.ToString() }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, lr.ids, false);
-            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.)
+            if (App.SendUpdate(req, true, true, true, this)) // Override all warnings as we're not moving anything.
                 MainWindow.RepeatSearches(7);
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (App.DeleteConfirm(false) && App.SendDelete("Recurrence", Glo.Tab.RECURRENCE_ID, id.ToString(), false))
+            if (App.DeleteConfirm(false, this) &&
+                App.SendDelete("Recurrence", Glo.Tab.RECURRENCE_ID, id.ToString(), false, this))
             {
                 MainWindow.RepeatSearches(8);
                 Close();
@@ -373,7 +374,7 @@ namespace BridgeOpsClient
         {
             string id = dtg.GetCurrentlySelectedID();
             List<Conference> selectResult;
-            if (!App.SendConferenceSelectRequest(new() { id }, out selectResult))
+            if (!App.SendConferenceSelectRequest(new() { id }, out selectResult, this))
                 return;
             if (selectResult.Count != 1)
                 return;

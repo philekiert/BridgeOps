@@ -798,7 +798,7 @@ namespace BridgeOpsClient.CustomControls
         {
             // Save as...
             string fileName;
-            if (!FileExport.GetSaveFileName(out fileName))
+            if (!FileExport.GetSaveFileName(out fileName, App.GetParentWindow(this)))
                 return;
 
             // Create a new workbook.
@@ -852,7 +852,7 @@ namespace BridgeOpsClient.CustomControls
             FileExport.AutoWidthColumns(columnCount, sheet);
 
             // Write file to disk.
-            FileExport.SaveFile(xl, fileName);
+            FileExport.SaveFile(xl, fileName, App.GetParentWindow(this));
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)

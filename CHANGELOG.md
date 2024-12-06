@@ -10,6 +10,8 @@
   - Recurrence by conference ID
   - Recurrence by recurrence ID
 - A logout warning on closing the application when there are other windows open other than the main window.
+### Changed
+- Added a very mild background to the schedule view to stop overlayed windows blending into it so much.
 ### Fixed
 - Disallowed renaming of recurrence columns, as this stopped some application functions working properly.
   

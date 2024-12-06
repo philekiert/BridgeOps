@@ -148,7 +148,7 @@ namespace BridgeOpsClient
             List<string?> columnNames;
             List<List<object?>> rows;
 
-            if (App.SelectHistory("AssetChange", id.ToString(), out columnNames, out rows))
+            if (App.SelectHistory("AssetChange", id.ToString(), out columnNames, out rows, this))
             {
                 foreach (List<object?> row in rows)
                     if (row[2] == null)
@@ -191,7 +191,7 @@ namespace BridgeOpsClient
                     newAsset.additionalNeedsQuotes.Add(
                         SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.asset, c).type));
 
-                if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset))
+                if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset, this))
                 {
                     changeMade = true;
                     if (MainWindow.pageDatabase != null)
@@ -204,7 +204,7 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditAsset.disallowed.Count > 0)
                     message = ditAsset.disallowed[0];
-                App.DisplayError(message);
+                App.DisplayError(message, this);
             }
         }
 
@@ -269,7 +269,7 @@ namespace BridgeOpsClient
                 if (result != null && result == true)
                 {
                     asset.changeReason = reasonDialog.txtReason.Text;
-                    if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset))
+                    if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset, this))
                     {
                         changeMade = true;
                         if (MainWindow.pageDatabase != null)
@@ -283,16 +283,16 @@ namespace BridgeOpsClient
                 string message = "One or more values caused an unknown error to occur.";
                 if (ditAsset.disallowed.Count > 0)
                     message = ditAsset.disallowed[0];
-                App.DisplayError(message);
+                App.DisplayError(message, this);
             }
         }
 
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
-            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id.ToString(), true))
+            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, id.ToString(), true, this))
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
@@ -338,7 +338,7 @@ namespace BridgeOpsClient
                 return;
 
             // Error message will present itself in BuildHistorical() if needed.
-            if (App.BuildHistorical("Asset", selectedID, id, out data))
+            if (App.BuildHistorical("Asset", selectedID, id, out data, this))
             {
                 NewAsset viewAsset = new(id, dtgChangeLog.GetCurrentlySelectedCell(1));
                 viewAsset.PopulateExistingData(data);
@@ -377,7 +377,7 @@ namespace BridgeOpsClient
                     GetHistory();
             }
             else
-                App.DisplayError("Please select a change record.");
+                App.DisplayError("Please select a change record.", this);
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -422,12 +422,12 @@ namespace BridgeOpsClient
                                                new() { Glo.Tab.ORGANISATION_REF },
                                                new() { cmbOrgRef.Text },
                                                new() { Conditional.Equals },
-                                               out _, out rows, false, false) &&
+                                               out _, out rows, false, false, this) &&
                     rows.Count > 0 && rows[0].Count > 0)
                 {
                     if (rows[0][0] is int i)
                     {
-                        App.EditOrganisation(i.ToString());
+                        App.EditOrganisation(i.ToString(), this);
                         return;
                     }
                 }
@@ -435,7 +435,7 @@ namespace BridgeOpsClient
             }
             catch (Exception ex)
             {
-                App.DisplayError(ex.Message);
+                App.DisplayError(ex.Message, this);
                 return;
             }
         }

@@ -10,7 +10,7 @@ namespace BridgeOpsClient
 {
     internal class FileExport
     {
-        public static bool GetSaveFileName(out string fileName)
+        public static bool GetSaveFileName(out string fileName, Window? owner)
         {
             Microsoft.Win32.SaveFileDialog saveDialog = new();
             DateTime now = DateTime.Now;
@@ -25,7 +25,7 @@ namespace BridgeOpsClient
             }
             if (!saveDialog.FileName.EndsWith(".xlsx") && !saveDialog.FileName.EndsWith(".xlsm"))
             {
-                App.DisplayError("Invalid file extension.");
+                App.DisplayError("Invalid file extension.", owner);
                 fileName = "";
                 return false;
             }
@@ -34,7 +34,7 @@ namespace BridgeOpsClient
             return true;
         }
 
-        public static bool SaveFile(XLWorkbook xl, string fileName)
+        public static bool SaveFile(XLWorkbook xl, string fileName, Window? owner)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace BridgeOpsClient
             }
             catch (Exception err)
             {
-                App.DisplayError("Could not save file, see error: " + err.Message);
+                App.DisplayError("Could not save file, see error: " + err.Message, owner);
                 return false;
             }
         }

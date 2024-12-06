@@ -34,7 +34,7 @@ namespace BridgeOpsClient
                 requireIdBack = true
             };
 
-            if (App.SendInsert(Glo.CLIENT_NEW_RECURRENCE, recurrence, out returnID))
+            if (App.SendInsert(Glo.CLIENT_NEW_RECURRENCE, recurrence, out returnID, this))
             {
                 DialogResult = true;
                 Close();

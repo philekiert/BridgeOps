@@ -236,7 +236,8 @@ namespace BridgeOpsClient
             {
                 List<string?> colNames = new();
                 List<List<object?>> rows = new();
-                if (App.SendSelectRequest((SelectRequest)conferenceSelectRequest, out colNames, out rows))
+                if (App.SendSelectRequest((SelectRequest)conferenceSelectRequest, out colNames, out rows,
+                                          App.mainWindow))
                     PopulateConferencesFromSelect(rows);
                 else
                     SetStatusBar();
@@ -245,7 +246,8 @@ namespace BridgeOpsClient
             {
                 List<string?> colNames = new();
                 List<List<object?>> rows = new();
-                if (App.SendSelectRequest((SelectRequest)recurrenceSelectRequest, out colNames, out rows))
+                if (App.SendSelectRequest((SelectRequest)recurrenceSelectRequest, out colNames, out rows,
+                                          App.mainWindow))
                     PopulateRecurrencesFromSelect(colNames, rows);
                 else
                     SetStatusBar();
@@ -255,7 +257,7 @@ namespace BridgeOpsClient
                 List<string?> columnNames;
                 List<List<object?>> rows;
                 if (lastSearchWide && App.SelectWide(table, lastWideValue,
-                                                     out columnNames, out rows, lastSearchHistorical))
+                                                     out columnNames, out rows, lastSearchHistorical, App.mainWindow))
                 {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
                     SetStatusBar(rows.Count, columnNames.Count, -1);
@@ -263,7 +265,7 @@ namespace BridgeOpsClient
                 else if (App.Select(cmbTable.Text,
                                     new List<string> { "*" },
                                     lastSearchColumns, lastSearchValues, lastSearchConditionals,
-                                    out columnNames, out rows, true, lastSearchHistorical))
+                                    out columnNames, out rows, true, lastSearchHistorical, App.mainWindow))
                 {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
                     SetStatusBar(rows.Count, columnNames.Count, lastSearchColumns.Count);
@@ -349,7 +351,7 @@ namespace BridgeOpsClient
                         string colName = (string)((ComboBoxItem)cmbColumn.Items[n]).Content;
                         if (!nameReversals.ContainsKey(colName))
                         {
-                            App.DisplayError("Searched column is not legal.");
+                            App.DisplayError("Searched column is not legal.", App.mainWindow);
                             return;
                         }
 
@@ -368,7 +370,7 @@ namespace BridgeOpsClient
                 if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                                new List<string> { "*" },
                                selectColumns, selectValues, conditionals,
-                               out columnNames, out rows, true, historical))
+                               out columnNames, out rows, true, historical, App.mainWindow))
                 {
                     lastSearchWide = false;
                     lastSearchColumns = selectColumns;
@@ -397,7 +399,8 @@ namespace BridgeOpsClient
                 }
                 catch
                 {
-                    App.DisplayError("Something went wrong. Try reloading the application and searching again.");
+                    App.DisplayError("Something went wrong. Try reloading the application and searching again.",
+                                     App.mainWindow);
                 }
             }
         }
@@ -439,7 +442,7 @@ namespace BridgeOpsClient
                     datTo.SelectedDate < datFrom.SelectedDate)
                 {
                     App.DisplayError("Must select a start and end date when the box is checked." +
-                                     "\n\nThe end date must be prior to the start date.");
+                                     "\n\nThe end date must be prior to the start date.", App.mainWindow);
                     return;
                 }
                 selectColumns.Add("Conference." + Glo.Tab.CONFERENCE_START);
@@ -471,7 +474,7 @@ namespace BridgeOpsClient
 
             List<string?> colNames = new();
             List<List<object?>> rows = new();
-            if (App.SendSelectRequest(req, out colNames, out rows))
+            if (App.SendSelectRequest(req, out colNames, out rows, App.mainWindow))
             {
                 lastConferenceSearchSelectCount = selectColumns.Count;
                 lastSearchWide = true;
@@ -488,9 +491,9 @@ namespace BridgeOpsClient
                 ids.Add(((int)row[0]!).ToString());
             List<Conference> conferences;
 
-            if (!App.SendConferenceSelectRequest(ids, out conferences))
+            if (!App.SendConferenceSelectRequest(ids, out conferences, App.mainWindow))
             {
-                App.DisplayError("Could not complete conference search, please try again.");
+                App.DisplayError("Could not complete conference search, please try again.", App.mainWindow);
                 btnClear_Click(null, null); // Clears the status bars automatically.
                 return;
             }
@@ -615,7 +618,7 @@ namespace BridgeOpsClient
 
             List<string?> colNames = new();
             List<List<object?>> rows = new();
-            if (App.SendSelectRequest(req, out colNames, out rows))
+            if (App.SendSelectRequest(req, out colNames, out rows, App.mainWindow))
             {
                 lastRecurrenceSearchSelectCount = selectColumns.Count;
                 lastSearchWide = true;
@@ -680,7 +683,7 @@ namespace BridgeOpsClient
                 List<string?> columnNames;
                 List<List<object?>> rows;
                 if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Needs changing in RepeatSearch() as well if adjusted.
-                                   out columnNames, out rows, historical))
+                                   out columnNames, out rows, historical, App.mainWindow))
                 {
                     lastSearchWide = true;
                     lastWideValue = txtSearch.Text;
@@ -811,7 +814,7 @@ namespace BridgeOpsClient
         {
             if (dtgResults.dtg.SelectedItems.Count < 1)
             {
-                App.DisplayError("You must select at least one item to update.");
+                App.DisplayError("You must select at least one item to update.", App.mainWindow);
                 return;
             }
 
@@ -861,11 +864,11 @@ namespace BridgeOpsClient
         {
             if (dtgResults.dtg.SelectedItems.Count < 1)
             {
-                App.DisplayError("You must select at least one item to delete.");
+                App.DisplayError("You must select at least one item to delete.", App.mainWindow);
                 return;
             }
 
-            if (!App.DeleteConfirm(dtgResults.dtg.SelectedItems.Count > 1))
+            if (!App.DeleteConfirm(dtgResults.dtg.SelectedItems.Count > 1, App.mainWindow))
                 return;
 
             bool needsQuotes = false; ;
@@ -902,7 +905,7 @@ namespace BridgeOpsClient
                 column = Glo.Tab.RESOURCE_ID;
             }
 
-            if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), needsQuotes) &&
+            if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), needsQuotes, App.mainWindow) &&
                 MainWindow.pageDatabase != null)
                 MainWindow.pageDatabase.RepeatSearches(dtgResults.identity);
         }
@@ -915,11 +918,11 @@ namespace BridgeOpsClient
             if (currentID != "")
             {
                 if (dtgResults.identity == 0)
-                    App.EditOrganisation(currentID);
+                    App.EditOrganisation(currentID, App.mainWindow);
                 if (dtgResults.identity == 1)
-                    App.EditAsset(currentID);
+                    App.EditAsset(currentID, App.mainWindow);
                 if (dtgResults.identity == 2)
-                    App.EditContact(currentID);
+                    App.EditContact(currentID, App.mainWindow);
                 if (dtgResults.identity == 7)
                 {
                     int id;
@@ -936,7 +939,7 @@ namespace BridgeOpsClient
                     editRec.Show();
                 }
                 if (dtgResults.identity == 9)
-                    App.EditResource(currentID);
+                    App.EditResource(currentID, App.mainWindow);
             }
         }
 
@@ -1070,14 +1073,15 @@ namespace BridgeOpsClient
                 List<string> ids = dtgResults.GetCurrentlySelectedIDs();
                 if (ids.Count == 0)
                     return;
-                if (!App.DisplayQuestion("Are you sure sure?", "Cancel", DialogWindows.DialogBox.Buttons.YesNo))
+                if (!App.DisplayQuestion("Are you sure?", "Cancel", DialogWindows.DialogBox.Buttons.YesNo,
+                                         App.mainWindow))
                     return;
 
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                         "Conference", new() { Glo.Tab.CONFERENCE_CANCELLED },
                                         new() { uncancel ? "0" : "1" },
                                         new() { false }, Glo.Tab.CONFERENCE_ID, ids, false);
-                if (App.SendUpdate(req))
+                if (App.SendUpdate(req, App.mainWindow))
                     MainWindow.RepeatSearches(7);
             }
             catch { } // No catch required due to intended inactivity on a conference disappearing and error
@@ -1113,7 +1117,7 @@ namespace BridgeOpsClient
             catch { return; }
 
             SelectResult res;
-            if (App.SendConnectionSelectRequest(ids.Select(i => i.ToString()).ToList(), out res))
+            if (App.SendConnectionSelectRequest(ids.Select(i => i.ToString()).ToList(), out res, App.mainWindow))
             {
                 string dialNoFriendly = ColumnRecord.GetPrintName(Glo.Tab.DIAL_NO,
                                             (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.DIAL_NO]!);
@@ -1135,7 +1139,7 @@ namespace BridgeOpsClient
                 ca.ids = ids;
 
                 // Error will display in the below function if it fails.
-                if (App.SendConferenceAdjustment(ca))
+                if (App.SendConferenceAdjustment(ca, App.mainWindow))
                     MainWindow.RepeatSearches(7);
             }
         }
@@ -1143,7 +1147,7 @@ namespace BridgeOpsClient
         {
             string id = dtgResults.GetCurrentlySelectedID();
             List<Conference> selectResult;
-            if (!App.SendConferenceSelectRequest(new() { id }, out selectResult))
+            if (!App.SendConferenceSelectRequest(new() { id }, out selectResult, App.mainWindow))
                 return;
             if (selectResult.Count != 1)
                 return;
@@ -1175,7 +1179,8 @@ namespace BridgeOpsClient
                 UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                         new() { Glo.Tab.RECURRENCE_ID }, new() { newRec.returnID }, new() { false },
                                         Glo.Tab.CONFERENCE_ID, ids, false);
-                if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+                // Override all warnings as we're not moving anything.
+                if (App.SendUpdate(req, true, true, true, App.mainWindow))
                     MainWindow.RepeatSearches(7);
             }
         }
@@ -1189,14 +1194,15 @@ namespace BridgeOpsClient
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
             {
-                App.DisplayError("ID could not be ascertained from the record.");
+                App.DisplayError("ID could not be ascertained from the record.", App.mainWindow);
                 return;
             }
 
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { lr.id }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, ids, false);
-            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+            // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true, App.mainWindow))
                 MainWindow.RepeatSearches(7);
         }
         private void btnConfRemoveFromRecurrence_Click(object sender, RoutedEventArgs e)
@@ -1208,7 +1214,8 @@ namespace BridgeOpsClient
             UpdateRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID, "Conference",
                                     new() { Glo.Tab.RECURRENCE_ID }, new() { null }, new() { false },
                                     Glo.Tab.CONFERENCE_ID, ids, false);
-            if (App.SendUpdate(req, true, true, true)) // Override all warnings as we're not moving anything.
+            // Override all warnings as we're not moving anything.
+            if (App.SendUpdate(req, true, true, true, App.mainWindow))
                 MainWindow.RepeatSearches(7);
         }
         private void btnConfEditRecurrence_Click(object sender, RoutedEventArgs e)

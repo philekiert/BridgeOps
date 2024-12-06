@@ -21,6 +21,7 @@ using DocumentFormat.OpenXml.Bibliography;
 using System.IO;
 using System.Xml;
 using System.Windows.Markup;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace BridgeOpsClient
 {
@@ -221,7 +222,7 @@ namespace BridgeOpsClient
                 }
                 else
                 {
-                    App.DisplayError("Unable to extract data from tabs.");
+                    App.DisplayError("Unable to extract data from tabs.", this);
                     return;
                 }
             }
@@ -238,7 +239,7 @@ namespace BridgeOpsClient
                 string tabName = ti.Header.ToString()!;
                 if (tabNames.Contains(tabName))
                 {
-                    App.DisplayError("Tabs must have unique names in order to export all as spreadsheet.");
+                    App.DisplayError("Tabs must have unique names in order to export all as spreadsheet.", this);
                     return;
                 }
                 tabNames.Add(tabName);
@@ -265,7 +266,7 @@ namespace BridgeOpsClient
                 }
                 else
                 {
-                    App.DisplayError("Unable to extract data from tabs.");
+                    App.DisplayError("Unable to extract data from tabs.", this);
                     return;
                 }
 
@@ -295,9 +296,9 @@ namespace BridgeOpsClient
 
             // Save as...
             string fileName;
-            if (!FileExport.GetSaveFileName(out fileName))
+            if (!FileExport.GetSaveFileName(out fileName, this))
                 return;
-            FileExport.SaveFile(xl, fileName);
+            FileExport.SaveFile(xl, fileName, this);
         }
 
         private string GetNewPresetName()
@@ -311,7 +312,7 @@ namespace BridgeOpsClient
                     return "";
                 if (!cmbPresets.Items.Contains(nameObject.txtName.Text))
                     break;
-                App.DisplayError("This name is already in use.");
+                App.DisplayError("This name is already in use.", this);
             }
 
             return nameObject.txtName.Text;
@@ -463,7 +464,7 @@ namespace BridgeOpsClient
             }
             catch
             {
-                App.DisplayError("JSON file could not be read. It could be corrupted.");
+                App.DisplayError("JSON file could not be read. It could be corrupted.", this);
             }
 
             tabControl.SelectedIndex = 0;
@@ -474,7 +475,7 @@ namespace BridgeOpsClient
         {
             if (cmbPresets.Text != "<New>" && !savingNew &&
                 !App.DisplayQuestion("Overwrite current preset?", "Save Changes",
-                                     DialogWindows.DialogBox.Buttons.YesNo))
+                                     DialogWindows.DialogBox.Buttons.YesNo, this))
                 return;
 
             JsonObject json = new();
@@ -556,16 +557,16 @@ namespace BridgeOpsClient
                 ++tabIndex;
             }
 
-            if (App.SendJsonObject(Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE, json))
+            if (App.SendJsonObject(Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE, json, this))
             {
                 skipPresetLoad = true;
                 PresetLoad(true);
                 cmbPresets.SelectedItem = name;
                 skipPresetLoad = false;
                 if (savingNew)
-                    App.DisplayError("Saved successfully.");
+                    App.DisplayError("Saved successfully.", this);
                 else
-                    App.DisplayError("Changes saved successfully.");
+                    App.DisplayError("Changes saved successfully.", this);
             }
         }
 
@@ -579,7 +580,7 @@ namespace BridgeOpsClient
                     {
                         if (stream == null)
                         {
-                            App.DisplayError(App.NO_NETWORK_STREAM);
+                            App.DisplayError(App.NO_NETWORK_STREAM, this);
                             return;
                         }
                         stream.WriteByte(Glo.CLIENT_SELECT_BUILDER_PRESET_LOAD);
@@ -621,7 +622,7 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                App.DisplayError(App.ErrorConcat("Could not retrieve preset list.", e.Message));
+                App.DisplayError(App.ErrorConcat("Could not retrieve preset list.", e.Message), this);
             }
         }
 
@@ -680,7 +681,7 @@ namespace BridgeOpsClient
 
         private void btnRemovePreset_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(false))
+            if (!App.DeleteConfirm(false, this))
                 return;
 
             try
@@ -691,7 +692,7 @@ namespace BridgeOpsClient
                     {
                         if (stream == null)
                         {
-                            App.DisplayError(App.NO_NETWORK_STREAM);
+                            App.DisplayError(App.NO_NETWORK_STREAM, this);
                             return;
                         }
                         stream.WriteByte(Glo.CLIENT_SELECT_BUILDER_PRESET_DELETE);
@@ -722,7 +723,7 @@ namespace BridgeOpsClient
             }
             catch (Exception ex)
             {
-                App.DisplayError(App.ErrorConcat("Could not remove the selected preset.", ex.Message));
+                App.DisplayError(App.ErrorConcat("Could not remove the selected preset.", ex.Message), this);
             }
             finally
             {
@@ -746,7 +747,7 @@ namespace BridgeOpsClient
                     {
                         if (stream == null)
                         {
-                            App.DisplayError(App.NO_NETWORK_STREAM);
+                            App.DisplayError(App.NO_NETWORK_STREAM, this);
                             return;
                         }
                         stream.WriteByte(Glo.CLIENT_SELECT_BUILDER_PRESET_RENAME);
@@ -778,7 +779,7 @@ namespace BridgeOpsClient
             }
             catch (Exception ex)
             {
-                App.DisplayError(App.ErrorConcat("Could not rename the selected preset.", ex.Message));
+                App.DisplayError(App.ErrorConcat("Could not rename the selected preset.", ex.Message), this);
             }
         }
 

@@ -167,7 +167,7 @@ namespace BridgeOpsClient
             {
                 // Allowed will always be empty if we get here as the user cannot add an allowed list to core columns.
                 bool couldGetAllowList;
-                allowed = App.GetOrganisationList(out couldGetAllowList).ToList();
+                allowed = App.GetOrganisationList(out couldGetAllowList, this).ToList();
                 if (!couldGetAllowList)
                     Close();
             }
@@ -207,7 +207,7 @@ namespace BridgeOpsClient
 
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            if (AssembleUpdate() && App.SendUpdate(request))
+            if (AssembleUpdate() && App.SendUpdate(request, this))
             {
                 DialogResult = true;
                 if (MainWindow.pageDatabase != null)
@@ -230,7 +230,7 @@ namespace BridgeOpsClient
 
             bool Abort(string message)
             {
-                App.DisplayError(message);
+                App.DisplayError(message, this);
                 return false;
             }
 
