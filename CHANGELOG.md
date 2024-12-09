@@ -10,6 +10,7 @@
   - Recurrence by conference ID
   - Recurrence by recurrence ID
 - A logout warning on closing the application when there are other windows open other than the main window.
+- Conference searches in the data pane will now also display user-added columns.
 ### Changed
 - Switching to a dialog window or a window that is the parent of a dialog window now re-focuses the whole tree in sequence. This makes dealing with error windows less frustrating when other applications are open.
 - Added a very mild background to the schedule view to stop overlayed windows blending into it so much.

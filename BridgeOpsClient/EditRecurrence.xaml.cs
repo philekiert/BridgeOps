@@ -135,7 +135,7 @@ namespace BridgeOpsClient
                     return Abort();
 
                 // If you change the position of cancelled, make sure to udpate it in the ContextMenuOpening function.
-                List<string?> columnNames = new()
+                List<string?> colNames = new()
                 {
                     Glo.Tab.CONFERENCE_ID,
                     ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_TITLE, ColumnRecord.conference),
@@ -152,9 +152,15 @@ namespace BridgeOpsClient
                     "Resource",
                     ColumnRecord.GetPrintName(Glo.Tab.NOTES, ColumnRecord.conference),
                 };
+
                 List<List<object?>> data = new();
                 DateTime start;
                 DateTime end;
+
+                // Add user-added columns.
+                if (conferences.Count > 0)
+                    colNames.AddRange(conferences[0].additionalCols);
+
                 foreach (Conference c in conferences)
                 {
                     bool test = false;
@@ -167,7 +173,7 @@ namespace BridgeOpsClient
 
                     start = (DateTime)c.start!;
                     end = (DateTime)c.end!;
-                    data.Add(new()
+                    List<object?> newRow = new()
                     {
                         c.conferenceID,
                         c.title,
@@ -184,10 +190,14 @@ namespace BridgeOpsClient
                         c.resourceName == null ? (c.resourceRow + 1).ToString() :
                                                  $"{c.resourceName} {c.resourceRow + 1}",
                         c.notes
-                    });
+                    };
+                    // Add user-added columns.
+                    newRow.AddRange(c.additionalValObjects);
+
+                    data.Add(newRow);
                 }
 
-                dtg.Update(columnNames, data);
+                dtg.Update(colNames, data);
             }
             else
                 dtg.Wipe();

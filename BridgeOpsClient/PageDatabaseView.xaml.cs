@@ -519,6 +519,11 @@ namespace BridgeOpsClient
             List<List<object?>> data = new();
             DateTime start;
             DateTime end;
+
+            // Add user-added columns.
+            if (conferences.Count > 0)
+                colNames.AddRange(conferences[0].additionalCols);
+
             foreach (Conference c in conferences)
             {
                 bool test = false;
@@ -531,7 +536,9 @@ namespace BridgeOpsClient
 
                 start = (DateTime)c.start!;
                 end = (DateTime)c.end!;
-                data.Add(new() { c.conferenceID,
+                List<object?> newRow = new()
+                {
+                    c.conferenceID,
                                  c.title,
                                  c.recurrenceID == null ? null :
                                     (c.recurrenceName == null ? ("R-" + c.recurrenceID.ToString()) :
@@ -549,7 +556,11 @@ namespace BridgeOpsClient
                                  c.resourceName == null ? (c.resourceRow + 1).ToString() :
                                                           $"{c.resourceName} {c.resourceRow + 1}",
                                  c.notes
-                               });
+                };
+                // Add user-added columns.
+                newRow.AddRange(c.additionalValObjects);
+
+                data.Add(newRow);
             }
 
             dtgResults.identity = 7;
