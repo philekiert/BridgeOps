@@ -2995,7 +2995,8 @@ internal class BridgeOpsAgent
                               $"LEFT JOIN Connection n ON c.{Glo.Tab.CONFERENCE_ID} = n.{Glo.Tab.CONFERENCE_ID} " +
                               $"LEFT JOIN Organisation o ON n.{Glo.Tab.DIAL_NO} = o.{Glo.Tab.DIAL_NO} " +
                               $"WHERE c.{Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", conferenceIdStrs)}) " +
-                              $"ORDER BY c.{Glo.Tab.CONFERENCE_ID}, n.{Glo.Tab.CONNECTION_ROW};",
+                              $"ORDER BY c.{Glo.Tab.CONFERENCE_START}, " +
+                                       $"c.{Glo.Tab.CONFERENCE_ID}, n.{Glo.Tab.CONNECTION_ROW};",
                                  sqlConnect);
             SelectResult result = new(com.ExecuteReader(), false);
             List<Conference> confs = new();

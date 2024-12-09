@@ -15,10 +15,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Content="Name" FontWeight="SemiBold" Margin="5 10 10 0"/>
-        <TextBox x:Name="txtName" Grid.Row="1" Margin="10 0 10 10"/>
+        <TextBox x:Name="txtName" Grid.Row="1" Margin="10 0 10 10" Height="24" VerticalContentAlignment="Center"/>
         <Label Grid.Row="2" Content="Notes" FontWeight="SemiBold" Margin="5 5 10 0"/>
         <TextBox x:Name="txtNotes" Grid.Row="3" Margin="10 0 10 10" Height="100" AcceptsReturn="True"/>
-        <Button x:Name="btnSave" Grid.Row="4" Content="Save"
+        <Button x:Name="btnSave" Grid.Row="4" Content="Save" Height="24"
                 Margin="10 10 10 20" Width="50" HorizontalAlignment="Left" Click="btnSave_Click"
                 Style="{StaticResource primary-button}"/>
     </Grid>
