@@ -133,8 +133,8 @@ namespace BridgeOpsClient
 
             DateTime current = startDate; // Start date has to have been assigned going by the above code.
 
-            if (startDate <= DateTime.Now.Date)
-                return App.Abort("Duplication can not begin earlier than tomorrow.", this);
+            //if (startDate <= DateTime.Now.Date)
+            //    return App.Abort("Duplication can not begin earlier than tomorrow.", this);
             if (endDate < startDate)
                 return App.Abort($"Recurrence can not end before it begins, as this would require time-travel " +
                                  $"technology not available in Bridge Manager {Glo.VersionNumber}." +
