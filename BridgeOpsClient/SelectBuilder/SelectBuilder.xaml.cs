@@ -307,6 +307,7 @@ namespace BridgeOpsClient
             while (true)
             {
                 nameObject = new("Preset Name");
+                nameObject.Owner = this;
                 nameObject.ShowDialog();
                 if (nameObject.DialogResult == false || nameObject.txtName.Text == "")
                     return "";

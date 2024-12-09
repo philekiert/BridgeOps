@@ -79,6 +79,7 @@ namespace BridgeOpsClient
 
             UpdateMultiple updateMultiple = new(identity, table, columns,
                                                 idColumn, dtgOutput.GetCurrentlySelectedIDs(), true);
+            updateMultiple.Owner = App.GetParentWindow(this);
             if (updateMultiple.ShowDialog() == true)
                 Run(out _, out _, out _);
             // Error message for failed updates are displayed by the UpdateMultiple window.
@@ -360,6 +361,7 @@ namespace BridgeOpsClient
             if (paramsToSet)
             {
                 SetParameters setParameters = new(pageName, paramList);
+                setParameters.Owner = App.GetParentWindow(this);
                 setParameters.ShowDialog();
                 if (setParameters.DialogResult == false)
                     return false;

@@ -313,6 +313,7 @@ namespace BridgeOpsClient
             if (table == "Organisation" || table == "Asset")
             {
                 DialogChangeReason dialogChangeReason = new(table);
+                dialogChangeReason.Owner = this;
                 bool? result = dialogChangeReason.ShowDialog();
                 if (result != null && result == true)
                     request.changeReason = dialogChangeReason.txtReason.Text;

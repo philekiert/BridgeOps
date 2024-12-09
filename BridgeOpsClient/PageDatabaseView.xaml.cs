@@ -858,6 +858,7 @@ namespace BridgeOpsClient
 
             UpdateMultiple updateMultiple = new(dtgResults.identity, table, columns,
                                                 idColumn, dtgResults.GetCurrentlySelectedIDs(), needsQuotes);
+            updateMultiple.Owner = App.mainWindow;
             updateMultiple.ShowDialog();
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
@@ -1093,6 +1094,7 @@ namespace BridgeOpsClient
             if (ids.Count == 0)
                 return;
             DialogWindows.AdjustConferenceTimes adjust = new(ids);
+            adjust.Owner = App.mainWindow;
             adjust.ShowDialog();
         }
         private void btnAdjustConns_Click(object sender, RoutedEventArgs e)
@@ -1101,6 +1103,7 @@ namespace BridgeOpsClient
             if (ids.Count == 0)
                 return;
             DialogWindows.AdjustConferenceConnections adjust = new(ids);
+            adjust.Owner = App.mainWindow;
             adjust.ShowDialog();
         }
         private void btnSetHost_Click(object sender, RoutedEventArgs e)
@@ -1128,6 +1131,7 @@ namespace BridgeOpsClient
                 res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
 
                 LinkRecord lr = new(res.columnNames, res.rows, 0);
+                lr.Owner = App.mainWindow;
                 lr.ShowDialog();
 
                 if (lr.id == null)
@@ -1173,6 +1177,7 @@ namespace BridgeOpsClient
                 return;
 
             NewRecurrence newRec = new();
+            newRec.Owner = App.mainWindow;
             newRec.ShowDialog();
             if (newRec.DialogResult == true && newRec.returnID != "")
             {
@@ -1191,6 +1196,7 @@ namespace BridgeOpsClient
                 return;
 
             LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
+            lr.Owner = App.mainWindow;
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
             {

@@ -13,8 +13,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using SendReceiveClasses;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace BridgeOpsClient
 {
@@ -202,6 +205,7 @@ namespace BridgeOpsClient
 
             UpdateMultiple updateMultiple = new(7, "Conference", ColumnRecord.orderedConference,
                                                 Glo.Tab.CONFERENCE_ID, dtg.GetCurrentlySelectedIDs(), false);
+            updateMultiple.Owner = this;
             updateMultiple.ShowDialog();
         }
 
@@ -209,6 +213,7 @@ namespace BridgeOpsClient
         {
             List<string> ids = dtg.GetCurrentlySelectedIDs();
             DialogWindows.AdjustConferenceTimes adjust = new(ids);
+            adjust.Owner = this;
             adjust.ShowDialog();
         }
 
@@ -216,6 +221,7 @@ namespace BridgeOpsClient
         {
             List<string> ids = dtg.GetCurrentlySelectedIDs();
             DialogWindows.AdjustConferenceConnections adjust = new(ids);
+            adjust.Owner = this;
             adjust.ShowDialog();
         }
 
@@ -235,6 +241,7 @@ namespace BridgeOpsClient
                 res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
 
                 LinkRecord lr = new(res.columnNames, res.rows, 0);
+                lr.Owner = this;
                 lr.ShowDialog();
 
                 if (lr.id == null)
@@ -339,6 +346,7 @@ namespace BridgeOpsClient
             LinkRecord lr = new("Conference", ColumnRecord.orderedConference, typeof(int), new() { id }, 3);
             lr.EnableMultiLink();
             lr.HideColumns(1, 2, 3);
+            lr.Owner = this;
             lr.ShowDialog();
 
             if (lr.DialogResult == false)
@@ -402,6 +410,7 @@ namespace BridgeOpsClient
         {
             string id = dtg.GetCurrentlySelectedID();
             RecurrenceSelect rs = new(id);
+            rs.Owner = this;
             rs.ShowDialog();
         }
     }

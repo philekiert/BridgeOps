@@ -1550,6 +1550,7 @@ namespace BridgeOpsClient
                 foreach (Conference c in SelectedConferences)
                     ids.Add(c.id.ToString());
             UpdateMultiple um = new(7, "Conference", ColumnRecord.orderedConference, Glo.Tab.CONFERENCE_ID, ids, false);
+            um.Owner = App.mainWindow;
             um.ShowDialog();
         }
 
@@ -1560,6 +1561,7 @@ namespace BridgeOpsClient
                 foreach (Conference c in SelectedConferences)
                     ids.Add(c.id.ToString());
             DialogWindows.AdjustConferenceTimes adjust = new(ids);
+            adjust.Owner = App.mainWindow;
             adjust.ShowDialog();
         }
 
@@ -1570,6 +1572,7 @@ namespace BridgeOpsClient
                 foreach (Conference c in SelectedConferences)
                     ids.Add(c.id.ToString());
             DialogWindows.AdjustConferenceConnections adjust = new(ids);
+            adjust.Owner = App.mainWindow;
             adjust.ShowDialog();
         }
 
@@ -1592,6 +1595,7 @@ namespace BridgeOpsClient
                 res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
 
                 LinkRecord lr = new(res.columnNames, res.rows, 0);
+                lr.Owner = App.mainWindow;
                 lr.ShowDialog();
 
                 if (lr.id == null)
@@ -1677,6 +1681,7 @@ namespace BridgeOpsClient
 
             LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
             schView.selectedConferences.Clear();
+            lr.Owner = App.mainWindow;
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.
             {
@@ -1752,6 +1757,7 @@ namespace BridgeOpsClient
                 return;
 
             NewRecurrence newRec = new();
+            newRec.Owner = App.mainWindow;
             newRec.ShowDialog();
             if (newRec.DialogResult == true && newRec.returnID != "")
             {

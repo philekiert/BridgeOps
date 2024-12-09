@@ -20,6 +20,7 @@ using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Wordprocessing;
 using SendReceiveClasses;
 
 namespace BridgeOpsClient
@@ -54,6 +55,7 @@ namespace BridgeOpsClient
 
             // Request login credentials on startup.
             LogIn logIn = new LogIn(this);
+            logIn.Owner = this;
             logIn.ShowDialog();
             if (!App.IsLoggedIn)
             {
@@ -182,6 +184,7 @@ namespace BridgeOpsClient
         private void menuDatabaseNewRecurrence_Click(object sender, RoutedEventArgs e)
         {
             NewRecurrence recurrence = new();
+            recurrence.Owner = this;
             recurrence.ShowDialog();
         }
 
@@ -225,6 +228,7 @@ namespace BridgeOpsClient
         private void menuChangePassword_Click(object sender, RoutedEventArgs e)
         {
             PasswordChange pc = new(App.sd.loginID, false);
+            pc.Owner = this;
             pc.ShowDialog();
         }
 
@@ -245,6 +249,7 @@ namespace BridgeOpsClient
         private void menuSettings_Click(object sender, RoutedEventArgs e)
         {
             SettingsWindow settingsWindow = new();
+            settingsWindow.Owner = this;
             if (App.IsLoggedIn) // Might not load if the session was invalidated.
                 settingsWindow.ShowDialog();
         }

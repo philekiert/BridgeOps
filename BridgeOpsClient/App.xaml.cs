@@ -18,6 +18,7 @@ using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Irony;
 using SendReceiveClasses;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using static BridgeOpsClient.PageConferenceView;
 using CR = ColumnRecord;
 
@@ -99,6 +100,7 @@ namespace BridgeOpsClient
                 DialogWindows.DialogBox dialog = new(Glo.ROW_CLASH_WARNING + "\n\nDo you wish to resolve automatically?",
                                                      "Row Clash",
                                                  DialogWindows.DialogBox.Buttons.YesNo);
+                dialog.Owner = owner;
                 dialog.ShowDialog();
                 return dialog.DialogResult == true;
             }
@@ -113,6 +115,7 @@ namespace BridgeOpsClient
                                                      "Dial Clash",
                                                  DialogWindows.DialogBox.Buttons.YesNo,
                                                  selectRes.columnNames, selectRes.rows);
+                dialog.Owner = owner;
                 dialog.ShowDialog();
                 return dialog.DialogResult == true;
             }
@@ -139,6 +142,7 @@ namespace BridgeOpsClient
                                                      "Resource Overflow",
                                                  DialogWindows.DialogBox.Buttons.YesNo,
                                                  selectRes.columnNames, selectRes.rows);
+                dialog.Owner = owner;
                 dialog.ShowDialog();
                 return dialog.DialogResult == true;
             }
@@ -475,6 +479,7 @@ namespace BridgeOpsClient
                         mainWindow.ToggleLogInOut(false);
 
                     LogIn logIn = new((MainWindow)Current.MainWindow);
+                    logIn.Owner = owner;
                     logIn.ShowDialog();
                 }
 
@@ -691,6 +696,7 @@ namespace BridgeOpsClient
                     {
                         NewResource resource = new(id);
                         resource.Populate(rows[0]);
+                        resource.Owner = owner;
                         resource.ShowDialog();
                     }
                     else

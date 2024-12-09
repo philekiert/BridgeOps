@@ -74,6 +74,7 @@ namespace BridgeOpsClient
 
             UpdateMultiple updateMultiple = new(identity, table, columns,
                                                 idColumn, dtgOutput.GetCurrentlySelectedIDs(), true);
+            updateMultiple.Owner = App.GetParentWindow(this);
             if (updateMultiple.ShowDialog() == true)
                 Run(out _, out _, out _, true, true);
             // Error message for failed updates are displayed by the UpdateMultiple window.

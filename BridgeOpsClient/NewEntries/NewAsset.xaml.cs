@@ -265,6 +265,7 @@ namespace BridgeOpsClient
                 }
 
                 DialogChangeReason reasonDialog = new("Asset");
+                reasonDialog.Owner = this;
                 bool? result = reasonDialog.ShowDialog();
                 if (result != null && result == true)
                 {

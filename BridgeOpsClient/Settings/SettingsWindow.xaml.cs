@@ -154,6 +154,7 @@ namespace BridgeOpsClient
                             {
                                 NewUser user = new NewUser(id);
                                 user.Populate(rows[0]);
+                                user.Owner = this;
                                 user.ShowDialog();
                                 if (user.didSomething)
                                     PopulateUserList();
@@ -178,6 +179,7 @@ namespace BridgeOpsClient
         private void btnUserAdd_Click(object sender, RoutedEventArgs e)
         {
             NewUser newUser = new();
+            newUser.Owner = this;
             newUser.ShowDialog();
             if (newUser.didSomething)
                 PopulateUserList();
@@ -286,6 +288,7 @@ namespace BridgeOpsClient
 
             NewColumn newColumn = new(table, column,
                 (ColumnRecord.Column)col);
+            newColumn.Owner = this;
             newColumn.ShowDialog();
             if (newColumn.changeMade)
                 InitiateTableChange();
@@ -294,6 +297,7 @@ namespace BridgeOpsClient
         private void btnColumnAdd_Click(object sender, RoutedEventArgs e)
         {
             NewColumn newColumn = new NewColumn();
+            newColumn.Owner = this;
             newColumn.ShowDialog();
             if (newColumn.changeMade)
                 InitiateTableChange();
@@ -412,6 +416,7 @@ namespace BridgeOpsClient
         private void btnReorder_Click(object sender, RoutedEventArgs e)
         {
             ReorderColumns reorderColumns = new();
+            reorderColumns.Owner = this;
             reorderColumns.ShowDialog();
             if (reorderColumns.changeMade)
                 InitiateTableChange();

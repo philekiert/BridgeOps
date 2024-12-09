@@ -474,7 +474,7 @@ namespace BridgeOpsClient
         {
             foreach (Window w in Application.Current.Windows)
             {
-                if (w.Owner == this)
+                if (Owner == w)
                     w.Activate();
             }
         }

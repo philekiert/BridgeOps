@@ -77,6 +77,7 @@ namespace BridgeOpsClient
             if (networkSettings)
             {
                 NetworkSettings settings = new NetworkSettings();
+                settings.Owner = this;
                 settings.ShowDialog();
                 ToggleNetworkSettings(sender, e);
                 return;

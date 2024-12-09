@@ -361,6 +361,7 @@ namespace BridgeOpsClient
                 }
 
                 DialogChangeReason reasonDialog = new("Organisation");
+                reasonDialog.Owner = this;
                 bool? result = reasonDialog.ShowDialog();
                 if (result != null && result == true)
                 {
@@ -435,7 +436,7 @@ namespace BridgeOpsClient
             newAsset.cmbOrgRef.IsEditable = true;
             newAsset.cmbOrgRef.Text = originalRef;
             newAsset.cmbOrgRef.IsEnabled = false;
-
+            newAsset.Owner = this;
             newAsset.ShowDialog();
             if (newAsset.changeMade)
                 PopulateAssets();
@@ -447,6 +448,7 @@ namespace BridgeOpsClient
                 return;
 
             LinkRecord lr = new("Asset", ColumnRecord.asset, typeof(string), new() { originalRef }, 2);
+            lr.Owner = this;
             lr.ShowDialog();
             string? assetID = lr.id;
             int assetIdInt;
@@ -501,7 +503,7 @@ namespace BridgeOpsClient
             NewContact newContact = new();
             newContact.requireIdBack = true;
             newContact.isDialog = true;
-
+            newContact.Owner = this;
             bool? completed = newContact.ShowDialog();
 
             int contactID;
@@ -535,6 +537,7 @@ namespace BridgeOpsClient
             catch { }
 
             LinkRecord lr = new("Contact", ColumnRecord.contact, typeof(int), excludeIDs, 0);
+            lr.Owner = this;
             lr.ShowDialog();
             int contactIdInt;
             if (lr.id == null || !int.TryParse(lr.id, out contactIdInt))
@@ -642,6 +645,7 @@ namespace BridgeOpsClient
             if (int.TryParse(changeIdString, out changeID))
             {
                 DialogChangeReason changeDialog = new DialogChangeReason("Organisation", changeID, changeReason);
+                changeDialog.Owner = this;
                 changeDialog.ShowDialog();
                 if (changeDialog.DialogResult == true)
                     GetHistory();

@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+﻿using BridgeOpsClient.DialogWindows;
+using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Office2013.Excel;
 using System;
 using System.Collections;
@@ -435,6 +436,7 @@ namespace BridgeOpsClient
             Entry entry = (Entry)lstColumns.SelectedItem;
 
             ReorderColumnsRenameHeader renameHeader = new(entry.name);
+            renameHeader.Owner = this;
             if (renameHeader.ShowDialog() == false)
                 return;
             entries[entry.displayIndex].name = renameHeader.name;

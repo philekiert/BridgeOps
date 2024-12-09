@@ -325,6 +325,7 @@ namespace BridgeOpsClient
         private void btnResetPassword_Click(object sender, RoutedEventArgs e)
         {
             PasswordChange pc = new(id, true);
+            pc.Owner = this;
             pc.ShowDialog();
         }
 
