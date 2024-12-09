@@ -24,7 +24,7 @@
         <TextBox x:Name="txtIPAddress" Grid.Row ="0" Grid.Column="1" MaxLength="15"
                  Margin="10 5 10 7" Width="140"/>
         <Button x:Name="btnIPDefault" Margin="0 5 10 7" Grid.Row="0" Grid.Column="2" Content=" Default "
-                Click="btnIPDefault_Click"/>
+                Click="btnIPDefault_Click" e/>
         <Label x:Name="lblPortOutbound" Content="Outbound Port" Grid.Row ="1" Grid.Column="0"/>
         <TextBox x:Name="txtPortOutbound" Grid.Row ="1" Grid.Column="1"
                  Margin="10 5 10 7"/>
@@ -35,7 +35,7 @@
                  Margin="10 5 10 7"/>
         <Button x:Name="btnInboundDefault" Margin="0 5 10 7" Grid.Row="2" Grid.Column="2" Content=" Default "
                 Click="btnInboundDefault_Click"/>
-        <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="3" Grid.ColumnSpan="3"
+        <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="3" Grid.ColumnSpan="3" Height="24"
                 Margin="10 10 10 10" Width="70" Click="btnConfirm_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </local:CustomWindow>

@@ -66,14 +66,14 @@
         <TextBox x:Name="txtTabName" Grid.Column="7" Width="150" Margin="0 10 5 10" Height="24"
                  VerticalContentAlignment="Center" TextChanged="txtTabName_TextChanged"
                  MaxLength="32" MaxLines="1"/>
-        <Button x:Name="btnRunAllPages" Grid.Column="8" Width="100" Content="Run All Pages"
+        <Button x:Name="btnRunAllPages" Grid.Column="8" Width="90" Content="Run All Pages"
                 Height="24" Margin="20 10 5 10" Click="btnRunAllPages_Click"
                 Style="{StaticResource primary-button}"/>
         <Button x:Name="btnExportAllPages" Grid.Column="9" Width="100" Content="Export All Pages"
                 Height="24" Margin="5 10 5 10" Click="btnExportAllPages_Click"
                 Style="{StaticResource primary-button}"/>
         <Button x:Name="btnClearDown" Grid.Column="10" Content="Clear Pages" Click="btnClearDown_Click"
-                Padding="0 0 0 0" Margin="5 10 10 10" Width="70" Height="24"/>
+                Padding="0 0 0 0" Margin="5 10 10 10" Width="74" Height="24"/>
 
         <!-- Preset Control -->
         <Label Content="Preset" Grid.Column="11" VerticalAlignment="Center" Margin="10 10 10 10"

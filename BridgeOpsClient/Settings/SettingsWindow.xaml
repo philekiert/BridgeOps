@@ -29,8 +29,8 @@
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="Refresh" Width="70" x:Name="btnUsersRefresh"
                                 HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
-                                Click="btnUsersRefresh_Click" Height="20"/>
-                        <Button Grid.Column="1" Content="Add" Width="70" x:Name="btnUserAdd"
+                                Click="btnUsersRefresh_Click" Height="24"/>
+                        <Button Grid.Column="1" Content="Add" Width="70" x:Name="btnUserAdd" 
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
                                 Click="btnUserAdd_Click" Style="{StaticResource primary-button}"/>
                         <Button Grid.Column="2" Content="Log Out" Width="70" x:Name="btnUserLogOut"
