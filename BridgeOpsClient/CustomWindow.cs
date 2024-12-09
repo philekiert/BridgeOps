@@ -53,6 +53,7 @@ namespace BridgeOpsClient
         {
             Activated += CustomWindow_Activated;
             StateChanged += CustomWindow_StateChanged;
+            Closing += CustomWindow_Closing;
 
             // Only instantiate once.
             if (tmrWindowLeaveDetect == null)
@@ -253,6 +254,12 @@ namespace BridgeOpsClient
             Loaded += CustomWindow_Loaded;
 
             ToggleCornerRadius(true);
+        }
+
+        public bool closing = false;
+        private void CustomWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            closing = true;
         }
 
         private void CustomWindow_StateChanged(object? sender, EventArgs e)
@@ -481,7 +488,7 @@ namespace BridgeOpsClient
             Window GetChild(Window window)
             {
                 foreach (Window w in Application.Current.Windows)
-                    if (w.Owner == this)
+                    if (w is CustomWindow cw && cw.Owner == this && !cw.closing)
                         return GetChild(w);
                 return this;
             }
