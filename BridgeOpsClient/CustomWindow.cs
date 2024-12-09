@@ -470,13 +470,32 @@ namespace BridgeOpsClient
                 Left = 0;
         }
 
+        static bool rearrangingWindows = false;
         private void CustomWindow_Activated(object? sender, EventArgs e)
         {
-            foreach (Window w in Application.Current.Windows)
+            if (rearrangingWindows)
+                return;
+            rearrangingWindows = true;
+
+            // Function to find a/the child (there should only ever be one).
+            Window GetChild(Window window)
             {
-                if (Owner == w)
-                    w.Activate();
+                foreach (Window w in Application.Current.Windows)
+                    if (w.Owner == this)
+                        return GetChild(w);
+                return this;
             }
+            Window lastChild = GetChild(this);
+            // Recursive function to activate each parent, then each child sequentially.
+            void ActivateParent(Window window)
+            {
+                if (window.Parent != null)
+                    window.Activate();
+                window.Activate();
+            }
+            ActivateParent(lastChild);
+
+            rearrangingWindows = false;
         }
 
         // All code below is slightly modified from David Rickard's. It handles maximised window placement.

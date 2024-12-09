@@ -54,7 +54,6 @@ namespace BridgeOpsClient
 
             // Request login credentials on startup.
             LogIn logIn = new LogIn(this);
-            logIn.Owner = this;
             logIn.ShowDialog();
             if (!App.IsLoggedIn)
             {
