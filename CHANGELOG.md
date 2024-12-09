@@ -18,6 +18,8 @@
 ### Fixed
 - Disallowed renaming of recurrence columns, as this stopped some application functions working properly.
 - Columns in the recurrence window can now be hidden.
+- Conference search results are now sorted by start date and time.
+- Ctrl-clicking in multi-select data tables now selects multiple items.
   
   
 ## 0.6.3

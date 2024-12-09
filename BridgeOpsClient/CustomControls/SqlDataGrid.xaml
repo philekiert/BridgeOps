@@ -25,7 +25,6 @@
               LayoutUpdated="dtg_LayoutUpdated">
         <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
-                <EventSetter Event="Control.RequestBringIntoView" Handler="dtg_CancelAutoScroll"/>
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             </Style>
         </DataGrid.RowStyle>

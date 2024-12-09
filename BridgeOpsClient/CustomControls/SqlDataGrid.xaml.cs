@@ -33,7 +33,7 @@ namespace BridgeOpsClient.CustomControls
         ScrollViewer? scrollViewer;
 
         public bool canHideColumns = false;
-        
+
         DataTemplate tickIcon;
 
         // Set by the caller when calling Update(). This is used to make sure the correct column settings are updated
@@ -496,58 +496,56 @@ namespace BridgeOpsClient.CustomControls
                     }
         }
 
-        // When clicking on an empty space on the DataGrid, select item 0 if present.
         private void dtg_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
+            DependencyObject obj = hit.VisualHit;
 
-            //// Select a row even if the columns don't extend that far.
-            //var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
-            //if (hit != null)
-            //{
-            //    DependencyObject obj = hit.VisualHit;
-            //    while (obj != null && !(obj is DataGridRow))
-            //        obj = VisualTreeHelper.GetParent(obj);
-
-            //    if (obj is DataGridRow row)
-            //        dtg.SelectedItem = row.Item;
-            //}
-        }
-
-        private void dtg_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            // A mousedown on the DataGrid won't be triggered if it's on a data row or header.
-            if (dtg.Items.Count != 0 && dtg.SelectedIndex == -1)
+            //// A mousedown on the DataGrid won't be triggered if it's on a data row or header.
+            if (dtg.Items.Count != 0 && dtg.SelectedIndex == -1 && obj.GetType() != typeof(ScrollBar))
             {
                 dtg.SelectedIndex = dtg.Items.Count - 1;
                 dtg.Focus(); // Otherwise the item highlight is greyed out.
             }
 
             // Select a row even if the columns don't extend that far.
-            var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
             if (hit != null)
             {
-                DependencyObject obj = hit.VisualHit;
                 while (obj != null && !(obj is DataGridRow))
                     obj = VisualTreeHelper.GetParent(obj);
 
                 if (obj is DataGridRow dgr)
                 {
                     Row row = (Row)dgr.Item;
-                    dtg.SelectedItem = row;
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+                    {
+                        if (dtg.SelectedItems.Contains(row))
+                            dtg.SelectedItems.Remove(row);
+                        else
+                            dtg.SelectedItems.Add(row);
+                    }
+                    else
+                        dtg.SelectedItem = row;
 
                     // While we're in here, switch checkboxes on and off if present.
                     if (checkBox)
-                    {
                         row.IsChecked = row.IsChecked != true;
-                    }
                 }
             }
         }
 
-        // When clicking on cell that overflows past the view, don't automatically scroll to bring it into view.
-        private void dtg_CancelAutoScroll(object sender, RequestBringIntoViewEventArgs e)
+        private void dtg_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            //e.Handled = true;
+            var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
+
+            // Do nothing if clicking the scrollbar.
+            DependencyObject objTraverse = hit.VisualHit;
+            while (objTraverse != null && objTraverse is not SqlDataGrid)
+            {
+                if (objTraverse is ScrollBar)
+                    return;
+                objTraverse = VisualTreeHelper.GetParent(objTraverse);
+            }
         }
 
         #region Custom Selection Changed Event
