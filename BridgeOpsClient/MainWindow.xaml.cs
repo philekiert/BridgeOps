@@ -20,7 +20,6 @@ using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using DocumentFormat.OpenXml.Wordprocessing;
 using SendReceiveClasses;
 
 namespace BridgeOpsClient
