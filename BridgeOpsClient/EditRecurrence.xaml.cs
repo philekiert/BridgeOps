@@ -41,6 +41,7 @@ namespace BridgeOpsClient
 
             InitializeComponent();
 
+            dtg.canHideColumns = true;
             dtg.EnableMultiSelect();
             dtg.identity = 10;
 

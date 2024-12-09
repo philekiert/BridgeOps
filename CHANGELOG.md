@@ -17,6 +17,7 @@
 - Removed the restriction against making recurrings in the past, as this makes some fixes impossible.
 ### Fixed
 - Disallowed renaming of recurrence columns, as this stopped some application functions working properly.
+- Columns in the recurrence window can now be hidden.
   
   
 ## 0.6.3
