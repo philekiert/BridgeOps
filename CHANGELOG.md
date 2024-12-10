@@ -11,8 +11,9 @@
   - Recurrence by recurrence ID
 - A logout warning on closing the application when there are other windows open other than the main window.
 - Conference searches in the data pane will now also display user-added columns.
+- A tool has been added to both the client and console application to enable the admin to remotely close client applications.
 ### Changed
-- Switching to a dialog window or a window that is the parent of a dialog window now re-focuses the whole tree in sequence. This makes dealing with error windows less frustrating when other applications are open.
+- Switching to a dialog window or a window that is the parent of a dialog window now re-focuses the whole tree in sequence.
 - Added a very mild background to the schedule view to stop overlayed windows blending into it so much.
 - Removed the restriction against making recurrings in the past, as this makes some fixes impossible.
 ### Fixed
