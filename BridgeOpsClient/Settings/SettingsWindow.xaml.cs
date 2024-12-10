@@ -31,8 +31,6 @@ namespace BridgeOpsClient
             bool editPermission = App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT];
             if (!editPermission)
                 btnUserLogOut.IsEnabled = false;
-            if (!App.sd.createPermissions[Glo.PERMISSION_USER_ACC_MGMT])
-                btnUserAdd.IsEnabled = false;
 
             if (!App.sd.admin)
                 tabDatabaseLayout.IsEnabled = false;
@@ -48,6 +46,12 @@ namespace BridgeOpsClient
             dtgColumns.AddContextMenuItem(item, true);
 
             dtgUsers.AddSeparator(true);
+            item = new MenuItem()
+            {
+                Header = "Close Client"
+            };
+            item.Click += btnClientClose_Click;
+            dtgUsers.AddContextMenuItem(item, true);
             item = new MenuItem()
             {
                 Header = "Logout"
@@ -171,6 +175,17 @@ namespace BridgeOpsClient
             }
         }
 
+        private void dtgUsers_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            btnUserLogOut.IsEnabled = !(dtgUsers.GetCurrentlySelectedID() == App.sd.loginID.ToString()) &&
+                                      !(dtgUsers.GetCurrentlySelectedCell(4) == "Inactive") &&
+                                      App.sd.admin;
+            btnClientClose.IsEnabled = !(dtgUsers.GetCurrentlySelectedCell(4) == "Inactive") &&
+                                       App.sd.admin;
+            ((MenuItem)dtgUsers.mnuData.Items[0]).IsEnabled = btnUserLogOut.IsEnabled;
+            ((MenuItem)dtgUsers.mnuData.Items[1]).IsEnabled = btnClientClose.IsEnabled;
+        }
+
         private void btnUsersRefresh_Click(object sender, RoutedEventArgs e)
         {
             PopulateUserList();
@@ -196,6 +211,18 @@ namespace BridgeOpsClient
                     return;
                 }
                 App.LogOut(loginID, this);
+                PopulateUserList();
+            }
+            else
+                App.DisplayError("You must first select a user to log out.", this);
+        }
+
+        private void btnClientClose_Click(object sender, RoutedEventArgs e)
+        {
+            string username = dtgUsers.GetCurrentlySelectedCell(1);
+            if (username != "")
+            {
+                App.CloseClient(username, this);
                 PopulateUserList();
             }
             else
@@ -404,13 +431,6 @@ namespace BridgeOpsClient
             btnColumnRemove.IsEnabled = Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
                                                                      dtgColumns.GetCurrentlySelectedCell(1));
             ((MenuItem)dtgColumns.mnuData.Items[0]).IsEnabled = btnColumnRemove.IsEnabled;
-        }
-
-        private void dtgUsers_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            btnUserLogOut.IsEnabled = !(dtgUsers.GetCurrentlySelectedID() == App.sd.loginID.ToString()) &&
-                                      !(dtgUsers.GetCurrentlySelectedCell(4) == "Inactive");
-            ((MenuItem)dtgUsers.mnuData.Items[0]).IsEnabled = btnUserLogOut.IsEnabled;
         }
 
         private void btnReorder_Click(object sender, RoutedEventArgs e)

@@ -50,8 +50,8 @@ namespace BridgeOpsClient
         //    }
         //    catch { }
         //}
-        public static void DisplayError(string error, Window? owner) { DisplayError(error, "", owner); }
-        public static void DisplayError(string error, string title, Window? owner)
+        public static bool DisplayError(string error, Window? owner) { return DisplayError(error, "", owner); }
+        public static bool DisplayError(string error, string title, Window? owner)
         {
             try
             {
@@ -60,6 +60,8 @@ namespace BridgeOpsClient
                 dialog.ShowDialog();
             }
             catch { }
+
+            return false;
         }
         public enum QuestionOptions
         { YesNo, OKCancel }
@@ -155,10 +157,15 @@ namespace BridgeOpsClient
         // The listener thread can't interact with WPF components, so have this timer handle anything that comes
         // in that requires that functionality, such as force logouts.
         static bool forceLogoutQueued = false;
+        static bool forceCloseQueued = false;
         static bool recurrenceUpdateQueued = false;
         DispatcherTimer tmrStatusCheck;
         private void StatusCheck(object? sender, EventArgs e)
         {
+            if (forceCloseQueued)
+            {
+                ApplicationExit(null, null);
+            }
             if (forceLogoutQueued)
             {
                 if (IsLoggedIn)
@@ -294,28 +301,20 @@ namespace BridgeOpsClient
                 {
                     int fncByte = stream.ReadByte();
                     if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
-                    {
                         if (!PullColumnRecord(mainWindow))
                             DisplayError("The column record is out of date, but a new one could not be pulled. " +
-                                            "Logging out.", mainWindow);
+                                         "Logging out.", mainWindow);
                         else
-                        {
                             DisplayError("Column record has been updated. It would be advisable to restart the " +
-                                            "application.", mainWindow);
-                        }
-                    }
+                                         "application.", mainWindow);
                     else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
-                    {
                         PullResourceInformation(mainWindow);
-                    }
                     else if (fncByte == Glo.SERVER_CLIENT_NUDGE)
-                    {
                         stream.WriteByte(Glo.SERVER_CLIENT_NUDGE);
-                    }
                     else if (fncByte == Glo.SERVER_FORCE_LOGOUT)
-                    {
                         forceLogoutQueued = true;
-                    }
+                    else if (fncByte == Glo.SERVER_CLIENT_CLOSE)
+                        Environment.Exit(0);
                     else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
                     {
                         foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
@@ -484,6 +483,45 @@ namespace BridgeOpsClient
                 }
 
                 return true;
+            }
+            catch
+            {
+                DisplayError("Something went wrong.", owner);
+                return false;
+            }
+        }
+        public static bool CloseClient(string username, Window? owner) // Used for logging out either self or others.
+        {
+            try
+            {
+                lock (streamLock)
+                {
+                    NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+
+                    if (stream != null)
+                    {
+                        stream.WriteByte(Glo.CLIENT_CLOSE);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        sr.WriteAndFlush(stream, username);
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        else if (response == Glo.CLIENT_SESSION_INVALID)
+                            return SessionInvalidated();
+                        else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
+                            return DisplayError(PERMISSION_DENIED, owner);
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            string reason = sr.ReadString(stream);
+                            if (reason == Glo.CLIENT_CLOSE_SESSION_NOT_FOUND)
+                                return DisplayError("Client session could no longer be found.", owner);
+                            else
+                                return DisplayError(sr.ReadString(stream), owner);
+                        }
+                    }
+
+                    throw new Exception();
+                }
             }
             catch
             {

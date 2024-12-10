@@ -192,6 +192,8 @@ public class ConsoleController
                    "Check to see if agent is running.");
         AddCommand("logout", ValType.String, menu, LogoutUser,
                    "End session for specified user.");
+        AddCommand("close", ValType.String, menu, CloseClient,
+                   "Attempt to terminate the application on the specified user's machine.");
         AddCommand("reset admin password", ValType.None, menu, ResetAdminPassword,
                    "Reset the admin password to 'admin'.");
 
@@ -1102,6 +1104,45 @@ public class ConsoleController
                     {
                         Writer.Negative("User not found.");
                     }
+                }
+                catch (Exception e)
+                {
+                    Writer.Message("No response from agent, see error:", ConsoleColor.Red);
+                    Writer.Message(e.Message, ConsoleColor.Red);
+                }
+            }
+        }
+        else
+            Writer.Negative("Agent process is not currently running. Type \"start\" to begin.");
+
+        return 0;
+    }
+
+    private int CloseClient()
+    {
+        if (GetProcess(true))
+        {
+            NamedPipeClientStream server = sr.NewClientNamedPipe(Glo.PIPE_CONSOLE);
+            try
+            {
+                server.Connect(2);
+            }
+            catch (Exception e)
+            {
+                Writer.Negative("Unable to connect to agent. See error:");
+                Writer.Message(e.Message);
+            }
+
+            if (server.IsConnected)
+            {
+                server.WriteByte(Glo.CONSOLE_CLOSE_CLIENT);
+                sr.WriteAndFlush(server, commandValString);
+                try
+                {
+                    if (server.ReadByte() == 0)
+                        Writer.Affirmative("Client close command sent.");
+                    else
+                        Writer.Negative("User not found.");
                 }
                 catch (Exception e)
                 {

@@ -119,8 +119,14 @@ internal class BridgeOpsAgent
         }
         public void SendLoggedOutNotification()
         {
-            if (SendNotification(Glo.SERVER_FORCE_LOGOUT))
+            if (!SendNotification(Glo.SERVER_FORCE_LOGOUT))
                 LogError($"Logged out notification could not be sent to {ipString} " +
+                         $"after {notificationSendRetries} retries.");
+        }
+        public void SendCloseNotification()
+        {
+            if (!SendNotification(Glo.SERVER_CLIENT_CLOSE))
+                LogError($"Client close notification could not be sent to {ipString} " +
                          $"after {notificationSendRetries} retries.");
         }
         public void SendConferenceChangeNotification()
@@ -579,6 +585,8 @@ internal class BridgeOpsAgent
             {
                 if (fncByte == Glo.SERVER_FORCE_LOGOUT)
                     notificationThread = new Thread(clientSessions[clientID].SendLoggedOutNotification);
+                if (fncByte == Glo.SERVER_CLIENT_CLOSE)
+                    notificationThread = new Thread(clientSessions[clientID].SendCloseNotification);
             }
         }
         if (notificationThread != null)
@@ -788,6 +796,8 @@ internal class BridgeOpsAgent
                     ConsoleClientList(server);
                 else if (fncByte == Glo.CONSOLE_LOGOUT_USER)
                     ConsoleLogoutUser(server);
+                else if (fncByte == Glo.CONSOLE_CLOSE_CLIENT)
+                    ConsoleCloseClient(server);
 
                 else
                     throw new Exception("Received int " + fncByte + " does not correspond to a function.");
@@ -859,6 +869,8 @@ internal class BridgeOpsAgent
                     ClientLogin(stream, sqlConnect, (IPEndPoint?)client.Client.RemoteEndPoint);
                 else if (fncByte == Glo.CLIENT_LOGOUT)
                     ClientLogout(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_CLOSE)
+                    ClientClose(stream);
                 else if (fncByte == Glo.CLIENT_PASSWORD_RESET)
                     ClientPasswordReset(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LOGGEDIN_LIST)
@@ -973,6 +985,29 @@ internal class BridgeOpsAgent
             if (sessionId.Length > 0 && clientSessions.ContainsKey(sessionId))
             {
                 SendSingleNotification(sessionId, Glo.SERVER_FORCE_LOGOUT);
+                clientSessions.Remove(sessionId);
+                server.WriteByte(0);
+                server.Flush();
+                return;
+            }
+
+            server.WriteByte(1);
+            server.Flush();
+        }
+    }
+
+    private static void ConsoleCloseClient(NamedPipeServerStream server)
+    {
+        string username = sr.ReadString(server);
+        string sessionId = "";
+        lock (clientSessions)
+        {
+            foreach (KeyValuePair<string, ClientSession> client in clientSessions)
+                if (client.Value.username == username)
+                    sessionId = client.Key;
+            if (sessionId.Length > 0 && clientSessions.ContainsKey(sessionId))
+            {
+                SendSingleNotification(sessionId, Glo.SERVER_CLIENT_CLOSE);
                 clientSessions.Remove(sessionId);
                 server.WriteByte(0);
                 server.Flush();
@@ -1341,6 +1376,51 @@ internal class BridgeOpsAgent
             stream.Close();
             if (sqlConnect.State == ConnectionState.Open)
                 sqlConnect.Close();
+        }
+    }
+
+    private static void ClientClose(NetworkStream stream)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            string username = sr.ReadString(stream);
+
+            string idToAttack = "";
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+                if (!clientSessions[sessionID].admin)
+                {
+                    stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                    return;
+                }
+                
+                foreach (ClientSession cs in clientSessions.Values)
+                    if (cs.username == username)
+                        idToAttack = cs.sessionID;
+                if (idToAttack == "")
+                    throw new(Glo.CLIENT_CLOSE_SESSION_NOT_FOUND);
+
+                SendSingleNotification(idToAttack, Glo.SERVER_CLIENT_CLOSE);
+                clientSessions.Remove(idToAttack);
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            }
+        }
+        catch (Exception e)
+        {
+            stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW);
+            sr.WriteAndFlush(stream, e.Message);
+            LogError(e);
+        }
+        finally
+        {
+            stream.Close();
         }
     }
 
@@ -2987,7 +3067,7 @@ internal class BridgeOpsAgent
                                         $"THEN o.{Glo.Tab.ORGANISATION_REF} ELSE NULL END, " +
                                    $"CASE WHEN n.{Glo.Tab.CONNECTION_IS_MANAGED} = 1 " +
                                         $"THEN o.{Glo.Tab.ORGANISATION_NAME} ELSE NULL END " +
-                              $"FROM Conference c "+
+                              $"FROM Conference c " +
                               $"LEFT JOIN Resource rc ON c.{Glo.Tab.RESOURCE_ID} = rc.{Glo.Tab.RESOURCE_ID} " +
                               $"LEFT JOIN Login cl ON c.{Glo.Tab.CONFERENCE_CREATION_LOGIN} = cl.{Glo.Tab.LOGIN_ID} " +
                               $"LEFT JOIN Login el ON c.{Glo.Tab.CONFERENCE_EDIT_LOGIN} = el.{Glo.Tab.LOGIN_ID} " +

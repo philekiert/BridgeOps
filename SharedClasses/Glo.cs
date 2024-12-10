@@ -68,27 +68,28 @@ public static class Glo
     public const int CLIENT_PULL_COLUMN_RECORD = 0;
     public const int CLIENT_LOGIN = 1;
     public const int CLIENT_LOGOUT = 2;
-    public const int CLIENT_PASSWORD_RESET = 3;
-    public const int CLIENT_LOGGEDIN_LIST = 4;
-    public const int CLIENT_PULL_USER_SETTINGS = 5;
-    public const int CLIENT_NEW_LOGIN = 7;
-    public const int CLIENT_NEW_ORGANISATION = 8;
-    public const int CLIENT_NEW_CONTACT = 9;
-    public const int CLIENT_NEW_ASSET = 10;
-    public const int CLIENT_NEW_CONFERENCE_TYPE = 11;
-    public const int CLIENT_NEW_CONFERENCE = 12;
-    public const int CLIENT_NEW_RECURRENCE = 13;
-    public const int CLIENT_NEW_RESOURCE = 14;
-    public const int CLIENT_UPDATE = 15;
-    public const int CLIENT_UPDATE_LOGIN = 16;
-    public const int CLIENT_UPDATE_ORGANISATION = 17;
-    public const int CLIENT_UPDATE_CONTACT = 18;
-    public const int CLIENT_UPDATE_ASSET = 19;
-    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 20;
-    public const int CLIENT_UPDATE_CONFERENCE = 21;
-    public const int CLIENT_UPDATE_RESOURCE = 22;
-    public const int CLIENT_UPDATE_RECURRENCE = 23;
-    public const int CLIENT_UPDATE_CHANGE_REASON = 24;
+    public const int CLIENT_CLOSE = 3;
+    public const int CLIENT_PASSWORD_RESET = 4;
+    public const int CLIENT_LOGGEDIN_LIST = 5;
+    public const int CLIENT_PULL_USER_SETTINGS = 6;
+    public const int CLIENT_NEW_LOGIN = 10;
+    public const int CLIENT_NEW_ORGANISATION = 11;
+    public const int CLIENT_NEW_CONTACT = 12;
+    public const int CLIENT_NEW_ASSET = 13;
+    public const int CLIENT_NEW_CONFERENCE_TYPE = 14;
+    public const int CLIENT_NEW_CONFERENCE = 15;
+    public const int CLIENT_NEW_RECURRENCE = 16;
+    public const int CLIENT_NEW_RESOURCE = 17;
+    public const int CLIENT_UPDATE = 18;
+    public const int CLIENT_UPDATE_LOGIN = 19;
+    public const int CLIENT_UPDATE_ORGANISATION = 20;
+    public const int CLIENT_UPDATE_CONTACT = 21;
+    public const int CLIENT_UPDATE_ASSET = 22;
+    public const int CLIENT_UPDATE_CONFERENCE_TYPE = 23;
+    public const int CLIENT_UPDATE_CONFERENCE = 24;
+    public const int CLIENT_UPDATE_RESOURCE = 25;
+    public const int CLIENT_UPDATE_RECURRENCE = 26;
+    public const int CLIENT_UPDATE_CHANGE_REASON = 27;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 30;
     public const int CLIENT_SELECT_QUICK = 31;
     public const int CLIENT_SELECT = 32;
@@ -119,11 +120,13 @@ public static class Glo
     public const int SERVER_RESOURCES_UPDATED = 2;
     public const int SERVER_FORCE_LOGOUT = 3;
     public const int SERVER_CONFERENCES_UPDATED = 4;
+    public const int SERVER_CLIENT_CLOSE = 5;
 
 
     // Console/Agent Function Specifiers
     public const int CONSOLE_CLIENT_LIST = 0;
     public const int CONSOLE_LOGOUT_USER = 1;
+    public const int CONSOLE_CLOSE_CLIENT = 2;
 
     // Operational
     public const int CLIENT_SESSION_INVALID = 0;
@@ -158,6 +161,7 @@ public static class Glo
 
     public const string CLIENT_LOGOUT_ACCEPT = "Safe travels";
     public const string CLIENT_LOGOUT_SESSION_NOT_FOUND = "Session not found";
+    public const string CLIENT_CLOSE_SESSION_NOT_FOUND = "Target lost";
 
     public const string CLIENT_LOGOUT_SESSION_INVALID = "Session invalid";
     

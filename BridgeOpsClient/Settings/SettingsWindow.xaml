@@ -26,6 +26,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="Refresh" Width="70" x:Name="btnUsersRefresh"
                                 HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
@@ -36,6 +37,9 @@
                         <Button Grid.Column="2" Content="Log Out" Width="70" x:Name="btnUserLogOut"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
                                 Click="btnUserLogOut_Click" IsEnabled="False"/>
+                        <Button Grid.Column="3" Content="Close Client" Width="86" x:Name="btnClientClose"
+                                HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
+                                Click="btnClientClose_Click"  IsEnabled="False"/>
                     </Grid>
                 </Grid>
             </TabItem>
