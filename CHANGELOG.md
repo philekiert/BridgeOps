@@ -4,6 +4,7 @@
 ## 0.6.5
 ### Fixed
 - Fixed an issue where the application was crashing after closing some windows.
+- Fixed a bug preventing conferences IDs from being searched in the data pane.
   
   
 ## 0.6.4

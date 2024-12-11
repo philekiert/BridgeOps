@@ -26,13 +26,14 @@
         </StackPanel>
 
         <!-- Search bar -->
-        <Grid Grid.Row="0" MaxWidth="818" HorizontalAlignment="Left">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -51,17 +52,16 @@
                       SelectionChanged="cmbColumn_SelectionChanged"/>
             <Button x:Name="btnClear" Grid.Column="3" Margin="-1 10 10 10" Width="71"
                     Content="Clear Fields" Click="btnClear_Click"/>
-            <TextBox x:Name="txtSearch" Grid.Column="4"
-                     Padding="0 2 0 0" Margin="10 10 10 10" Width="205"
+            <ComboBox x:Name="cmbSearchType" Grid.Column="4" Margin="10 10 10 10" Width="110"
+                      SelectionChanged="cmbSearchType_SelectionChanged"/>
+            <TextBox x:Name="txtSearch" Grid.Column="5" Width="Auto" Padding="0 2 0 0" Margin="10 10 10 10"
                      KeyDown="txtSearch_KeyDown" TextChanged="txtSearch_TextChanged"/>
-            <Button x:Name="btnSearch" Grid.Column="5" Margin="10 10 10 10" Width="50"
-                    Content="Search" Click="btnSearch_Click"/>
-            <Button x:Name="btnWideSearch" Grid.Column="6" Margin="0 10 10 10" Width="80"
-                    Content="Wide Search" Click="btnWideSearch_Click" Style="{StaticResource primary-button}"/>
+            <Button x:Name="btnSearch" Grid.Column="6" Margin="10 10 10 10" Width="50"
+                    Content="Search" Click="btnSearch_Click" Style="{StaticResource primary-button}"/>
             <Button x:Name="btnRemovePane" Style="{StaticResource minus-button}" Click="btnRemovePane_Click"
                     Margin="10 0 0 0" Grid.Column="7"/>
             <Button x:Name="btnAddPane" Style="{StaticResource plus-button}" Click="btnAddPane_Click"
-                    Grid.Column="8"/>
+                    Grid.Column="8" Margin="0 0 10 0"/>
         </Grid>
 
         <!-- Results -->

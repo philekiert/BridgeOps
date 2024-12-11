@@ -261,9 +261,9 @@ namespace BridgeOpsClient
                 view.cmbTable.TabIndex = ++tabStop;
                 view.cmbColumn.TabIndex = ++tabStop;
                 view.btnClear.TabIndex = ++tabStop;
+                view.cmbSearchType.TabIndex = ++tabStop;
                 view.txtSearch.TabIndex = ++tabStop;
                 view.btnSearch.TabIndex = ++tabStop;
-                view.btnWideSearch.TabIndex = ++tabStop;
                 view.btnRemovePane.TabIndex = ++tabStop;
                 view.btnAddPane.TabIndex = ++tabStop;
             }

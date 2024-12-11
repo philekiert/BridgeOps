@@ -194,7 +194,6 @@ namespace BridgeOpsClient
 
             txtSearch.IsEnabled = cmbColumn.Items.Count > 0;
             btnSearch.IsEnabled = cmbColumn.Items.Count > 0;
-            btnWideSearch.IsEnabled = cmbColumn.Items.Count > 0;
             txtSearch.Text = "";
         }
 
@@ -285,6 +284,12 @@ namespace BridgeOpsClient
         {
             // Show/hide the conference dates panel
             stkDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
+            if (cmbTable.SelectedIndex < 2)
+                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Column", "Search History" };
+            else
+                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Column" };
+            if (cmbSearchType.SelectedIndex == -1)
+                cmbSearchType.SelectedIndex = 0;
 
             PopulateColumnComboBox();
         }
@@ -1246,6 +1251,11 @@ namespace BridgeOpsClient
                 editRec.Show();
             }
             catch { }
+        }
+
+        private void cmbSearchType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }
