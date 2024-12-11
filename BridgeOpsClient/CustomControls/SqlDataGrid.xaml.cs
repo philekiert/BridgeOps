@@ -499,6 +499,8 @@ namespace BridgeOpsClient.CustomControls
         private void dtg_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
+            if (hit == null)
+                return;
             DependencyObject obj = hit.VisualHit;
 
             //// A mousedown on the DataGrid won't be triggered if it's on a data row or header.
@@ -537,6 +539,8 @@ namespace BridgeOpsClient.CustomControls
         private void dtg_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
+            if (hit == null)
+                return;
 
             // Do nothing if clicking the scrollbar.
             DependencyObject objTraverse = hit.VisualHit;
