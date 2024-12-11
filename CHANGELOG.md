@@ -1,6 +1,11 @@
 # Changelog
   
   
+## 0.6.5
+### Fixed
+- Fixed an issue where the application was crashing after closing some windows.
+  
+  
 ## 0.6.4
 ### Added
 - The ability to add a conference to an existing recurrence from the conference booking window.

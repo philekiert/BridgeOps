@@ -470,7 +470,7 @@ namespace BridgeOpsClient
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());
-            req.autoRecIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);
+            req.autoConfIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);
 
             List<string?> colNames = new();
             List<List<object?>> rows = new();
