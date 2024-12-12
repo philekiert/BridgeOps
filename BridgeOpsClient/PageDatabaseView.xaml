@@ -48,7 +48,7 @@
                 <ComboBoxItem Content="Recurrence"/>
                 <ComboBoxItem Content="Resource"/>
             </ComboBox>
-            <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 10 10" Width="110"
+            <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 10 10" Width="114"
                       SelectionChanged="cmbSearchType_SelectionChanged"/>
             <ComboBox x:Name="cmbColumn" Grid.Column="3" Margin="10 10 0 10" Width="155"
                       SelectionChanged="cmbColumn_SelectionChanged"/>

@@ -286,9 +286,9 @@ namespace BridgeOpsClient
             // Show/hide the conference dates panel
             stkDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
             if (cmbTable.SelectedIndex < 2)
-                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Column", "Search History" };
+                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns", "Search History" };
             else
-                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Column" };
+                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns" };
             if (cmbSearchType.SelectedIndex == -1)
                 cmbSearchType.SelectedIndex = 0;
 
@@ -1262,7 +1262,16 @@ namespace BridgeOpsClient
 
         private void cmbSearchType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            if (cmbSearchType.SelectedIndex == 1)
+            {
+                cmbColumn.Visibility = Visibility.Visible;
+                btnClear.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                cmbColumn.Visibility = Visibility.Collapsed;
+                btnClear.Visibility = Visibility.Collapsed;
+            }
         }
     }
 }
