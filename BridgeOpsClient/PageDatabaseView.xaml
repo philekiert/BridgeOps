@@ -39,7 +39,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <ComboBox x:Name="cmbTable" Grid.Column="1" Margin="10 10 10 10" Width="100"
+            <ComboBox x:Name="cmbTable" Grid.Column="1" Margin="10 10 0 10" Width="100"
                       SelectionChanged="cmbTable_SelectionChanged">
                 <ComboBoxItem Content="Organisation" />
                 <ComboBoxItem Content="Asset"/>
@@ -48,12 +48,12 @@
                 <ComboBoxItem Content="Recurrence"/>
                 <ComboBoxItem Content="Resource"/>
             </ComboBox>
-            <ComboBox x:Name="cmbColumn" Grid.Column="2" Margin="10 10 0 10" Width="155"
-                      SelectionChanged="cmbColumn_SelectionChanged"/>
-            <Button x:Name="btnClear" Grid.Column="3" Margin="-1 10 10 10" Width="71"
-                    Content="Clear Fields" Click="btnClear_Click"/>
-            <ComboBox x:Name="cmbSearchType" Grid.Column="4" Margin="10 10 10 10" Width="110"
+            <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 10 10" Width="110"
                       SelectionChanged="cmbSearchType_SelectionChanged"/>
+            <ComboBox x:Name="cmbColumn" Grid.Column="3" Margin="10 10 0 10" Width="155"
+                      SelectionChanged="cmbColumn_SelectionChanged"/>
+            <Button x:Name="btnClear" Grid.Column="4" Margin="-1 10 10 10" Width="71"
+                    Content="Clear Fields" Click="btnClear_Click"/>
             <TextBox x:Name="txtSearch" Grid.Column="5" Width="Auto" Padding="0 2 0 0" Margin="10 10 10 10"
                      KeyDown="txtSearch_KeyDown" TextChanged="txtSearch_TextChanged"/>
             <Button x:Name="btnSearch" Grid.Column="6" Margin="10 10 10 10" Width="50"

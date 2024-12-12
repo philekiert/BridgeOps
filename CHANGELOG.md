@@ -1,10 +1,15 @@
 # Changelog
   
   
+## 0.6.6
+### Changed
+- Reworked the search bar in the data pane to make wide, narrow and historical search options more clear.
+  
+  
 ## 0.6.5
 ### Fixed
 - Fixed an issue where the application was crashing after closing some windows.
-- Fixed a bug preventing conferences IDs from being searched in the data pane.
+- Fixed a bug preventing conference IDs from being searched in the data pane.
   
   
 ## 0.6.4

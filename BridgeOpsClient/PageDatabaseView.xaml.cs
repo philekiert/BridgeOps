@@ -259,7 +259,7 @@ namespace BridgeOpsClient
                                                      out columnNames, out rows, lastSearchHistorical, App.mainWindow))
                 {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
-                    SetStatusBar(rows.Count, columnNames.Count, -1);
+                    SetStatusBar(rows.Count, columnNames.Count, -1, lastSearchHistorical ? 1 : -1);
                 }
                 else if (App.Select(cmbTable.Text,
                                     new List<string> { "*" },
@@ -267,7 +267,8 @@ namespace BridgeOpsClient
                                     out columnNames, out rows, true, lastSearchHistorical, App.mainWindow))
                 {
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
-                    SetStatusBar(rows.Count, columnNames.Count, lastSearchColumns.Count);
+                    SetStatusBar(rows.Count, columnNames.Count, lastSearchColumns.Count,
+                                 lastSearchHistorical ? 1 : -1);
                 }
                 else
                     SetStatusBar();
@@ -294,14 +295,27 @@ namespace BridgeOpsClient
             PopulateColumnComboBox();
         }
 
-        private void btnSearch_Click(object sender, RoutedEventArgs e)
+        private void btnSearch_Click(object? sender, RoutedEventArgs? e)
         {
-            btnSearch_Click(sender, e, cmbTable.SelectedIndex);
-        }
-        private void btnSearch_Click(object sender, RoutedEventArgs e, int identity)
-        {
-            bool historical = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            // Narrow Search
+            if (cmbSearchType.SelectedIndex == 1)
+            {
+                Search(cmbTable.SelectedIndex);
+            }
+            // Wide Search
+            else
+            {
+                int identity = cmbTable.SelectedIndex;
+                // This is because some identities aren't used in the table select and only for data grid column layouts.
+                if (identity > 2)
+                    identity += 4;
 
+                // SelectedIndex of 2 is a historical wide search (historical narrow is not currently possible).
+                WideSearch(identity, cmbSearchType.SelectedIndex == 2);
+            }
+        }
+        private void Search(int identity)
+        {
             OrderedDictionary tableColDefs;
             Dictionary<string, string> nameReversals;
             if (cmbTable.Text == "Organisation")
@@ -375,7 +389,7 @@ namespace BridgeOpsClient
                 if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                                new List<string> { "*" },
                                selectColumns, selectValues, conditionals,
-                               out columnNames, out rows, true, historical, App.mainWindow))
+                               out columnNames, out rows, true, false, App.mainWindow))
                 {
                     lastSearchWide = false;
                     lastSearchColumns = selectColumns;
@@ -383,10 +397,11 @@ namespace BridgeOpsClient
                     lastSearchConditionals = conditionals;
                     lastColumnDefinitions = tableColDefs;
 
+                    lastSearchHistorical = false;
                     dtgResults.identity = identity;
                     dtgResults.Update(tableColDefs, columnNames, rows);
 
-                    SetStatusBar(rows.Count, columnNames.Count, selectColumns.Count);
+                    SetStatusBar(rows.Count, columnNames.Count, selectColumns.Count, lastSearchHistorical ? 1 : -1);
                 }
                 else
                     SetStatusBar();
@@ -568,13 +583,15 @@ namespace BridgeOpsClient
                 data.Add(newRow);
             }
 
+            lastSearchHistorical = false;
             dtgResults.identity = 7;
             dtgResults.Update(colNames, data);
 
             if (lastSearchWide)
-                SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1);
+                SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1, lastSearchHistorical ? 1 : -1);
             else
-                SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount);
+                SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount,
+                             lastSearchHistorical ? 1 : -1);
         }
 
         private void SearchRecurrences(bool wide)
@@ -646,20 +663,20 @@ namespace BridgeOpsClient
         }
         private void PopulateRecurrencesFromSelect(List<string?> colNames, List<List<object?>> rows)
         {
+            lastSearchHistorical = false;
             dtgResults.identity = 8;
             dtgResults.Update(colNames, rows);
 
             if (lastSearchWide)
-                SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1);
+                SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1, lastSearchHistorical ? 1 : -1);
             else
-                SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount);
+                SetStatusBar(rows.Count, colNames.Count, lastConferenceSearchSelectCount,
+                             lastSearchHistorical ? 1 : -1);
         }
 
         // Wide search on either enter or click.
-        private void WideSearch(int identity)
+        private void WideSearch(int identity, bool historical)
         {
-            bool historical = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
-
             OrderedDictionary tableColDefs;
             Dictionary<string, string> nameReversals;
             if (identity == 0) // Organisation
@@ -698,17 +715,18 @@ namespace BridgeOpsClient
                 // Error message is displayed by App.SelectAll() if something goes wrong.
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Needs changing in RepeatSearch() as well if adjusted.
+                if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Also needs changing in RepeatSearch() if adjusted.
                                    out columnNames, out rows, historical, App.mainWindow))
                 {
                     lastSearchWide = true;
                     lastWideValue = txtSearch.Text;
                     lastColumnDefinitions = tableColDefs;
 
+                    lastSearchHistorical = historical;
                     dtgResults.identity = identity;
                     dtgResults.Update(tableColDefs, columnNames, rows);
 
-                    SetStatusBar(rows.Count, columnNames.Count, -1);
+                    SetStatusBar(rows.Count, columnNames.Count, -1, lastSearchHistorical ? 1 : -1);
                 }
                 else
                     SetStatusBar();
@@ -721,29 +739,15 @@ namespace BridgeOpsClient
                     SearchRecurrences(true);
             }
         }
-        private void btnWideSearch_Click(object sender, RoutedEventArgs e)
-        {
-            int identity = cmbTable.SelectedIndex;
-            // This is because some identities aren't used in the table select and only for data grid column layouts.
-            if (identity > 2)
-                identity += 4;
-
-            WideSearch(identity);
-        }
         private void txtSearch_KeyDown(object sender, KeyEventArgs e)
         {
-            int identity = cmbTable.SelectedIndex;
-            // This is because some identities aren't used in the table select and only for data grid column layouts.
-            if (identity > 2)
-                identity += 4;
-
             if (e.Key == Key.Enter)
-                WideSearch(identity);
+                btnSearch_Click(null, null);
         }
 
         private void SetStatusBar(params int[] vals)
         {
-            if (vals.Length != 3)
+            if (vals.Length != 4)
             {
                 lblRows.Content = "";
                 lblColumns.Content = "";
@@ -756,7 +760,10 @@ namespace BridgeOpsClient
             // Set all labels to updated values.
             lblRows.Content = "Rows: " + vals[0].ToString();
             lblColumns.Content = "Columns: " + vals[1].ToString();
-            lblColumnsSearched.Content = vals[2] == -1 ? "Wide search" : ("Fields searched: " + vals[2].ToString());
+            bool historical = vals[3] == 1;
+            string searched = vals[2] == -1 ? (historical ? "Historical wide search" : "Wide search") :
+                                              ((historical ? "Historical f" : "F") + $"ields searched: {vals[2]}");
+            lblColumnsSearched.Content = searched;
             dtgResults_SelectionChanged(dtgResults, null);
 
             string tableSearched = "Organisations";
