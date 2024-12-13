@@ -8,6 +8,7 @@
 - Reworked the search bar in the data pane to make wide, narrow and historical search options more clear.
 ### Fixed
 - User Settings windows no longer read "New User" in the title bar.
+- The Settings window now correctly reports whether users accounts are enabled or disabled.
   
   
 ## 0.6.5

@@ -90,7 +90,7 @@ namespace BridgeOpsClient
                         rows[n][2] = (bool)userType ? "Administrator" : "User";
                     object? userEnabled = rows[n][3];
                     if (userEnabled != null && userEnabled.GetType() == typeof(bool))
-                        rows[n][3] = (bool)userEnabled ? "Yes" : "No";
+                        rows[n][3] = userEnabled;
 
                     object? userID = rows[n][0];
                     if (userID != null)
