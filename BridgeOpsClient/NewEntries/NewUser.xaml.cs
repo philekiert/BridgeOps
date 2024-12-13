@@ -34,11 +34,11 @@ namespace BridgeOpsClient
         {
             this.id = id;
 
-            this.Title = "Edit User";
-
             InitializeComponent();
             InitialiseFields();
             GetCheckBoxArray();
+
+            Title = "User Settings";
 
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Visible;

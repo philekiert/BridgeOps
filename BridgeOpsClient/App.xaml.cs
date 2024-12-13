@@ -341,7 +341,7 @@ namespace BridgeOpsClient
 
         public static MainWindow? mainWindow = null;
 
-        private void ApplicationExit(object sender, EventArgs e)
+        private void ApplicationExit(object? sender, EventArgs? e)
         {
             LogOut(mainWindow);
         }

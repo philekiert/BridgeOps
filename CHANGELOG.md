@@ -2,10 +2,12 @@
   
   
 ## 0.6.6
-###
+### Added
 - Added a feature for historical searches on specific columns in addition to the current historical wide search.
 ### Changed
 - Reworked the search bar in the data pane to make wide, narrow and historical search options more clear.
+### Fixed
+- User Settings windows no longer read "New User" in the title bar.
   
   
 ## 0.6.5

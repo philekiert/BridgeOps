@@ -287,8 +287,8 @@ namespace BridgeOpsClient
             stkDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
             if (cmbTable.SelectedIndex < 2)
                 cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns",
-                                                                 "Search All Historical",
-                                                                 "Search Columns Historical" };
+                                                                 "Search All (historical)",
+                                                                 "Search Columns (historical)" };
             else
                 cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns" };
             if (cmbSearchType.SelectedIndex == -1)
