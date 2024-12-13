@@ -286,7 +286,9 @@ namespace BridgeOpsClient
             // Show/hide the conference dates panel
             stkDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
             if (cmbTable.SelectedIndex < 2)
-                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns", "Search History" };
+                cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns",
+                                                                 "Search All Historical",
+                                                                 "Search Columns Historical" };
             else
                 cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns" };
             if (cmbSearchType.SelectedIndex == -1)
@@ -298,10 +300,8 @@ namespace BridgeOpsClient
         private void btnSearch_Click(object? sender, RoutedEventArgs? e)
         {
             // Narrow Search
-            if (cmbSearchType.SelectedIndex == 1)
-            {
+            if (cmbSearchType.SelectedIndex % 2 == 1)
                 Search(cmbTable.SelectedIndex);
-            }
             // Wide Search
             else
             {
@@ -383,13 +383,15 @@ namespace BridgeOpsClient
                 for (int i = 0; i < selectColumns.Count; ++i)
                     conditionals.Add(Conditional.Like);
 
+                bool historical = cmbSearchType.SelectedIndex > 1;
+
                 // Error message is displayed by App.SelectAll() if something goes wrong.
                 List<string?> columnNames;
                 List<List<object?>> rows;
                 if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
                                new List<string> { "*" },
                                selectColumns, selectValues, conditionals,
-                               out columnNames, out rows, true, false, App.mainWindow))
+                               out columnNames, out rows, true, historical, App.mainWindow))
                 {
                     lastSearchWide = false;
                     lastSearchColumns = selectColumns;
@@ -397,7 +399,7 @@ namespace BridgeOpsClient
                     lastSearchConditionals = conditionals;
                     lastColumnDefinitions = tableColDefs;
 
-                    lastSearchHistorical = false;
+                    lastSearchHistorical = historical;
                     dtgResults.identity = identity;
                     dtgResults.Update(tableColDefs, columnNames, rows);
 
@@ -583,7 +585,7 @@ namespace BridgeOpsClient
                 data.Add(newRow);
             }
 
-            lastSearchHistorical = false;
+            lastSearchHistorical = cmbSearchType.SelectedIndex > 1;
             dtgResults.identity = 7;
             dtgResults.Update(colNames, data);
 
@@ -663,7 +665,7 @@ namespace BridgeOpsClient
         }
         private void PopulateRecurrencesFromSelect(List<string?> colNames, List<List<object?>> rows)
         {
-            lastSearchHistorical = false;
+            lastSearchHistorical = cmbSearchType.SelectedIndex > 1;
             dtgResults.identity = 8;
             dtgResults.Update(colNames, rows);
 
@@ -1262,7 +1264,7 @@ namespace BridgeOpsClient
 
         private void cmbSearchType_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cmbSearchType.SelectedIndex == 1)
+            if (cmbSearchType.SelectedIndex % 2 == 1)
             {
                 cmbColumn.Visibility = Visibility.Visible;
                 btnClear.Visibility = Visibility.Visible;

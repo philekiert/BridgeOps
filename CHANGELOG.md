@@ -2,6 +2,8 @@
   
   
 ## 0.6.6
+###
+- Added a feature for historical searches on specific columns in addition to the current historical wide search.
 ### Changed
 - Reworked the search bar in the data pane to make wide, narrow and historical search options more clear.
   

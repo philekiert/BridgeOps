@@ -1689,8 +1689,8 @@ internal class BridgeOpsAgent
             string command = "";
             if (historical)
                 command = "SELECT DISTINCT " + (req.table == "Organisation" ?
-                                                Glo.Tab.ORGANISATION_REF :
-                                                Glo.Tab.ASSET_REF)
+                                                Glo.Tab.ORGANISATION_ID :
+                                                Glo.Tab.ASSET_ID)
                                                 + " FROM " + req.table + "Change";
             else
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table;
@@ -1716,7 +1716,7 @@ internal class BridgeOpsAgent
 
             if (historical)
                 command = "SELECT " + string.Join(", ", req.select) + " FROM " + req.table +
-                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_REF : Glo.Tab.ASSET_REF) +
+                          " WHERE " + (req.table == "Organisation" ? Glo.Tab.ORGANISATION_ID : Glo.Tab.ASSET_ID) +
                           " IN (" + command + ");";
 
             SqlCommand com = new(command, sqlConnect);
