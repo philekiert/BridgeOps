@@ -528,10 +528,6 @@ namespace BridgeOpsClient.CustomControls
                     }
                     else
                         dtg.SelectedItem = row;
-
-                    // While we're in here, switch checkboxes on and off if present.
-                    if (checkBox)
-                        row.IsChecked = row.IsChecked != true;
                 }
             }
         }
@@ -541,9 +537,21 @@ namespace BridgeOpsClient.CustomControls
             var hit = VisualTreeHelper.HitTest(dtg, e.GetPosition(dtg));
             if (hit == null)
                 return;
+            DependencyObject objTraverse = hit.VisualHit;
+
+            // Check boxes if needed.
+            if (checkBox && hit != null)
+            {
+                while (objTraverse != null && !(objTraverse is DataGridRow))
+                    objTraverse = VisualTreeHelper.GetParent(objTraverse);
+                if (objTraverse is DataGridRow dgr)
+                {
+                    Row row = (Row)dgr.Item;
+                    row.IsChecked = row.IsChecked != true;
+                }
+            }
 
             // Do nothing if clicking the scrollbar.
-            DependencyObject objTraverse = hit.VisualHit;
             while (objTraverse != null && objTraverse is not SqlDataGrid)
             {
                 if (objTraverse is ScrollBar)

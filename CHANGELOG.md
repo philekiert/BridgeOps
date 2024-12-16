@@ -1,6 +1,11 @@
 # Changelog
   
   
+## 0.6.7
+### Fixed
+- Fixed issue where sites could not be selected for removal in the Adjust Connections window.
+  
+  
 ## 0.6.6
 ### Added
 - Added a feature for historical searches on specific columns in addition to the current historical wide search.
