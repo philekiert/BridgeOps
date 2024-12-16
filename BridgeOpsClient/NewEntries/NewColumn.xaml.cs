@@ -402,6 +402,12 @@ namespace BridgeOpsClient
 
         private void chk_Click(object sender, RoutedEventArgs e)
         {
+            // Make sure only one of the bottom two boxes can be checked.
+            if (sender == chkSoftDuplicate && chkSoftDuplicate.IsChecked == true)
+                chkUnique.IsChecked = false;
+            else if (sender == chkUnique && chkUnique.IsChecked == true)
+                chkSoftDuplicate.IsChecked = false;
+
             InputHandler(null, null);
         }
     }

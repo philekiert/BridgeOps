@@ -63,7 +63,7 @@
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="Refresh" Width="70" x:Name="btnColumnsRefresh"
                                 HorizontalAlignment="Left" Margin="10 0 20 10" Padding="10 0 10 0"
-                                Click="btnColumnsRefresh_Click" Height="20"/>
+                                Click="btnColumnsRefresh_Click" Height="24"/>
                         <Button Grid.Column="1" Content="Add" Width="70" x:Name="btnColumnAdd"
                                 HorizontalAlignment="Left" Margin="10 0 0 10" Padding="10 0 10 0"
                                 Click="btnColumnAdd_Click" Style="{StaticResource primary-button}"/>

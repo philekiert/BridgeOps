@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="New User" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
         Closed="Window_Closed" UseLayoutRounding="True">
-    <Grid Margin="0 5 0 0">
+    <Grid Margin="5 5 0 0">
         <Grid.Resources>
             <Style TargetType="TextBox">
                 <Setter Property="Margin" Value="10 5 10 5"/>
@@ -38,7 +38,7 @@
         <Label Content="Confirm Password" Grid.Row="2" Grid.Column="0" x:Name="lblPasswordConfirm" Padding="5 6 5 5"/>
         <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPasswordConfirm" Height="20"/>
         <Button Grid.Row="3" Content="Reset Password" Margin="5 10 10 10" x:Name="btnResetPassword"
-                Click="btnResetPassword_Click"/>
+                Click="btnResetPassword_Click" Height="24"/>
         <Label Content="Administrator" Grid.Row="4" Grid.Column="0" x:Name="lblAdministrator" />
         <CheckBox Grid.Row="4" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkAdmin" Click="chkAdmin_Clicked"/>
         <Grid Grid.Row="5" Grid.ColumnSpan="2" x:Name="grdPermissions" Margin="0 0 0 20">
@@ -105,11 +105,15 @@
         <Label Content="Enabled" Grid.Row="6" Grid.Column="0" x:Name="lblEnabled" />
         <CheckBox Grid.Row="6" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkEnabled" Click="ValueChanged"
                   IsChecked="True"/>
-        <Button Grid.Row="7" Grid.Column="0" Content="Add" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnAdd" Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
-        <Button Grid.Row="7" Grid.Column="0" Content="Save" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False"/>
-        <Button Grid.Row="7" Grid.Column="1" Content="Delete" Margin="10,25,0,15" HorizontalAlignment="Left" Width="70"
-                    x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden"/>
+        <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left">
+            <Button Grid.Row="7" Grid.Column="0" Content="Add" Margin="5,25,0,15" HorizontalAlignment="Left"
+                    Width="70" x:Name="btnAdd" Click="btnAdd_Click" Style="{StaticResource primary-button}"
+                    Height="24"/>
+            <Button Grid.Row="7" Grid.Column="0" Content="Save" Margin="5,25,0,15" HorizontalAlignment="Left"
+                    Width="70" x:Name="btnEdit" Click="btnEdit_Click" Visibility="Hidden" IsEnabled="False" Height="24"
+                    Style="{StaticResource primary-button}"/>
+            <Button Grid.Row="7" Grid.Column="1" Content="Delete" Margin="10,25,0,15" HorizontalAlignment="Left"
+                    Width="70" x:Name="btnDelete" Click="btnDelete_Click" Visibility="Hidden" Height="24"/>
+        </StackPanel>
     </Grid>
 </local:CustomWindow>

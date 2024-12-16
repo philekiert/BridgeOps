@@ -40,7 +40,7 @@ namespace BridgeOpsClient
 
             Title = "User Settings";
 
-            btnAdd.Visibility = Visibility.Hidden;
+            btnAdd.Visibility = Visibility.Collapsed;
             btnEdit.Visibility = Visibility.Visible;
             btnEdit.IsEnabled = false;
             btnDelete.Visibility = Visibility.Visible;

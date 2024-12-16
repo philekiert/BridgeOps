@@ -79,6 +79,6 @@
                       Click="chk_Click"/>
         </StackPanel>
         <Button Grid.Row="8" Grid.ColumnSpan="2" Content="Add" Margin="5,5,0,15" Width="70" HorizontalAlignment="Left"
-                x:Name="btnAdd" Click="btnAdd_Click"  Style="{StaticResource primary-button}"/>
+                x:Name="btnAdd" Click="btnAdd_Click"  Style="{StaticResource primary-button}" Height="24"/>
     </Grid>
 </local:CustomWindow>
