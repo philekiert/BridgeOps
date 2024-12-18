@@ -1,6 +1,13 @@
 # Changelog
   
   
+## 0.6.8
+### Fixed
+- Fixed multiple bugs regarding alterations to core columns.
+- The recurrence title field now wraps text as intended.
+- The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
+  
+  
 ## 0.6.7
 ### Fixed
 - Fixed issue where sites could not be selected for removal in the Adjust Connections window.

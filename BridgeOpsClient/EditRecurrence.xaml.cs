@@ -41,6 +41,11 @@ namespace BridgeOpsClient
 
             InitializeComponent();
 
+            txtName.MaxLength = (int)((ColumnRecord.Column)ColumnRecord.recurrence[Glo.Tab.RECURRENCE_NAME]!)
+                .restriction;
+            txtNotes.MaxLength = (int)((ColumnRecord.Column)ColumnRecord.recurrence[Glo.Tab.NOTES]!)
+                .restriction;
+
             dtg.canHideColumns = true;
             dtg.EnableMultiSelect();
             dtg.identity = 10;

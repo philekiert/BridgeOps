@@ -215,7 +215,7 @@ namespace BridgeOpsClient
 
         bool updatingSelection = false;
         List<object> lastSelection = new();
-        private void lstColumns_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void lstColumns_SelectionChanged(object? sender, SelectionChangedEventArgs? e)
         {
             if (!updatingSelection)
             {

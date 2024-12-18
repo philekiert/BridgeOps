@@ -39,6 +39,11 @@ namespace BridgeOpsClient
                 cmbClosure.Items.Add(s);
 
             cmbResource.ItemsSource = PageConferenceView.resourceRowNames;
+
+            txtTitle.MaxLength = (int)((ColumnRecord.Column)ColumnRecord.conference[Glo.Tab.CONFERENCE_TITLE]!)
+                .restriction;
+            txtNotes.MaxLength = (int)((ColumnRecord.Column)ColumnRecord.conference[Glo.Tab.NOTES]!)
+                .restriction;
         }
 
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start) : this()

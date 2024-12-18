@@ -436,7 +436,7 @@ public class DatabaseCreator
                      ", CONSTRAINT u_Username UNIQUE (Username) );";
             asset += ", CONSTRAINT pk_AssetID PRIMARY KEY (Asset_ID)" +
                      ", CONSTRAINT fk_AssetOrganisation FOREIGN KEY (Organisation_Reference) REFERENCES Organisation (Organisation_Reference) ON DELETE SET NULL ON UPDATE CASCADE );" +
-                     " CREATE UNIQUE INDEX u_assetRef ON Asset (Asset_Reference) WHERE Asset_Reference IS NOT NULL;"; // Needs adding separately due to the WHERE clause.
+                     " CREATE UNIQUE INDEX u_AssetRef ON Asset (Asset_Reference) WHERE Asset_Reference IS NOT NULL;"; // Needs adding separately due to the WHERE clause.
             resource += ", CONSTRAINT pk_ResourceID PRIMARY KEY (Resource_ID)" +
                         ", CONSTRAINT u_ResourceName UNIQUE (Resource_Name) );";
             //conferenceType += ", CONSTRAINT pk_ConfTypeID PRIMARY KEY (Type_ID) );";

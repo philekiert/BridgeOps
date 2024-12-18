@@ -282,11 +282,11 @@ public class FieldDefs
         str += $"{Glo.NL}# Primary/Foreign Keys" +
                $"{Glo.NL}# ------------" +
                $"{Glo.NL}" +
-               $"{Glo.NL}Organisation ID:                      Type = " + typeOrgID +
+               //$"{Glo.NL}Organisation ID:                      Type = " + typeOrgID + // Table contains unique keys, making type alterations impossible.
                $"{Glo.NL}Organisation Reference:               Max Length = " + ExtractVARCHARLength(typeOrgRef) +
                $"{Glo.NL}Organisation Dial No:                 Max Length = " + ExtractVARCHARLength(typeDialNo) +
                $"{Glo.NL}Organisation Name:                    Max Length = " + ExtractVARCHARLength(typeOrgName) +
-               $"{Glo.NL}Asset ID:                             Type = " + typeAssetID +
+               //$"{Glo.NL}Asset ID:                             Type = " + typeAssetID + // Table contains unique keys, making type alterations impossible.
                $"{Glo.NL}Asset Reference:                      Max Length = " + ExtractVARCHARLength(typeAssetRef) +
                $"{Glo.NL}Contact ID:                           Type = " + typeContactID +
                $"{Glo.NL}Login ID:                             Type = " + typeLoginID +

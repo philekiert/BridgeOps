@@ -252,6 +252,7 @@ namespace BridgeOpsClient
                                                     // Boolean is more widely understood by the user than BIT.
                                                     col.type == "BIT" ? "BOOLEAN" : col.type,
                                                     col.restriction == 0 ? "" : col.restriction.ToString(),
+                                                    Glo.Fun.ColumnRemovalAllowed(name, colName) ? "" : "✓",
                                                     col.softDuplicateCheck ? "✓" : "",
                                                     col.unique ? "✓" : "",
                                                     string.Join("; ", col.allowed) };
@@ -292,7 +293,7 @@ namespace BridgeOpsClient
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 
                 dtgColumns.Update(new List<string?>() { "Table", "Column", "Friendly Name",
-                                                        "Type", "Max", "SDC", "Unique", "Allowed" }, rows);
+                                                        "Type", "Max", "Core", "SDC", "Unique", "Allowed" }, rows);
             }
         }
 

@@ -27,6 +27,7 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
+            chkUnique.IsEnabled = false;
             txtColumnName.Focus();
         }
         // Edit
@@ -76,6 +77,10 @@ namespace BridgeOpsClient
                     cmbType.Text = columnDetails.type;
                     cmbType.SelectedIndex = cmbType.SelectedIndex;
                     updatingTypeOptions = false;
+
+                    if ((table == "Organisation" && column == Glo.Tab.ORGANISATION_ID) ||
+                        (table == "Asset" && column == Glo.Tab.ASSET_ID))
+                        cmbType.IsEnabled = false;
                 }
                 else if (columnDetails.type.StartsWith("VARCHAR"))
                 {
@@ -89,6 +94,7 @@ namespace BridgeOpsClient
                     cmbType.Items.RemoveAt(2);
 
                     if ((table == "Organisation" && column == Glo.Tab.ORGANISATION_REF) ||
+                        (table == "Organisation" && column == Glo.Tab.DIAL_NO) ||
                         (table == "Asset" && column == Glo.Tab.ASSET_REF) ||
                         (table == "Login" && column == Glo.Tab.LOGIN_USERNAME))
                     {
@@ -96,7 +102,7 @@ namespace BridgeOpsClient
                         cmbType.IsEnabled = false;
                     }
                     if ((table == "Organisation" && column == Glo.Tab.PARENT_REF) ||
-                        (table == "Conference" && column == Glo.Tab.PARENT_REF))
+                        (table == "Asset" && column == Glo.Tab.ORGANISATION_REF))
                     {
                         cmbType.IsEnabled = false;
                         txtLimit.IsEnabled = false;

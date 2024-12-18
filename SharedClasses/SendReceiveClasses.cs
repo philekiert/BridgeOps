@@ -9,6 +9,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.Xml;
@@ -396,9 +397,8 @@ namespace SendReceiveClasses
                 if (allowed.Count > 0)
                     command += $" CONSTRAINT chk_{table}{column}" +
                                $" CHECK ({column} IN ({string.Join(", ", allowed)}))";
-                if (unique)
-                    command += $" CONSTRAINT u_{table}{column} UNIQUE ({column})";
                 command += ";";
+                // Unique cannot be set on new columns, and must be set in an edit after the fact.
 
                 // Create register columns if needed.
                 if (table == "Organisation" || table == "Asset")
@@ -507,15 +507,14 @@ namespace SendReceiveClasses
                             commands.Add($"ALTER TABLE Organisation ALTER COLUMN {column} {columnType};");
                             commands.Add($"ALTER TABLE Organisation ALTER COLUMN {Glo.Tab.PARENT_REF} {columnType};");
                             commands.Add($"ALTER TABLE Asset ALTER COLUMN {column} {columnType};");
-                            commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType} NOT NULL;");
                             commands.Add($"ALTER TABLE OrganisationContacts ALTER COLUMN {column} {columnType} NOT NULL;");
                         }
                         if (column == Glo.Tab.DIAL_NO)
                         {
                             reAddKeys = true;
                             commands.Add("DROP INDEX u_OrgDialNo ON Organisation;");
-                            commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType};");
                             commands.Add("ALTER TABLE Connection DROP CONSTRAINT u_ConnectionConfIDDialNo;");
+                            commands.Add($"ALTER TABLE Connection ALTER COLUMN {column} {columnType};");
                         }
                     }
                     else if (table == "Asset")
@@ -530,7 +529,7 @@ namespace SendReceiveClasses
                         if (column == Glo.Tab.ASSET_REF)
                         {
                             reAddKeys = true;
-                            commands.Add("ALTER TABLE Asset DROP CONSTRAINT u_AssetRef;");
+                            commands.Add("DROP INDEX u_AssetRef ON Asset;");
                         }
                     }
                     else if (table == "Contact" && column == Glo.Tab.CONTACT_ID)
@@ -616,7 +615,7 @@ namespace SendReceiveClasses
                             }
                             else if (column == Glo.Tab.ASSET_REF)
                             {
-                                commands.Add("ALTER TABLE Asset ADD CONSTRAINT u_AssetRef UNIQUE (Asset_Reference);");
+                                commands.Add("CREATE UNIQUE INDEX u_AssetRef ON Asset (Asset_Reference) WHERE Asset_Reference IS NOT NULL;");
                             }
                         }
                         else if (table == "Contact" && column == Glo.Tab.CONTACT_ID)

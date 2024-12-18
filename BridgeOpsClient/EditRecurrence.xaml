@@ -26,7 +26,7 @@
 
         <StackPanel Grid.Column="1" Grid.RowSpan="2">
             <Label Content="Name" FontWeight="SemiBold" Margin="0 5 0 -5"/>
-            <TextBox x:Name="txtName" Margin="5 10 10 10" Height="40"/>
+            <TextBox x:Name="txtName" Margin="5 10 10 10" Height="40" TextWrapping="Wrap"/>
             <Button x:Name="btnAdd" Content="Add Conferences" Margin="5 10 10 10" Click="btnAdd_Click" Height="24"/>
             <Button x:Name="btnRemove" Content="Remove Conferences" Margin="5 0 10 10" Click="btnRemove_Click"
                     IsEnabled="False" Height="24"/>
