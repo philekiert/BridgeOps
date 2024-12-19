@@ -66,8 +66,11 @@ namespace BridgeOpsClient
             // Look for RPT Exporter and grey out if it isn't found.
             if (App.currentDir != null)
                 rptExporterLocation = App.currentDir + "/RPT Exporter/RPT Exporter.exe";
-            if (!(rptExporterLocation != null && System.IO.File.Exists(rptExporterLocation)))
-                menuRPTExporter.IsEnabled = false;
+            if (!System.IO.File.Exists(rptExporterLocation))
+            {
+                menuRPTExporter.Visibility = Visibility.Collapsed;
+                menuRPTExporterSeparator.Visibility = Visibility.Collapsed; 
+            }
 
             pageDatabase = new PageDatabase(this);
             frameConf.Content = new PageConferenceView();
