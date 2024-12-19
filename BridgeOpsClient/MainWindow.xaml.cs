@@ -423,5 +423,12 @@ namespace BridgeOpsClient
                                      "Closing Application", DialogWindows.DialogBox.Buttons.YesNo, this))
                 e.Cancel = true;
         }
+
+        private void btnAbout_Click(object sender, RoutedEventArgs e)
+        {
+            About about = new();
+            about.Owner = this;
+            about.ShowDialog();
+        }
     }
 }

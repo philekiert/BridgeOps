@@ -38,6 +38,7 @@
     <None Remove="Resources\Icons\17Delete.png" />
     <None Remove="Resources\Icons\x20TitleBarIcon.png" />
     <None Remove="Resources\Icons\x20TitleBarIconDark.png" />
+    <None Remove="Resources\Images\Logo.png" />
     <None Remove="Resources\sql-syntax.xshd" />
   </ItemGroup>
 
@@ -80,6 +81,7 @@
     <Resource Include="Resources\Fonts\Roboto Mono\RobotoMono.ttf" />
     <Resource Include="Resources\Icons\x20TitleBarIcon.png" />
     <Resource Include="Resources\Icons\x20TitleBarIconDark.png" />
+    <Resource Include="Resources\Images\Logo.png" />
   </ItemGroup>
 
   <ItemGroup>

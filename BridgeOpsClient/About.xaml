@@ -1,0 +1,47 @@
+﻿<Window x:Class="BridgeOpsClient.About"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BridgeOpsClient"
+        mc:Ignorable="d" WindowStartupLocation="CenterOwner"
+        Title="" Height="410" Width="840" ResizeMode="NoResize" WindowStyle="None"
+        MouseUp="CustomWindow_MouseUp" AllowsTransparency="True" Background="Transparent">
+    <Border Padding="30">
+        <Border CornerRadius="8" Background="White">
+            <Border.Effect>
+                <DropShadowEffect 
+                    ShadowDepth="0"
+                    Color="Black"
+                    BlurRadius="30"
+                    Opacity="0.6"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Image Source="/Resources/Images/Logo.png" Width="220"/>
+                <StackPanel Grid.Column="1">
+                    <Label Content="Bridge Manager" Margin="0 30 0 0"
+                       FontFamily="Aptos" FontSize="48" FontWeight="Bold"/>
+                    <Label Content="v#.#.#" FontFamily="Aptos" FontSize="24" FontWeight="Bold" Margin="0 0 0 20"
+                   x:Name="lblVersion" Foreground="{StaticResource brushCloseButton}"/>
+                    <Label Content="Author:  Phil Ekiert"/>
+                    <Label Content="Licenced under the MIT Licence" Margin="0 0 0 10"/>
+                    <Label Content="Key Testers" FontWeight="Bold" Margin="0 8 0 0" Padding="5 5 5 0"/>
+                    <TextBlock Width="380" HorizontalAlignment="Left" Padding="5" TextWrapping="Wrap">
+                Deryn Doyle-Brown,
+                Perry Doyle-Brown,
+                Tricia Harrow,
+                Dean Lewis,
+                Rory McIntosh,
+                Beth Wilkinson,
+                Paul Williamson,
+                Hudhayfah Zaman
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Border>
+</Window>

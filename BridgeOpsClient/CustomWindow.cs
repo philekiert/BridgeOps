@@ -332,7 +332,7 @@ namespace BridgeOpsClient
 
             if (tools != null)
             {
-                tools.Margin = new Thickness(15, 0, 0, 0);
+                tools.Margin = new Thickness(20, 0, 0, 0);
                 stk.Children.Add(tools);
                 foreach (object o in tools.Children)
                     if (o is Button b)

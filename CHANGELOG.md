@@ -2,6 +2,8 @@
   
   
 ## 0.6.8
+### Added
+- Added a Help menu to the title bar, containing an About button and a placeholder button for Docs in advance of when they become available.
 ### Fixed
 - Fixed multiple bugs regarding alterations to core columns.
 - The recurrence title field now wraps text as intended.
