@@ -130,21 +130,21 @@ public class ConsoleController
 
         // Database
         menu = MENU_DATABASE;
+        AddCommand("create type overrides", ValType.None, menu, CreateTypeOverrides,
+                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\". File path is relevant to the path of this executable.");
         AddCommand("load type overrides", ValType.None, menu, LoadTypeOverrides,
                    "Load type overrides from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) +
                    "\". File path is relevant to the path of this executable.");
-        AddCommand("create type overrides", ValType.None, menu, CreateTypeOverrides,
-                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\". File path is relevant to the path of this executable.");
         AddCommand("reset type overrides", ValType.None, menu, ResetTypeOverrides,
                    "Reset type overrides to default types.");
         AddCommand("view current types", ValType.None, menu, ViewCurrentValuesWithOverrides,
                    "View the list of columns in their respective tables with the currently loaded overrides. Does " +
                    "not include column additions.");
+        AddCommand("create column additions", ValType.None, menu, CreateColumnAdditions,
+                   "Create a new column additions template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) + "\". File path is relevant to the path of this executable.");
         AddCommand("load column additions", ValType.None, menu, LoadColumnAdditions,
                    "Load column additions from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) +
                    "\". File path is relevant to the path of this executable.");
-        AddCommand("create column additions", ValType.None, menu, CreateColumnAdditions,
-                   "Create a new column additions template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) + "\". File path is relevant to the path of this executable.");
         AddCommand("wipe column additions", ValType.None, menu, WipeColumnAdditions,
                    "Wipe all loaded column additions. Does not affect the column additions template file.");
         AddCommand("create friendly names", ValType.None, menu, CreateFriendlyNames,
