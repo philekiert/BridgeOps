@@ -273,7 +273,7 @@ public class FieldDefs
                      $"# values are ignored.{Glo.DNL}" +
                      $"# Fields cannot be renamed.{Glo.NL}" +
                      $"# All values must be placed at the end of a line after a double-space, with no white space afterwards.{Glo.NL}" +
-                     $"# VARCHAR length values must be between 1 and 65535.{Glo.NL}" +
+                     $"# VARCHAR length values must be between 1 and 8000.{Glo.NL}" +
                      $"# Type values are limited to TINYINT, SMALLINT and INT.{Glo.DNL}" +
                      $"# Primary key value MUST be placed above all others. Any placed out of order will be ignored.{Glo.DNL}";
 
@@ -394,7 +394,7 @@ public class FieldDefs
                         $"{Glo.NL}#      Integral: TINYINT, SMALLINT, INT (these cannot accept [allowed] values)" +
                         $"{Glo.NL}#      Floating Point: FLOAT (cannot accept [allowed] values)" +
                         $"{Glo.NL}#      Date/Time: DATE, DATETIME, TIME (cannot accept [allowed] values)" +
-                        $"{Glo.NL}#      Text: VARCHAR(0 - 65535), VARCHAR(MAX) (either can accept [allowed] values)" +
+                        $"{Glo.NL}#      Text: VARCHAR(0 - 8000), VARCHAR(MAX) (either can accept [allowed] values)" +
                         $"{Glo.NL}#      Boolean: BOOLEAN (cannot accept [allowed] values)" +
                         $"{Glo.NL}#  - Only the Organisation, Contact, Asset and Conference tables can be added to." +
                         $"{Glo.DNL}# ! Some knowledge of the listed SQL types is recommended before using this file." +

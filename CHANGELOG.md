@@ -10,6 +10,8 @@
 - Fixed multiple bugs regarding alterations to core columns.
 - The recurrence title field now wraps text as intended.
 - The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
+- Corrected max VARCHAR and CHAR length in the database creation functions from 65535 to 8000.
+- Corrected some command descriptions on the console.
   
   
 ## 0.6.7

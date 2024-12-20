@@ -131,24 +131,22 @@ public class ConsoleController
         // Database
         menu = MENU_DATABASE;
         AddCommand("create type overrides", ValType.None, menu, CreateTypeOverrides,
-                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\". File path is relevant to the path of this executable.");
+                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\".");
         AddCommand("load type overrides", ValType.None, menu, LoadTypeOverrides,
-                   "Load type overrides from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) +
-                   "\". File path is relevant to the path of this executable.");
+                   "Load type overrides from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_TYPE_OVERRIDES) + "\".");
         AddCommand("reset type overrides", ValType.None, menu, ResetTypeOverrides,
                    "Reset type overrides to default types.");
         AddCommand("view current types", ValType.None, menu, ViewCurrentValuesWithOverrides,
                    "View the list of columns in their respective tables with the currently loaded overrides. Does " +
                    "not include column additions.");
         AddCommand("create column additions", ValType.None, menu, CreateColumnAdditions,
-                   "Create a new column additions template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) + "\". File path is relevant to the path of this executable.");
+                   "Create a new column additions template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) + "\".");
         AddCommand("load column additions", ValType.None, menu, LoadColumnAdditions,
-                   "Load column additions from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) +
-                   "\". File path is relevant to the path of this executable.");
+                   "Load column additions from file \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_COLUMN_ADDITIONS) + "\".");
         AddCommand("wipe column additions", ValType.None, menu, WipeColumnAdditions,
                    "Wipe all loaded column additions. Does not affect the column additions template file.");
         AddCommand("create friendly names", ValType.None, menu, CreateFriendlyNames,
-                   "Create a new friendly names template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES) + "\". File path is relevant to the path of this executable.");
+                   "Create a new friendly names template file under \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES) + "\".");
         AddCommand("load friendly names", ValType.None, menu, LoadFriendlyNames,
                    "Load friendly names from \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_FRIENDLY_NAMES) +
                    "\". File path is relevent to the path of this executable.");
@@ -162,21 +160,16 @@ public class ConsoleController
         // Data
         menu = MENU_DATA;
         AddCommand("import", ValType.None, menu, ImportAuto,
-                   "Import organisations from a Organisations.csv and assets from Assets.csv, " +
-                   "followed by the parents defined in each." +
-                   "Full file path is required, make sure to read docs before proceeding.");
+                   "Import organisations from Organisations.csv and assets from Assets.csv, " +
+                   "located in \"" + Glo.PathImportFiles + "\", followed by the parents defined in each.");
         AddCommand("import organisations", ValType.String, menu, ImportOrganisations,
-                   "Import organisations from a specified .csv file. " +
-                   "Full file path is required, make sure to read docs before proceeding.");
+                   "Import organisations from a specified .csv file located in " + Glo.PathImportFiles + "\".");
         AddCommand("import organisation parents", ValType.String, menu, ImportOrganisationParents,
-                   "Import organisation parents from a specified .csv file. " +
-                   "Full file path is required, make sure to read docs before proceeding.");
+                   "Import organisation parents from a specified .csv file located in " + Glo.PathImportFiles + "\".");
         AddCommand("import assets", ValType.String, menu, ImportAssets,
-                   "Import assets from a specified .csv file. Full file path is required, " +
-                   "make sure to read docs before proceeding.");
+                   "Import assets from a specified .csv file located in " + Glo.PathImportFiles + "\".");
         AddCommand("import asset parents", ValType.String, menu, ImportAssetParents,
-                   "Import asset parents from a specified .csv file. Full file path is required, " +
-                   "make sure to read docs before proceeding.");
+                   "Import asset parents from a specified .csv file located in " + Glo.PathImportFiles + "\".");
         AddCommand("generate test data", ValType.Int, menu, GenerateTestData,
                    "Outputs C:/Organisations.csv with the specified number of randomly generated organisations, " +
                    "along with C:/Assets.csv filled by assets with randomly assigned parents.");
@@ -203,8 +196,7 @@ public class ConsoleController
                    "Check to make sure \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) +
                    "\" is legible for agent. File path is relevent to the path of this executable.");
         AddCommand("create network config", ValType.None, menu, CreateNetworkSettings,
-                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) +
-                    "\". File path is relevant to the path of this executable.");
+                   "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) + "\".");
     }
 
     public int ProcessCommand(string command)

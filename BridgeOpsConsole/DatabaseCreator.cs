@@ -129,7 +129,7 @@ public class DatabaseCreator
                             if (type.StartsWith("CHAR("))
                             {
                                 int iVal;
-                                if (int.TryParse(val, out iVal) && iVal > 0 && iVal <= 65535)
+                                if (int.TryParse(val, out iVal) && iVal > 0 && iVal <= 8000)
                                 {
                                     string newVal = "CHAR(" + val + ")";
                                     if (newVal != def.sqlType && !(isList && "LIST(" + newVal + ")" == def.sqlType))
@@ -145,7 +145,7 @@ public class DatabaseCreator
                             else if (type.StartsWith("VARCHAR("))
                             {
                                 int iVal;
-                                if (int.TryParse(val, out iVal) && iVal > 0 && iVal <= 65535)
+                                if (int.TryParse(val, out iVal) && iVal > 0 && iVal <= 8000)
                                 {
                                     string newVal = "VARCHAR(" + val + ")";
                                     if (newVal != def.sqlType && !(isList && "LIST(" + newVal + ")" == def.sqlType))
@@ -777,7 +777,7 @@ GROUP BY
                         {
                             if (int.TryParse(fieldDefs.ExtractVARCHARLength(type), out varcharLength))
                             {
-                                if (varcharLength < 1 || varcharLength > 65535)
+                                if (varcharLength < 1 || varcharLength > 8000)
                                     invalidated = true;
                             }
                             else
