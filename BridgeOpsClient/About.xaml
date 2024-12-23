@@ -23,12 +23,12 @@
                 </Grid.ColumnDefinitions>
                 <Image Source="/Resources/Images/Logo.png" Width="220"/>
                 <StackPanel Grid.Column="1">
-                    <Label Content="Bridge Manager" Margin="0 30 0 0"
+                    <Label Content="Bridge Manager" Margin="0 35 0 0"
                        FontFamily="Aptos" FontSize="48" FontWeight="Bold"/>
                     <Label Content="v#.#.#" FontFamily="Aptos" FontSize="24" FontWeight="Bold" Margin="0 0 0 20"
                    x:Name="lblVersion" Foreground="{StaticResource brushCloseButton}"/>
                     <Label Content="Author:  Phil Ekiert"/>
-                    <Label Content="Licenced under the MIT Licence" Margin="0 0 0 10"/>
+                    <Label Content="Licenced under the MIT Licence" Margin="0 0 0 15"/>
                     <Label Content="Key Testers" FontWeight="Bold" Margin="0 8 0 0" Padding="5 5 5 0"/>
                     <TextBlock Width="380" HorizontalAlignment="Left" Padding="5" TextWrapping="Wrap">
                 Deryn Doyle-Brown,
