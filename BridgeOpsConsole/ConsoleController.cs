@@ -1252,7 +1252,7 @@ public class ConsoleController
         //Writer.Message("View each success or failure as the file is read?");
         //ParseNetworkSettings(Writer.YesNo());
         //Writer.Message("Agent must be restarted for any config changes to take effect.");
-        ParseNetworkSettings(false);
+        ParseNetworkSettings(true);
 
         return 0;
     }
@@ -1260,6 +1260,12 @@ public class ConsoleController
     {
         Writer.Message("\nParsing " + Glo.CONFIG_NETWORK + "...");
 
+        string file = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK);
+        if (!File.Exists(file))
+        {
+            Writer.Negative("File does not yet exist. Run 'create network config' to create.");
+            return;
+        }
         string[] settings = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK));
 
         int inboundPort = Glo.PORT_INBOUND_DEFAULT; // Store inboundPort to make sure outboundPort isn't the same.

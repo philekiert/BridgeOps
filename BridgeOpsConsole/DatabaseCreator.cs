@@ -59,8 +59,20 @@ public class DatabaseCreator
                 // Try switching to bridge Manager database.
                 if (!CheckDatabaseFileExistence())
                     Writer.Negative("Database not yet created.");
-                else
-                    SwitchToDatabase(DATABASE_NAME);
+                else if (!SwitchToDatabase(DATABASE_NAME))
+                {
+                    // If we're here, the file is present, but SQL Server isn't aware of it.
+                    Writer.Message("Attempting to restore datase from file...");
+                    if (SendCommandSQL($"CREATE DATABASE {DATABASE_NAME}\n" +
+                                       $"ON (FILENAME = '{DatabaseFilePath}')," +
+                                       $"   (FILENAME = '{DatabaseLogPath}')" +
+                                       $"FOR ATTACH;"))
+                        Writer.Affirmative("Database restored.");
+                    else
+                        Writer.Negative("Database could not be restored. " +
+                                        "Restore manually from SQL Server Management Studio.");
+                    // The above command should recreate the BridgeManager database from the .mdf and .ldf files.
+                }
             }
             catch (Exception e)
             {
@@ -177,7 +189,7 @@ public class DatabaseCreator
                             {
                                 ++valuesRead;
                                 //if (showFileReadSuccesses)
-                                    Writer.Affirmative(key + " read as " + def.sqlType);
+                                Writer.Affirmative(key + " read as " + def.sqlType);
                             }
                             else
                                 Writer.Negative(key + " couldn't be read.");
@@ -190,11 +202,11 @@ public class DatabaseCreator
             }
             //if (!showFileReadSuccesses)
             //{
-                if (valuesRead > 0)
-                    Writer.Affirmative(valuesRead.ToString() + " value overrides read successfully, " +
-                                                                valuesChanged + " differed from current values.");
-                else
-                    Writer.Neutral("0 value overrides read successfully.");
+            if (valuesRead > 0)
+                Writer.Affirmative(valuesRead.ToString() + " value overrides read successfully, " +
+                                                            valuesChanged + " differed from current values.");
+            else
+                Writer.Neutral("0 value overrides read successfully.");
             //}
             //else
             //    Writer.Neutral(valuesChanged.ToString() + " settings differed from current values.");
