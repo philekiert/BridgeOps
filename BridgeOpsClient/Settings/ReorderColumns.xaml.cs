@@ -397,7 +397,7 @@ namespace BridgeOpsClient
 
         private void btnAddHeader_Click(object sender, RoutedEventArgs e)
         {
-            Entry newColumn = new(entries.Count, entries.Count, "New Column", Entry.Kind.header);
+            Entry newColumn = new(entries.Count, entries.Count, "New Header", Entry.Kind.header);
             entries.Add(newColumn);
             ++upperLimit;
             ReapplyIndices();
