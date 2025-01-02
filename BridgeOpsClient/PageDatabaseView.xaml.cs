@@ -1160,7 +1160,7 @@ namespace BridgeOpsClient
                                             (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
                 res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
 
-                LinkRecord lr = new(res.columnNames, res.rows, 0);
+                LinkRecord lr = new(res.columnNames, res.rows, 0, "Set Host");
                 lr.Owner = App.mainWindow;
                 lr.ShowDialog();
 
@@ -1225,7 +1225,7 @@ namespace BridgeOpsClient
             if (ids.Count == 0)
                 return;
 
-            LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
+            LinkRecord lr = new("Recurrence", ColumnRecord.recurrence, "Select Recurrence");
             lr.Owner = App.mainWindow;
             lr.ShowDialog();
             if (lr.id == "") // Error will display in LinkRecord if it couldn't get the ID.

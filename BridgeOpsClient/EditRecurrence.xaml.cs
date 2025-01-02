@@ -256,7 +256,7 @@ namespace BridgeOpsClient
                                             (ColumnRecord.Column)ColumnRecord.organisation[Glo.Tab.ORGANISATION_NAME]!);
                 res.columnNames = new() { dialNoFriendly, orgRefFriendly, orgNameFriendly, "Test", "Host", "Presence" };
 
-                LinkRecord lr = new(res.columnNames, res.rows, 0);
+                LinkRecord lr = new(res.columnNames, res.rows, 0, "Set Host");
                 lr.Owner = this;
                 lr.ShowDialog();
 
@@ -359,7 +359,7 @@ namespace BridgeOpsClient
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
-            LinkRecord lr = new("Conference", ColumnRecord.orderedConference, typeof(int), new() { id }, 3);
+            LinkRecord lr = new("Conference", ColumnRecord.orderedConference, "Select Conference", typeof(int), new() { id }, 3);
             lr.EnableMultiLink();
             lr.HideColumns(1, 2, 3);
             lr.Owner = this;

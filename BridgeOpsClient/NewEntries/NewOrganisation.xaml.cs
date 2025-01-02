@@ -447,7 +447,7 @@ namespace BridgeOpsClient
             if (originalRef == null)
                 return;
 
-            LinkRecord lr = new("Asset", ColumnRecord.asset, typeof(string), new() { originalRef }, 2);
+            LinkRecord lr = new("Asset", ColumnRecord.asset, "Link Asset", typeof(string), new() { originalRef }, 2);
             lr.Owner = this;
             lr.ShowDialog();
             string? assetID = lr.id;
@@ -536,7 +536,7 @@ namespace BridgeOpsClient
             }
             catch { }
 
-            LinkRecord lr = new("Contact", ColumnRecord.contact, typeof(int), excludeIDs, 0);
+            LinkRecord lr = new("Contact", ColumnRecord.contact, "Link Contact", typeof(int), excludeIDs, 0);
             lr.Owner = this;
             lr.ShowDialog();
             int contactIdInt;

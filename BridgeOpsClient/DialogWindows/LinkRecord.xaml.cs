@@ -43,9 +43,10 @@ namespace BridgeOpsClient
             catch { }
         }
 
-        public LinkRecord(string table, OrderedDictionary columns)
+        public LinkRecord(string table, OrderedDictionary columns, string title)
         {
             InitializeComponent();
+            Title = title;
 
             this.table = table;
             this.columns = columns;
@@ -59,10 +60,11 @@ namespace BridgeOpsClient
 
             txtSearch.Focus();
         }
-        public LinkRecord(string table, OrderedDictionary columns,
+        public LinkRecord(string table, OrderedDictionary columns, string title,
                           Type idType, HashSet<object> excludeIDs, int excludeCol)
         {
             InitializeComponent();
+            Title = title;
 
             this.table = table;
             this.columns = columns;
@@ -89,11 +91,12 @@ namespace BridgeOpsClient
             txtSearch.Focus();
         }
 
-        public LinkRecord(List<string?> columns, List<List<object?>> data, int idColumn)
+        public LinkRecord(List<string?> columns, List<List<object?>> data, int idColumn, string title)
         {
             this.idColumn = idColumn;
 
             InitializeComponent();
+            Title = title;
 
             dtg.Update(columns, data);
             dtg.CustomDoubleClick += dtg_DoubleClick;
@@ -101,11 +104,12 @@ namespace BridgeOpsClient
             txtSearch.Focus();
         }
         public LinkRecord(List<string?> columns, List<List<object?>> data, int idColumn,
-                          Type idType, HashSet<object> excludeIDs, int excludeCol)
+                          Type idType, HashSet<object> excludeIDs, int excludeCol, string title)
         {
             this.idColumn = idColumn;
 
             InitializeComponent();
+            Title = title;
 
             try
             {

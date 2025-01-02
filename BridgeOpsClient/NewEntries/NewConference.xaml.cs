@@ -859,7 +859,7 @@ namespace BridgeOpsClient
             }
             else
             {
-                LinkRecord lr = new("Recurrence", ColumnRecord.recurrence);
+                LinkRecord lr = new("Recurrence", ColumnRecord.recurrence, "Select Recurrence");
                 lr.Owner = this;
                 lr.ShowDialog();
                 int recID;
