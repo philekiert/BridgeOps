@@ -429,16 +429,21 @@ namespace BridgeOpsClient
 
         private void SearchConferences(bool wide)
         {
-            Dictionary<string, string> nameReversals = ColumnRecord.organisationFriendlyNameReversal;
+            Dictionary<string, string> nameReversals = ColumnRecord.connectionFriendlyNameReversal;
             List<string> selectColumns = new();
             List<string?> selectValues = new();
             List<string> operators = new();
             List<bool> needsQuotes = new();
             List<string> andOrs = new();
-            string prefix = "Organisation.";
+            string prefix = "Connection.";
 
             for (int n = 0; n < fieldValues.Count; ++n)
             {
+                if (n == 1)
+                {
+                    prefix = "Organisation.";
+                    nameReversals = ColumnRecord.organisationFriendlyNameReversal;
+                }
                 if (n == 3)
                 {
                     prefix = "Conference.";

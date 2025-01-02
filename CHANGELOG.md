@@ -3,7 +3,8 @@
   
 ## 0.6.8
 ### Added
-- Added a Help menu to the title bar, containing an About button and a placeholder button for Docs in advance of when they become available.
+- Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
+- Conference dial no searches in the data pane now also bring up results for unmanaged connections.
 ### Changed
 - Ordered the command lists in the console help summaries more sensibly.
 ### Fixed

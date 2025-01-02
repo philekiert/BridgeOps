@@ -63,7 +63,7 @@
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About" x:Name="btnAbout" Click="btnAbout_Click"/>
-                <MenuItem Header="_Documentation" x:Name="btnDocs" IsEnabled="False"/>
+                <!--<MenuItem Header="_Documentation" x:Name="btnDocs" IsEnabled="False"/>-->
             </MenuItem>
         </Menu>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" x:Name="stkPaneButtons"
