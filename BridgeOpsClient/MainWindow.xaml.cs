@@ -235,14 +235,21 @@ namespace BridgeOpsClient
 
         private void menuResetViewSettings_Click(object sender, RoutedEventArgs e)
         {
-            if (App.DisplayQuestion("Are you sure? This will:\n\n• Reset all data table view " +
-                                    "settings, such as hidden columns, column orders and columns " +
-                                    "widths.\n• Reset pane layout.\n\nYou will need to log back in.",
+            if (App.DisplayQuestion("Are you sure? This will:\n" +
+                                    "\n• Reset all data table view settings, such as hidden columns, column orders " +
+                                        "and columns widths." +
+                                    "\n• Reset pane selection and widths." +
+                                    "\n• Reset data pane layout and heights." +
+                                    "\n• Reset resource selection in the schedule pane.\n" +
+                                    "\nYou will need to log back in.",
                                     "Reset View Settings",
                                     DialogWindows.DialogBox.Buttons.YesNo, this))
             {
                 // Reset settings before LogOut(), and they will be stored on the database as part of that method.
                 App.us = new UserSettings();
+                foreach (PageConferenceView pcv in pageConferenceViews)
+                    pcv.resourcesOrder = new();
+                
                 App.LogOut(this);
             }
         }

@@ -36,6 +36,7 @@
     <None Remove="Resources\Icons\15AddCode.png" />
     <None Remove="Resources\Icons\16Duplicate.png" />
     <None Remove="Resources\Icons\17Delete.png" />
+    <None Remove="Resources\Icons\18Resources.png" />
     <None Remove="Resources\Icons\x20TitleBarIcon.png" />
     <None Remove="Resources\Icons\x20TitleBarIconDark.png" />
     <None Remove="Resources\Images\Logo.png" />
@@ -73,6 +74,7 @@
     <Resource Include="Resources\Icons\17Delete.png">
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Resources\Icons\18Resources.png" />
     <Resource Include="Resources\Icons\BridgeManager.ico" />
   </ItemGroup>
 

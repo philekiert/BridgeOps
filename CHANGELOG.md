@@ -9,6 +9,7 @@
 - Ordered the command lists in the console help summaries more sensibly.
 ### Fixed
 - Fixed multiple bugs regarding alterations to core columns.
+- The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
 - The recurrence title field now wraps text as intended.
 - The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
 - Corrected the default name of new headers in the column order settings from "New Column" to "New Header".

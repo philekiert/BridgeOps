@@ -427,6 +427,10 @@ namespace BridgeOpsClient
                             settings += pdv.cmbTable.Text + ";";
                             settings += pdv.GetRowDefinitionForFrame().Height.Value.ToString() + ";";
                         }
+                        settings += "\n";
+                        // Store the resource selections.
+                        foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                            settings += string.Join(",", pcv.resourcesOrder) + ";";
                         us = new();
                     }
 
@@ -919,7 +923,7 @@ namespace BridgeOpsClient
                             catch { }
 
                             // Conference view width, database view width, then view state.
-                            int next = settings.Length - 2;
+                            int next = settings.Length - 3;
                             if (next > 0)
                             {
                                 string[] viewSplit = settings[next].Split(';');
@@ -949,6 +953,19 @@ namespace BridgeOpsClient
                                     if (us.dataOrder[i].Count != us.dataHidden[i].Count ||
                                         us.dataOrder[i].Count != us.dataWidths[i].Count)
                                         return false;
+                            }
+                            catch { }
+
+                            // Resource selections.
+                            ++next;
+                            try
+                            {
+                                string[] orders = settings[next].Split(';');
+                                List<PageConferenceView> pcvs = BridgeOpsClient.MainWindow.pageConferenceViews;
+                                for (int i = 0;
+                                     i < orders.Length && i < pcvs.Count;
+                                     ++i)
+                                    pcvs[i].resourcesOrder = orders[i].Split(',').Select(i => int.Parse(i)).ToList();
                             }
                             catch { }
                         }

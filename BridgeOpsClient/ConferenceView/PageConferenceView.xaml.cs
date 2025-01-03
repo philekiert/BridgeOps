@@ -561,6 +561,13 @@ namespace BridgeOpsClient
             schView.ZoomResource(1);
         }
 
+        private void btnResources_Click(object sender, RoutedEventArgs e)
+        {
+            SelectResources selectResources = new(resourcesOrder);
+            selectResources.Owner = App.mainWindow;
+            selectResources.ShowDialog();
+        }
+
         void WindowResized(object sender, SizeChangedEventArgs e)
         {
             RedrawGrid();
