@@ -851,10 +851,7 @@ namespace BridgeOpsClient
                         }
                     }
                     foreach (PageConferenceView confView in BridgeOpsClient.MainWindow.pageConferenceViews)
-                    {
-                        confView.resourcesOrder = resources.Select(r => r.Value.id).ToList();
                         confView.SetResources();
-                    }
 
                     return true;
                 }
@@ -874,6 +871,7 @@ namespace BridgeOpsClient
             }
         }
 
+        public static List<List<int>> storedResourceSelection = new(); // Stored and accessed on MainWindow creation.
         public static bool PullUserSettings()
         {
             lock (streamLock)
@@ -961,13 +959,26 @@ namespace BridgeOpsClient
                             try
                             {
                                 string[] orders = settings[next].Split(';');
-                                List<PageConferenceView> pcvs = BridgeOpsClient.MainWindow.pageConferenceViews;
-                                for (int i = 0;
-                                     i < orders.Length && i < pcvs.Count;
-                                     ++i)
-                                    pcvs[i].resourcesOrder = orders[i].Split(',').Select(i => int.Parse(i)).ToList();
+                                storedResourceSelection.Clear();
+                                if (BridgeOpsClient.MainWindow.pageConferenceViews.Count == 0)
+                                    for (int i = 0; i < orders.Length; ++i)
+                                        storedResourceSelection.Add(orders[i]
+                                            .Split(',').Select(i => int.Parse(i)).ToList());
+                                else
+                                {
+                                    int n = 0;
+                                    foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                                    {
+                                        pcv.resourcesOrder = orders[n].Split(',').Select(i => int.Parse(i)).ToList();
+                                        ++n;
+                                    }
+                                }
                             }
-                            catch { }
+                            catch
+                            {
+                                foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                                    pcv.resourcesOrder = new();
+                            }
                         }
                     }
                     catch

@@ -72,8 +72,9 @@ namespace BridgeOpsClient
                 menuRPTExporterSeparator.Visibility = Visibility.Collapsed; 
             }
 
-            pageDatabase = new PageDatabase(this);
             frameConf.Content = new PageConferenceView();
+
+            pageDatabase = new PageDatabase(this);
             frameData.Content = pageDatabase;
 
             grdConfData.Focus();

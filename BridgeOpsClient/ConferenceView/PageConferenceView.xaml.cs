@@ -80,9 +80,6 @@ namespace BridgeOpsClient
             {
                 lock (resourcesOrder)
                 {
-                    // Temp code until custom resource orders are configurable by the user.
-                    resourcesOrder = resources.Select(r => r.Value.id).ToList();
-
                     resourceRowNames.Clear();
                     totalRows = 0;
                     foreach (int i in resourcesOrder)
@@ -323,6 +320,10 @@ namespace BridgeOpsClient
         {
             InitializeComponent();
 
+            if (App.storedResourceSelection.Count > 0)
+                foreach (int i in App.storedResourceSelection[0])
+                    resourcesOrder.Add(i);
+
             SetResources();
 
             tmrRender.Tick += TimerUpdate;
@@ -335,6 +336,8 @@ namespace BridgeOpsClient
 
             schResources.conferenceView = this;
             schView.conferenceView = this;
+
+            App.PullResourceInformation(App.mainWindow);
 
             MainWindow.pageConferenceViews.Add(this);
         }
@@ -563,7 +566,7 @@ namespace BridgeOpsClient
 
         private void btnResources_Click(object sender, RoutedEventArgs e)
         {
-            SelectResources selectResources = new(resourcesOrder);
+            SelectResources selectResources = new(this, resourcesOrder);
             selectResources.Owner = App.mainWindow;
             selectResources.ShowDialog();
         }

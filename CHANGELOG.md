@@ -1,10 +1,11 @@
 # Changelog
   
   
-## 0.6.8
+## 1.0.0
 ### Added
+- The ability to hide, show or reorder resources.
+- Conference dial number searches in the data pane now also bring up results for unmanaged connections.
 - Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
-- Conference dial no searches in the data pane now also bring up results for unmanaged connections.
 ### Changed
 - Ordered the command lists in the console help summaries more sensibly.
 ### Fixed
@@ -14,7 +15,7 @@
 - The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
 - Corrected the default name of new headers in the column order settings from "New Column" to "New Header".
 - Corrected max VARCHAR and CHAR length in the database creation functions from 65535 to 8000.
-- Corrected some command descriptions on the console.
+- Corrected some command descriptions in the console.
   
   
 ## 0.6.7

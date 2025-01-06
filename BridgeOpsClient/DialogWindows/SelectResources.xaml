@@ -9,7 +9,7 @@
         Title="Select Resources" SizeToContent="WidthAndHeight">
     <StackPanel>
         <ScrollViewer Margin="10 15 10 10" VerticalScrollBarVisibility="Auto" MinHeight="50" MaxHeight="500"
-                      MinWidth="120" MaxWidth="500">
+                      MinWidth="120" MaxWidth="500" HorizontalScrollBarVisibility="Auto">
             <Grid x:Name="grd">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>

@@ -27,9 +27,7 @@ namespace BridgeOpsClient
         public NewResource(string id)
         {
             if (!int.TryParse(id, out this.id))
-            {
                 App.DisplayError("Could not discern resource ID.", this);
-            }
 
             InitializeComponent();
 

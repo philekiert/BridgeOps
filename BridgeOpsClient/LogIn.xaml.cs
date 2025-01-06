@@ -87,6 +87,9 @@ namespace BridgeOpsClient
             // Function automatically stores the session ID in App if logged in successfully.
             if (result == Glo.CLIENT_LOGIN_ACCEPT)
             {
+                // No need to warn if this fails, it will simply fail and be reset/rebuilt on the user's next logout.
+                App.PullUserSettings();
+
                 if (App.PullColumnRecord(this))
                 {
                     // If Main window hasn't opened yet, the buttons will be null. If they aren't and MainWindow is
@@ -114,9 +117,6 @@ namespace BridgeOpsClient
                                      "contact the software administrator.", this);
                     App.LogOut(this);
                 }
-
-                // No need to warn if this fails, it will simply fail and be reset/rebuilt on the user's next logout.
-                App.PullUserSettings();
 
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.ReflectPermissions();

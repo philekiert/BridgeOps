@@ -18,11 +18,14 @@ namespace BridgeOpsClient
 {
     public partial class SelectResources : CustomWindow
     {
+        PageConferenceView page;
         List<ResourceRow> resources = new();
 
-        public SelectResources(List<int> resourceOrder)
+        public SelectResources(PageConferenceView page, List<int> resourceOrder)
         {
             InitializeComponent();
+
+            this.page = page;
 
             HashSet<int> resourceHash = resourceOrder.ToHashSet();
 
@@ -39,9 +42,14 @@ namespace BridgeOpsClient
             // Sort by order first, then name in case of loose rows.
             resources = resources.OrderBy(r => r.order).ThenBy(r => r.name).ToList();
 
+
             int n = 0;
             foreach (ResourceRow r in resources)
             {
+                // Reset orders to make sure everything has an index, as some will have -1 at this stage.
+                bool isIncluded = r.order != -1;
+                r.order = n;
+
                 grd.RowDefinitions.Add(new() { Height = new(24) });
                 Grid row = new() { Height = 24 };
                 row.ColumnDefinitions.Add(new() { Width = GridLength.Auto } );
@@ -58,6 +66,7 @@ namespace BridgeOpsClient
                     Padding = new(0, -1, 0, 0),
                     BorderThickness = new(1, 1, 1, 0)
                 };
+                up.IsEnabled = r.order != 0;
                 Button down = new()
                 {
                     Width = 24,
@@ -68,9 +77,11 @@ namespace BridgeOpsClient
                     Margin = new(0, 0, 15, 0),
                     Padding = new(0, -1, 0, 0)
                 };
+                down.IsEnabled = r.order != resources.Count - 1;
                 CheckBox chk = new()
                 {
-                    VerticalAlignment = VerticalAlignment.Center
+                    VerticalAlignment = VerticalAlignment.Center,
+                    IsChecked = isIncluded
                 };
                 Label name = new()
                 {
@@ -95,6 +106,8 @@ namespace BridgeOpsClient
                 Grid.SetRow(row, n);
                 grd.Children.Add(row);
 
+                r.grdRow = row;
+
                 ++n;
             }
         }
@@ -109,13 +122,45 @@ namespace BridgeOpsClient
                 return;
             if (!up && index == resources.Count - 1)
                 return;
+
+            Grid toSwap = up ? resources[index - 1].grdRow! : resources[index + 1].grdRow!;
+
+            if (up)
+            {
+                --resources[index].order;
+                ++resources[index - 1].order;
+                resources.Insert(index - 1, resources[index]);
+                resources.RemoveAt(index + 1);
+                Grid.SetRow(toSwap, index);
+                Grid.SetRow(toMove, index - 1);
+            }
+            else
+            {
+                --resources[index + 1].order;
+                ++resources[index].order;
+                resources.Insert(index + 2, resources[index]);
+                resources.RemoveAt(index);
+                Grid.SetRow(toMove, index + 1);
+                Grid.SetRow(toSwap, index);
+            }
+
+            // Blanket set button enabled states, best to catch everything just in case of a bug.
+            int lastIndex = resources.Count - 1;
+            for (int i = 0; i < resources.Count; ++i)
+            {
+                resources[i].grdRow!.Children[0].IsEnabled = i != 0;
+                resources[i].grdRow!.Children[1].IsEnabled = i != lastIndex;
+            }
             
             // YOU WERE HERE :) SWAP ROWS AROUND.
         }
 
         private void btnSet_Click(object sender, RoutedEventArgs e)
         {
-
+            page.resourcesOrder = resources.Where(i => ((CheckBox)i.grdRow!.Children[2]).IsChecked == true)
+                                           .Select(i => i.id).ToList();
+            Close();
+            App.PullResourceInformation(App.mainWindow);
         }
     }
 
@@ -124,6 +169,8 @@ namespace BridgeOpsClient
         public int order;
         public int id;
         public string name;
-        public ResourceRow(int order, int id, string name) { this.order = order; this.id = id; this.name = name; }
+        public Grid? grdRow = null;
+        public ResourceRow(int order, int id, string name)
+        { this.order = order; this.id = id; this.name = name; }
     }
 }
