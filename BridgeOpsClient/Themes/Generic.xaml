@@ -44,6 +44,8 @@
     <Color x:Key="colorAddButtonBorder">#4a8a81</Color>
     <Color x:Key="colorRemoveButton">#ff6996</Color>
     <Color x:Key="colorRemoveButtonBorder">#ab5073</Color>
+    <Color x:Key="colorNeutralButton">#D1F0FF</Color>
+    <Color x:Key="colorNeutralButtonBorder">#4495BB</Color>
     <Color x:Key="colorButton">#eee</Color>
     <Color x:Key="colorButtonBorder">#aaa</Color>
     <Color x:Key="colorNegativeBackground">#F45</Color>
@@ -60,6 +62,8 @@
     <SolidColorBrush x:Key="brushAddButtonBorder" Color="{StaticResource colorAddButtonBorder}"/>
     <SolidColorBrush x:Key="brushRemoveButton" Color="{StaticResource colorRemoveButton}"/>
     <SolidColorBrush x:Key="brushRemoveButtonBorder" Color="{StaticResource colorRemoveButtonBorder}"/>
+    <SolidColorBrush x:Key="brushNeutralButton" Color="{StaticResource colorNeutralButton}"/>
+    <SolidColorBrush x:Key="brushNeutralButtonBorder" Color="{StaticResource colorNeutralButtonBorder}"/>
     <SolidColorBrush x:Key="brushButton" Color="{StaticResource colorButton}"/>
     <SolidColorBrush x:Key="brushButtonBorder" Color="{StaticResource colorButtonBorder}"/>
     <SolidColorBrush x:Key="brushNegativeBackground" Color="{StaticResource colorNegativeBackground}"/>

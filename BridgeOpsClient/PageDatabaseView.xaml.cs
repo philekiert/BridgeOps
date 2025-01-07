@@ -86,6 +86,14 @@ namespace BridgeOpsClient
                                                                         false, btnConfRemoveFromRecurrence_Click);
             btnConfEditRecurrence = dtgResults.AddContextMenuItem("View Recurrence",
                                                                   false, btnConfEditRecurrence_Click);
+
+            for (int n = 0; n < 7; ++n)
+            {
+                DayLabel(n).MouseDown += DayMouseDown;
+                daysOn[n] = true;
+            }
+            ResetDays();
+            this.MouseMove += DayMouseMove;
         }
 
         public void EnforcePermissions()
@@ -122,6 +130,7 @@ namespace BridgeOpsClient
         private void WipeCallback()
         {
             SetStatusBar();
+            ResetDays();
         }
 
         public void PopulateColumnComboBox()
@@ -258,6 +267,7 @@ namespace BridgeOpsClient
                 if (lastSearchWide && App.SelectWide(table, lastWideValue,
                                                      out columnNames, out rows, lastSearchHistorical, App.mainWindow))
                 {
+                    ResetDays();
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
                     SetStatusBar(rows.Count, columnNames.Count, -1, lastSearchHistorical ? 1 : -1);
                 }
@@ -266,6 +276,7 @@ namespace BridgeOpsClient
                                     lastSearchColumns, lastSearchValues, lastSearchConditionals,
                                     out columnNames, out rows, true, lastSearchHistorical, App.mainWindow))
                 {
+                    ResetDays();
                     dtgResults.Update(lastColumnDefinitions, columnNames, rows);
                     SetStatusBar(rows.Count, columnNames.Count, lastSearchColumns.Count,
                                  lastSearchHistorical ? 1 : -1);
@@ -281,10 +292,114 @@ namespace BridgeOpsClient
         int lastRecurrenceSearchSelectCount = 0;
         SelectRequest? recurrenceSelectRequest = null;
 
+        bool daySelect = false;
+        bool daySwitch = false;
+        int dayCurrentlyOver = -1;
+        bool[] daysPresent = new bool[7];
+        bool[] daysOn = new bool[7];
+        private Label DayLabel(int day)
+        {
+            switch (day)
+            {
+                case 0: return mon;
+                case 1: return tue;
+                case 2: return wed;
+                case 3: return thu;
+                case 4: return fri;
+                case 5: return sat;
+                default: return sun;
+            }
+        }
+        private Border DayBorder(int day)
+        {
+            switch (day)
+            {
+                case 0: return monPr;
+                case 1: return tuePr;
+                case 2: return wedPr;
+                case 3: return thuPr;
+                case 4: return friPr;
+                case 5: return satPr;
+                default: return sunPr;
+            }
+        }
+        private int Day()
+        {
+            int x = (int)Mouse.GetPosition(mon).X;
+            x = x / 36; // Button width is 37, but -1 margin.
+            if (x < 0 || x > 6)
+                return -1;
+            return x;
+        }
+        private void DayMouseDown(object sender, MouseEventArgs e)
+        {
+            daySelect = true;
+            int day = Day();
+            Label l = DayLabel(day);
+            if (l.Background == (Brush)FindResource("brushButton"))
+                daySwitch = true;
+            else
+                daySwitch = false;
+            DayMouseMove(sender, e);
+        }
+        private void DayMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!daySelect)
+                return;
+
+            if (e.LeftButton == MouseButtonState.Released)
+            {
+                daySelect = false;
+                dayCurrentlyOver = -1;
+                return;
+            }
+
+            int day = Day();
+            if (day == -1)
+            {
+                dayCurrentlyOver = -1;
+                return;
+            }
+
+            if (dayCurrentlyOver != day)
+            {
+                dayCurrentlyOver = day;
+                Label l = DayLabel(day);
+                if (daySwitch)
+                    daysOn[day] = true;
+                else
+                    daysOn[day] = false;
+                RefreshDayColours();
+            }
+        }
+        private void ResetDays()
+        {
+            for (int n = 0; n < 7; ++n)
+                daysPresent[n] = false;
+            RefreshDayColours();
+        }
+        private void RefreshDayColours()
+        {
+            for (int i = 0; i < 7; ++i)
+            {
+                Label l = DayLabel(i);
+                if (daysOn[i])
+                    l.Style = (Style)l.FindResource("dayOn");
+                else
+                    l.Style = (Style)l.FindResource("day");
+                Border b = DayBorder(i);
+                if (daysPresent[i])
+                    b.Style = (Style)l.FindResource("dayPresent");
+                else
+                    b.Style = (Style)l.FindResource("dayAbsent");
+            }
+
+        }
+
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Show/hide the conference dates panel
-            stkDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
+            grdDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
             if (cmbTable.SelectedIndex < 2)
                 cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns",
                                                                  "Search All (historical)",
@@ -401,6 +516,7 @@ namespace BridgeOpsClient
 
                     lastSearchHistorical = historical;
                     dtgResults.identity = identity;
+                    ResetDays();
                     dtgResults.Update(tableColDefs, columnNames, rows);
 
                     SetStatusBar(rows.Count, columnNames.Count, selectColumns.Count, lastSearchHistorical ? 1 : -1);
@@ -551,6 +667,8 @@ namespace BridgeOpsClient
             if (conferences.Count > 0)
                 colNames.AddRange(conferences[0].additionalCols);
 
+            bool[] newDaysPresent = new bool[7];
+
             foreach (Conference c in conferences)
             {
                 bool test = false;
@@ -563,6 +681,10 @@ namespace BridgeOpsClient
 
                 start = (DateTime)c.start!;
                 end = (DateTime)c.end!;
+
+                newDaysPresent[(int)start.DayOfWeek - 1] = true;
+                if (!daysOn[(int)start.DayOfWeek - 1])
+                    continue;
                 List<object?> newRow = new()
                 {
                     c.conferenceID,
@@ -592,7 +714,10 @@ namespace BridgeOpsClient
 
             lastSearchHistorical = cmbSearchType.SelectedIndex > 1;
             dtgResults.identity = 7;
+            ResetDays();
             dtgResults.Update(colNames, data);
+            daysPresent = newDaysPresent;
+            RefreshDayColours();
 
             if (lastSearchWide)
                 SetStatusBar(rows.Count, lastConferenceSearchSelectCount, -1, lastSearchHistorical ? 1 : -1);
@@ -672,6 +797,7 @@ namespace BridgeOpsClient
         {
             lastSearchHistorical = cmbSearchType.SelectedIndex > 1;
             dtgResults.identity = 8;
+            ResetDays();
             dtgResults.Update(colNames, rows);
 
             if (lastSearchWide)
@@ -731,6 +857,7 @@ namespace BridgeOpsClient
 
                     lastSearchHistorical = historical;
                     dtgResults.identity = identity;
+                    ResetDays();
                     dtgResults.Update(tableColDefs, columnNames, rows);
 
                     SetStatusBar(rows.Count, columnNames.Count, -1, lastSearchHistorical ? 1 : -1);

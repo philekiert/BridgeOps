@@ -17,13 +17,90 @@
         </Grid.RowDefinitions>
 
         <!-- Conference date pickers (at the top so as not to be null for cmbTable change -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" x:Name="stkDates" Visibility="Collapsed">
-            <CheckBox x:Name="chkConfFromTo" Margin="9 6 0 0"/>
-            <Label Content="From" Margin="5 0 0 0"/>
-            <DatePicker x:Name="datFrom" Margin="5 1 4 0"/>
-            <Label Content="To" Margin="10 0 0 0"/>
-            <DatePicker x:Name="datTo" Margin="5 1 4 0"/>
-        </StackPanel>
+        <Grid Grid.Row="1" x:Name="grdDates" Visibility="Visible">
+            <Grid.Resources>
+                <Style TargetType="Label" x:Key="day">
+                    <Setter Property="VerticalAlignment" Value="Top"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource brushButtonBorder}"/>
+                    <Setter Property="Background" Value="{StaticResource brushButton}"/>
+                    <Setter Property="Height" Value="20"/>
+                    <Setter Property="Width" Value="37"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="Margin" Value="-1 1 0 0" />
+                    <Setter Property="Padding" Value="2 1 2 0"/>
+                    <Setter Property="Panel.ZIndex" Value="997"/>
+                </Style>
+                <Style TargetType="Label" x:Key="dayOn">
+                    <Setter Property="VerticalAlignment" Value="Top"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource brushNeutralButtonBorder}"/>
+                    <Setter Property="Background" Value="{StaticResource brushNeutralButton}"/>
+                    <Setter Property="Height" Value="20"/>
+                    <Setter Property="Width" Value="37"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="Margin" Value="-1 1 0 0"/>
+                    <Setter Property="Padding" Value="2 1 2 0"/>
+                    <Setter Property="Panel.ZIndex" Value="998"/>
+                </Style>
+                <Style TargetType="Border" x:Key="dayPresent">
+                    <Setter Property="VerticalAlignment" Value="Bottom"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource brushAddButtonBorder}"/>
+                    <Setter Property="Background" Value="{StaticResource brushAddButton}"/>
+                    <Setter Property="Height" Value="6"/>
+                    <Setter Property="Width" Value="37"/>
+                    <Setter Property="Margin" Value="-1 0 0 0"/>
+                    <Setter Property="Panel.ZIndex" Value="999"/>
+                </Style>
+                <Style TargetType="Border" x:Key="dayAbsent">
+                    <Setter Property="VerticalAlignment" Value="Bottom"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="#d0d0d0"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="Height" Value="6"/>
+                    <Setter Property="Width" Value="37"/>
+                    <Setter Property="Margin" Value="-1 0 0 0"/>
+                    <Setter Property="Panel.ZIndex" Value="996"/>
+                </Style>
+            </Grid.Resources>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="10"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="chkConfFromTo" Margin="9 6 0 0" Grid.Column="0"/>
+            <Label Content="From" Margin="5 0 0 0" Grid.Column="1"/>
+            <DatePicker x:Name="datFrom" Margin="5 1 4 0" Grid.Column="2"/>
+            <Label Content="To" Margin="10 0 0 0" Grid.Column="3"/>
+            <DatePicker x:Name="datTo" Margin="5 1 4 0" Grid.Column="4"/>
+            <Label x:Name="mon" Content="MON" Grid.Column="6" Style="{StaticResource day}"/>
+            <Border x:Name="monPr" Grid.Column="6" Style="{StaticResource dayAbsent}"/>
+            <Label x:Name="tue" Content="TUE" Grid.Column="7" Style="{StaticResource day}"/>
+            <Border x:Name="tuePr" Grid.Column="7" Style="{StaticResource dayAbsent}"/>
+            <Label x:Name="wed" Content="WED" Grid.Column="8" Style="{StaticResource day}"/>
+            <Border x:Name="wedPr" Grid.Column="8" Style="{StaticResource dayAbsent}"/>
+            <Label x:Name="thu" Content="THU" Grid.Column="9" Style="{StaticResource day}"/>
+            <Border x:Name="thuPr" Grid.Column="9" Style="{StaticResource dayAbsent}"/>
+            <Label x:Name="fri" Content="FRI" Grid.Column="10" Style="{StaticResource day}"/>
+            <Border x:Name="friPr" Grid.Column="10" Style="{StaticResource dayAbsent}"/>
+            <Label x:Name="sat" Content="SAT" Grid.Column="11" Style="{StaticResource day}"/>
+            <Border x:Name="satPr" Grid.Column="11" Style="{StaticResource dayAbsent}"/>
+            <Label x:Name="sun" Content="SUN" Grid.Column="12" Style="{StaticResource day}"/>
+            <Border x:Name="sunPr" Grid.Column="12" Style="{StaticResource dayAbsent}"/>
+        </Grid>
 
         <!-- Search bar -->
         <Grid Grid.Row="0">
@@ -78,7 +155,7 @@
         </Grid>
 
         <!-- Status -->
-        <Border Margin="10 -10 10 0" Height="23" Grid.Row="3"
+        <Border Margin="10 -10 10 0" Height="23" Grid.Row="3" Visibility="Hidden"
                 VerticalAlignment="Top" CornerRadius="0 0 4 4" BorderThickness="1 0 1 1"
                 Background="{StaticResource brushStatusBar}" BorderBrush="{StaticResource brushStatusBarBorder}"/>
         <StackPanel Grid.Row="3" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">

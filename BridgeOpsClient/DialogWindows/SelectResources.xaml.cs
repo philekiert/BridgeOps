@@ -50,7 +50,7 @@ namespace BridgeOpsClient
                 bool isIncluded = r.order != -1;
                 r.order = n;
 
-                grd.RowDefinitions.Add(new() { Height = new(24) });
+                grd.RowDefinitions.Add(new() { Height = new(30) });
                 Grid row = new() { Height = 24 };
                 row.ColumnDefinitions.Add(new() { Width = GridLength.Auto } );
                 row.ColumnDefinitions.Add(new() { Width = new(24) } );
