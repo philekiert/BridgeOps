@@ -164,8 +164,10 @@ namespace BridgeOpsClient
                 cmbColumn.Items.Add(new ComboBoxItem()
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
                 cmbColumn.Items.Add(new ComboBoxItem()
+                { Content = ColumnRecord.GetPrintName(Glo.Tab.RECURRENCE_ID, ColumnRecord.recurrence) });
+                cmbColumn.Items.Add(new ComboBoxItem()
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_ID, ColumnRecord.conference) });
-                fieldValues.AddRange(new string[] { "", "", "" });
+                fieldValues.AddRange(new string[] { "", "", "", "", "" });
             }
             // Same for recurrences.
             if (cmbTable.SelectedIndex == 4)
@@ -561,6 +563,11 @@ namespace BridgeOpsClient
                 }
                 if (n == 3)
                 {
+                    prefix = "Recurrence.";
+                    nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
+                }
+                if (n == 4)
+                {
                     prefix = "Conference.";
                     nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
                 }
@@ -588,7 +595,7 @@ namespace BridgeOpsClient
                     return;
                 }
                 selectColumns.Add("Conference." + Glo.Tab.CONFERENCE_START);
-                selectColumns.Add("Conference." + Glo.Tab.CONFERENCE_START);
+                selectColumns.Add("Conference." + Glo.Tab.CONFERENCE_START); // NB: This is correct :)
                 selectValues.Add(SqlAssist.DateTimeToSQL((DateTime)datFrom.SelectedDate));
                 selectValues.Add(SqlAssist.DateTimeToSQL(((DateTime)datTo.SelectedDate).AddDays(1)));
                 operators.Add(">=");
@@ -603,16 +610,19 @@ namespace BridgeOpsClient
                 andOrs.RemoveAt(0); // This needs to be one fewer than the rest.
 
             SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, "Conference", true,
-                                    new() { "Connection", "Organisation" },
+                                    new() { "Connection", "Organisation", "Recurrence" },
                                     new() { "Connection." + Glo.Tab.CONFERENCE_ID,
-                                                    "Organisation." + Glo.Tab.DIAL_NO },
+                                            "Organisation." + Glo.Tab.DIAL_NO,
+                                            "Conference." + Glo.Tab.RECURRENCE_ID},
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID,
-                                                    "Connection." + Glo.Tab.DIAL_NO },
-                                    new() { "LEFT", "LEFT" },
+                                            "Connection." + Glo.Tab.DIAL_NO,
+                                            "Recurrence." + Glo.Tab.RECURRENCE_ID},
+                                    new() { "LEFT", "LEFT", "LEFT" },
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());
             req.autoConfIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);
+            req.autoRecIdPrefix = wide || selectColumns.Contains("Recurrence." + Glo.Tab.RECURRENCE_ID);
 
             List<string?> colNames = new();
             List<List<object?>> rows = new();

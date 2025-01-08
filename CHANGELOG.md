@@ -4,6 +4,7 @@
 ## 1.0.0
 ### Added
 - Day of week filtering on conference searches in the database pane.
+- Added recurrence ID field to conference search columns.
 - The ability to hide, show or reorder resources.
 - Conference dial number searches in the data pane now also bring up results for unmanaged connections.
 - Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
@@ -11,6 +12,7 @@
 - Ordered the command lists in the console help summaries more sensibly.
 - Included recurrence notes in data pane search results.
 ### Fixed
+- Fixed a bug preventing conference notes from being explicitly searched.
 - Fixed multiple bugs regarding alterations to core columns.
 - Added the ConferenceAdditional view to the join options in the Select Query Builder.
 - The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
