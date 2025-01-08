@@ -164,10 +164,8 @@ namespace BridgeOpsClient
                 cmbColumn.Items.Add(new ComboBoxItem()
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
                 cmbColumn.Items.Add(new ComboBoxItem()
-                { Content = ColumnRecord.GetPrintName(Glo.Tab.RECURRENCE_ID, ColumnRecord.recurrence) });
-                cmbColumn.Items.Add(new ComboBoxItem()
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_ID, ColumnRecord.conference) });
-                fieldValues.AddRange(new string[] { "", "", "", "", "" });
+                fieldValues.AddRange(new string[] { "", "", "", ""});
             }
             // Same for recurrences.
             if (cmbTable.SelectedIndex == 4)
@@ -610,19 +608,16 @@ namespace BridgeOpsClient
                 andOrs.RemoveAt(0); // This needs to be one fewer than the rest.
 
             SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, "Conference", true,
-                                    new() { "Connection", "Organisation", "Recurrence" },
+                                    new() { "Connection", "Organisation"},
                                     new() { "Connection." + Glo.Tab.CONFERENCE_ID,
-                                            "Organisation." + Glo.Tab.DIAL_NO,
-                                            "Conference." + Glo.Tab.RECURRENCE_ID},
+                                            "Organisation." + Glo.Tab.DIAL_NO},
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID,
-                                            "Connection." + Glo.Tab.DIAL_NO,
-                                            "Recurrence." + Glo.Tab.RECURRENCE_ID},
+                                            "Connection." + Glo.Tab.DIAL_NO},
                                     new() { "LEFT", "LEFT", "LEFT" },
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());
             req.autoConfIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);
-            req.autoRecIdPrefix = wide || selectColumns.Contains("Recurrence." + Glo.Tab.RECURRENCE_ID);
 
             List<string?> colNames = new();
             List<List<object?>> rows = new();
