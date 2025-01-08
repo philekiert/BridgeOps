@@ -327,8 +327,10 @@ namespace BridgeOpsClient
         {
             int x = (int)Mouse.GetPosition(mon).X;
             x = x / 36; // Button width is 37, but -1 margin.
-            if (x < 0 || x > 6)
+            if (x < 0 || x > 7)
                 return -1;
+            if (x == 7) // Extended slighly further right.
+                return 6;
             return x;
         }
         private void DayMouseDown(object sender, MouseEventArgs e)
@@ -336,10 +338,7 @@ namespace BridgeOpsClient
             daySelect = true;
             int day = Day();
             Label l = DayLabel(day);
-            if (l.Background == (Brush)FindResource("brushButton"))
-                daySwitch = true;
-            else
-                daySwitch = false;
+            daySwitch = !daysOn[day];
             DayMouseMove(sender, e);
         }
         private void DayMouseMove(object sender, MouseEventArgs e)
@@ -775,7 +774,8 @@ namespace BridgeOpsClient
                                             "Connection." + Glo.Tab.DIAL_NO },
                                     new() { "LEFT", "LEFT", "LEFT" },
                                     new() { "Recurrence." + Glo.Tab.RECURRENCE_ID,
-                                            "Recurrence." + Glo.Tab.RECURRENCE_NAME}, new() { "", "" },
+                                            "Recurrence." + Glo.Tab.RECURRENCE_NAME,
+                                            "Recurrence." + Glo.Tab.NOTES }, new() { "", "", "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());
             req.autoConfIdPrefix = wide || selectColumns.Contains("Conference." + Glo.Tab.CONFERENCE_ID);

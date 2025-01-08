@@ -9,6 +9,7 @@
 - Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
 ### Changed
 - Ordered the command lists in the console help summaries more sensibly.
+- Included recurrence notes in data pane search results.
 ### Fixed
 - Fixed multiple bugs regarding alterations to core columns.
 - The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
