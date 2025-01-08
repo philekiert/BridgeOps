@@ -12,6 +12,7 @@
 - Included recurrence notes in data pane search results.
 ### Fixed
 - Fixed multiple bugs regarding alterations to core columns.
+- Added the ConferenceAdditional view to the join options in the Select Query Builder.
 - The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
 - The recurrence title field now wraps text as intended.
 - The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
