@@ -13,6 +13,7 @@
 ### Fixed
 - Fixed a bug preventing conference notes from being explicitly searched.
 - Fixed multiple bugs regarding alterations to core columns.
+- Fixed a conference duplication bug where clash and overflow detection was happening on the conference being duplicated rather than the duplication.
 - Added the ConferenceAdditional view to the join options in the Select Query Builder.
 - The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
 - The recurrence title field now wraps text as intended.

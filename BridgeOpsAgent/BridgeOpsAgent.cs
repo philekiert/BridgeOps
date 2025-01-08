@@ -3297,9 +3297,9 @@ internal class BridgeOpsAgent
             coms.Add(Conference.SqlCheckForRowClashes(duplicate ? null : conferenceIDs,
                                                       sqlConnect, resolveRowClashes));
             if (!overrideDialNoClashes)
-                coms.Add(Conference.SqlCheckForDialNoClashes(conferenceIDs, sqlConnect));
+                coms.Add(Conference.SqlCheckForDialNoClashes(duplicate ? null : conferenceIDs, sqlConnect));
             if (!overrideResourceOverflows)
-                coms.Add(Conference.SqlCheckForResourceOverflows(conferenceIDs, sqlConnect));
+                coms.Add(Conference.SqlCheckForResourceOverflows(duplicate ? null : conferenceIDs, sqlConnect));
 
             SqlCommand com = new(SqlAssist.Transaction(coms.ToArray()), sqlConnect);
 
