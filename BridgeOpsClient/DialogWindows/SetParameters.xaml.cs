@@ -182,13 +182,13 @@ namespace BridgeOpsClient
                     {
                         if (txt.Text == "")
                             return Abort($"You must select a value for all parameters.");
-                        value = txt.Text.Replace("'", "''");
+                        value = "'" + txt.Text.Replace("'", "''") + "'";
                     }
                     else if (row.value is ComboBox cmb)
                     {
                         if (cmb.SelectedIndex < 0)
                             return Abort($"You must select a value for all parameters.");
-                        value = cmb.Text.Replace("'", "''");
+                        value = "'" + cmb.Text.Replace("'", "''") + "'";
                     }
                     else if (row.value is ScrollViewer scrl)
                     {

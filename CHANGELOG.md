@@ -11,6 +11,7 @@
 - Ordered the command lists in the console help summaries more sensibly.
 - Included recurrence notes in data pane search results.
 ### Fixed
+- Text values inserted as parameters in select statements are now enclosed in single quotes as they should have been previously.
 - Fixed a bug preventing conference notes from being explicitly searched.
 - Fixed multiple bugs regarding alterations to core columns.
 - Fixed a conference duplication bug where clash and overflow detection was happening on the conference being duplicated rather than the duplication.

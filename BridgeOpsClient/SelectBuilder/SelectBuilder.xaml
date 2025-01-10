@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
-        mc:Ignorable="d"
+        mc:Ignorable="d" MinHeight="400"
         Title="Select Query Builder" Width="1050" Height="600" UseLayoutRounding="True"
         MinWidth="1200">
     <Grid Margin="0 5 0 0">
@@ -79,7 +79,7 @@
         <Label Content="Preset" Grid.Column="11" VerticalAlignment="Center" Margin="10 10 10 10"
                HorizontalAlignment="Right"/>
         <ComboBox x:Name="cmbPresets" Grid.Column="12" Margin="0 10 10 10" Width="260"
-                  SelectionChanged="cmbPresets_SelectionChanged"/>
+                  SelectionChanged="cmbPresets_SelectionChanged" Height="24"/>
         <Button x:Name="btnAddPreset" Grid.Column="13" Click=
                 "btnAddPreset_Click"
                 Margin="0 10 0 10" Style="{StaticResource toolbar-button}" ToolTip="Save As New">
