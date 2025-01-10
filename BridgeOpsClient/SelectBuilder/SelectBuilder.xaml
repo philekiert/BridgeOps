@@ -93,7 +93,7 @@
                 <Image Source="/Resources/Icons/13Save.png"/>
             </Button.Content>
         </Button>
-        <Button x:Name="btnRemovePreset" Grid.Column="15" Click="btnRemovePreset_Click" ToolTip="Save Changes"
+        <Button x:Name="btnRemovePreset" Grid.Column="15" Click="btnRemovePreset_Click" ToolTip="Delete Preset"
                 Margin="0 10 0 10" Style="{StaticResource toolbar-button}" IsEnabled="False">
             <Button.Content>
                 <Image Source="/Resources/Icons/17Delete.png"/>
