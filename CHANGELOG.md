@@ -4,12 +4,13 @@
 ## 1.0.0
 ### Added
 - Day of week filtering on conference searches in the database pane.
-- The ability to hide, show or reorder resources.
 - Conference dial number searches in the data pane now also bring up results for unmanaged connections.
+- The ability to hide, show or reorder resources.
 - Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
 ### Changed
 - Ordered the command lists in the console help summaries more sensibly.
 - Included recurrence notes in data pane search results.
+- Clarified some button names in the Select Query Builder window.
 ### Fixed
 - Text values inserted as parameters in select statements are now enclosed in single quotes as they should have been previously.
 - Fixed a bug preventing conference notes from being explicitly searched.
