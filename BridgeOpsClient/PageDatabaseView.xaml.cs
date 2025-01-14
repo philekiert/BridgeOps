@@ -561,11 +561,6 @@ namespace BridgeOpsClient
                 }
                 if (n == 3)
                 {
-                    prefix = "Recurrence.";
-                    nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
-                }
-                if (n == 4)
-                {
                     prefix = "Conference.";
                     nameReversals = ColumnRecord.conferenceFriendlyNameReversal;
                 }
@@ -613,7 +608,7 @@ namespace BridgeOpsClient
                                             "Organisation." + Glo.Tab.DIAL_NO},
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID,
                                             "Connection." + Glo.Tab.DIAL_NO},
-                                    new() { "LEFT", "LEFT", "LEFT" },
+                                    new() { "LEFT", "LEFT"},
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());
