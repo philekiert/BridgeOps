@@ -12,6 +12,7 @@
 - Included recurrence notes in data pane search results.
 - Clarified some button names in the Select Query Builder window.
 ### Fixed
+- Hosts are now correctly reported in the Adjust Connections and Set Host windows.
 - Text values inserted as parameters in select statements are now enclosed in single quotes as they should have been previously.
 - Fixed a bug preventing conference notes from being explicitly searched.
 - Fixed multiple bugs regarding alterations to core columns.
