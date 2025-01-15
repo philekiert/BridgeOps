@@ -23,9 +23,17 @@ namespace BridgeOpsClient
             lblVersion.Content = Glo.VersionNumber;
         }
 
-        private void CustomWindow_MouseUp(object sender, MouseButtonEventArgs e)
+        bool closing = false;
+        private void CustomWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            closing = true;
             Close();
+        }
+
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            if (!closing)
+                Close();
         }
     }
 }

@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d" WindowStartupLocation="CenterOwner"
         Title="" Height="410" Width="840" ResizeMode="NoResize" WindowStyle="None"
-        MouseUp="CustomWindow_MouseUp" AllowsTransparency="True" Background="Transparent">
+        MouseDown="CustomWindow_MouseDown" AllowsTransparency="True" Background="Transparent"
+        Deactivated="Window_Deactivated">
     <Border Padding="30">
         <Border CornerRadius="8" Background="White">
             <Border.Effect>
