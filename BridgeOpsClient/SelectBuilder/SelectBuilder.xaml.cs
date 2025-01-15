@@ -301,13 +301,18 @@ namespace BridgeOpsClient
             FileExport.SaveFile(xl, fileName, this);
         }
 
-        private string GetNewPresetName()
+        private string GetNewPresetName() { return GetNewPresetName(""); }
+        private string GetNewPresetName(string rename)
         {
             DialogWindows.NameObject nameObject;
             while (true)
             {
-                nameObject = new("Preset Name");
+                if (rename == "")
+                    nameObject = new("Preset Name");
+                else
+                    nameObject = new("Preset Name", cmbPresets.Text);
                 nameObject.Owner = this;
+
                 nameObject.ShowDialog();
                 if (nameObject.DialogResult == false || nameObject.txtName.Text == "")
                     return "";
@@ -736,7 +741,7 @@ namespace BridgeOpsClient
 
         private void btnRenamePreset_Click(object sender, RoutedEventArgs e)
         {
-            string newName = GetNewPresetName();
+            string newName = GetNewPresetName(cmbPresets.Text);
             if (newName == "")
                 return;
 

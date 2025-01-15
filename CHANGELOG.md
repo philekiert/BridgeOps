@@ -7,7 +7,7 @@
   - Day of week filtering on conference searches in the database pane.
   - Conference dial number searches in the data pane now also bring up results for unmanaged connections.
   - The ability to hide, show or reorder resources.
-  - Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
+  - Added a Help menu to the title bar with an About page and links to docs.
 ### Changed
 - Server
   - Ordered the command lists in the console help summaries more sensibly.

@@ -25,6 +25,12 @@ namespace BridgeOpsClient.DialogWindows
             txtName.Focus();
         }
 
+        public NameObject(string title, string initial) : this(title)
+        {
+            txtName.Text = initial;
+            txtName.SelectAll();
+        }
+
         private void btnSubmit_Click(object? sender, RoutedEventArgs? e)
         {
             if (!CheckLegal())
