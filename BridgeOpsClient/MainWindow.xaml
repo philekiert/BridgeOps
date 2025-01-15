@@ -56,8 +56,16 @@
                               Click="menuDatabaseNewResource_Click"/>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="Select _Query Builder" Click="menuSelect_Click"/>
-                <MenuItem Header="_Select Statement" Click="menuSelectStatement_Click"/>
+                <MenuItem Header="Select _Query Builder" Click="menuSelect_Click">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/Icons/04Plus.png" Width="22" Height="22" Margin="0 -3 -3 0"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Select Statement" Click="menuSelectStatement_Click">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/Icons/15AddCode.png" Width="22" Height="22" Margin="0 -3 -3 0"/>
+                    </MenuItem.Icon>
+                </MenuItem>
                 <Separator x:Name="menuRPTExporterSeparator"/>
                 <MenuItem Header="_RPT Exporter" Click="menuRPTExporter_Click" x:Name="menuRPTExporter"/>
                 <MenuItem Header="RPT Exporter _Documentation" Click="menuRPTExporterDocs_Click"
@@ -67,7 +75,11 @@
                 <MenuItem Header="_Administration Guide" x:Name="btnDocsAdmin" Click="btnDocs_Click"/>
                 <MenuItem Header="_User Guide" x:Name="btnDocsUser" Click="btnDocs_Click"/>
                 <Separator/>
-                <MenuItem Header="A_bout" x:Name="btnAbout" Click="btnAbout_Click"/>
+                <MenuItem Header="A_bout" x:Name="btnAbout" Click="btnAbout_Click">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/Icons/x20TitlebarIcon.png" Margin="0 -2 -2 0" Height="20" Width="20"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
         </Menu>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" x:Name="stkPaneButtons"
