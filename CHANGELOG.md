@@ -3,27 +3,32 @@
   
 ## 1.0.0
 ### Added
-- Day of week filtering on conference searches in the database pane.
-- Conference dial number searches in the data pane now also bring up results for unmanaged connections.
-- The ability to hide, show or reorder resources.
-- Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
+- Client
+  - Day of week filtering on conference searches in the database pane.
+  - Conference dial number searches in the data pane now also bring up results for unmanaged connections.
+  - The ability to hide, show or reorder resources.
+  - Added a Help menu to the title bar, currently containing an About button but will also contain a button for Docs when they become available.
 ### Changed
-- Ordered the command lists in the console help summaries more sensibly.
-- Included recurrence notes in data pane search results.
-- Clarified some button names in the Select Query Builder window.
+- Server
+  - Ordered the command lists in the console help summaries more sensibly.
+- Client
+  - Included recurrence notes in data pane search results.
+  - Clarified some button names in the Select Query Builder window.
 ### Fixed
-- Hosts are now correctly reported in the Adjust Connections and Set Host windows.
-- Text values inserted as parameters in select statements are now enclosed in single quotes as they should have been previously.
-- Fixed a bug preventing conference notes from being explicitly searched.
-- Fixed multiple bugs regarding alterations to core columns.
-- Fixed a conference duplication bug where clash and overflow detection was happening on the conference being duplicated rather than the duplication.
-- Added the ConferenceAdditional view to the join options in the Select Query Builder.
-- The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
-- The recurrence title field now wraps text as intended.
-- The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
-- Corrected the default name of new headers in the column order settings from "New Column" to "New Header".
-- Corrected max VARCHAR and CHAR length in the database creation functions from 65535 to 8000.
-- Corrected some command descriptions in the console.
+- Client
+  - Hosts are now correctly reported in the Adjust Connections and Set Host windows.
+  - Text values inserted as parameters in select statements are now enclosed in single quotes as they should have been previously.
+  - Fixed a bug preventing conference notes from being explicitly searched.
+  - Fixed a conference duplication bug where clash and overflow detection was happening on the conference being duplicated rather than the duplication.
+  - Added the ConferenceAdditional view to the join options in the Select Query Builder.
+  - The dialog windows for linking records, conferences to recurrences or setting conference hosts now display the correct title for each.
+  - The recurrence title field now wraps text as intended.
+  - The conference and recurrence title and notes fields now set their max lengths correctly according to their column restrictions in the database.
+  - Corrected the default name of new headers in the column order settings from "New Column" to "New Header".
+- Server
+  - Fixed multiple bugs regarding alterations to core columns.
+  - Corrected max VARCHAR and CHAR length in the database creation functions from 65535 to 8000.
+  - Corrected some command descriptions in the console.
   
   
 ## 0.6.7

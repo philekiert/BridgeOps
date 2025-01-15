@@ -51,9 +51,9 @@ namespace BridgeOpsClient
         }
 
         private void CustomWindow_KeyUp(object sender, KeyEventArgs e)
-            {
-                ToggleNetworkSettings(sender, e);
-            }
+        {
+            ToggleNetworkSettings(sender, e);
+        }
 
         private void ToggleNetworkSettings(object sender, EventArgs e)
         {
@@ -118,6 +118,9 @@ namespace BridgeOpsClient
                     App.LogOut(this);
                 }
 
+                if (mainWindow.btnDocsAdmin != null) // This condition checks that the window has actually been displayed.
+                    mainWindow.ApplyPermissions();
+
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.ReflectPermissions();
             }
@@ -133,7 +136,7 @@ namespace BridgeOpsClient
                                     "minute. If the problem does not resolve itself, contact the software " +
                                     "administrator.", this);
                 else if (result == Glo.CLIENT_LOGIN_REJECT_USER_DISABLED)
-                    App.DisplayError("Account disabled, please speak to your administrator.", this);   
+                    App.DisplayError("Account disabled, please speak to your administrator.", this);
                 else
                     App.DisplayError("Could not connect to Agent.", this);
 
@@ -142,7 +145,7 @@ namespace BridgeOpsClient
 
             if (mainWindow.IsLoaded)
             {
-                mainWindow.GreyOutPermissions();
+                mainWindow.ApplyPermissions();
                 mainWindow.mixedPaneRedrawOverride = true;
                 mainWindow.ApplyViewState();
             }

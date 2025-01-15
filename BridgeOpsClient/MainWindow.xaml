@@ -60,10 +60,14 @@
                 <MenuItem Header="_Select Statement" Click="menuSelectStatement_Click"/>
                 <Separator x:Name="menuRPTExporterSeparator"/>
                 <MenuItem Header="_RPT Exporter" Click="menuRPTExporter_Click" x:Name="menuRPTExporter"/>
+                <MenuItem Header="RPT Exporter _Documentation" Click="menuRPTExporterDocs_Click"
+                          x:Name="menuRPTExporterDocs"/>
             </MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem Header="_About" x:Name="btnAbout" Click="btnAbout_Click"/>
-                <!--<MenuItem Header="_Documentation" x:Name="btnDocs" IsEnabled="False"/>-->
+                <MenuItem Header="_Administration Guide" x:Name="btnDocsAdmin" Click="btnDocs_Click"/>
+                <MenuItem Header="_User Guide" x:Name="btnDocsUser" Click="btnDocs_Click"/>
+                <Separator/>
+                <MenuItem Header="A_bout" x:Name="btnAbout" Click="btnAbout_Click"/>
             </MenuItem>
         </Menu>
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" x:Name="stkPaneButtons"

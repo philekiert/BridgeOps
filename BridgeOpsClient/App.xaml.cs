@@ -40,16 +40,6 @@ namespace BridgeOpsClient
         {
             return additional == "" ? error : $"{error} See error:\n\n{additional}";
         }
-        //public static void DisplayError(string error) { DisplayError(error, ""); }
-        //public static void DisplayError(string error, string title)
-        //{
-        //    try
-        //    {
-        //        DialogWindows.DialogBox dialog = new(error, title);
-        //        dialog.ShowDialog();
-        //    }
-        //    catch { }
-        //}
         public static bool DisplayError(string error, Window? owner) { return DisplayError(error, "", owner); }
         public static bool DisplayError(string error, string title, Window? owner)
         {

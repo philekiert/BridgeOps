@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net;
@@ -47,6 +48,7 @@ namespace BridgeOpsClient
         }
 
         string? rptExporterLocation = null;
+        string? rptExporterDocsLocation = null;
 
         public MainWindow()
         {
@@ -65,12 +67,18 @@ namespace BridgeOpsClient
 
             // Look for RPT Exporter and grey out if it isn't found.
             if (App.currentDir != null)
-                rptExporterLocation = App.currentDir + "/RPT Exporter/RPT Exporter.exe";
-            if (!System.IO.File.Exists(rptExporterLocation))
             {
-                menuRPTExporter.Visibility = Visibility.Collapsed;
-                menuRPTExporterSeparator.Visibility = Visibility.Collapsed; 
+                rptExporterLocation = App.currentDir + "\\RPT Exporter\\RPT Exporter.exe";
+                rptExporterDocsLocation = App.currentDir + "\\RPT Exporter\\RPT Exporter.pdf";
             }
+            bool rptExists = File.Exists(rptExporterLocation);
+            bool rptDocExists = File.Exists(rptExporterDocsLocation);
+            if (!rptExists)
+                menuRPTExporter.Visibility = Visibility.Collapsed;
+            if (!rptDocExists)
+                menuRPTExporterDocs.Visibility = Visibility.Collapsed;
+            if (!rptExists && !rptDocExists)
+                menuRPTExporterSeparator.Visibility = Visibility.Collapsed;
 
             frameConf.Content = new PageConferenceView();
 
@@ -94,10 +102,7 @@ namespace BridgeOpsClient
             mixedPaneRedrawOverride = true;
 
             ApplyViewState();
-            GreyOutPermissions();
-
-            // DELETE !!!
-            //stkPaneButtons.Visibility = Visibility.Collapsed;
+            ApplyPermissions();
         }
 
         public void ApplyViewState()
@@ -120,7 +125,7 @@ namespace BridgeOpsClient
                 pageDatabase.ClearSqlDataGrids();
         }
 
-        public void GreyOutPermissions()
+        public void ApplyPermissions()
         {
             menuDatabaseNewOrganisation.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
             menuDatabaseNewAsset.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
@@ -129,10 +134,12 @@ namespace BridgeOpsClient
             menuDatabaseNewRecurrence.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
             menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
 
-            // DELETE !!!
-            //menuDatabaseNewConference.IsEnabled = false;
-            //menuDatabaseNewRecurrence.IsEnabled = false;
-            //menuDatabaseNewResource.IsEnabled = false;
+            if (!App.sd.admin && !App.sd.createPermissions[Glo.PERMISSION_USER_ACC_MGMT] &&
+                                 !App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT] &&
+                                 !App.sd.deletePermissions[Glo.PERMISSION_USER_ACC_MGMT])
+                btnDocsAdmin.Visibility = Visibility.Collapsed;
+            else
+                btnDocsAdmin.Visibility = Visibility.Visible;
         }
 
         private void menuDatabaseNewOrganisation_Click(object sender, RoutedEventArgs e)
@@ -250,7 +257,7 @@ namespace BridgeOpsClient
                 App.us = new UserSettings();
                 foreach (PageConferenceView pcv in pageConferenceViews)
                     pcv.resourcesOrder = new();
-                
+
                 App.LogOut(this);
             }
         }
@@ -267,6 +274,38 @@ namespace BridgeOpsClient
         {
             // No need for cleanup as this is handled in App.ApplicationExit().
             Close();
+        }
+
+        private void btnDocs_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender == btnDocsUser)
+            {
+                if (File.Exists(App.currentDir + "\\Documentation\\Bridge Manager User Guide.pdf"))
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = App.currentDir + "\\Documentation\\Bridge Manager User Guide.pdf",
+                        UseShellExecute = true
+                    };
+                    Process.Start(psi);
+                }
+                else
+                    App.DisplayError("Could not locate file.", this);
+            }
+            else if (sender == btnDocsAdmin)
+            {
+                if (File.Exists(App.currentDir + "\\Documentation\\Bridge Manager Administration Guide.pdf"))
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = App.currentDir + "\\Documentation\\Bridge Manager Administration Guide.pdf",
+                        UseShellExecute = true
+                    };
+                    Process.Start(psi);
+                }
+                else
+                    App.DisplayError("Could not locate file.", this);
+            }
         }
 
         public void ToggleLogInOut(bool loggedIn)
@@ -411,7 +450,7 @@ namespace BridgeOpsClient
 
         private void menuRPTExporter_Click(object sender, RoutedEventArgs e)
         {
-            if (!System.IO.File.Exists(rptExporterLocation))
+            if (!File.Exists(rptExporterLocation))
             {
                 App.DisplayError("Unable to locate ./RPT Exporter/RPT Exporter.exe", this);
                 return;
@@ -424,6 +463,30 @@ namespace BridgeOpsClient
             catch
             {
                 App.DisplayError("Could not load RPT Exporter.exe", this);
+            }
+        }
+
+        private void menuRPTExporterDocs_Click(object sender, RoutedEventArgs e)
+        {
+            if (!File.Exists(rptExporterDocsLocation))
+            {
+                App.DisplayError("Unable to locate ./RPT Exporter/RPT Exporter.pdf", this);
+                return;
+            }
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = rptExporterDocsLocation,
+                UseShellExecute = true
+            };
+
+            try
+            {
+                Process.Start(psi);
+            }
+            catch
+            {
+                App.DisplayError("Could not open the file.", this);
             }
         }
 
