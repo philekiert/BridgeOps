@@ -689,6 +689,7 @@ namespace BridgeOpsClient
                 // Draw conferences.
                 bool resizeCursorSet = false;
                 bool isMouseOverConference = false;
+                HashSet<int> resourceIDs = conferenceView.resourcesOrder.ToHashSet();
 
                 lock (conferenceListLock)
                     lock (clashIDs)
@@ -701,6 +702,9 @@ namespace BridgeOpsClient
                         conferencesToDraw.AddRange(dragConferenceGhosts);
                         foreach (var c in conferencesToDraw)
                         {
+                            if (!resourceIDs.Contains(c.resourceID))
+                                continue;
+
                             if (c.end > start && c.start < end)
                             {
                                 // Assemble the correct paint set :)
