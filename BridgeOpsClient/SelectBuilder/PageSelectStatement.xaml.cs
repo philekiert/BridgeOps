@@ -420,7 +420,7 @@ namespace BridgeOpsClient
             if (!InsertParameters(txtStatement.Text, out final, tabItem == null ? null : tabItem.Header.ToString()))
                 return false;
 
-            if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes, App.mainWindow))
+            if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes, builderWindow))
                 return false;
 
             HashSet<int> dateCols = new();

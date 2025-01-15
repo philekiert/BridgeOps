@@ -669,7 +669,7 @@ namespace BridgeOpsClient
                 if (!useLast)
                     DisplayCode();
                 tabOutput.Focus();
-                App.SendSelectRequest(selectRequest, out columnNames, out rows, out columnTypes, App.mainWindow);
+                App.SendSelectRequest(selectRequest, out columnNames, out rows, out columnTypes, builderWindow);
                 if (columnNames.Count == chosenColumnNames.Count)
                     for (int i = 0; i < columnNames.Count; ++i)
                         columnNames[i] = chosenColumnNames[i];

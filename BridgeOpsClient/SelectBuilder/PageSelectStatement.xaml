@@ -10,7 +10,7 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="PageSelectStatement">
 
-    <Grid>
+    <Grid UseLayoutRounding="True">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1.2*" MinWidth="500"/>
             <ColumnDefinition Width="1*" MinWidth="300"/>
