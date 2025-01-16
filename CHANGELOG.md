@@ -1,5 +1,8 @@
 # Changelog
   
+## 1.0.1
+### Fixed
+  - Resolved a crash that occurred on most conference searches.
   
 ## 1.0.0
 ### Added

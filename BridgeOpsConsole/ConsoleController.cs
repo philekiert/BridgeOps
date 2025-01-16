@@ -1031,7 +1031,8 @@ public class ConsoleController
     {
         if (GetProcess(true))
         {
-            Writer.Affirmative("Process is running.\nGetting list of open client sessions...");
+            Writer.Affirmative($"Bridge Manager Agent v{lastKnownAgentVersion} is running.\n" +
+                                "Getting version and list of open client sessions...");
 
             NamedPipeClientStream server = sr.NewClientNamedPipe(Glo.PIPE_CONSOLE);
             try
@@ -1046,9 +1047,7 @@ public class ConsoleController
 
             if (server.IsConnected)
             {
-                // Ping the server.
                 server.WriteByte(Glo.CONSOLE_CLIENT_LIST);
-
                 ConnectedClients? clients = sr.Deserialise<ConnectedClients>(sr.ReadString(server));
                 if (clients != null && clients.connectedClients.Count > 0)
                 {
@@ -1194,6 +1193,7 @@ public class ConsoleController
         return 0;
     }
 
+    string lastKnownAgentVersion = "?";
     public bool GetProcess(bool acquire)
     {
         Process[] processes = Process.GetProcessesByName(agentExe.Replace(".exe", ""));
@@ -1205,6 +1205,7 @@ public class ConsoleController
             ProcessModule? procMod = processes[n].MainModule;
             if (procMod != null && procMod.FileName == agentFullPath)
             {
+                lastKnownAgentVersion = FileVersionInfo.GetVersionInfo(agentFullPath).FileVersion ?? "?";
                 if (acquire)
                     process = processes[n];
                 return true;

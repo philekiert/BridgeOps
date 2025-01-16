@@ -127,8 +127,7 @@
                 <ComboBoxItem Content="Resource"/>
             </ComboBox>
             <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 10 10" Width="171"
-                      SelectionChanged="cmbSearchType_SelectionChanged">
-            </ComboBox>
+                      SelectionChanged="cmbSearchType_SelectionChanged"/>
             <ComboBox x:Name="cmbColumn" Grid.Column="3" Margin="10 10 0 10" Width="155"
                       SelectionChanged="cmbColumn_SelectionChanged"/>
             <Button x:Name="btnClear" Grid.Column="4" Margin="-1 10 10 10" Width="71"

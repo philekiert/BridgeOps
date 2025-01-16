@@ -5,9 +5,9 @@ using System.Xml.Linq;
 using System.Reflection;
 
 // Application version
-[assembly: AssemblyVersion("1.0")]
-[assembly: AssemblyFileVersion("1.0")]
-[assembly: AssemblyInformationalVersion("1.0")]
+[assembly: AssemblyVersion("1.0.1")]
+[assembly: AssemblyFileVersion("1.0.1")]
+[assembly: AssemblyInformationalVersion("1.0.1")]
 
 public static class Glo
 {
@@ -124,9 +124,10 @@ public static class Glo
 
 
     // Console/Agent Function Specifiers
-    public const int CONSOLE_CLIENT_LIST = 0;
-    public const int CONSOLE_LOGOUT_USER = 1;
-    public const int CONSOLE_CLOSE_CLIENT = 2;
+    public const int CONSOLE_GET_AGENT_VERSION = 0;
+    public const int CONSOLE_CLIENT_LIST = 1;
+    public const int CONSOLE_LOGOUT_USER = 2;
+    public const int CONSOLE_CLOSE_CLIENT = 3;
 
     // Operational
     public const int CLIENT_SESSION_INVALID = 0;

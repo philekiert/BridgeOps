@@ -504,5 +504,14 @@ namespace BridgeOpsClient
             about.Owner = this;
             about.ShowDialog();
         }
+
+        // We want the weekday on/off button drag to work regardless of where the mouse is in the window.
+        private void CustomWindow_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (pageDatabase != null)
+                for (int i = 0; i < pageDatabase.grdPanes.Children.Count; ++i)
+                    if (pageDatabase.grdPanes.Children[i].GetType() != typeof(GridSplitter))
+                        ((PageDatabaseView)((Frame)pageDatabase.grdPanes.Children[i]).Content).DayMouseMove(null, null);
+        }
     }
 }

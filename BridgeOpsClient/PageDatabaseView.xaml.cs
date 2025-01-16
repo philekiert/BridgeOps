@@ -93,7 +93,6 @@ namespace BridgeOpsClient
                 daysOn[n] = true;
             }
             ResetDays();
-            this.MouseMove += DayMouseMove;
         }
 
         public void EnforcePermissions()
@@ -165,7 +164,7 @@ namespace BridgeOpsClient
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.ORGANISATION_NAME, ColumnRecord.organisation) });
                 cmbColumn.Items.Add(new ComboBoxItem()
                 { Content = ColumnRecord.GetPrintName(Glo.Tab.CONFERENCE_ID, ColumnRecord.conference) });
-                fieldValues.AddRange(new string[] { "", "", "", ""});
+                fieldValues.AddRange(new string[] { "", "", "", "" });
             }
             // Same for recurrences.
             if (cmbTable.SelectedIndex == 4)
@@ -341,15 +340,14 @@ namespace BridgeOpsClient
             daySwitch = !daysOn[day];
             DayMouseMove(sender, e);
         }
-        private void DayMouseMove(object sender, MouseEventArgs e)
+        public void DayMouseMove(object? sender, MouseEventArgs? e)
         {
             if (!daySelect)
                 return;
 
-            if (e.LeftButton == MouseButtonState.Released)
+            if (Mouse.LeftButton == MouseButtonState.Released)
             {
                 daySelect = false;
-                dayCurrentlyOver = -1;
                 return;
             }
 
@@ -360,7 +358,7 @@ namespace BridgeOpsClient
                 return;
             }
 
-            if (dayCurrentlyOver != day)
+            if (daysOn[day] != daySwitch)
             {
                 dayCurrentlyOver = day;
                 Label l = DayLabel(day);
@@ -544,13 +542,15 @@ namespace BridgeOpsClient
 
         private void SearchConferences(bool wide)
         {
-            Dictionary<string, string> nameReversals = ColumnRecord.connectionFriendlyNameReversal;
+            // Although we're technically starting with the connection table, we need to use the column reversal for
+            // organisations as the Dial No friendly name isn't stored for connections in the column record.
+            string prefix = "Organisation.";
+            Dictionary<string, string> nameReversals = ColumnRecord.organisationFriendlyNameReversal;
             List<string> selectColumns = new();
             List<string?> selectValues = new();
             List<string> operators = new();
             List<bool> needsQuotes = new();
             List<string> andOrs = new();
-            string prefix = "Connection.";
 
             for (int n = 0; n < fieldValues.Count; ++n)
             {
@@ -603,12 +603,12 @@ namespace BridgeOpsClient
                 andOrs.RemoveAt(0); // This needs to be one fewer than the rest.
 
             SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, "Conference", true,
-                                    new() { "Connection", "Organisation"},
+                                    new() { "Connection", "Organisation" },
                                     new() { "Connection." + Glo.Tab.CONFERENCE_ID,
                                             "Organisation." + Glo.Tab.DIAL_NO},
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID,
                                             "Connection." + Glo.Tab.DIAL_NO},
-                                    new() { "LEFT", "LEFT"},
+                                    new() { "LEFT", "LEFT" },
                                     new() { "Conference." + Glo.Tab.CONFERENCE_ID }, new() { "" },
                                     selectColumns, operators, selectValues, needsQuotes, new(), new(), andOrs,
                                     new(), new());

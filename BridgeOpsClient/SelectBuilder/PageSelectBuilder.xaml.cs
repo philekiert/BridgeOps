@@ -399,8 +399,6 @@ namespace BridgeOpsClient
                 orderBys[i].frame.TabIndex = i + tabStop;
         }
 
-        List<string> columnNameList = new();
-
         public string GetProperColumnName(string column)
         {
             if (column == "" || column.EndsWith('*'))

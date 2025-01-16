@@ -10,7 +10,7 @@
         Closing="CustomWindow_Closing"
         Closed="Window_Closed"
         KeyDown="CustomWindow_KeyDown" KeyUp="CustomWindow_KeyUp"
-        Deactivated="CustomWindow_Deactivated">
+        Deactivated="CustomWindow_Deactivated" MouseMove="CustomWindow_MouseMove">
     <Grid x:Name="grdMain">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="17*"/>

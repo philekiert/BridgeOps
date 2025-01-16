@@ -792,7 +792,9 @@ internal class BridgeOpsAgent
             try
             {
                 int fncByte = server.ReadByte();
-                if (fncByte == Glo.CONSOLE_CLIENT_LIST)
+                if (fncByte == Glo.CONSOLE_GET_AGENT_VERSION)
+                    ConsoleGetVersion(server);
+                else if (fncByte == Glo.CONSOLE_CLIENT_LIST)
                     ConsoleClientList(server);
                 else if (fncByte == Glo.CONSOLE_LOGOUT_USER)
                     ConsoleLogoutUser(server);
@@ -960,6 +962,11 @@ internal class BridgeOpsAgent
 
 
     //   C O N S O L E   R E Q U E S T   F U N C T I O N S
+
+    private static void ConsoleGetVersion(NamedPipeServerStream server)
+    {
+        sr.WriteAndFlush(server, Glo.VersionNumber);
+    }
 
     private static void ConsoleClientList(NamedPipeServerStream server)
     {
