@@ -1,5 +1,9 @@
 # Changelog
   
+## 1.0.2
+### Fixed
+  - Resolved a bug preventing some user settings from loading in some situations.
+  
 ## 1.0.1
 ### Fixed
   - Resolved a crash that occurred on most conference searches.
