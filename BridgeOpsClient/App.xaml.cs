@@ -78,7 +78,7 @@ namespace BridgeOpsClient
             catch { return false; }
         }
 
-        //This is a handy function to have, as a lot of other functions display an error and then return false.
+        // This is a handy function to have, as a lot of other functions display an error and then return false.
         public static bool Abort(string message, Window? owner)
         {
             DisplayError(message, owner);
@@ -910,6 +910,16 @@ namespace BridgeOpsClient
                             }
                             catch { }
 
+                            // Verify table settings integrity.
+                            for (int i = 0; i < us.dataOrder.Length; ++i)
+                                if (us.dataOrder[i].Count != us.dataHidden[i].Count ||
+                                    us.dataOrder[i].Count != us.dataWidths[i].Count)
+                                {
+                                    us.dataOrder[i] = new();
+                                    us.dataWidths[i] = new();
+                                    us.dataHidden[i] = new();
+                                }
+
                             // Conference view width, database view width, then view state.
                             int next = settings.Length - 3;
                             if (next > 0)
@@ -935,12 +945,6 @@ namespace BridgeOpsClient
                                     PageDatabase.storedViewSettingsToApply = settings[next];
                                 else
                                     BridgeOpsClient.MainWindow.pageDatabase.ApplyViewSettings(settings[next]);
-
-                                // Verify table settings integrity.
-                                for (int i = 0; i < us.dataOrder.Length; ++i)
-                                    if (us.dataOrder[i].Count != us.dataHidden[i].Count ||
-                                        us.dataOrder[i].Count != us.dataWidths[i].Count)
-                                        return false;
                             }
                             catch { }
 

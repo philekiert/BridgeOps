@@ -294,7 +294,7 @@ namespace BridgeOpsClient
             {
                 if (txtOrgRef.Text == "")
                 {
-                    App.DisplayError("You must input a value for Organisation ID", this);
+                    App.DisplayError("You must input a value for Organisation ID.", this);
                     return;
                 }
 
