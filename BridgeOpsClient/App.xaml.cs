@@ -750,9 +750,9 @@ namespace BridgeOpsClient
         public static bool EditRecurrence(int id)
         {
             EditRecurrence editRec = new(id);
-            if (Settings.Default.ConfWinSizeX > 0d)
+            if (Settings.Default.RecWinSizeX > 0d)
                 editRec.Width = Settings.Default.RecWinSizeX;
-            if (Settings.Default.ConfWinSizeY > 0d)
+            if (Settings.Default.RecWinSizeY > 0d)
                 editRec.Height = Settings.Default.RecWinSizeY;
             editRec.Show();
             return true;

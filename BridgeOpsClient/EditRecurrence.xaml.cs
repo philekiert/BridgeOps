@@ -429,5 +429,16 @@ namespace BridgeOpsClient
             rs.Owner = this;
             rs.ShowDialog();
         }
+
+        private void CustomWindow_Closed(object sender, EventArgs e)
+        {
+            if (WindowState != WindowState.Maximized)
+            {
+                Settings.Default.RecWinSizeX = Width;
+                Settings.Default.RecWinSizeY = Height;
+                Settings.Default.Save();
+                App.WindowClosed();
+            }
+        }
     }
 }
