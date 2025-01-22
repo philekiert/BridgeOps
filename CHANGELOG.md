@@ -1,8 +1,12 @@
 # Changelog
   
 ## 1.0.2
+### Changed
+- The application now remembers the Recurrence window size.
+- The schedule view now remembers its vertical zoom amount between sessions.
 ### Fixed
-  - Resolved a bug preventing some user settings from loading in some situations.
+- Resolved a bug preventing some user settings from loading in some situations.
+- Minor changes to layout for consistency.
   
 ## 1.0.1
 ### Fixed
