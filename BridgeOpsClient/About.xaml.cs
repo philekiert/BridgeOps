@@ -27,13 +27,17 @@ namespace BridgeOpsClient
         private void CustomWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
             closing = true;
+            this.Owner = null;
             Close();
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
             if (!closing)
+            {
+                this.Owner = null;
                 Close();
+            }
         }
     }
 }

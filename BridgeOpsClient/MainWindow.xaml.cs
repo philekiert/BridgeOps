@@ -502,7 +502,7 @@ namespace BridgeOpsClient
         {
             About about = new();
             about.Owner = this;
-            about.ShowDialog();
+            about.Show();
         }
 
         // We want the weekday on/off button drag to work regardless of where the mouse is in the window.
