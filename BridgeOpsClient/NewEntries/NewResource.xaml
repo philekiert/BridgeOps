@@ -48,7 +48,7 @@
         </Grid>
         <StackPanel Orientation="Horizontal" Grid.Row="1">
             <Button x:Name="btnAdd" Content="Add" Margin="10,15,0,15" HorizontalAlignment="Left"
-                    Width="70" Click="btnAdd_Click" Style="{StaticResource primary-button}"/>
+                    Width="70" Click="btnAdd_Click" Style="{StaticResource primary-button}" Height="24"/>
             <Button x:Name="btnDelete" Content="Delete" Margin="10,15,0,15" HorizontalAlignment="Left"
                     Width="70" Click="btnDelete_Click" Visibility="Hidden"/>
         </StackPanel>

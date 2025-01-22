@@ -65,12 +65,12 @@
                 <ColumnDefinition Width="37"/>
                 <ColumnDefinition Width="24"/>
                 <ColumnDefinition Width="35"/>
-                <ColumnDefinition Width="23"/>
-                <ColumnDefinition Width="23"/>
                 <ColumnDefinition Width="24"/>
-                <ColumnDefinition Width="23"/>
-                <ColumnDefinition Width="23"/>
-                <ColumnDefinition Width="23"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="24"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="↔" FontSize="17" Padding="0 0 0 0" Margin="8 8 2 0"/>
