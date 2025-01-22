@@ -534,8 +534,7 @@ namespace BridgeOpsClient
                 int id;
                 if (!int.TryParse(dtgOutput.GetCurrentlySelectedID(), out id))
                     return;
-                EditRecurrence editRec = new(id);
-                editRec.Show();
+                App.EditRecurrence(id);
             }
             else if (relevantTable == RelevantTable.Resource)
                 App.EditResource(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);

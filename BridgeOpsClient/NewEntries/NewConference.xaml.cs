@@ -854,8 +854,7 @@ namespace BridgeOpsClient
         {
             if (recurrenceID != null)
             {
-                EditRecurrence editRec = new((int)recurrenceID);
-                editRec.Show();
+                App.EditRecurrence((int)recurrenceID);
             }
             else
             {

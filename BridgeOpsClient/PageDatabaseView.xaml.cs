@@ -1093,8 +1093,7 @@ namespace BridgeOpsClient
                     int id;
                     if (!int.TryParse(currentID, out id))
                         return;
-                    EditRecurrence editRec = new(id);
-                    editRec.Show();
+                    App.EditRecurrence(id);
                 }
                 if (dtgResults.identity == 9)
                     App.EditResource(currentID, App.mainWindow);
@@ -1388,8 +1387,7 @@ namespace BridgeOpsClient
 
             try
             {
-                EditRecurrence editRec = new(int.Parse(recID));
-                editRec.Show();
+                App.EditRecurrence(int.Parse(recID));
             }
             catch { }
         }

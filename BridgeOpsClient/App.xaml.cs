@@ -747,6 +747,18 @@ namespace BridgeOpsClient
             return true;
         }
 
+        public static bool EditRecurrence(int id)
+        {
+            EditRecurrence editRec = new(id);
+            if (Settings.Default.ConfWinSizeX > 0d)
+                editRec.Width = Settings.Default.RecWinSizeX;
+            if (Settings.Default.ConfWinSizeY > 0d)
+                editRec.Height = Settings.Default.RecWinSizeY;
+            editRec.Show();
+            return true;
+        }
+
+
         static bool columnRecordPulInProgress = false;
         public static bool PullColumnRecord(Window? owner)
         {

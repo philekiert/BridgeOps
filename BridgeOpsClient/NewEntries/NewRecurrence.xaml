@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient"
         mc:Ignorable="d" SizeToContent="Height" Width="300" ResizeMode="NoResize"
-        Title="New Recurrence" WindowStartupLocation="CenterScreen">
+        Title="New Recurrence" WindowStartupLocation="CenterScreen"
+        Closed="CustomWindow_Closed">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

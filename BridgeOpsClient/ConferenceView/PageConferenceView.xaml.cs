@@ -1749,9 +1749,8 @@ namespace BridgeOpsClient
             if (id == null) // This really should never be the case.
                 return;
 
-            EditRecurrence editRec = new((int)id);
             schView.selectedConferences.Clear();
-            editRec.Show();
+            App.EditRecurrence((int)id);
         }
 
         private void mnuScheduleCreateRecurrence_Click(object sender, RoutedEventArgs e)
