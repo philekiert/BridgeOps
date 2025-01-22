@@ -324,6 +324,9 @@ namespace BridgeOpsClient
                 foreach (int i in App.storedResourceSelection[0])
                     resourcesOrder.Add(i);
 
+            if (App.storedResourceZooms.Count > 0)
+                schView.zoomResource = App.storedResourceZooms[0];
+
             SetResources();
 
             tmrRender.Tick += TimerUpdate;

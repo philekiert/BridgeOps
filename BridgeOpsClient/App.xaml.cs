@@ -421,6 +421,11 @@ namespace BridgeOpsClient
                         // Store the resource selections.
                         foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
                             settings += string.Join(",", pcv.resourcesOrder) + ";";
+                        settings += "\n";
+                        // Store the schedule zoom.
+                        List<int> heights = new();
+                        settings += string.Join(';', BridgeOpsClient.MainWindow.pageConferenceViews
+                                                     .Select(i => i.schView.zoomResource));
                         us = new();
                     }
 
@@ -862,6 +867,7 @@ namespace BridgeOpsClient
         }
 
         public static List<List<int>> storedResourceSelection = new(); // Stored and accessed on MainWindow creation.
+        public static List<int> storedResourceZooms = new();
         public static bool PullUserSettings()
         {
             lock (streamLock)
@@ -920,8 +926,9 @@ namespace BridgeOpsClient
                                     us.dataHidden[i] = new();
                                 }
 
+                            int next = us.dataOrder.Length * 3;
+
                             // Conference view width, database view width, then view state.
-                            int next = settings.Length - 3;
                             if (next > 0)
                             {
                                 string[] viewSplit = settings[next].Split(';');
@@ -952,8 +959,8 @@ namespace BridgeOpsClient
                             ++next;
                             try
                             {
-                                string[] orders = settings[next].Split(';');
                                 storedResourceSelection.Clear();
+                                string[] orders = settings[next].Split(';');
                                 if (BridgeOpsClient.MainWindow.pageConferenceViews.Count == 0)
                                     for (int i = 0; i < orders.Length; ++i)
                                         storedResourceSelection.Add(orders[i]
@@ -973,6 +980,27 @@ namespace BridgeOpsClient
                                 foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
                                     pcv.resourcesOrder = new();
                             }
+
+                            // Zoom heights.
+                            ++next;
+                            try
+                            {
+                                storedResourceZooms.Clear();
+                                string[] zooms = settings[next].Split(';');
+                                if (BridgeOpsClient.MainWindow.pageConferenceViews.Count == 0)
+                                    for (int i = 0; i < zooms.Length; ++i)
+                                        storedResourceZooms.Add(int.Parse(zooms[i]));
+                                else
+                                {
+                                    int n = 0;
+                                    foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                                    {
+                                        pcv.schView.zoomResource = int.Parse(zooms[n]);
+                                        ++n;
+                                    }
+                                }
+                            }
+                            catch { }
                         }
                     }
                     catch
