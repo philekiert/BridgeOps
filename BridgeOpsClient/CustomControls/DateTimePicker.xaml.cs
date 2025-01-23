@@ -76,8 +76,14 @@ namespace BridgeOpsClient.CustomControls
         public void ToggleDatePicker(bool show)
         {
             grd.ColumnDefinitions[0].Width = show ? new GridLength(110) : new GridLength(0);
+            datePicker.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             dateVisible = show;
-            datePicker.Focusable = show;
+        }
+
+        private void datePicker_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (!dateVisible)
+                ((DatePicker)sender).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
         }
     }
 }

@@ -90,8 +90,8 @@ namespace BridgeOpsClient.CustomControls
 
             string check = txt.Text;
 
-            // If someone types "1", for example, change that to an hour selection. This is way more comprehensive than
-            // it needs to be, but I love it.
+            // If someone types "1", for example, change that to an hour selection. This is all way more comprehensive
+            // than it needs to be, but I love it.
             int val;
             if (!check.Contains(':') && int.TryParse(check, out val) && val >= 0)
             {
