@@ -15,13 +15,18 @@ using System.Windows.Shapes;
 
 namespace BridgeOpsClient.CustomControls
 {
+
+    // This picker only supports times up to 23:59. If you need more than 23 hours, you will need to amend the
+    // txt_LostFocus() method to handle days, as TimeSpan.TryParse needs the string broken down into
+    // days:hours:minutes.
+
     public partial class TimePicker : UserControl
     {
         private TimeSpan max = new(23, 59, 0);
         public void SetMaxValue(TimeSpan max)
         {
-            if (max.TotalHours > 99)
-                max = new(99, max.Minutes, 0);
+            if (max.TotalHours > 23)
+                max = new(23, max.Minutes, 0);
             else if (max < new TimeSpan(0, 2, 0))
                 max = new TimeSpan(0, 1, 0);
             this.max = max;
@@ -87,29 +92,40 @@ namespace BridgeOpsClient.CustomControls
 
             // If someone types "1", for example, change that to an hour selection. This is way more comprehensive than
             // it needs to be, but I love it.
-            if (!check.Contains(':'))
+            int val;
+            if (!check.Contains(':') && int.TryParse(check, out val) && val >= 0)
             {
-                int val;
-                if (int.TryParse(check, out val) && val >= 0)
+                if (val < 24)
+                    check += ":00";
+                else if (val < 60)
+                    check = "00:" + check;
+                else if (val < 100)
+                    check = check.Insert(1, ":");
+                else if (val < 1000)
                 {
-                    if (val < 24)
-                        check += ":00";
-                    else if (val < 60)
-                        check = "00:" + check;
-                    else if (val < 100)
+                    if (val % 100 < 60)
                         check = check.Insert(1, ":");
-                    else if (val < 1000)
-                    {
-                        if (val % 100 < 60)
-                            check = check.Insert(1, ":");
-                        else
-                            check = check.Insert(2, ":");
-                    }
                     else
                         check = check.Insert(2, ":");
                 }
+                else
+                    check = check.Insert(2, ":");
             }
 
+            if (check.Contains(":"))
+            {
+                string[] parts = check.Split(':');
+                if (parts.Length != 2)
+                {
+                    txt.Text = "";
+                    return;
+                }
+                if (int.TryParse(parts[0], out val) && val > max.Hours)
+                    parts[0] = max.Hours.ToString();
+                if (int.TryParse(parts[1], out val) && val > max.Minutes)
+                    parts[1] = max.Minutes.ToString();
+                check = parts[0] + ":" + parts[1];
+            }
 
             TimeSpan ts;
             if (!TimeSpan.TryParse(check, out ts))
