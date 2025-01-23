@@ -78,20 +78,46 @@ namespace BridgeOpsClient.CustomControls
 
         private void txt_LostFocus(object sender, RoutedEventArgs e)
         {
+            // If this isn't here and we had stuff highlighted when we lost focus, the next mouse down will reselect.
+            txt.SelectionLength = 0;
+
             // Tidy up if possible, otherwise set to blank.
 
-            if (txt.Text.Length < 3)
+            string check = txt.Text;
+
+            // If someone types "1", for example, change that to an hour selection. This is way more comprehensive than
+            // it needs to be, but I love it.
+            if (!check.Contains(':'))
+            {
+                int val;
+                if (int.TryParse(check, out val) && val >= 0)
+                {
+                    if (val < 24)
+                        check += ":00";
+                    else if (val < 60)
+                        check = "00:" + check;
+                    else if (val < 100)
+                        check = check.Insert(1, ":");
+                    else if (val < 1000)
+                    {
+                        if (val % 100 < 60)
+                            check = check.Insert(1, ":");
+                        else
+                            check = check.Insert(2, ":");
+                    }
+                    else
+                        check = check.Insert(2, ":");
+                }
+            }
+
+
+            TimeSpan ts;
+            if (!TimeSpan.TryParse(check, out ts))
             {
                 txt.Text = "";
                 return;
             }
-
-            if (int.TryParse(txt.Text, out _) && !txt.Text.Contains(':') &&
-                txt.Text.Length < 5)
-                txt.Text = txt.Text.Insert(txt.Text.Length - 2, ":");
-
-            TimeSpan ts;
-            if (!TimeSpan.TryParse(txt.Text, out ts))
+            if (ts < TimeSpan.Zero)
             {
                 txt.Text = "";
                 return;
@@ -113,6 +139,11 @@ namespace BridgeOpsClient.CustomControls
         {
             if (Mouse.LeftButton != MouseButtonState.Pressed)
                 txt.SelectAll();
+        }
+
+        private void txt_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            txt.SelectAll();
         }
     }
 }

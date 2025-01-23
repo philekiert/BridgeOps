@@ -1,4 +1,9 @@
 # Changelog
+
+## 1.1.0
+### Minor
+#### Changed
+- Improved the time field UX.
   
 ## 1.0.2
 ### Changed
