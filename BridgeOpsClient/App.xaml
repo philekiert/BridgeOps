@@ -34,6 +34,8 @@
             <Style TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource brushButton}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource brushButtonBorder}"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="Padding" Value="10 0 10 0"/>
             </Style>
 
             <!-- DataInputTable -->

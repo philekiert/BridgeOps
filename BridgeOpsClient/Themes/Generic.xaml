@@ -103,6 +103,8 @@
         <Setter Property="BorderBrush" Value="{StaticResource brushPrimaryButtonBorder}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="TextOptions.TextRenderingMode" Value="Aliased"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Padding" Value="10 0 10 0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -164,6 +166,7 @@
     <Style TargetType="DatePicker">
         <Setter Property="SelectedDateFormat" Value="Long"/>
         <Setter Property="Language" Value="en-GB"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="DatePicker">
@@ -181,7 +184,7 @@
                                  Padding="2 2 2 2"
                                  Margin="0"
                                  Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:dd/MM/yyyy}'}"/>
-                        <Button x:Name="PART_Button"
+   n                     <Button x:Name="PART_Button"
                                 HorizontalAlignment="Right"
                                 Grid.Column="0"
                                 Style="{StaticResource toolbar-button}">

@@ -4,6 +4,8 @@
 ### Minor
 #### Changed
 - Improved the time field UX.
+#### Fixed
+- Stopped the date field from being focusable when hidden in connections.
   
 ## 1.0.2
 ### Changed
