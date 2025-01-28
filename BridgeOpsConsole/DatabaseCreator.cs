@@ -466,8 +466,10 @@ public class DatabaseCreator
             task += ", CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID)" +
                     ", CONSTRAINT u_TaskRef UNIQUE (Organisation_Reference) );";
             // No task reference for either of these, same goes for organisations. Task references are kept very loose at the request of the team.
-            visit += ", CONSTRAINT pk_Visit_ID PRIMARY KEY (Task_ID)";
-            document += ", CONSTRAINT pk_Document_ID PRIMARY KEY (Task_ID);";
+            visit += ", CONSTRAINT pk_Visit_ID PRIMARY KEY (Task_ID)" +
+                     ", CONSTRAINT chk_VisitType CHECK (Closure IN (''))";
+            document += ", CONSTRAINT pk_Document_ID PRIMARY KEY (Task_ID)" +
+                        ", CONSTRAINT chk_DocumentType CHECK (Closure IN (''))";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
