@@ -90,6 +90,7 @@ namespace BridgeOpsClient
             for (int n = 0; n < 7; ++n)
             {
                 DayLabel(n).MouseDown += DayMouseDown;
+                DayBorder(n).MouseDown += DayMouseDown;
                 daysOn[n] = true;
             }
             ResetDays();

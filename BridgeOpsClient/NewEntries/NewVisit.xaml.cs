@@ -17,7 +17,7 @@ namespace BridgeOpsClient.NewEntries
     /// <summary>
     /// Interaction logic for NewVisit.xaml
     /// </summary>
-    public partial class NewVisit : Window
+    public partial class NewVisit : CustomWindow
     {
         public NewVisit()
         {

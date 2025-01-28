@@ -17,7 +17,7 @@ namespace BridgeOpsClient
     /// <summary>
     /// Interaction logic for NewTask.xaml
     /// </summary>
-    public partial class NewTask : Window
+    public partial class NewTask : CustomWindow
     {
         public NewTask()
         {

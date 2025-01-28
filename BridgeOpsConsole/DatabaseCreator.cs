@@ -374,6 +374,9 @@ public class DatabaseCreator
             string connections = "";
             //string dialNo = "";
             //string conferencesByDay = "";
+            string task = "";
+            string visit = "";
+            string document = "";
             string organisationChange = "";
             string assetChange = "";
             string junctionOrgContacts = "";
@@ -460,6 +463,11 @@ public class DatabaseCreator
             //               We have to manually implement the Edit_Login_ID cascades below due to SQL Server's cautious nature regarding cascade cycles.
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the Recurrence table.
             recurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID) );";
+            task += ", CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID)" +
+                    ", CONSTRAINT u_TaskRef UNIQUE (Organisation_Reference) );";
+            // No task reference for either of these, same goes for organisations. Task references are kept very loose at the request of the team.
+            visit += ", CONSTRAINT pk_Visit_ID PRIMARY KEY (Task_ID)";
+            document += ", CONSTRAINT pk_Document_ID PRIMARY KEY (Task_ID);";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +

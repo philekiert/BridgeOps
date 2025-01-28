@@ -252,6 +252,20 @@ public static class Glo
         public const string LOGIN_ENABLED = "Enabled";
         public const string LOGIN_VIEW_SETTINGS = "Organisation_Order";
 
+        public const string TASK_ID = "Task_ID";
+        public const string TASK_REFERENCE = "Task_Reference";
+        public const string TASK_OPENED = "Task_Opened";
+        public const string TASK_CLOSED = "Task_Closed";
+
+        public const string VISIT_ID = "Visit_ID";
+        public const string VISIT_DATE = "Visit_Date";
+        public const string VISIT_TYPE = "Visit_Type";
+
+        public const string DOCUMENT_ID = "Visit_ID";
+        public const string DOCUMENT_DATE = "Visit_Date";
+        public const string DOCUMENT_TYPE = "Visit_Type";
+
+
         public const string FRIENDLY_TABLE = "TableName";
         public const string FRIENDLY_COLUMN = "ColumnName";
         public const string FRIENDLY_NAME = "FriendlyName";

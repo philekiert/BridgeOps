@@ -1,5 +1,5 @@
 ﻿<bridgeopsclient:CustomWindow xmlns:bridgeopsclient="clr-namespace:BridgeOpsClient"
-                              x:Class="BridgeOpsClient.NewEntries.NewDocument"
+                              x:Class="BridgeOpsClient.NewEntries.NewVisit"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"

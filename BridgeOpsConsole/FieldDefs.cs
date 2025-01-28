@@ -94,6 +94,10 @@ public class FieldDefs
     public string typeDialNo = "VARCHAR(20)";
     public string typeOrgChangeID = "INT UNSIGNED";
     public string typeAssetChangeID = "INT UNSIGNED";
+    public string typeTaskID = "INT UNSIGNED";
+    public string typeTaskRef = "VARCHAR(40)";
+    public string typeVisitID = "INT UNSIGNED";
+    public string typeDocumentID = "INT UNSIGNED";
 
     public void DefineFields()
     {
@@ -106,6 +110,7 @@ public class FieldDefs
         defs.Add("Organisation Name", new Definition(12, Glo.Tab.ORGANISATION_NAME, typeOrgName, false, true, false));
         defs.Add("Organisation Dial No", new Definition(12, Glo.Tab.DIAL_NO, typeDialNo, false, true, false));
         defs.Add("Organisation Available For Conferencing", new Definition(12, Glo.Tab.ORGANISATION_AVAILABLE, "BIT", false, false, false));
+        defs.Add("Organisation Task Reference", new Definition(12, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, false, false));
         defs.Add("Organisation Notes", new Definition(12, "Notes", "VARCHAR(MAX)", false, false, false));
 
         // Contact
@@ -159,9 +164,25 @@ public class FieldDefs
         //defs.Add("Conference Type Name", new Definition(15, Glo.Tab.CONFERENCE_TYPE_NAME, "VARCHAR(50)", true, false, false));
 
         // Conference Recurrence
-        defs.Add("Recurrence Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, true, true));
+        defs.Add("Recurrence ID", new Definition(10, Glo.Tab.RECURRENCE_ID, typeRecurrenceID, false, true, true));
         defs.Add("Recurrence Name", new Definition(10, Glo.Tab.RECURRENCE_NAME, "VARCHAR(50)", true, false, false));
         defs.Add("Recurrence Notes", new Definition(10, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
+
+        defs.Add("Task ID", new Definition(4, Glo.Tab.TASK_ID, typeTaskID, false, true, true));
+        defs.Add("Task Reference", new Definition(4, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, true, false));
+        defs.Add("Task Opened", new Definition(4, Glo.Tab.TASK_OPENED, "DATE", false, false, false));
+        defs.Add("Task Closed", new Definition(4, Glo.Tab.TASK_CLOSED, "DATE", false, false, false));
+        defs.Add("Task Notes", new Definition(4, Glo.Tab.NOTES, "DATE", false, false, false));
+
+        defs.Add("Visit ID", new Definition(5, Glo.Tab.VISIT_ID, typeVisitID, false, true, true));
+        defs.Add("Visit Task Reference", new Definition(5, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, false, false));
+        defs.Add("Visit Date", new Definition(5, Glo.Tab.VISIT_DATE, "DATE", false, false, false));
+        defs.Add("Visit Type", new Definition(5, Glo.Tab.VISIT_TYPE, "VARCHAR(50)", true, false, false));
+
+        defs.Add("Document ID", new Definition(8, Glo.Tab.DOCUMENT_ID, typeDocumentID, false, true, true));
+        defs.Add("Document Task Reference", new Definition(8, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, false, false));
+        defs.Add("Document Date", new Definition(8, Glo.Tab.DOCUMENT_DATE, "DATE", false, false, false));
+        defs.Add("Document Type", new Definition(8, Glo.Tab.DOCUMENT_TYPE, "VARCHAR(50)", true, false, false));
 
 
         // ----- SUPPLEMENTARY TABLES ----- //
@@ -277,21 +298,25 @@ public class FieldDefs
                      $"# Type values are limited to TINYINT, SMALLINT and INT.{Glo.DNL}" +
                      $"# Primary key value MUST be placed above all others. Any placed out of order will be ignored.{Glo.DNL}";
 
-        // The primary keys need setting before anything else. These can be hard coded as they're far less likely to change.
+        // The primary keys need setting before anything else.
 
         str += $"{Glo.NL}# Primary/Foreign Keys" +
                $"{Glo.NL}# ------------" +
                $"{Glo.NL}" +
-               //$"{Glo.NL}Organisation ID:                      Type = " + typeOrgID + // Table contains unique keys, making type alterations impossible.
+               $"{Glo.NL}Organisation ID:                      Type = " + typeOrgID + // Table contains unique keys, making later type alterations impossible.
                $"{Glo.NL}Organisation Reference:               Max Length = " + ExtractVARCHARLength(typeOrgRef) +
                $"{Glo.NL}Organisation Dial No:                 Max Length = " + ExtractVARCHARLength(typeDialNo) +
                $"{Glo.NL}Organisation Name:                    Max Length = " + ExtractVARCHARLength(typeOrgName) +
-               //$"{Glo.NL}Asset ID:                             Type = " + typeAssetID + // Table contains unique keys, making type alterations impossible.
+               $"{Glo.NL}Asset ID:                             Type = " + typeAssetID + // Table contains unique keys, making later type alterations impossible.
                $"{Glo.NL}Asset Reference:                      Max Length = " + ExtractVARCHARLength(typeAssetRef) +
                $"{Glo.NL}Contact ID:                           Type = " + typeContactID +
                $"{Glo.NL}Login ID:                             Type = " + typeLoginID +
                $"{Glo.NL}Resource ID:                          Type = " + typeResourceID +
                $"{Glo.NL}Conference ID:                        Type = " + typeConfID +
+               $"{Glo.NL}Task ID:                              Type = " + typeTaskID + // Table contains unique keys, making later type alterations impossible.
+               $"{Glo.NL}Task Reference:                       Max Length = " + ExtractVARCHARLength(typeTaskRef) +
+               $"{Glo.NL}Visit ID:                             Type = " + typeVisitID +
+               $"{Glo.NL}Document ID:                          Type = " + typeDocumentID +
                $"{Glo.NL}Organisation Change ID:               Type = " + typeOrgChangeID +
                $"{Glo.NL}Asset Change ID:                      Type = " + typeAssetChangeID +
                $"{Glo.NL}" +

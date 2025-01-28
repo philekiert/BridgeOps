@@ -184,7 +184,7 @@
                                  Padding="2 2 2 2"
                                  Margin="0"
                                  Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:dd/MM/yyyy}'}"/>
-   n                     <Button x:Name="PART_Button"
+                        <Button x:Name="PART_Button"
                                 HorizontalAlignment="Right"
                                 Grid.Column="0"
                                 Style="{StaticResource toolbar-button}">

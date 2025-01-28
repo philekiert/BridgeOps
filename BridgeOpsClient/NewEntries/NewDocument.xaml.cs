@@ -17,7 +17,7 @@ namespace BridgeOpsClient.NewEntries
     /// <summary>
     /// Interaction logic for NewDocument.xaml
     /// </summary>
-    public partial class NewDocument : Window
+    public partial class NewDocument : CustomWindow
     {
         public NewDocument()
         {
