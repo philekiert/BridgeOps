@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using SendReceiveClasses;
 
 
@@ -100,6 +101,12 @@ public static class ColumnRecord
     public static Dictionary<string, string> conferenceAdditionalFriendlyNameReversal = new();
     public static OrderedDictionary recurrence = new();
     public static Dictionary<string, string> conferenceRecurrenceFriendlyNameReversal = new();
+    public static OrderedDictionary task = new();
+    public static Dictionary<string, string> taskFriendlyNameReversal = new();
+    public static OrderedDictionary visit = new();
+    public static Dictionary<string, string> visitFriendlyNameReversal = new();
+    public static OrderedDictionary document = new();
+    public static Dictionary<string, string> documentFriendlyNameReversal = new();
     public static OrderedDictionary connection = new();
     public static Dictionary<string, string> connectionFriendlyNameReversal = new();
     public static OrderedDictionary resource = new();
@@ -111,16 +118,25 @@ public static class ColumnRecord
     public static List<int> assetOrder = new();
     public static List<int> contactOrder = new();
     public static List<int> conferenceOrder = new();
+    public static List<int> taskOrder = new();
+    public static List<int> visitOrder = new();
+    public static List<int> documentOrder = new();
 
     public static OrderedDictionary orderedOrganisation = new();
     public static OrderedDictionary orderedAsset = new();
     public static OrderedDictionary orderedContact = new();
     public static OrderedDictionary orderedConference = new();
+    public static OrderedDictionary orderedTask = new();
+    public static OrderedDictionary orderedVisit = new();
+    public static OrderedDictionary orderedDocument = new();
 
     public static List<ColumnOrdering.Header> organisationHeaders = new();
     public static List<ColumnOrdering.Header> assetHeaders = new();
     public static List<ColumnOrdering.Header> contactHeaders = new();
     public static List<ColumnOrdering.Header> conferenceHeaders = new();
+    public static List<ColumnOrdering.Header> taskHeaders = new();
+    public static List<ColumnOrdering.Header> visitHeaders = new();
+    public static List<ColumnOrdering.Header> documentHeaders = new();
 
     public static bool OrderTable(OrderedDictionary dictionary,
                                   List<int> order,
@@ -191,6 +207,12 @@ public static class ColumnRecord
                     return (Column?)conference[column];
                 case "Recurrence":
                     return (Column?)recurrence[column];
+                case "Task":
+                    return (Column?)task[column];
+                case "Visit":
+                    return (Column?)visit[column];
+                case "Document":
+                    return (Column?)document[column];
                 case "Resource":
                     return (Column?)resource[column];
                 case "Login":
@@ -236,6 +258,12 @@ public static class ColumnRecord
             return recurrence;
         else if (table == "Resource")
             return resource;
+        else if (table == "Task")
+            return task;
+        else if (table == "Visit")
+            return visit;
+        else if (table == "Document")
+            return document;
         else if (table == "Login")
             return login;
         else if (table == "OrganisationChange")
@@ -261,6 +289,12 @@ public static class ColumnRecord
             return contactOrder;
         else if (table == "Conference")
             return conferenceOrder;
+        else if (table == "Task")
+            return taskOrder;
+        else if (table == "Visit")
+            return visitOrder;
+        else if (table == "Document")
+            return documentOrder;
         else
             return null;
     }
@@ -296,14 +330,20 @@ public static class ColumnRecord
         assetChangeFriendlyNameReversal = new();
         contact = new();
         contactFriendlyNameReversal = new();
-        conferenceType = new();
-        conferenceTypeFriendlyNameReversal = new();
+        //conferenceType = new();
+        //conferenceTypeFriendlyNameReversal = new();
         conference = new();
         conferenceFriendlyNameReversal = new();
         conferenceAdditional = new();
         conferenceAdditionalFriendlyNameReversal = new();
         recurrence = new();
         conferenceRecurrenceFriendlyNameReversal = new();
+        task = new();
+        taskFriendlyNameReversal = new();
+        visit = new();
+        visitFriendlyNameReversal = new();
+        document = new();
+        documentFriendlyNameReversal = new();
         connection = new();
         connectionFriendlyNameReversal = new();
         resource = new();
@@ -315,16 +355,25 @@ public static class ColumnRecord
         assetOrder = new();
         contactOrder = new();
         conferenceOrder = new();
+        taskOrder = new();
+        visitOrder = new();
+        documentOrder = new();
 
         orderedOrganisation = new();
         orderedAsset = new();
         orderedContact = new();
         orderedConference = new();
+        orderedTask = new();
+        orderedVisit = new();
+        orderedDocument = new();
 
         organisationHeaders = new();
         assetHeaders = new();
         contactHeaders = new();
         conferenceHeaders = new();
+        taskHeaders = new();
+        visitHeaders = new();
+        documentHeaders = new();
 
         try
         {
@@ -416,6 +465,12 @@ public static class ColumnRecord
                     recurrence.Add(column, col);
                 else if (table == "Resource")
                     resource.Add(column, col);
+                else if (table == "Task")
+                    task.Add(column, col);
+                else if (table == "Visit")
+                    visit.Add(column, col);
+                else if (table == "Document")
+                    document.Add(column, col);
                 else if (table == "Login")
                     login.Add(column, col);
             }
@@ -464,11 +519,17 @@ public static class ColumnRecord
                     AddFriendlyName(recurrence);
                 if (friendlySplit[0] == "Resource")
                     AddFriendlyName(resource);
+                if (friendlySplit[0] == "Task")
+                    AddFriendlyName(task);
+                if (friendlySplit[0] == "Visit")
+                    AddFriendlyName(visit);
+                if (friendlySplit[0] == "Document")
+                    AddFriendlyName(document);
                 if (friendlySplit[0] == "Login")
                     AddFriendlyName(login);
             }
 
-            for (int o = 0; n < lines.Count && o < 4; ++n, ++o)
+            for (int o = 0; n < lines.Count && o < 7; ++n, ++o)
             {
                 if (lines[n] == "<")
                 {
@@ -485,8 +546,14 @@ public static class ColumnRecord
                     order = assetOrder;
                 else if (o == 2)
                     order = contactOrder;
-                else // if 3
+                else if (o == 3)
                     order = conferenceOrder;
+                else if (o == 4)
+                    order = taskOrder;
+                else if (o == 5)
+                    order = visitOrder;
+                else // o == 6
+                    order = documentOrder;
 
                 foreach (string s in indices)
                 {
@@ -501,7 +568,7 @@ public static class ColumnRecord
                 ++n;
 
             // This input is heavily vetted by the agent when creating the column record, so no need to check much.
-            for (int o = 0; n < lines.Count && o < 4; ++n, ++o)
+            for (int o = 0; n < lines.Count && o < 7; ++n, ++o)
             {
                 List<ColumnOrdering.Header> headerList;
                 if (o == 0)
@@ -510,8 +577,14 @@ public static class ColumnRecord
                     headerList = assetHeaders;
                 else if (o == 2)
                     headerList = contactHeaders;
-                else
+                else if (o == 3)
                     headerList = conferenceHeaders;
+                else if (o == 4)
+                    headerList = taskHeaders;
+                else if (o == 5)
+                    headerList = visitHeaders;
+                else // o == 6
+                    headerList = documentHeaders;
 
                 string[] vals = lines[n].Split(';');
 
@@ -549,7 +622,10 @@ public static class ColumnRecord
             if (organisation.Count != organisationOrder.Count ||
                 asset.Count != assetOrder.Count ||
                 contact.Count != contactOrder.Count ||
-                conference.Count != conferenceOrder.Count)
+                conference.Count != conferenceOrder.Count ||
+                task.Count != taskOrder.Count ||
+                visit.Count != visitOrder.Count ||
+                document.Count != documentOrder.Count)
                 return false;
 
             for (int i = 0; i < organisationOrder.Count; ++i)
@@ -564,11 +640,23 @@ public static class ColumnRecord
             for (int i = 0; i < conferenceOrder.Count; ++i)
                 if (!conferenceOrder.Contains(i))
                     return false;
+            for (int i = 0; i < taskOrder.Count; ++i)
+                if (!taskOrder.Contains(i))
+                    return false;
+            for (int i = 0; i < visitOrder.Count; ++i)
+                if (!visitOrder.Contains(i))
+                    return false;
+            for (int i = 0; i < documentOrder.Count; ++i)
+                if (!documentOrder.Contains(i))
+                    return false;
 
             if (!OrderTable(organisation, organisationOrder, orderedOrganisation) ||
                 !OrderTable(asset, assetOrder, orderedAsset) ||
                 !OrderTable(contact, contactOrder, orderedContact) ||
-                !OrderTable(conference, conferenceOrder, orderedConference))
+                !OrderTable(conference, conferenceOrder, orderedConference) ||
+                !OrderTable(task, taskOrder, orderedTask) ||
+                !OrderTable(visit, visitOrder, orderedVisit) ||
+                !OrderTable(document, documentOrder, orderedDocument))
                 return false;
 
             // Populate the friendly name reversal dictionaries.
@@ -590,6 +678,12 @@ public static class ColumnRecord
                 connectionFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in recurrence)
                 conferenceRecurrenceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in task)
+                taskFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in visit)
+                visitFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in document)
+                documentFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in resource)
                 resourceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in login)

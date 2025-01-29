@@ -289,6 +289,7 @@ namespace BridgeOpsClient
                                                               Glo.Tab.LOGIN_PASSWORD,
                                                               Glo.Tab.LOGIN_VIEW_SETTINGS });
                 AddTable("Recurrence", ColumnRecord.recurrence, new[] { Glo.Tab.RECURRENCE_ID });
+                AddTable("Task", ColumnRecord.)
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 

@@ -628,6 +628,9 @@ public class DatabaseCreator
             SendCommandSQL(OrderString("Asset"));
             SendCommandSQL(OrderString("Contact"));
             SendCommandSQL(OrderString("Conference"));
+            SendCommandSQL(OrderString("Task"));
+            SendCommandSQL(OrderString("Visit"));
+            SendCommandSQL(OrderString("Document"));
 
             Writer.Message("\nCreating view for additional conference information...");
             SendCommandSQL($@"

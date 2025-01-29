@@ -409,7 +409,10 @@ internal class BridgeOpsAgent
                                         "WHERE TABLE_NAME != 'OrganisationOrder' AND " +
                                               "TABLE_NAME != 'AssetOrder' AND " +
                                               "TABLE_NAME != 'ContactOrder' AND " +
-                                              "TABLE_NAME != 'ConferenceOrder';", sqlConnect);
+                                              "TABLE_NAME != 'ConferenceOrder' AND " +
+                                              "TABLE_NAME != 'TaskOrder' AND " +
+                                              "TABLE_NAME != 'VisitOrder' AND " +
+                                              "TABLE_NAME != 'DocumentOrder';", sqlConnect);
             reader = sqlCommand.ExecuteReader();
 
             List<string[]> columns = new();
@@ -438,6 +441,12 @@ internal class BridgeOpsAgent
                 else if (column[0] == "Contact")
                     ++orderCounts[2];
                 else if (column[0] == "Conference")
+                    ++orderCounts[3];
+                else if (column[0] == "Task")
+                    ++orderCounts[3];
+                else if (column[0] == "Visit")
+                    ++orderCounts[3];
+                else if (column[0] == "Document")
                     ++orderCounts[3];
 
                 if (uniqueColNames.Contains(column[0] + "." + column[1]))
@@ -500,17 +509,23 @@ internal class BridgeOpsAgent
             AddColumnOrder("Asset", orderCounts[1]);
             AddColumnOrder("Contact", orderCounts[2]);
             AddColumnOrder("Conference", orderCounts[3]);
+            AddColumnOrder("Task", orderCounts[4]);
+            AddColumnOrder("Visit", orderCounts[5]);
+            AddColumnOrder("Document", orderCounts[6]);
 
-            fileText += "<" + Glo.NL; ;
+            fileText += "<" + Glo.NL;
 
             // Add a line for headers from each table.
             Dictionary<string, List<string>> headerTables = new()
-                {
-                    { "Organisation", new() },
-                    { "Asset",  new() },
-                    { "Contact",  new() },
-                    { "Conference", new() }
-                };
+            {
+                { "Organisation", new() },
+                { "Asset",  new() },
+                { "Contact",  new() },
+                { "Conference",  new() },
+                { "Task",  new() },
+                { "Visit",  new() },
+                { "Document", new() }
+            };
             string headerFilePath = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_HEADERS);
             if (File.Exists(headerFilePath))
             {
@@ -532,6 +547,9 @@ internal class BridgeOpsAgent
             fileText += string.Join(';', headerTables["Asset"]) + Glo.NL;
             fileText += string.Join(';', headerTables["Contact"]) + Glo.NL;
             fileText += string.Join(';', headerTables["Conference"]) + Glo.NL;
+            fileText += string.Join(';', headerTables["Task"]) + Glo.NL;
+            fileText += string.Join(';', headerTables["Visit"]) + Glo.NL;
+            fileText += string.Join(';', headerTables["Document"]) + Glo.NL;
 
             // Lastly, the soft duplicate check columns.
             fileText += "&" + Glo.NL;
@@ -1407,7 +1425,7 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                     return;
                 }
-                
+
                 foreach (ClientSession cs in clientSessions.Values)
                     if (cs.username == username)
                         idToAttack = cs.sessionID;
