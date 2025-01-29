@@ -528,6 +528,18 @@ public static class ColumnRecord
                     AddFriendlyName(login);
             }
 
+            // Task Reference is a one-off in that we want the friendly name to be reflected elsewhere.
+            string taskRefFriendly = ((Column)task[Glo.Tab.TASK_REFERENCE]!).friendlyName;
+            Column taskCol = GetColumn(organisation, Glo.Tab.TASK_REFERENCE);
+            taskCol.friendlyName = taskRefFriendly;
+            organisation[Glo.Tab.TASK_REFERENCE] = taskCol;
+            taskCol = GetColumn(visit, Glo.Tab.TASK_REFERENCE);
+            taskCol.friendlyName = taskRefFriendly;
+            visit[Glo.Tab.TASK_REFERENCE] = taskCol;
+            taskCol = GetColumn(document, Glo.Tab.TASK_REFERENCE);
+            taskCol.friendlyName = taskRefFriendly;
+            document[Glo.Tab.TASK_REFERENCE] = taskCol;
+
             for (int o = 0; n < lines.Count && o < 7; ++n, ++o)
             {
                 if (lines[n] == "<")
