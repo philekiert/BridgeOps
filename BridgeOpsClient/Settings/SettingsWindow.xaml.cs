@@ -262,7 +262,8 @@ namespace BridgeOpsClient
                     }
                 }
 
-                AddTable("Organisation", ColumnRecord.orderedOrganisation, new[] { Glo.Tab.ORGANISATION_AVAILABLE });
+                AddTable("Organisation", ColumnRecord.orderedOrganisation, new[] { Glo.Tab.ORGANISATION_AVAILABLE,
+                                                                                   Glo.Tab.TASK_REFERENCE });
                 AddTable("Asset", ColumnRecord.orderedAsset, new string[0]);
                 AddTable("Contact", ColumnRecord.orderedContact, new string[0]);
 
@@ -289,7 +290,13 @@ namespace BridgeOpsClient
                                                               Glo.Tab.LOGIN_PASSWORD,
                                                               Glo.Tab.LOGIN_VIEW_SETTINGS });
                 AddTable("Recurrence", ColumnRecord.recurrence, new[] { Glo.Tab.RECURRENCE_ID });
-                AddTable("Task", ColumnRecord.)
+                AddTable("Task", ColumnRecord.task, new[] { Glo.Tab.TASK_ID,
+                                                            Glo.Tab.TASK_OPENED,
+                                                            Glo.Tab.TASK_CLOSED });
+                AddTable("Visit", ColumnRecord.visit, new[] { Glo.Tab.VISIT_DATE,
+                                                              Glo.Tab.TASK_REFERENCE });
+                AddTable("Document", ColumnRecord.document, new[] { Glo.Tab.DOCUMENT_DATE,
+                                                                    Glo.Tab.TASK_REFERENCE });
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 

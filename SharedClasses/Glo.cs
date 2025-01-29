@@ -5,9 +5,9 @@ using System.Xml.Linq;
 using System.Reflection;
 
 // Application version
-[assembly: AssemblyVersion("1.0.2")]
-[assembly: AssemblyFileVersion("1.0.2")]
-[assembly: AssemblyInformationalVersion("1.0.2")]
+[assembly: AssemblyVersion("1.1.0")]
+[assembly: AssemblyFileVersion("1.1.0")]
+[assembly: AssemblyInformationalVersion("1.1.0")]
 
 public static class Glo
 {
@@ -261,9 +261,9 @@ public static class Glo
         public const string VISIT_DATE = "Visit_Date";
         public const string VISIT_TYPE = "Visit_Type";
 
-        public const string DOCUMENT_ID = "Visit_ID";
-        public const string DOCUMENT_DATE = "Visit_Date";
-        public const string DOCUMENT_TYPE = "Visit_Type";
+        public const string DOCUMENT_ID = "Document_ID";
+        public const string DOCUMENT_DATE = "Document_Date";
+        public const string DOCUMENT_TYPE = "Document_Type";
 
 
         public const string FRIENDLY_TABLE = "TableName";
@@ -323,13 +323,16 @@ public static class Glo
                      column == Glo.Tab.PARENT_REF ||
                      column == Glo.Tab.ORGANISATION_NAME ||
                      column == Glo.Tab.DIAL_NO ||
-                     column == Glo.Tab.ORGANISATION_AVAILABLE)) ||
+                     column == Glo.Tab.ORGANISATION_AVAILABLE ||
+                     column == Glo.Tab.NOTES)) ||
                   (table == "Asset" &&
                     (column == Glo.Tab.ASSET_ID ||
                      column == Glo.Tab.ASSET_REF ||
-                     column == Glo.Tab.ORGANISATION_REF)) ||
+                     column == Glo.Tab.ORGANISATION_REF ||
+                     column == Glo.Tab.NOTES)) ||
                   (table == "Contact" &&
-                    (column == Glo.Tab.CONTACT_ID)) ||
+                    (column == Glo.Tab.CONTACT_ID ||
+                     column == Glo.Tab.NOTES)) ||
                   (table == "Conference" &&
                     (column == Glo.Tab.CONFERENCE_ID ||
                      column == Glo.Tab.RESOURCE_ID ||
@@ -344,10 +347,12 @@ public static class Glo
                      column == Glo.Tab.CONFERENCE_CREATION_LOGIN ||
                      column == Glo.Tab.CONFERENCE_CREATION_TIME ||
                      column == Glo.Tab.CONFERENCE_EDIT_LOGIN ||
-                     column == Glo.Tab.CONFERENCE_EDIT_TIME)) ||
+                     column == Glo.Tab.CONFERENCE_EDIT_TIME ||
+                     column == Glo.Tab.NOTES)) ||
                   (table == "Recurrence" &&
                     (column == Glo.Tab.RECURRENCE_ID ||
-                     column == Glo.Tab.RECURRENCE_NAME)) ||
+                     column == Glo.Tab.RECURRENCE_NAME ||
+                     column == Glo.Tab.NOTES)) ||
                    (table == "Login" &&
                     (column == Glo.Tab.LOGIN_ID ||
                      column == Glo.Tab.LOGIN_USERNAME ||
@@ -357,8 +362,26 @@ public static class Glo
                      column == Glo.Tab.LOGIN_EDIT_PERMISSIONS ||
                      column == Glo.Tab.LOGIN_DELETE_PERMISSIONS ||
                      column == Glo.Tab.LOGIN_ADMIN ||
-                     column == Glo.Tab.LOGIN_ENABLED))
-                     );
+                     column == Glo.Tab.LOGIN_ENABLED)) ||
+                   (table == "Task" &&
+                    (column == Glo.Tab.TASK_ID ||
+                     column == Glo.Tab.TASK_REFERENCE ||
+                     column == Glo.Tab.TASK_OPENED ||
+                     column == Glo.Tab.TASK_CLOSED ||
+                     column == Glo.Tab.NOTES)) ||
+                   (table == "Visit" &&
+                    (column == Glo.Tab.VISIT_ID ||
+                     column == Glo.Tab.TASK_REFERENCE ||
+                     column == Glo.Tab.VISIT_DATE ||
+                     column == Glo.Tab.VISIT_TYPE ||
+                     column == Glo.Tab.NOTES)) ||
+                   (table == "Document" &&
+                    (column == Glo.Tab.DOCUMENT_ID ||
+                     column == Glo.Tab.TASK_REFERENCE ||
+                     column == Glo.Tab.DOCUMENT_DATE ||
+                     column == Glo.Tab.DOCUMENT_TYPE ||
+                     column == Glo.Tab.NOTES))
+                 );
         }
 
         public static IPAddress? GetIPAddressFromString(string ip)

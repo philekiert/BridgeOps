@@ -430,7 +430,7 @@ internal class BridgeOpsAgent
 
             string fileText = (++columnRecordID).ToString() + $"{Glo.NL}^{Glo.NL}";
 
-            int[] orderCounts = new int[4]; // Record the column counts for the four tables that require ordering.
+            int[] orderCounts = new int[7]; // Record the column counts for the four tables that require ordering.
 
             foreach (string[] column in columns)
             {
@@ -443,11 +443,11 @@ internal class BridgeOpsAgent
                 else if (column[0] == "Conference")
                     ++orderCounts[3];
                 else if (column[0] == "Task")
-                    ++orderCounts[3];
+                    ++orderCounts[4];
                 else if (column[0] == "Visit")
-                    ++orderCounts[3];
+                    ++orderCounts[5];
                 else if (column[0] == "Document")
-                    ++orderCounts[3];
+                    ++orderCounts[6];
 
                 if (uniqueColNames.Contains(column[0] + "." + column[1]))
                     fileText += "[U]";

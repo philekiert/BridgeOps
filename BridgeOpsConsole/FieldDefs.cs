@@ -172,17 +172,19 @@ public class FieldDefs
         defs.Add("Task Reference", new Definition(4, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, true, false));
         defs.Add("Task Opened", new Definition(4, Glo.Tab.TASK_OPENED, "DATE", false, false, false));
         defs.Add("Task Closed", new Definition(4, Glo.Tab.TASK_CLOSED, "DATE", false, false, false));
-        defs.Add("Task Notes", new Definition(4, Glo.Tab.NOTES, "DATE", false, false, false));
+        defs.Add("Task Notes", new Definition(4, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
         defs.Add("Visit ID", new Definition(5, Glo.Tab.VISIT_ID, typeVisitID, false, true, true));
         defs.Add("Visit Task Reference", new Definition(5, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, false, false));
         defs.Add("Visit Date", new Definition(5, Glo.Tab.VISIT_DATE, "DATE", false, false, false));
         defs.Add("Visit Type", new Definition(5, Glo.Tab.VISIT_TYPE, "VARCHAR(50)", true, false, false));
+        defs.Add("Visit Notes", new Definition(5, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
         defs.Add("Document ID", new Definition(8, Glo.Tab.DOCUMENT_ID, typeDocumentID, false, true, true));
         defs.Add("Document Task Reference", new Definition(8, Glo.Tab.TASK_REFERENCE, typeTaskRef, false, false, false));
         defs.Add("Document Date", new Definition(8, Glo.Tab.DOCUMENT_DATE, "DATE", false, false, false));
         defs.Add("Document Type", new Definition(8, Glo.Tab.DOCUMENT_TYPE, "VARCHAR(50)", true, false, false));
+        defs.Add("Document Notes", new Definition(8, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
 
         // ----- SUPPLEMENTARY TABLES ----- //

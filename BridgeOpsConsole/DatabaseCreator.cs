@@ -406,6 +406,12 @@ public class DatabaseCreator
                     AddColumn(ref recurrence, def);
                 if (fieldDefs.Category(def) == "Connection")
                     AddColumn(ref connections, def);
+                if (fieldDefs.Category(def) == "Task")
+                    AddColumn(ref task, def);
+                if (fieldDefs.Category(def) == "Visit")
+                    AddColumn(ref visit, def);
+                if (fieldDefs.Category(def) == "Document")
+                    AddColumn(ref document, def);
                 //if (fieldDefs.Category(def) == "Dial No")
                 //    AddColumn(ref dialNo, def);
                 //if (fieldDefs.Category(def) == "Conferences by Day")
@@ -445,7 +451,9 @@ public class DatabaseCreator
             organisation += ", CONSTRAINT pk_OrgID PRIMARY KEY (Organisation_ID)" +
                             ", CONSTRAINT fk_ParentOrgRef FOREIGN KEY (Parent_Reference) REFERENCES Organisation (Organisation_Reference)" +
                             ", CONSTRAINT u_OrgRef UNIQUE (Organisation_Reference) );" +
-                             " CREATE UNIQUE INDEX u_OrgDialNo ON Organisation (Dial_No) WHERE Dial_No IS NOT NULL;"; // Needs adding separately due to the WHERE clause.
+                             // Needs adding separately due to the WHERE clause.
+                             " CREATE UNIQUE INDEX u_OrgDialNo ON Organisation (Dial_No) WHERE Dial_No IS NOT NULL;" +
+                             " CREATE UNIQUE INDEX u_OrgTaskRef ON Organisation (Task_Reference) WHERE Task_Reference IS NOT NULL;";
             contact += ", CONSTRAINT pk_ContactID PRIMARY KEY (Contact_ID) );";
             login += ", CONSTRAINT pk_LoginID PRIMARY KEY (Login_ID)" +
                      ", CONSTRAINT u_Username UNIQUE (Username) );";
@@ -464,12 +472,12 @@ public class DatabaseCreator
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the Recurrence table.
             recurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID) );";
             task += ", CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID)" +
-                    ", CONSTRAINT u_TaskRef UNIQUE (Organisation_Reference) );";
+                    ", CONSTRAINT u_TaskRef UNIQUE (Task_Reference) );";
             // No task reference for either of these, same goes for organisations. Task references are kept very loose at the request of the team.
-            visit += ", CONSTRAINT pk_Visit_ID PRIMARY KEY (Task_ID)" +
-                     ", CONSTRAINT chk_VisitType CHECK (Closure IN (''))";
-            document += ", CONSTRAINT pk_Document_ID PRIMARY KEY (Task_ID)" +
-                        ", CONSTRAINT chk_DocumentType CHECK (Closure IN (''))";
+            visit += ", CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID)" +
+                     ", CONSTRAINT chk_VisitType CHECK (Visit_Type IN ('')) );";
+            document += ", CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID)" +
+                        ", CONSTRAINT chk_DocumentType CHECK (Document_Type IN ('')) );";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
@@ -526,6 +534,12 @@ public class DatabaseCreator
             //SendCommandSQL(dialNo);
             Writer.Message("Creating Connection table...");
             SendCommandSQL(connections);
+            Writer.Message("Creating Task table...");
+            SendCommandSQL(task);
+            Writer.Message("Creating Visit table...");
+            SendCommandSQL(visit);
+            Writer.Message("Creating Document table...");
+            SendCommandSQL(document);
             Writer.Message("Creating Organisation Change table...");
             SendCommandSQL(organisationChange);
             //Writer.Message("Creating Conferences by Day table...");

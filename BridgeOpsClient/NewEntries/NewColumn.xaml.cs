@@ -96,18 +96,22 @@ namespace BridgeOpsClient
                     if ((table == "Organisation" && column == Glo.Tab.ORGANISATION_REF) ||
                         (table == "Organisation" && column == Glo.Tab.DIAL_NO) ||
                         (table == "Asset" && column == Glo.Tab.ASSET_REF) ||
-                        (table == "Login" && column == Glo.Tab.LOGIN_USERNAME))
+                        (table == "Login" && column == Glo.Tab.LOGIN_USERNAME) ||
+                        (table == "Task" && column == Glo.Tab.TASK_REFERENCE))
                     {
                         cmbType.Items.RemoveAt(1);
                         cmbType.IsEnabled = false;
                     }
-                    if ((table == "Organisation" && column == Glo.Tab.PARENT_REF) ||
-                        (table == "Asset" && column == Glo.Tab.ORGANISATION_REF))
+                    else if ((table == "Organisation" && column == Glo.Tab.PARENT_REF) ||
+                             (table == "Asset" && column == Glo.Tab.ORGANISATION_REF))
                     {
                         cmbType.IsEnabled = false;
                         txtLimit.IsEnabled = false;
                         txtAllowed.IsEnabled = false;
                     }
+                    else if ((table == "Document" && column == Glo.Tab.DOCUMENT_TYPE) ||
+                             (table == "Visit" && column == Glo.Tab.VISIT_TYPE))
+                        cmbType.IsEnabled = false;
 
                     updatingTypeOptions = false;
                     if (columnDetails.restriction == Int32.MaxValue)
@@ -144,7 +148,11 @@ namespace BridgeOpsClient
                 case "VARCHAR":
                     txtLimit.IsEnabled = true;
                     txtLimit.Text = "";
-                    txtAllowed.IsEnabled = !core;
+                    // Visit and Document Type fields are an exception - their allowed lists should be editable.
+                    txtAllowed.IsEnabled = !core || ((cmbTable.Text == "Visit" &&
+                                                      txtColumnName.Text == Glo.Tab.VISIT_TYPE) ||
+                                                     (cmbTable.Text == "Document" &&
+                                                      txtColumnName.Text == Glo.Tab.DOCUMENT_TYPE));
                     if (columnDetails.type == "VARCHAR" && columnDetails.restriction <= 65535)
                         txtLimit.Text = columnDetails.restriction.ToString();
                     break;
@@ -161,7 +169,7 @@ namespace BridgeOpsClient
                     txtLimit.Text = "2,147,483,647";
                     break;
                 case "BIGINT":
-                    txtLimit.Text = "9,223,372,036,854,775,807";
+                    txtLimit.Text = "9,223,372,036,854,775,807"; // :)
                     break;
                 default: // DATE, TIME, DATETIME or BOOLEAN
                     txtLimit.Text = "";

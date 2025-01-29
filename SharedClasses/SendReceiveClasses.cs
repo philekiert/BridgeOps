@@ -560,12 +560,36 @@ namespace SendReceiveClasses
                             commands.Add("ALTER TABLE Login DROP CONSTRAINT u_Username;");
                         }
                     }
-                    else if (table == "Conference")
+                    else if (table == "Task")
                     {
-                        if (column == Glo.Tab.CONFERENCE_ID)
+                        if (column == Glo.Tab.TASK_ID)
                         {
                             reAddKeys = true;
-                            commands.Add("ALTER TABLE Login DROP CONSTRAINT u_ConnectionConfIDDialNo;");
+                            commands.Add("ALTER TABLE Task DROP CONSTRAINT pk_TaskID;");
+                        }
+                        else if (column == Glo.Tab.TASK_REFERENCE)
+                        {
+                            reAddKeys = true;
+                            commands.Add("DROP INDEX u_OrgTaskRef ON Organisation;");
+                            commands.Add($"ALTER TABLE Organisation ALTER COLUMN {column} {columnType};");
+                            commands.Add($"ALTER TABLE Visit ALTER COLUMN {column} {columnType};");
+                            commands.Add($"ALTER TABLE Document ALTER COLUMN {column} {columnType};");
+                        }
+                    }
+                    else if (table == "Visit")
+                    {
+                        if (column == Glo.Tab.VISIT_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Visit DROP CONSTRAINT pk_VisitID;");
+                        }
+                    }
+                    else if (table == "Document")
+                    {
+                        if (column == Glo.Tab.DOCUMENT_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE Document DROP CONSTRAINT pk_DocumentID;");
                         }
                     }
 
@@ -641,13 +665,17 @@ namespace SendReceiveClasses
                                 commands.Add("ALTER TABLE Login ADD CONSTRAINT u_Username UNIQUE (Username);");
                             }
                         }
-                        else if (table == "Conference")
+                        else if (table == "Task")
                         {
-                            if (column == Glo.Tab.CONFERENCE_ID)
-                            {
-                                commands.Add("ALTER TABLE Connection ADD CONSTRAINT u_ConnectionConfIDDialNo UNIQUE (Conference_ID, Dial_No);");
-                            }
+                            if (column == Glo.Tab.TASK_ID)
+                                commands.Add("ALTER TABLE Task ADD CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID);");
+                            else if (column == Glo.Tab.TASK_REFERENCE)
+                                commands.Add("CREATE UNIQUE INDEX u_OrgTaskRef ON Organisation (Task_Reference) WHERE Task_Reference IS NOT NULL;");
                         }
+                        else if (table == "Visit" && column == Glo.Tab.VISIT_ID)
+                            commands.Add("ALTER TABLE Visit ADD CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID);");
+                        else if (table == "Document" && column == Glo.Tab.DOCUMENT_ID)
+                            commands.Add("ALTER TABLE Document ADD CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID);");
                     }
                 }
                 if (allowed.Count > 0)
