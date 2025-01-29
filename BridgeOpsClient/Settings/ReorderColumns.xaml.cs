@@ -55,8 +55,8 @@ namespace BridgeOpsClient
         // 1: Asset
         // 2: Contact
         // 3: Conference
-        List<Entry>[] entryLists = new List<Entry>[4];
-        List<Entry>[] entryListOriginals = new List<Entry>[4];
+        List<Entry>[] entryLists = new List<Entry>[7];
+        List<Entry>[] entryListOriginals = new List<Entry>[7];
         List<Entry> entries = new();
         List<Entry> entriesOriginal = new();
 
@@ -74,7 +74,7 @@ namespace BridgeOpsClient
             OrderedDictionary dictionary;
             List<int> order;
             List<SendReceiveClasses.ColumnOrdering.Header> headers;
-            for (int n = 0; n < 4; ++n)
+            for (int n = 0; n < 7; ++n)
             {
                 if (n == 0)
                 {
@@ -94,14 +94,33 @@ namespace BridgeOpsClient
                     order = ColumnRecord.contactOrder;
                     headers = ColumnRecord.contactHeaders;
                 }
-                else // if 3
+                else if (n == 3)
                 {
                     dictionary = ColumnRecord.conference;
                     order = ColumnRecord.conferenceOrder;
                     headers = ColumnRecord.conferenceHeaders;
                 }
+                else if (n == 4)
+                {
+                    dictionary = ColumnRecord.task;
+                    order = ColumnRecord.taskOrder;
+                    headers = ColumnRecord.taskHeaders;
+                }
+                else if (n == 5)
+                {
+                    dictionary = ColumnRecord.visit;
+                    order = ColumnRecord.visitOrder;
+                    headers = ColumnRecord.visitHeaders;
+                }
+                else // if 6
+                {
+                    dictionary = ColumnRecord.document;
+                    order = ColumnRecord.documentOrder;
+                    headers = ColumnRecord.documentHeaders;
+                }
 
-                string[] table = new string[] { "Organisation", "Asset", "Contact", "Conference" };
+                string[] table = new string[] { "Organisation", "Asset", "Contact", "Conference",
+                                                "Task", "Visit", "Document" };
                 int i = 0;
                 foreach (DictionaryEntry de in dictionary)
                 {
@@ -167,8 +186,14 @@ namespace BridgeOpsClient
                 lowerLimit = Glo.Tab.ASSET_STATIC_COUNT;
             else if (cmbTable.SelectedIndex == 2)
                 lowerLimit = Glo.Tab.CONTACT_STATIC_COUNT;
-            else // if 4
+            else if (cmbTable.SelectedIndex == 3)
                 lowerLimit = Glo.Tab.CONFERENCE_STATIC_COUNT;
+            else if (cmbTable.SelectedIndex == 4)
+                lowerLimit = Glo.Tab.TASK_STATIC_COUNT;
+            else if (cmbTable.SelectedIndex == 5)
+                lowerLimit = Glo.Tab.VISIT_STATIC_COUNT;
+            else // if 6
+                lowerLimit = Glo.Tab.DOCUMENT_STATIC_COUNT;
 
             upperLimit = lstColumns.Items.Count - 1;
         }
@@ -291,13 +316,19 @@ namespace BridgeOpsClient
             List<int> assetOrder = new();
             List<int> contactOrder = new();
             List<int> conferenceOrder = new();
+            List<int> taskOrder = new();
+            List<int> visitOrder = new();
+            List<int> documentOrder = new();
 
             List<SendReceiveClasses.ColumnOrdering.Header> organisationHeaders = new();
             List<SendReceiveClasses.ColumnOrdering.Header> assetHeaders = new();
             List<SendReceiveClasses.ColumnOrdering.Header> contactHeaders = new();
             List<SendReceiveClasses.ColumnOrdering.Header> conferenceHeaders = new();
+            List<SendReceiveClasses.ColumnOrdering.Header> taskHeaders = new();
+            List<SendReceiveClasses.ColumnOrdering.Header> visitHeaders = new();
+            List<SendReceiveClasses.ColumnOrdering.Header> documentHeaders = new();
 
-            for (int n = 0; n < 4; ++n)
+            for (int n = 0; n < 7; ++n)
             {
                 List<int> order;
                 List<SendReceiveClasses.ColumnOrdering.Header> headers;
@@ -316,10 +347,25 @@ namespace BridgeOpsClient
                     order = contactOrder;
                     headers = contactHeaders;
                 }
-                else // if 3
+                else if (n == 3)
                 {
                     order = conferenceOrder;
                     headers = conferenceHeaders;
+                }
+                else if (n == 4)
+                {
+                    order = taskOrder;
+                    headers = taskHeaders;
+                }
+                else if (n == 5)
+                {
+                    order = visitOrder;
+                    headers = visitHeaders;
+                }
+                else // if 6
+                {
+                    order = documentOrder;
+                    headers = documentHeaders;
                 }
 
                 int i = 0;
@@ -344,19 +390,24 @@ namespace BridgeOpsClient
                 {
                     if (stream != null)
                     {
-                        stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
-
                         SendReceiveClasses.ColumnOrdering newOrdering = new(App.sd.sessionID,
                                                                             ColumnRecord.columnRecordID,
                                                                             organisationOrder,
                                                                             assetOrder,
                                                                             contactOrder,
-                                                                            conferenceOrder);
+                                                                            conferenceOrder,
+                                                                            taskOrder,
+                                                                            visitOrder,
+                                                                            documentOrder);
                         newOrdering.organisationHeaders = organisationHeaders;
                         newOrdering.assetHeaders = assetHeaders;
                         newOrdering.contactHeaders = contactHeaders;
                         newOrdering.conferenceHeaders = conferenceHeaders;
+                        newOrdering.taskHeaders = taskHeaders;
+                        newOrdering.visitHeaders = visitHeaders;
+                        newOrdering.documentHeaders = documentHeaders;
 
+                        stream.WriteByte(Glo.CLIENT_COLUMN_ORDER_UPDATE);
                         App.sr.WriteAndFlush(stream, App.sr.Serialise(newOrdering));
                         int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
@@ -481,7 +532,7 @@ namespace BridgeOpsClient
             }
 
             // To see if anything changed, we can just check to see if any tables are bold.
-            for (int n = 0; n < 4; ++n)
+            for (int n = 0; n < 7; ++n)
                 if (((ComboBoxItem)cmbTable.Items[n]).FontWeight == FontWeights.Bold)
                 {
                     btnApply.IsEnabled = true;

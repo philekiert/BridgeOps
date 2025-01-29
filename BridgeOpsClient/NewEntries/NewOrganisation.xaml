@@ -39,11 +39,11 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Label Content="Organisation Reference" Grid.Row="0" Grid.Column="0" x:Name="lblOrgID"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgRef"
-                             TextChanged="ValueChanged" Height="24"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtOrgRef" TextChanged="ValueChanged" Height="24"/>
                     <Label Content="Parent Organisation" Grid.Row="1" Grid.Column="0" x:Name="lblOrgParentID"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                     <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cmbOrgParentID" Margin="10 4 10 4"
@@ -67,6 +67,9 @@
                         <CheckBox Grid.Column="2" x:Name="chkAvailable" Margin="0 1 10 0" VerticalAlignment="Center"
                                   Click="chkAvailable_Click"/>
                     </Grid>
+                    <Label Content="Task Reference" Grid.Row="4" Grid.Column="0" x:Name="lblTask"
+                           VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox x:Name="txtTask" Grid.Row="4" Grid.Column="1" TextChanged="ValueChanged" Height="24"/>
                 </Grid>
                 <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" Margin="10,10,10,10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left"

@@ -736,10 +736,16 @@ namespace SendReceiveClasses
         public List<int> assetOrder = new();
         public List<int> contactOrder = new();
         public List<int> conferenceOrder = new();
+        public List<int> taskOrder = new();
+        public List<int> visitOrder = new();
+        public List<int> documentOrder = new();
         public List<Header> organisationHeaders = new();
         public List<Header> assetHeaders = new();
         public List<Header> contactHeaders = new();
         public List<Header> conferenceHeaders = new();
+        public List<Header> taskHeaders = new();
+        public List<Header> visitHeaders = new();
+        public List<Header> documentHeaders = new();
 
         public struct Header
         {
@@ -751,7 +757,10 @@ namespace SendReceiveClasses
         public ColumnOrdering(string sessionID, int columnRecordID, List<int> organisationOrder,
                                                                     List<int> assetOrder,
                                                                     List<int> contactOrder,
-                                                                    List<int> conferenceOrder)
+                                                                    List<int> conferenceOrder,
+                                                                    List<int> taskOrder,
+                                                                    List<int> visitOrder,
+                                                                    List<int> documentOrder)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -759,6 +768,9 @@ namespace SendReceiveClasses
             this.assetOrder = assetOrder;
             this.contactOrder = contactOrder;
             this.conferenceOrder = conferenceOrder;
+            this.taskOrder = taskOrder;
+            this.visitOrder = visitOrder;
+            this.documentOrder = documentOrder;
         }
 
         public string SqlCommand()
@@ -781,13 +793,16 @@ namespace SendReceiveClasses
             return SqlAssist.Transaction(new string[] { Command("Organisation", organisationOrder),
                                                         Command("Asset", assetOrder),
                                                         Command("Contact", contactOrder),
-                                                        Command("Conference", conferenceOrder) });
+                                                        Command("Conference", conferenceOrder),
+                                                        Command("Task", taskOrder),
+                                                        Command("Visit", visitOrder),
+                                                        Command("Document", documentOrder)});
         }
 
         public string HeaderConfigText()
         {
             StringBuilder str = new();
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 7; ++i)
             {
                 string table;
                 List<Header> headers;
@@ -806,10 +821,25 @@ namespace SendReceiveClasses
                     table = "Contact";
                     headers = contactHeaders;
                 }
-                else
+                else if (i == 3)
                 {
                     table = "Conference";
                     headers = conferenceHeaders;
+                }
+                else if (i == 4)
+                {
+                    table = "Task";
+                    headers = taskHeaders;
+                }
+                else if (i == 5)
+                {
+                    table = "Visit";
+                    headers = visitHeaders;
+                }
+                else // if 6
+                {
+                    table = "Document";
+                    headers = documentHeaders;
                 }
 
                 foreach (Header h in headers)
@@ -830,12 +860,14 @@ namespace SendReceiveClasses
         public string? name;
         public string? dialNo;
         public bool? available;
+        public string? taskRef;
         public string? notes;
         public bool organisationRefChanged;
         public bool parentOrgRefChanged;
         public bool nameChanged;
         public bool dialNoChanged;
         public bool availableChanged;
+        public bool taskChanged;
         public bool notesChanged;
         public List<string> additionalCols;
         public List<string?> additionalVals;
@@ -844,9 +876,10 @@ namespace SendReceiveClasses
 
         public Organisation(string sessionID, int columnRecordID,
                             int organisationID, string? organisationRef, string? parentOrgRef, string? name,
-                            string? dialNo, bool? available, string? notes, List<string> additionalCols,
-                                                                            List<string?> additionalVals,
-                                                                            List<bool> additionalNeedsQuotes)
+                            string? dialNo, bool? available, string? taskRef,
+                            string? notes, List<string> additionalCols,
+                                           List<string?> additionalVals,
+                                           List<bool> additionalNeedsQuotes)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
@@ -856,6 +889,7 @@ namespace SendReceiveClasses
             this.name = name;
             this.dialNo = dialNo;
             this.available = available;
+            this.taskRef = taskRef;
             this.notes = notes;
             this.additionalCols = additionalCols;
             this.additionalVals = additionalVals;
@@ -865,6 +899,7 @@ namespace SendReceiveClasses
             nameChanged = false;
             dialNoChanged = false;
             availableChanged = false;
+            taskChanged = false;
             notesChanged = false;
             changeReason = "";
         }
@@ -879,6 +914,8 @@ namespace SendReceiveClasses
                 name = SqlAssist.AddQuotes(SqlAssist.SecureValue(name));
             if (dialNo != null)
                 dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(dialNo));
+            if (taskRef != null)
+                taskRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(taskRef));
             if (notes != null)
                 notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
             SqlAssist.SecureColumn(additionalCols);
@@ -902,16 +939,18 @@ namespace SendReceiveClasses
                                                                                   Glo.Tab.ORGANISATION_NAME,
                                                                                   Glo.Tab.DIAL_NO,
                                                                                   Glo.Tab.ORGANISATION_AVAILABLE,
+                                                                                  Glo.Tab.TASK_REFERENCE,
                                                                                   Glo.Tab.NOTES),
                                               SqlAssist.ValConcat(additionalVals, organisationRef,
                                                                                   parentOrgRef,
                                                                                   name,
                                                                                   dialNo,
                                                                                   available == true ? "1" : "0",
+                                                                                  taskRef,
                                                                                   notes));
             // Create a first change instance.
-            additionalCols.RemoveRange(additionalCols.Count - 6, 6); // ColConcat and ValConcat added the main fields
-            additionalVals.RemoveRange(additionalVals.Count - 6, 6); // to the Lists, so walk that back here.
+            additionalCols.RemoveRange(additionalCols.Count - 7, 7); // ColConcat and ValConcat added the main fields
+            additionalVals.RemoveRange(additionalVals.Count - 7, 7); // to the Lists, so walk that back here.
             int initialCount = additionalCols.Count;
             for (int i = 0; i < initialCount; ++i)
             {
@@ -934,6 +973,8 @@ namespace SendReceiveClasses
                                                             Glo.Tab.DIAL_NO + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.ORGANISATION_AVAILABLE,
                                                             Glo.Tab.ORGANISATION_AVAILABLE + Glo.Tab.CHANGE_SUFFIX,
+                                                            Glo.Tab.TASK_REFERENCE,
+                                                            Glo.Tab.TASK_REFERENCE + Glo.Tab.CHANGE_SUFFIX,
                                                             Glo.Tab.NOTES,
                                                             Glo.Tab.NOTES + Glo.Tab.CHANGE_SUFFIX),
                                         SqlAssist.ValConcat(additionalVals,
@@ -946,6 +987,7 @@ namespace SendReceiveClasses
                                                             name, "1",
                                                             dialNo, "1",
                                                             available == true ? "1" : "0", "1",
+                                                            taskRef, "1",
                                                             notes, "1"));
             return SqlAssist.Transaction(com);
         }
@@ -981,6 +1023,8 @@ namespace SendReceiveClasses
                 setters.Add(SqlAssist.Setter(Glo.Tab.DIAL_NO, dialNo));
             if (availableChanged)
                 setters.Add(Glo.Tab.ORGANISATION_AVAILABLE + " = " + (available == true ? "1" : "0"));
+            if (taskChanged)
+                setters.Add(SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef));
             if (notesChanged)
                 setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
             for (int i = 0; i < additionalCols.Count; ++i)
@@ -1029,6 +1073,13 @@ namespace SendReceiveClasses
                 additionalCols.Add(Glo.Tab.ORGANISATION_AVAILABLE);
                 additionalCols.Add(Glo.Tab.ORGANISATION_AVAILABLE + Glo.Tab.CHANGE_SUFFIX);
                 additionalVals.Add(available == true ? "1" : "0");
+                additionalVals.Add("1");
+            }
+            if (taskChanged)
+            {
+                additionalCols.Add(Glo.Tab.TASK_REFERENCE);
+                additionalCols.Add(Glo.Tab.TASK_REFERENCE + Glo.Tab.CHANGE_SUFFIX);
+                additionalVals.Add(taskRef);
                 additionalVals.Add("1");
             }
             if (notesChanged)

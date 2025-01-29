@@ -265,15 +265,18 @@ public static class Glo
         public const string DOCUMENT_DATE = "Document_Date";
         public const string DOCUMENT_TYPE = "Document_Type";
 
-
         public const string FRIENDLY_TABLE = "TableName";
         public const string FRIENDLY_COLUMN = "ColumnName";
         public const string FRIENDLY_NAME = "FriendlyName";
 
-        public const int ORGANISATION_STATIC_COUNT = 7;
+        // These represent how many core columns are in the respective tables, unable to be re-ordered.
+        public const int ORGANISATION_STATIC_COUNT = 8;
         public const int ASSET_STATIC_COUNT = 4;
         public const int CONTACT_STATIC_COUNT = 2;
         public const int CONFERENCE_STATIC_COUNT = 14;
+        public const int TASK_STATIC_COUNT = 5;
+        public const int VISIT_STATIC_COUNT = 5;
+        public const int DOCUMENT_STATIC_COUNT = 5;
 
         public const string NOTES = "Notes";
     }
@@ -324,6 +327,7 @@ public static class Glo
                      column == Glo.Tab.ORGANISATION_NAME ||
                      column == Glo.Tab.DIAL_NO ||
                      column == Glo.Tab.ORGANISATION_AVAILABLE ||
+                     column == Glo.Tab.TASK_REFERENCE ||
                      column == Glo.Tab.NOTES)) ||
                   (table == "Asset" &&
                     (column == Glo.Tab.ASSET_ID ||

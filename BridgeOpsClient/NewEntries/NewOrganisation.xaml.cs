@@ -31,6 +31,7 @@ namespace BridgeOpsClient
         string? originalName = "";
         string? originalDialNo = "";
         bool? originalAvailable = false;
+        string? originalTask = "";
         string? originalNotes = "";
 
         public void ApplyPermissions()
@@ -47,6 +48,7 @@ namespace BridgeOpsClient
                 btnAssetAdd.IsEnabled = false;
                 btnAssetRemove.IsEnabled = false;
                 txtOrgRef.IsReadOnly = true;
+                txtTask.IsReadOnly = true;
                 ToggleFieldsEnabled(false);
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
@@ -112,6 +114,8 @@ namespace BridgeOpsClient
                                                                          Glo.Tab.ORGANISATION_NAME).restriction);
             txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                                            Glo.Tab.DIAL_NO).restriction);
+            txtTask.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
+                                                                         Glo.Tab.TASK_REFERENCE).restriction);
             txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                                           Glo.Tab.NOTES).restriction);
 
@@ -131,6 +135,9 @@ namespace BridgeOpsClient
             if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.ORGANISATION_AVAILABLE).friendlyName != "")
                 lblAvailable.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                           Glo.Tab.ORGANISATION_AVAILABLE).friendlyName;
+            if (ColumnRecord.GetColumn(ColumnRecord.task, Glo.Tab.TASK_REFERENCE).friendlyName != "")
+                lblTask.Content = ColumnRecord.GetColumn(ColumnRecord.task,
+                                                          Glo.Tab.TASK_REFERENCE).friendlyName;
             if (ColumnRecord.GetColumn(ColumnRecord.organisation, Glo.Tab.NOTES).friendlyName != "")
                 lblNotes.Content = ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                           Glo.Tab.NOTES).friendlyName;
@@ -192,17 +199,22 @@ namespace BridgeOpsClient
             else
                 chkAvailable.IsChecked = false;
             if (data[6] != null)
-                txtNotes.Text = data[6].ToString();
+                txtTask.Text = data[6].ToString();
+            else
+                txtTask.Text = null;
+            if (data[7] != null)
+                txtNotes.Text = data[7].ToString();
             else
                 txtNotes.Text = null;
 
             // Store the original values to check if any changes have been made to the data. The same takes place
             // in the data input table.
             originalRef = txtOrgRef.Text;
-            originalParent = cmbOrgParentID.Text;
+            originalParent = cmbOrgParentID.Text == null ? "" : cmbOrgParentID.Text;
             originalName = txtName.Text;
             originalDialNo = txtDialNo.Text;
             originalAvailable = chkAvailable.IsChecked;
+            originalTask = txtTask.Text;
             originalNotes = txtNotes.Text;
 
             ditOrganisation.ValueChangedHandler = AnyInteraction; // Must be set before Populate().
@@ -262,6 +274,7 @@ namespace BridgeOpsClient
                 newOrg.name = txtName.Text.Length == 0 ? null : txtName.Text;
                 newOrg.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
                 newOrg.available = chkAvailable.IsChecked;
+                newOrg.taskRef = txtTask.Text.Length == 0 ? null : txtTask.Text;
                 newOrg.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
                 ditOrganisation.ExtractValues(out newOrg.additionalCols, out newOrg.additionalVals);
@@ -353,6 +366,11 @@ namespace BridgeOpsClient
                 {
                     org.available = chkAvailable.IsChecked == true;
                     org.availableChanged = true;
+                }
+                if (txtTask.Text != originalTask)
+                {
+                    org.taskRef = txtTask.Text;
+                    org.taskChanged = true;
                 }
                 if (txtNotes.Text != originalNotes)
                 {
@@ -626,12 +644,13 @@ namespace BridgeOpsClient
             if (!IsLoaded)
                 return false;
 
-            string currentParent = cmbOrgParentID.SelectedItem == null ? "" : (string)cmbOrgParentID.SelectedItem;
+            string currentParent = cmbOrgParentID.SelectedItem == null ? null : (string)cmbOrgParentID.SelectedItem;
             btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
                                 originalParent != currentParent ||
                                 originalName != txtName.Text ||
                                 originalDialNo != txtDialNo.Text ||
                                 originalAvailable != chkAvailable.IsChecked ||
+                                originalTask != txtTask.Text ||
                                 originalNotes != txtNotes.Text ||
                                 ditOrganisation.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.

@@ -2568,7 +2568,6 @@ internal class BridgeOpsAgent
                     throw new Exception("Cannot select an existing column name as a friendly name.");
             }
 
-
             string orderUpdateCommand = "";
 
             string column = req.column;
@@ -2611,7 +2610,10 @@ internal class BridgeOpsAgent
                     ColumnOrdering colOrder = new("", 0, ColumnRecord.organisationOrder,
                                                          ColumnRecord.assetOrder,
                                                          ColumnRecord.contactOrder,
-                                                         ColumnRecord.conferenceOrder);
+                                                         ColumnRecord.conferenceOrder,
+                                                         ColumnRecord.taskOrder,
+                                                         ColumnRecord.visitOrder,
+                                                         ColumnRecord.documentOrder);
                     orderUpdateCommand = colOrder.SqlCommand();
                 }
 
@@ -2676,6 +2678,9 @@ internal class BridgeOpsAgent
                     AddDictionaries(ColumnRecord.GetDictionary("Contact", false)!, "Contact");
                     AddDictionaries(ColumnRecord.GetDictionary("Asset", false)!, "Asset");
                     AddDictionaries(ColumnRecord.GetDictionary("Conference", false)!, "Conference");
+                    AddDictionaries(ColumnRecord.GetDictionary("Task", false)!, "Task");
+                    AddDictionaries(ColumnRecord.GetDictionary("Visit", false)!, "Visit");
+                    AddDictionaries(ColumnRecord.GetDictionary("Document", false)!, "Document");
 
                     if (req.softDuplicateCheck)
                         softDupCols.Add(req.table + "." +
@@ -2741,7 +2746,10 @@ internal class BridgeOpsAgent
                 req.organisationOrder.Count != ColumnRecord.organisation.Count ||
                 req.assetOrder.Count != ColumnRecord.asset.Count ||
                 req.contactOrder.Count != ColumnRecord.contact.Count ||
-                req.conferenceOrder.Count != ColumnRecord.conference.Count)
+                req.conferenceOrder.Count != ColumnRecord.conference.Count ||
+                req.taskOrder.Count != ColumnRecord.task.Count ||
+                req.visitOrder.Count != ColumnRecord.visit.Count ||
+                req.documentOrder.Count != ColumnRecord.document.Count)
                 throw new Exception("Could not apply new column order. Either the column record " +
                                     "is no longer intact, or the column counts were incorrect.");
 
@@ -2761,9 +2769,12 @@ internal class BridgeOpsAgent
             CheckStartingOrderValues(req.assetOrder, Glo.Tab.ASSET_STATIC_COUNT);
             CheckStartingOrderValues(req.contactOrder, Glo.Tab.CONTACT_STATIC_COUNT);
             CheckStartingOrderValues(req.conferenceOrder, Glo.Tab.CONFERENCE_STATIC_COUNT);
+            CheckStartingOrderValues(req.taskOrder, Glo.Tab.TASK_STATIC_COUNT);
+            CheckStartingOrderValues(req.visitOrder, Glo.Tab.VISIT_STATIC_COUNT);
+            CheckStartingOrderValues(req.documentOrder, Glo.Tab.DOCUMENT_STATIC_COUNT);
 
             SqlCommand sqlCommand = new(req.SqlCommand(), sqlConnect);
-            if (sqlCommand.ExecuteNonQuery() != 4)
+            if (sqlCommand.ExecuteNonQuery() != 7)
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
             else
             {

@@ -128,7 +128,7 @@ namespace BridgeOpsClient
             // Store the original values to check if any changes have been made to the data. The same takes place
             // in the data input table.
             originalRef = txtAssetRef.Text;
-            originalOrg = cmbOrgRef.Text;
+            originalOrg = cmbOrgRef.Text == null ? "" : cmbOrgRef.Text;
             originalNotes = txtNotes.Text;
 
             ditAsset.Populate(data.GetRange(4, data.Count - 4));

@@ -29,6 +29,9 @@
             <ComboBoxItem Content="Asset" FontWeight="Normal"/>
             <ComboBoxItem Content="Contact" FontWeight="Normal"/>
             <ComboBoxItem Content="Conference" FontWeight="Normal"/>
+            <ComboBoxItem Content="Task" FontWeight="Normal"/>
+            <ComboBoxItem Content="Visit" FontWeight="Normal"/>
+            <ComboBoxItem Content="Document" FontWeight="Normal"/>
         </ComboBox>
         <Label Grid.Row="1" Grid.Column="0" Content="Columns"/>
         <ListView Grid.Row="1" Grid.Column="1" Grid.RowSpan="3" x:Name="lstColumns" Grid.ColumnSpan="4" Height="384"
