@@ -422,7 +422,7 @@ public static class ColumnRecord
                 // Type and restriction will be corrected in a sec.
                 string type = restriction;
                 long max = 0;
-                    
+
                 // If type is text, change type name and set max length.
                 int r;
                 if (int.TryParse(restriction, out r))
@@ -529,16 +529,18 @@ public static class ColumnRecord
             }
 
             // Task Reference is a one-off in that we want the friendly name to be reflected elsewhere.
-            string taskRefFriendly = ((Column)task[Glo.Tab.TASK_REFERENCE]!).friendlyName;
-            Column taskCol = GetColumn(organisation, Glo.Tab.TASK_REFERENCE);
-            taskCol.friendlyName = taskRefFriendly;
-            organisation[Glo.Tab.TASK_REFERENCE] = taskCol;
-            taskCol = GetColumn(visit, Glo.Tab.TASK_REFERENCE);
-            taskCol.friendlyName = taskRefFriendly;
-            visit[Glo.Tab.TASK_REFERENCE] = taskCol;
-            taskCol = GetColumn(document, Glo.Tab.TASK_REFERENCE);
-            taskCol.friendlyName = taskRefFriendly;
-            document[Glo.Tab.TASK_REFERENCE] = taskCol;
+            void CarryFriendlyNames(OrderedDictionary sourceTable, string colName, params OrderedDictionary[] carryDicts)
+            {
+                string friendly = ((Column)sourceTable[colName]!).friendlyName;
+                foreach (OrderedDictionary od in carryDicts)
+                {
+                    Column taskCol = GetColumn(od, colName);
+                    taskCol.friendlyName = friendly;
+                    od[colName] = taskCol;
+                }
+            }
+            CarryFriendlyNames(task, Glo.Tab.TASK_REFERENCE, organisation, visit, document);
+            CarryFriendlyNames(organisation, Glo.Tab.DIAL_NO, connection);
 
             for (int o = 0; n < lines.Count && o < 7; ++n, ++o)
             {
