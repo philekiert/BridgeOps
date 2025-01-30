@@ -2364,6 +2364,240 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         }
     }
 
+    struct Task
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public int taskID = -1;
+        public string taskRef;
+        public DateTime? opened;
+        public DateTime? closed;
+        public string? notes;
+        public List<string> additionalCols = new();
+        public List<string?> additionalVals = new();
+        public List<bool> additionalNeedsQuotes = new();
+
+        public Task(string sessionID, int columnRecordID,
+                       string taskRef, DateTime? opened, DateTime? closed, string? notes)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.taskRef = taskRef;
+            this.opened = opened;
+            this.closed = closed;
+            this.notes = notes;
+        }
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            taskRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(taskRef));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+
+            string ret = SqlAssist.InsertInto("Task",
+                                              SqlAssist.ColConcat(additionalCols,
+                                                                  Glo.Tab.TASK_REFERENCE,
+                                                                  Glo.Tab.TASK_OPENED,
+                                                                  Glo.Tab.TASK_CLOSED,
+                                                                  Glo.Tab.NOTES),
+                                              SqlAssist.ValConcat(additionalVals,
+                                                                  taskRef,
+                                                                  opened == null ? null :
+                                                                  SqlAssist.DateTimeToSQL((DateTime)opened!,
+                                                                                          false, true),
+                                                                  closed == null ? null :
+                                                                  SqlAssist.DateTimeToSQL((DateTime)closed!,
+                                                                                          false, true),
+                                                                  notes));
+            return ret;
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new()
+            {
+                SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef),
+                SqlAssist.Setter(Glo.Tab.TASK_OPENED, opened == null ? null :
+                                                      SqlAssist.DateTimeToSQL(opened.Value, true, false)),
+                SqlAssist.Setter(Glo.Tab.TASK_CLOSED, closed == null ? null :
+                                                      SqlAssist.DateTimeToSQL(closed.Value, true, false)),
+                SqlAssist.Setter(Glo.Tab.NOTES, notes)
+            };
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
+
+            return SqlAssist.Update("Task", string.Join(", ", setters),
+                                    Glo.Tab.TASK_ID, taskID);
+        }
+    }
+
+    struct Visit
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public int visitID = -1;
+        public string? taskRef;
+        public string? type;
+        public DateTime? date;
+        public string? notes;
+        public List<string> additionalCols = new();
+        public List<string?> additionalVals = new();
+        public List<bool> additionalNeedsQuotes = new();
+
+        public Visit(string sessionID, int columnRecordID,
+                    string? taskRef, string? type, DateTime? date, string? notes)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.taskRef = taskRef;
+            this.type = type;
+            this.date = date;
+            this.notes = notes;
+        }
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (taskRef != null)
+                taskRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(taskRef));
+            if (type != null)
+                type = SqlAssist.AddQuotes(SqlAssist.SecureValue(type));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+
+            string ret = SqlAssist.InsertInto("Visit",
+                                              SqlAssist.ColConcat(additionalCols,
+                                                                  Glo.Tab.TASK_REFERENCE,
+                                                                  Glo.Tab.VISIT_TYPE,
+                                                                  Glo.Tab.VISIT_DATE,
+                                                                  Glo.Tab.NOTES),
+                                              SqlAssist.ValConcat(additionalVals,
+                                                                  taskRef,
+                                                                  type,
+                                                                  date == null ? null :
+                                                                  SqlAssist.DateTimeToSQL((DateTime)date!,
+                                                                                          false, true),
+                                                                  notes));
+            return ret;
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new()
+            {
+                SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef),
+                SqlAssist.Setter(Glo.Tab.VISIT_TYPE, type),
+                SqlAssist.Setter(Glo.Tab.VISIT_DATE, date == null ? null :
+                                                      SqlAssist.DateTimeToSQL(date.Value, true, false)),
+                SqlAssist.Setter(Glo.Tab.NOTES, notes)
+            };
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
+
+            return SqlAssist.Update("Task", string.Join(", ", setters),
+                                    Glo.Tab.VISIT_ID, visitID);
+        }
+    }
+
+    struct Document
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public int documentID = -1;
+        public string? taskRef;
+        public string? type;
+        public DateTime? date;
+        public string? notes;
+        public List<string> additionalCols = new();
+        public List<string?> additionalVals = new();
+        public List<bool> additionalNeedsQuotes = new();
+
+        public Document(string sessionID, int columnRecordID,
+                    string? taskRef, string? type, DateTime? date, string? notes)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.taskRef = taskRef;
+            this.type = type;
+            this.date = date;
+            this.notes = notes;
+        }
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (taskRef != null)
+                taskRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(taskRef));
+            if (type != null)
+                type = SqlAssist.AddQuotes(SqlAssist.SecureValue(type));
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+            SqlAssist.SecureColumn(additionalCols);
+            SqlAssist.SecureValue(additionalVals);
+            SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+
+            string ret = SqlAssist.InsertInto("Document",
+                                              SqlAssist.ColConcat(additionalCols,
+                                                                  Glo.Tab.TASK_REFERENCE,
+                                                                  Glo.Tab.DOCUMENT_TYPE,
+                                                                  Glo.Tab.DOCUMENT_DATE,
+                                                                  Glo.Tab.NOTES),
+                                              SqlAssist.ValConcat(additionalVals,
+                                                                  taskRef,
+                                                                  type,
+                                                                  date == null ? null :
+                                                                  SqlAssist.DateTimeToSQL((DateTime)date!,
+                                                                                          false, true),
+                                                                  notes));
+            return ret;
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new()
+            {
+                SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef),
+                SqlAssist.Setter(Glo.Tab.DOCUMENT_TYPE, type),
+                SqlAssist.Setter(Glo.Tab.DOCUMENT_DATE, date == null ? null :
+                                                      SqlAssist.DateTimeToSQL(date.Value, true, false)),
+                SqlAssist.Setter(Glo.Tab.NOTES, notes)
+            };
+            for (int i = 0; i < additionalCols.Count; ++i)
+                setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
+
+            return SqlAssist.Update("Task", string.Join(", ", setters),
+                                    Glo.Tab.VISIT_ID, documentID);
+        }
+    }
+
     struct Login
     {
         public string sessionID;

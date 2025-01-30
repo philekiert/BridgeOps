@@ -45,8 +45,12 @@ namespace BridgeOpsClient.CustomControls
         }
         public List<ColValue> colValues = new();
 
+        OrderedDictionary columns = new();
+
         public void Initialise(OrderedDictionary columns, string table)
         {
+            this.columns = columns;
+
             int i = 0;
             int iTotal = 0;
 
@@ -64,25 +68,20 @@ namespace BridgeOpsClient.CustomControls
                 // The user may have consecutive headers with the same position integer.
                 headerBump += headers.Count(h => h.position == iTotal);
 
-                /* This is very very botch, it should be done more elegantly elsewhere but things are a bit tight
-                   at the moment. It's here because the affected column names have dedicated fields. */
-                if (table == "Contact")
-                {
-                    if (col.Key == Glo.Tab.CONTACT_ID ||
-                        col.Key == Glo.Tab.NOTES)
-                        skip = true;
-                }
-                else if (!Glo.Fun.ColumnRemovalAllowed("Organisation", col.Key))
+                // Filter out core columns.
+                if (!Glo.Fun.ColumnRemovalAllowed("Organisation", col.Key))
                     skip = true;
-                else if (table == "Asset")
-                {
-                    if (col.Key == Glo.Tab.ASSET_ID ||
-                        col.Key == Glo.Tab.ASSET_REF ||
-                        col.Key == Glo.Tab.ORGANISATION_REF ||
-                        col.Key == Glo.Tab.NOTES)
+                else if (!Glo.Fun.ColumnRemovalAllowed("Asset", col.Key))
                         skip = true;
-                }
+                else if(!Glo.Fun.ColumnRemovalAllowed("Contact", col.Key))
+                    skip = true;
                 else if (!Glo.Fun.ColumnRemovalAllowed("Conference", col.Key))
+                    skip = true;
+                else if (!Glo.Fun.ColumnRemovalAllowed("Task", col.Key))
+                    skip = true;
+                else if (!Glo.Fun.ColumnRemovalAllowed("Visit", col.Key))
+                    skip = true;
+                else if (!Glo.Fun.ColumnRemovalAllowed("Document", col.Key))
                     skip = true;
 
                 if (!skip)
@@ -436,6 +435,14 @@ namespace BridgeOpsClient.CustomControls
             values = colVals;
 
             return true;
+        }
+        public List<bool> GetNeedsQuotes()
+        {
+            List<bool> additionalNeedsQuotes = new List<bool>();
+            foreach (string c in colValues.Select(i => i.name))
+                additionalNeedsQuotes.Add(
+                    SendReceiveClasses.SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.task, c).type));
+            return additionalNeedsQuotes;
         }
     }
 }

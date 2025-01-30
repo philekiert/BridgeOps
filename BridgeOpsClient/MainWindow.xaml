@@ -54,6 +54,13 @@
                               Click="menuDatabaseNewRecurrence_Click"/>
                     <MenuItem Header="_Resource" x:Name="menuDatabaseNewResource"
                               Click="menuDatabaseNewResource_Click"/>
+                    <Separator/>
+                    <MenuItem Header="_Task" x:Name="menuDatabaseNewTask"
+                              Click="menuDatabaseNewTask_Click"/>
+                    <MenuItem Header="_Visit" x:Name="menuDatabaseNewVisit"
+                              Click="menuDatabaseNewVisit_Click"/>
+                    <MenuItem Header="_Document" x:Name="menuDatabaseNewDocument"
+                              Click="menuDatabaseNewDocument_Click"/>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Select _Query Builder" Click="menuSelect_Click">

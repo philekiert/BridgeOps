@@ -1082,6 +1082,27 @@ namespace BridgeOpsClient
                     values = conf.additionalVals;
                     needsQuotes = conf.additionalNeedsQuotes;
                 }
+                else if (toSerialise is SendReceiveClasses.Task task)
+                {
+                    table = "Task";
+                    columns = task.additionalCols;
+                    values = task.additionalVals;
+                    needsQuotes = task.additionalNeedsQuotes;
+                }
+                else if (toSerialise is SendReceiveClasses.Visit visit)
+                {
+                    table = "Visit";
+                    columns = visit.additionalCols;
+                    values = visit.additionalVals;
+                    needsQuotes = visit.additionalNeedsQuotes;
+                }
+                else if (toSerialise is SendReceiveClasses.Document document)
+                {
+                    table = "Document";
+                    columns = document.additionalCols;
+                    values = document.additionalVals;
+                    needsQuotes = document.additionalNeedsQuotes;
+                }
 
                 if (table != "")
                 {
@@ -2743,10 +2764,15 @@ namespace BridgeOpsClient
         //                 7  Conference
         //                 8  Recurrence
         //                 9  Resource
-        //                 10  Conference (Recurrence menu)
-        public List<string>[] dataOrder = new List<string>[11];
-        public List<bool>[] dataHidden = new List<bool>[11];
-        public List<double>[] dataWidths = new List<double>[11];
+        //                 10 Conference (Recurrence menu)
+        //                 11 Task
+        //                 12 Visit
+        //                 13 Document
+        //                 14 Visit (Task links table)
+        //                 15 Document (Task links table)
+        public List<string>[] dataOrder = new List<string>[16];
+        public List<bool>[] dataHidden = new List<bool>[16];
+        public List<double>[] dataWidths = new List<double>[16];
 
         public bool settingsPulled = false;
 

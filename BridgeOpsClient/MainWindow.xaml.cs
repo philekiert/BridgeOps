@@ -211,6 +211,24 @@ namespace BridgeOpsClient
             newResource.Show();
         }
 
+        private void menuDatabaseNewTask_Click(object sender, RoutedEventArgs e)
+        {
+            NewTask newTask = new();
+            newTask.Show();
+        }
+
+        private void menuDatabaseNewVisit_Click(object sender, RoutedEventArgs e)
+        {
+            NewVisit newVisit = new();
+            newVisit.Show();
+        }
+
+        private void menuDatabaseNewDocument_Click(object sender, RoutedEventArgs e)
+        {
+            NewDocument newTask = new();
+            newTask.Show();
+        }
+
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)
         {
             if (App.IsLoggedIn)

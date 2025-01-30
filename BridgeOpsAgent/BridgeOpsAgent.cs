@@ -20,6 +20,7 @@ using System.Reflection.PortableExecutable;
 using System.Xml.Schema;
 using System.Collections.Specialized;
 using System.Collections;
+using System.ComponentModel;
 
 internal class BridgeOpsAgent
 {
@@ -902,6 +903,9 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_CONFERENCE ||
                          fncByte == Glo.CLIENT_NEW_RESOURCE ||
                          fncByte == Glo.CLIENT_NEW_RECURRENCE ||
+                         fncByte == Glo.CLIENT_NEW_TASK||
+                         fncByte == Glo.CLIENT_NEW_VISIT||
+                         fncByte == Glo.CLIENT_NEW_DOCUMENT ||
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_UPDATE)
@@ -1520,6 +1524,30 @@ internal class BridgeOpsAgent
                     Resource newRow = sr.Deserialise<Resource>(sr.ReadString(stream));
                     if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RESOURCES,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_TASK)
+                {
+                    SendReceiveClasses.Task newRow = sr.Deserialise<SendReceiveClasses.Task>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_TASKS,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_VISIT)
+                {
+                    Visit newRow = sr.Deserialise<Visit>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_TASKS,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
+                else if (target == Glo.CLIENT_NEW_DOCUMENT)
+                {
+                    Document newRow = sr.Deserialise<Document>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_TASKS,
                         create, out permission))
                         com.CommandText = newRow.SqlInsert();
                 }

@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,36 +11,38 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace BridgeOpsClient
 {
-    public partial class NewDocument : CustomWindow
+    public partial class NewTask : CustomWindow
     {
         bool edit = false;
         public string id = "";
         public bool changeMade = false;
 
-        public NewDocument()
+        public NewTask()
         {
             InitializeComponent();
 
-            dit.headers = ColumnRecord.documentHeaders;
-            dit.Initialise(ColumnRecord.orderedDocument, "Document");
+            dit.headers = ColumnRecord.taskHeaders;
+            dit.Initialise(ColumnRecord.orderedTask, "Task");
 
-            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.document,
+            txtTaskRef.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.task,
+                                                                            Glo.Tab.TASK_REFERENCE).restriction);
+            txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.contact,
                                                                           Glo.Tab.NOTES).restriction);
-            // cmbTaskRef max length is set in cmbTaskRef_Loaded() further down once it's loaded as it's not as simple.
-
-            cmbType.ItemsSource = ColumnRecord.GetColumn(ColumnRecord.document, Glo.Tab.DOCUMENT_TYPE).allowed;
         }
 
-        public NewDocument(string id) : this()
+        public NewTask(string id) : this()
         {
             InitializeComponent();
 
             edit = true;
             this.id = id;
 
+            btnAddDoc.IsEnabled = true;
+            btnAddVisit.IsEnabled = true;
             btnDelete.Visibility = Visibility.Visible;
         }
 
@@ -68,42 +69,39 @@ namespace BridgeOpsClient
                 return;
             }
 
-            string? taskRef = cmbTaskRef.Text == "" ? null : cmbTaskRef.Text;
-            string? type = cmbType.Text == "" ? null : cmbType.Text;
+            if (txtTaskRef.Text == "")
+            {
+                App.Abort("You must select a task reference.", this);
+                return;
+            }
+
             string? notes = txtNotes.Text == "" ? null : txtNotes.Text;
 
-            SendReceiveClasses.Document doc = new(App.sd.sessionID, ColumnRecord.columnRecordID, cmbTaskRef.Text,
-                                                  cmbType.Text, dat.SelectedDate, notes);
-            dit.ExtractValues(out doc.additionalCols, out doc.additionalVals);
-            doc.additionalNeedsQuotes = dit.GetNeedsQuotes();
+            SendReceiveClasses.Task task = new(App.sd.sessionID, ColumnRecord.columnRecordID, txtTaskRef.Text,
+                                               datOpened.SelectedDate, datClosed.SelectedDate, notes);
+            dit.ExtractValues(out task.additionalCols, out task.additionalVals);
+            task.additionalNeedsQuotes = dit.GetNeedsQuotes();
 
             if (edit)
             {
-                if (!int.TryParse(id, out doc.documentID))
+                if (!int.TryParse(id, out task.taskID))
                 {
-                    App.Abort("Could not ascertain the document's ID.", this);
+                    App.Abort("Could not ascertain the task's ID.", this);
                     return;
                 }
             }
             else
             {
-                if (App.SendInsert(Glo.CLIENT_NEW_DOCUMENT, doc, out id, this))
+                if (App.SendInsert(Glo.CLIENT_NEW_TASK, task, out id, this))
                 {
                     changeMade = true;
                     // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
                     // table in the application but the Organisation that added it, if there was one.
                     if (MainWindow.pageDatabase != null)
-                        MainWindow.pageDatabase.RepeatSearches(13);
+                        MainWindow.pageDatabase.RepeatSearches(11);
                     Close();
                 }
             }
-        }
-
-        private void cmbType_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
-                txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.document,
-                                                                         Glo.Tab.TASK_REFERENCE).restriction);
         }
     }
 }
