@@ -146,8 +146,20 @@ namespace BridgeOpsClient
                 table = ColumnRecord.orderedConference;
             else if (cmbTable.SelectedIndex == 4)
                 table = ColumnRecord.recurrence;
-            else
+            else if (cmbTable.SelectedIndex == 5)
                 table = ColumnRecord.resource;
+            // 6 is the seperator.
+            else if (cmbTable.SelectedIndex == 7)
+                table = ColumnRecord.task;
+            else if (cmbTable.SelectedIndex == 8)
+                table = ColumnRecord.visit;
+            else if (cmbTable.SelectedIndex == 9)
+                table = ColumnRecord.document;
+            else
+            {
+                App.Abort("Unable to populate column list.", App.mainWindow);
+                return;
+            }
 
             cmbColumn.Items.Clear();
             fieldValues.Clear();
@@ -239,6 +251,12 @@ namespace BridgeOpsClient
                 table = "Recurrence";
             else if (dtgResults.identity == 9)
                 table = "Resource";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
+                table = "Task";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
+                table = "Visit";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
+                table = "Document";
 
             if (dtgResults.identity == 7 && conferenceSelectRequest != null)
             {
@@ -419,9 +437,10 @@ namespace BridgeOpsClient
             else
             {
                 int identity = cmbTable.SelectedIndex;
-                // This is because some identities aren't used in the table select and only for data grid column layouts.
+                // This is because some identities aren't used in the table select and only for column layouts.
                 if (identity > 2)
-                    identity += 4;
+                    identity += 4; // Nudge past the organisation and settings identities.
+                // No need to nudge further past the recurrence conference list identity, since the separator adds one anyway.
 
                 // SelectedIndex of 2 is a historical wide search (historical narrow is not currently possible).
                 WideSearch(identity, cmbSearchType.SelectedIndex == 2);
@@ -464,11 +483,29 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.recurrence;
                 nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
             }
-            else // if Resource
+            else if (cmbTable.Text == "Resource")
             {
                 identity = 9;
                 tableColDefs = ColumnRecord.resource;
                 nameReversals = ColumnRecord.resourceFriendlyNameReversal;
+            }
+            else if (cmbTable.Text == "Task")
+            {
+                identity = (int)UserSettings.TableIndex.Task;
+                tableColDefs = ColumnRecord.task;
+                nameReversals = ColumnRecord.taskFriendlyNameReversal;
+            }
+            else if (cmbTable.Text == "Visit")
+            {
+                identity = (int)UserSettings.TableIndex.Visit;
+                tableColDefs = ColumnRecord.visit;
+                nameReversals = ColumnRecord.visitFriendlyNameReversal;
+            }
+            else // if Document
+            {
+                identity = (int)UserSettings.TableIndex.Document;
+                tableColDefs = ColumnRecord.document;
+                nameReversals = ColumnRecord.documentFriendlyNameReversal;
             }
 
             if (identity != 7 && identity != 8) // Conference and recurrence searches are a tad more complicated.
@@ -838,10 +875,25 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.recurrence;
                 nameReversals = ColumnRecord.conferenceRecurrenceFriendlyNameReversal;
             }
-            else // if 9 // Resource
+            else if (identity == 9) // Recurrence
             {
                 tableColDefs = ColumnRecord.resource;
                 nameReversals = ColumnRecord.resourceFriendlyNameReversal;
+            }
+            else if (identity == (int)UserSettings.TableIndex.Task)
+            {
+                tableColDefs = ColumnRecord.task;
+                nameReversals = ColumnRecord.taskFriendlyNameReversal;
+            }
+            else if (identity == (int)UserSettings.TableIndex.Visit)
+            {
+                tableColDefs = ColumnRecord.visit;
+                nameReversals = ColumnRecord.visitFriendlyNameReversal;
+            }
+            else // if Document
+            {
+                tableColDefs = ColumnRecord.document;
+                nameReversals = ColumnRecord.documentFriendlyNameReversal;
             }
 
             if (identity != 7 && identity != 8) // Conference and recurrence searches are a tad more complicated.
@@ -912,6 +964,12 @@ namespace BridgeOpsClient
                 tableSearched = "Recurrences";
             else if (dtgResults.identity == 9)
                 tableSearched = "Resources";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
+                tableSearched = "Task";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
+                tableSearched = "Visit";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
+                tableSearched = "Document";
             lblTable.Content = tableSearched;
 
             // Highlight searches where more than one field was searched in case the user was not aware.
@@ -1009,6 +1067,24 @@ namespace BridgeOpsClient
                 table = "Resource";
                 idColumn = Glo.Tab.RESOURCE_ID;
             }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
+            {
+                needsQuotes = false;
+                table = "Task";
+                idColumn = Glo.Tab.TASK_ID;
+            }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
+            {
+                needsQuotes = false;
+                table = "Visit";
+                idColumn = Glo.Tab.VISIT_ID;
+            }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
+            {
+                needsQuotes = false;
+                table = "Document";
+                idColumn = Glo.Tab.DOCUMENT_ID;
+            }
 
             var columns = ColumnRecord.GetDictionary(table, true);
             if (columns == null)
@@ -1063,6 +1139,24 @@ namespace BridgeOpsClient
                 table = "Resource";
                 column = Glo.Tab.RESOURCE_ID;
             }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
+            {
+                needsQuotes = false;
+                table = "Task";
+                column = Glo.Tab.TASK_ID;
+            }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
+            {
+                needsQuotes = false;
+                table = "Visit";
+                column = Glo.Tab.VISIT_ID;
+            }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
+            {
+                needsQuotes = false;
+                table = "Document";
+                column = Glo.Tab.DOCUMENT_ID;
+            }
 
             if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), needsQuotes, App.mainWindow) &&
                 MainWindow.pageDatabase != null)
@@ -1098,6 +1192,12 @@ namespace BridgeOpsClient
                 }
                 if (dtgResults.identity == 9)
                     App.EditResource(currentID, App.mainWindow);
+                if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
+                    App.EditTask(currentID.ToString(), App.mainWindow);
+                if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
+                    App.EditVisit(currentID.ToString(), App.mainWindow);
+                if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
+                    App.EditDocument(currentID.ToString(), App.mainWindow);
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
+using SendReceiveClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,9 @@ namespace BridgeOpsClient
                                                                           Glo.Tab.NOTES).restriction);
             // cmbTaskRef max length is set in cmbTaskRef_Loaded() further down once it's loaded as it's not as simple.
 
+            List<string> taskRefs;
+            App.GetAllTaskRefs(out taskRefs, this);
+            cmbTaskRef.ItemsSource = taskRefs;
             cmbType.ItemsSource = ColumnRecord.GetColumn(ColumnRecord.document, Glo.Tab.DOCUMENT_TYPE).allowed;
         }
 
@@ -43,21 +47,18 @@ namespace BridgeOpsClient
             this.id = id;
 
             btnDelete.Visibility = Visibility.Visible;
+
+            Title = "Document";
         }
 
-        public void Populate(List<object> data)
+        public void Populate(List<object?> data)
         {
+            cmbTaskRef.Text = (string?)data[1];
+            dat.SelectedDate = (DateTime?)data[2];
+            cmbType.Text = (string?)data[3];
+            txtNotes.Text = (string?)data[4];
 
-        }
-
-        public void PopulateVisits()
-        {
-
-        }
-
-        public void PopulateDocuments()
-        {
-
+            dit.Populate(data.GetRange(5, data.Count - 5));
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -84,6 +85,14 @@ namespace BridgeOpsClient
                     App.Abort("Could not ascertain the document's ID.", this);
                     return;
                 }
+
+                if (App.SendUpdate(Glo.CLIENT_UPDATE_DOCUMENT, doc, this))
+                {
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Document);
+                    changeMade = true;
+                    Close();
+                }
             }
             else
             {
@@ -104,6 +113,20 @@ namespace BridgeOpsClient
             if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
                 txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.document,
                                                                          Glo.Tab.TASK_REFERENCE).restriction);
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (!App.DeleteConfirm(false, this))
+                return;
+
+            if (App.SendDelete("Document", Glo.Tab.DOCUMENT_ID, id, false, this))
+            {
+                changeMade = true;
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Visit);
+                Close();
+            }
         }
     }
 }

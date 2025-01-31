@@ -53,6 +53,9 @@
                 <ComboBoxItem Content="ConferenceAdditional"/>
                 <ComboBoxItem Content="Recurrence"/>
                 <ComboBoxItem Content="Resource"/>
+                <ComboBoxItem Content="Task"/>
+                <ComboBoxItem Content="Visit"/>
+                <ComboBoxItem Content="Document"/>
                 <ComboBoxItem Content="Login"/>
             </ComboBox>
             <Label Content="Remove Duplicate Rows" x:Name="lblDistinct" Grid.Row="0" Grid.Column="3"/>

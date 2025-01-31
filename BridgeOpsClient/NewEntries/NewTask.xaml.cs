@@ -32,6 +32,9 @@ namespace BridgeOpsClient
                                                                             Glo.Tab.TASK_REFERENCE).restriction);
             txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.contact,
                                                                           Glo.Tab.NOTES).restriction);
+
+            dtgDocs.identity = (int)UserSettings.TableIndex.TaskDocument;
+            dtgVisits.identity = (int)UserSettings.TableIndex.TaskVisit;
         }
 
         public NewTask(string id) : this()
@@ -46,7 +49,7 @@ namespace BridgeOpsClient
             btnDelete.Visibility = Visibility.Visible;
         }
 
-        public void Populate(List<object> data)
+        public void Populate(List<object?> data)
         {
 
         }

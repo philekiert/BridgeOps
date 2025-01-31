@@ -102,6 +102,7 @@ public static class Glo
     public const int CLIENT_SELECT_STATEMENT = 53;
     public const int CLIENT_SELECT_WIDE = 54;
     public const int CLIENT_SELECT_EXISTS = 55;
+    public const int CLIENT_SELECT_TASK_REFS = 56;
     public const int CLIENT_DELETE = 60;
     public const int CLIENT_LINK_CONTACT = 70;
     public const int CLIENT_LINKED_CONTACT_SELECT = 71;
@@ -161,10 +162,9 @@ public static class Glo
     public const int PERMISSION_RECORDS = 0; // Keep at zero, and subsequent values in order.
     public const int PERMISSION_CONFERENCES = 1;
     public const int PERMISSION_RESOURCES = 2;
-    public const int PERMISSION_UNUSED = 3;
+    public const int PERMISSION_TASKS = 3;
     public const int PERMISSION_REPORTS = 4;
     public const int PERMISSION_USER_ACC_MGMT = 5;
-    public const int PERMISSION_TASKS = 6;
     public const int PERMISSIONS_MAX_VALUE = 63;
 
     public const string CLIENT_LOGOUT_ACCEPT = "Safe travels";
@@ -310,14 +310,16 @@ public static class Glo
         {
             if (table == "Organisation" || table == "Asset" || table == "Contact")
                 return PERMISSION_RECORDS;
-            if (table == "Conference" || table == "Recurrence")
+            else if (table == "Conference" || table == "Recurrence")
                 return PERMISSION_CONFERENCES;
-            if (table == "Resource")
+            else if (table == "Resource")
                 return PERMISSION_RESOURCES;
-            if (table == "ConferenceType")
-                return PERMISSION_UNUSED;
-            if (table == "Login")
+            else if (table == "Task" || table == "Visit" || table == "Document")
+                return PERMISSION_TASKS;
+            else if (table == "Login")
                 return PERMISSION_USER_ACC_MGMT;
+            else if (table == "Task" || table == "Visit" || table == "Document")
+                return PERMISSION_TASKS;
             else return -1;
         }
 

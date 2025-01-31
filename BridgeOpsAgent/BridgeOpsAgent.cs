@@ -903,8 +903,8 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_NEW_CONFERENCE ||
                          fncByte == Glo.CLIENT_NEW_RESOURCE ||
                          fncByte == Glo.CLIENT_NEW_RECURRENCE ||
-                         fncByte == Glo.CLIENT_NEW_TASK||
-                         fncByte == Glo.CLIENT_NEW_VISIT||
+                         fncByte == Glo.CLIENT_NEW_TASK ||
+                         fncByte == Glo.CLIENT_NEW_VISIT ||
                          fncByte == Glo.CLIENT_NEW_DOCUMENT ||
                          fncByte == Glo.CLIENT_NEW_LOGIN)
                     ClientNewInsert(stream, sqlConnect, fncByte);
@@ -917,6 +917,9 @@ internal class BridgeOpsAgent
                          fncByte == Glo.CLIENT_UPDATE_CONFERENCE ||
                          fncByte == Glo.CLIENT_UPDATE_RECURRENCE ||
                          fncByte == Glo.CLIENT_UPDATE_RESOURCE ||
+                         fncByte == Glo.CLIENT_UPDATE_TASK ||
+                         fncByte == Glo.CLIENT_UPDATE_VISIT ||
+                         fncByte == Glo.CLIENT_UPDATE_DOCUMENT ||
                          fncByte == Glo.CLIENT_UPDATE_LOGIN ||
                          fncByte == Glo.CLIENT_UPDATE_CHANGE_REASON)
                     ClientUpdate(stream, sqlConnect, fncByte);
@@ -932,6 +935,8 @@ internal class BridgeOpsAgent
                     ClientSelectWide(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_SELECT_EXISTS)
                     ClientSelectExists(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_SELECT_TASK_REFS)
+                    ClientSelectTaskRefs(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_DELETE)
                     ClientDelete(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LINK_CONTACT)
@@ -1475,6 +1480,8 @@ internal class BridgeOpsAgent
 
             lock (clientSessions)
             {
+                // This craziness is a result of not using class inheritance. Lesson learned.
+
                 if (target == Glo.CLIENT_NEW_ORGANISATION)
                 {
                     Organisation newRow = sr.Deserialise<Organisation>(sr.ReadString(stream));
@@ -1884,6 +1891,12 @@ internal class BridgeOpsAgent
                 columns = ColumnRecord.recurrence;
             else if (req.table == "Resource")
                 columns = ColumnRecord.resource;
+            else if (req.table == "Task")
+                columns = ColumnRecord.task;
+            else if (req.table == "Visit")
+                columns = ColumnRecord.visit;
+            else if (req.table == "Document")
+                columns = ColumnRecord.document;
             else
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -2012,6 +2025,8 @@ internal class BridgeOpsAgent
 
             lock (clientSessions)
             {
+                // This craziness is a result of not using class inheritance. Lesson learned.
+
                 if (target == Glo.CLIENT_UPDATE_ORGANISATION)
                 {
                     Organisation update = sr.Deserialise<Organisation>(sr.ReadString(stream));
@@ -2067,6 +2082,30 @@ internal class BridgeOpsAgent
                     Resource update = sr.Deserialise<Resource>(sr.ReadString(stream));
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_TASK)
+                {
+                    SendReceiveClasses.Task update = sr.Deserialise<SendReceiveClasses.Task>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_TASKS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_VISIT)
+                {
+                    Visit update = sr.Deserialise<Visit>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_TASKS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_DOCUMENT)
+                {
+                    Document update = sr.Deserialise<Document>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_TASKS, edit,
                         out permission))
                         com.CommandText = update.SqlUpdate();
                 }
@@ -3559,6 +3598,52 @@ GROUP BY
         catch (Exception e)
         {
             LogError("Couldn't load conference, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientSelectTaskRefs(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+
+            lock (clientSessions)
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+            // Get list of distinct values of all task references in use across all relevant tables.
+            string command = @$"
+SELECT DISTINCT Task_reference
+FROM (
+    SELECT Task_reference FROM Organisation
+    UNION
+    SELECT Task_reference FROM Task
+    UNION
+    SELECT Task_reference FROM Visit
+    UNION
+    SELECT Task_reference FROM Document
+) AS Refs
+ORDER BY Task_reference ASC;";
+
+            SqlCommand com = new(command, sqlConnect);
+            sqlConnect.Open();
+            SelectResult res = new(com.ExecuteReader(), false);
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(res));
+        }
+        catch (Exception e)
+        {
+            LogError("Couldn't load a list of task references, see error:", e);
             SafeFail(stream, e.Message);
         }
         finally

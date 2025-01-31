@@ -5,14 +5,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
-        mc:Ignorable="d" ResizeMode="NoResize"
-        Title="New Visit" MinHeight="600" MaxHeight="600" MinWidth="500" MaxWidth="500">
+        mc:Ignorable="d" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
+        Title="New Visit" MinWidth="500" MaxWidth="500">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="200"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -37,13 +37,13 @@
                    Content="Type" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <ComboBox x:Name="cmbType" Height="24" Grid.Row="2" Grid.Column="1" Margin="16 0 0 0"/>
         </Grid>
-        <customcontrols:DataInputTable Margin="10" Grid.ColumnSpan="2" Grid.Row="1" x:Name="dit"/>
+        <customcontrols:DataInputTable Margin="10" Grid.ColumnSpan="2" Grid.Row="1" x:Name="dit" MaxHeight="400"/>
         <Label x:Name="lblNotes" Margin="10 10 0 0" Grid.Row="2" Content="Notes" FontWeight="SemiBold" Padding="0"/>
-        <TextBox x:Name="txtNotes" Margin="10" Grid.Row="3" Grid.ColumnSpan="2"/>
+        <TextBox x:Name="txtNotes" Margin="10" Grid.Row="3" Grid.ColumnSpan="2" AcceptsReturn="True"/>
         <StackPanel Grid.Row="4" Orientation="Horizontal">
             <Button x:Name="btnSave" Margin="10" Content="Save" Style="{StaticResource primary-button}"
                     Click="btnSave_Click"/>
-            <Button x:Name="btnDelete" Margin="0" Content="Delete" Visibility="Collapsed"/>
+            <Button x:Name="btnDelete" Margin="0" Content="Delete" Visibility="Collapsed" Click="btnDelete_Click"/>
         </StackPanel>
     </Grid>
 </bridgeopsclient:CustomWindow>

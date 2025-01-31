@@ -2413,10 +2413,10 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                                                                   taskRef,
                                                                   opened == null ? null :
                                                                   SqlAssist.DateTimeToSQL((DateTime)opened!,
-                                                                                          false, true),
+                                                                                          true, true),
                                                                   closed == null ? null :
                                                                   SqlAssist.DateTimeToSQL((DateTime)closed!,
-                                                                                          false, true),
+                                                                                          true, true),
                                                                   notes));
             return ret;
         }
@@ -2429,9 +2429,9 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             {
                 SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef),
                 SqlAssist.Setter(Glo.Tab.TASK_OPENED, opened == null ? null :
-                                                      SqlAssist.DateTimeToSQL(opened.Value, true, false)),
+                                                      SqlAssist.DateTimeToSQL(opened.Value, true, true)),
                 SqlAssist.Setter(Glo.Tab.TASK_CLOSED, closed == null ? null :
-                                                      SqlAssist.DateTimeToSQL(closed.Value, true, false)),
+                                                      SqlAssist.DateTimeToSQL(closed.Value, true, true)),
                 SqlAssist.Setter(Glo.Tab.NOTES, notes)
             };
             for (int i = 0; i < additionalCols.Count; ++i)
@@ -2495,7 +2495,7 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                                                                   type,
                                                                   date == null ? null :
                                                                   SqlAssist.DateTimeToSQL((DateTime)date!,
-                                                                                          false, true),
+                                                                                          true, true),
                                                                   notes));
             return ret;
         }
@@ -2509,13 +2509,13 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                 SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef),
                 SqlAssist.Setter(Glo.Tab.VISIT_TYPE, type),
                 SqlAssist.Setter(Glo.Tab.VISIT_DATE, date == null ? null :
-                                                      SqlAssist.DateTimeToSQL(date.Value, true, false)),
+                                                      SqlAssist.DateTimeToSQL(date.Value, true, true)),
                 SqlAssist.Setter(Glo.Tab.NOTES, notes)
             };
             for (int i = 0; i < additionalCols.Count; ++i)
                 setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
 
-            return SqlAssist.Update("Task", string.Join(", ", setters),
+            return SqlAssist.Update("Visit", string.Join(", ", setters),
                                     Glo.Tab.VISIT_ID, visitID);
         }
     }
@@ -2573,7 +2573,7 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                                                                   type,
                                                                   date == null ? null :
                                                                   SqlAssist.DateTimeToSQL((DateTime)date!,
-                                                                                          false, true),
+                                                                                          true, true),
                                                                   notes));
             return ret;
         }
@@ -2587,14 +2587,14 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                 SqlAssist.Setter(Glo.Tab.TASK_REFERENCE, taskRef),
                 SqlAssist.Setter(Glo.Tab.DOCUMENT_TYPE, type),
                 SqlAssist.Setter(Glo.Tab.DOCUMENT_DATE, date == null ? null :
-                                                      SqlAssist.DateTimeToSQL(date.Value, true, false)),
+                                                      SqlAssist.DateTimeToSQL(date.Value, true, true)),
                 SqlAssist.Setter(Glo.Tab.NOTES, notes)
             };
             for (int i = 0; i < additionalCols.Count; ++i)
                 setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
 
-            return SqlAssist.Update("Task", string.Join(", ", setters),
-                                    Glo.Tab.VISIT_ID, documentID);
+            return SqlAssist.Update("Document", string.Join(", ", setters),
+                                    Glo.Tab.DOCUMENT_ID, documentID);
         }
     }
 

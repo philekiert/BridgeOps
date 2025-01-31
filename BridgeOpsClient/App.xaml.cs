@@ -758,6 +758,73 @@ namespace BridgeOpsClient
             return true;
         }
 
+        public static bool EditTask(string id, Window? owner)
+        {
+            return true;
+        }
+
+        public static bool EditVisit(string id, Window? owner)
+        {
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("Visit",
+                           new List<string> { "*" },
+                           new List<string> { Glo.Tab.VISIT_ID },
+                           new List<string> { id.ToString() },
+                           new List<Conditional> { Conditional.Equals },
+                           out columnNames, out rows, true, false, owner))
+            {
+                if (rows.Count > 0)
+                {
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.visit.Count)
+                    {
+                        NewVisit visit = new(id);
+                        visit.Populate(rows[0]);
+                        visit.Show();
+                    }
+                    else
+                    {
+                        DisplayError("Incorrect number of fields received.", owner);
+                    }
+                }
+                else
+                    DisplayError("Could no longer retrieve record.", owner);
+            }
+            return true;
+        }
+
+        public static bool EditDocument(string id, Window? owner)
+        {
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("Document",
+                           new List<string> { "*" },
+                           new List<string> { Glo.Tab.DOCUMENT_ID },
+                           new List<string> { id.ToString() },
+                           new List<Conditional> { Conditional.Equals },
+                           out columnNames, out rows, true, false, owner))
+            {
+                if (rows.Count > 0)
+                {
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.document.Count)
+                    {
+                        NewDocument doc = new(id);
+                        doc.Populate(rows[0]);
+                        doc.Show();
+                    }
+                    else
+                    {
+                        DisplayError("Incorrect number of fields received.", owner);
+                    }
+                }
+                else
+                    DisplayError("Could no longer retrieve record.", owner);
+            }
+            return true;
+        }
+
 
         static bool columnRecordPulInProgress = false;
         public static bool PullColumnRecord(Window? owner)
@@ -2562,6 +2629,49 @@ namespace BridgeOpsClient
             }
         }
 
+        public static bool GetAllTaskRefs(out List<string> references, Window? owner)
+        {
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    if (stream == null)
+                        throw new();
+                    try
+                    {
+                        stream.WriteByte(Glo.CLIENT_SELECT_TASK_REFS);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            SelectResult res = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                            references = res.rows.Select(i => i[0]!.ToString()!).ToList(); // Won't ever be null.
+                            return true;
+                        }
+                        if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError(ErrorConcat("Could not select task reference list.", sr.ReadString(stream)),
+                                         owner);
+                            references = new();
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not select task reference list.", owner);
+                        references = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
         enum JsonTypes { Number, DateTime, TimeSpan, Boolean, String, Unknown }
         static private void ConvertUnknownJsonObjectsToRespectiveTypes(List<string?> columnTypes,
                                                                        List<List<object?>> rows)
@@ -2770,6 +2880,10 @@ namespace BridgeOpsClient
         //                 13 Document
         //                 14 Visit (Task links table)
         //                 15 Document (Task links table)
+        public enum TableIndex
+        { Organisation, Asset, Contact, OrgAsset, OrgContact, 
+          User, Column, Conference, Recurrence, Resource, RecConference,
+          Task, Visit, Document, TaskVisit, TaskDocument}
         public List<string>[] dataOrder = new List<string>[16];
         public List<bool>[] dataHidden = new List<bool>[16];
         public List<double>[] dataWidths = new List<double>[16];

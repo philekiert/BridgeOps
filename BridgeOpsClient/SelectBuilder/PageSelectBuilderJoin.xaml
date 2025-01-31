@@ -53,6 +53,9 @@
             <ComboBoxItem Content="ConferenceAdditional"/>
             <ComboBoxItem Content="Recurrence"/>
             <ComboBoxItem Content="Resource"/>
+            <ComboBoxItem Content="Task"/>
+            <ComboBoxItem Content="Visit"/>
+            <ComboBoxItem Content="Document"/>
             <ComboBoxItem Content="Login"/>
         </ComboBox>
         <Label Content="Columns" Grid.Row="0" Grid.Column="4" Margin="0 0 -6 0"/>

@@ -233,13 +233,13 @@ namespace BridgeOpsClient
                     if (window is NewOrganisation org)
                         org.PopulateContacts();
             }
-            else if (identity == 12)
+            else if (identity == (int)UserSettings.TableIndex.Visit)
             {
                 foreach (Window window in Application.Current.Windows)
                     if (window is NewTask org)
                         org.PopulateVisits();
             }
-            else if (identity == 13)
+            else if (identity == (int)UserSettings.TableIndex.Document)
             {
                 foreach (Window window in Application.Current.Windows)
                     if (window is NewTask org)

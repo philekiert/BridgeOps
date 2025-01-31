@@ -441,7 +441,7 @@ namespace BridgeOpsClient.CustomControls
             List<bool> additionalNeedsQuotes = new List<bool>();
             foreach (string c in colValues.Select(i => i.name))
                 additionalNeedsQuotes.Add(
-                    SendReceiveClasses.SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(ColumnRecord.task, c).type));
+                    SendReceiveClasses.SqlAssist.NeedsQuotes(ColumnRecord.GetColumn(columns, c).type));
             return additionalNeedsQuotes;
         }
     }

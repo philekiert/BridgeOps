@@ -50,6 +50,8 @@ namespace BridgeOpsClient
         }
         public NewContact(string id)
         {
+            Title = "Contact";
+
             this.id = id;
 
             InitializeComponent();
@@ -83,8 +85,7 @@ namespace BridgeOpsClient
         public void Populate(List<object?> data)
         {
             // This method will not be called if the data has a different Count than expected.
-            if (data[1] != null)
-                txtNotes.Text = data[1].ToString();
+            txtNotes.Text = (string?)data[1];
 
             // Store the original values to check if any changes have been made for the data. The same takes place
             // in the data input table.
@@ -174,6 +175,7 @@ namespace BridgeOpsClient
                 }
 
                 // Obtain types and determine whether or not quotes will be needed.
+                contact.additionalNeedsQuotes = ditContact.GetNeedsQuotes();
                 contact.additionalNeedsQuotes = new();
                 foreach (string c in cols)
                     contact.additionalNeedsQuotes.Add(

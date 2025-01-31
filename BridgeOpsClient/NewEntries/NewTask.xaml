@@ -59,17 +59,17 @@
                    Content="Documents" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <Button x:Name="btnAddDoc" Margin="10 10 10 0" Content="Add Document" Width="110"
                     HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"/>
-            <customcontrols:SqlDataGrid Grid.Row="1"/>
+            <customcontrols:SqlDataGrid Grid.Row="1" x:Name="dtgDocs"/>
             <Label Margin="10 10 0 0" Padding="0" Grid.Row="2" Grid.Column="0"
                    Content="Visits" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <Button Grid.Row="2" x:Name="btnAddVisit" Margin="10 10 10 0" Content="Add Visit" Width="74"
                     HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"/>
-            <customcontrols:SqlDataGrid Grid.Row="3"/>
+            <customcontrols:SqlDataGrid Grid.Row="3" x:Name="dtgVisits"/>
         </Grid>
 
         <!-- Notes and buttons area -->
         <Label x:Name="lblNotes" Margin="10 0 0 0" Grid.Row="1" Content="Notes" FontWeight="SemiBold" Padding="0"/>
-        <TextBox x:Name="txtNotes" Margin="10" Grid.Row="2" Grid.ColumnSpan="2"/>
+        <TextBox x:Name="txtNotes" Margin="10" Grid.Row="2" Grid.ColumnSpan="2" AcceptsReturn="True"/>
         <StackPanel Grid.Row="3" Orientation="Horizontal">
             <Button x:Name="btnSave" Margin="10" Content="Save" Style="{StaticResource primary-button}"
                     Click="btnSave_Click"/>

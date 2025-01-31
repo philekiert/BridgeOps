@@ -125,6 +125,10 @@
                 <ComboBoxItem Content="Conference"/>
                 <ComboBoxItem Content="Recurrence"/>
                 <ComboBoxItem Content="Resource"/>
+                <Separator/>
+                <ComboBoxItem Content="Task"/>
+                <ComboBoxItem Content="Visit"/>
+                <ComboBoxItem Content="Document"/>
             </ComboBox>
             <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 10 10" Width="171"
                       SelectionChanged="cmbSearchType_SelectionChanged"/>
