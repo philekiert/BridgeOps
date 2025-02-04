@@ -76,12 +76,11 @@ namespace BridgeOpsClient
             {
                 Conference c = toClone.CloneForNewInsert(App.sd.sessionID, ColumnRecord.columnRecordID);
                 c.closure = null;
-                DateTime start = (DateTime)c.start!;
-                TimeSpan length = (DateTime)c.end! - start;
-                toClone.start = date.Date + start.TimeOfDay;
-                toClone.end = toClone.start + length;
+                TimeSpan length = toClone.end!.Value! - toClone.start!.Value;
+                c.start = date.Date + toClone.start!.Value.TimeOfDay;
+                c.end = c.start + length;
 
-                duplicates.Add(toClone.CloneForNewInsert(App.sd.sessionID, ColumnRecord.columnRecordID));
+                duplicates.Add(c);
             }
 
             if (App.SendInsert(Glo.CLIENT_NEW_CONFERENCE, duplicates, this))

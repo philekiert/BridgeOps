@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using BridgeOpsClient.CustomControls;
 using SendReceiveClasses;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
+using static BridgeOpsClient.SelectBuilder;
 
 namespace BridgeOpsClient
 {
@@ -52,25 +53,7 @@ namespace BridgeOpsClient
             string table;
             string idColumn;
             int identity;
-            if (relevantTable == RelevantTable.Organisation)
-            {
-                table = "Organisation";
-                idColumn = Glo.Tab.ORGANISATION_ID;
-                identity = 0;
-            }
-            else if (relevantTable == RelevantTable.Asset)
-            {
-                table = "Asset";
-                idColumn = Glo.Tab.ASSET_ID;
-                identity = 1;
-            }
-            else if (relevantTable == RelevantTable.Contact)
-            {
-                table = "Contact";
-                idColumn = Glo.Tab.CONTACT_ID;
-                identity = 2;
-            }
-            else
+            if (!SelectBuilder.GetRelevancy(relevantTable, out table, out idColumn, out identity))
                 return;
 
             var columns = ColumnRecord.GetDictionary(table, true);
@@ -86,34 +69,16 @@ namespace BridgeOpsClient
         }
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
-            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1, App.mainWindow))
+            if (!App.DeleteConfirm(dtgOutput.dtg.SelectedItems.Count > 1, builderWindow))
                 return;
 
             string table;
             string idColumn;
             int identity;
-            if (relevantTable == RelevantTable.Organisation)
-            {
-                table = "Organisation";
-                idColumn = Glo.Tab.ORGANISATION_ID;
-                identity = 0;
-            }
-            else if (relevantTable == RelevantTable.Asset)
-            {
-                table = "Asset";
-                idColumn = Glo.Tab.ASSET_ID;
-                identity = 1;
-            }
-            else if (relevantTable == RelevantTable.Contact)
-            {
-                table = "Contact";
-                idColumn = Glo.Tab.CONTACT_ID;
-                identity = 2;
-            }
-            else
+            if (!SelectBuilder.GetRelevancy(relevantTable, out table, out idColumn, out identity))
                 return;
 
-            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true, App.mainWindow) &&
+            if (App.SendDelete(table, idColumn, dtgOutput.GetCurrentlySelectedIDs(), true, builderWindow) &&
                 MainWindow.pageDatabase != null)
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
@@ -141,8 +106,7 @@ namespace BridgeOpsClient
 
         // This is used to allow the opening of relevant windows by double clicking on the SqlDataGrid when a
         // compatible query has been run, i.e. ID as the first column.
-        enum RelevantTable { None, Organisation, Asset, Contact, Conference, Recurrence, Resource }
-        RelevantTable relevantTable = RelevantTable.None;
+        SelectBuilder.RelevantTable relevantTable = SelectBuilder.RelevantTable.None;
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
@@ -463,6 +427,21 @@ namespace BridgeOpsClient
                     relevantTable = RelevantTable.Resource;
                     permissionRelevancy = Glo.PERMISSION_RECORDS;
                 }
+                else if (cmbRelevancy.Text == "Task")
+                {
+                    relevantTable = RelevantTable.Task;
+                    permissionRelevancy = Glo.PERMISSION_TASKS;
+                }
+                else if (cmbRelevancy.Text == "Visit")
+                {
+                    relevantTable = RelevantTable.Visit;
+                    permissionRelevancy = Glo.PERMISSION_TASKS;
+                }
+                else if (cmbRelevancy.Text == "Document")
+                {
+                    relevantTable = RelevantTable.Document;
+                    permissionRelevancy = Glo.PERMISSION_TASKS;
+                }
                 btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
                                               App.sd.deletePermissions[permissionRelevancy];
                 btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
@@ -538,6 +517,12 @@ namespace BridgeOpsClient
             }
             else if (relevantTable == RelevantTable.Resource)
                 App.EditResource(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
+            else if (relevantTable == RelevantTable.Task)
+                App.EditTask(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
+            else if (relevantTable == RelevantTable.Visit)
+                App.EditVisit(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
+            else if (relevantTable == RelevantTable.Document)
+                App.EditDocument(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
         }
     }
 }

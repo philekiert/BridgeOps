@@ -1033,7 +1033,7 @@ namespace BridgeOpsClient
                 App.DisplayError("You must select at least one item to update.", App.mainWindow);
                 return;
             }
-
+            
             string table = "Organisation";
             string idColumn = Glo.Tab.ORGANISATION_ID;
             bool needsQuotes = false; ;
@@ -1172,31 +1172,31 @@ namespace BridgeOpsClient
             {
                 if (dtgResults.identity == 0)
                     App.EditOrganisation(currentID, App.mainWindow);
-                if (dtgResults.identity == 1)
+                else if (dtgResults.identity == 1)
                     App.EditAsset(currentID, App.mainWindow);
-                if (dtgResults.identity == 2)
+                else if (dtgResults.identity == 2)
                     App.EditContact(currentID, App.mainWindow);
-                if (dtgResults.identity == 7)
+                else if (dtgResults.identity == 7)
                 {
                     int id;
                     if (!int.TryParse(currentID, out id))
                         return;
                     App.EditConference(id, App.mainWindow);
                 }
-                if (dtgResults.identity == 8)
+                else if (dtgResults.identity == 8)
                 {
                     int id;
                     if (!int.TryParse(currentID, out id))
                         return;
                     App.EditRecurrence(id);
                 }
-                if (dtgResults.identity == 9)
+                else if (dtgResults.identity == 9)
                     App.EditResource(currentID, App.mainWindow);
-                if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
+                else if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
                     App.EditTask(currentID.ToString(), App.mainWindow);
-                if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
+                else if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
                     App.EditVisit(currentID.ToString(), App.mainWindow);
-                if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
+                else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
                     App.EditDocument(currentID.ToString(), App.mainWindow);
             }
         }

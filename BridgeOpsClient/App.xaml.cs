@@ -760,6 +760,32 @@ namespace BridgeOpsClient
 
         public static bool EditTask(string id, Window? owner)
         {
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("Task",
+                           new List<string> { "*" },
+                           new List<string> { Glo.Tab.TASK_ID },
+                           new List<string> { id },
+                           new List<Conditional> { Conditional.Equals },
+                           out columnNames, out rows, true, false, owner))
+            {
+                if (rows.Count > 0)
+                {
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.task.Count)
+                    {
+                        NewTask task = new(id);
+                        task.Populate(rows[0]);
+                        task.Show();
+                    }
+                    else
+                    {
+                        DisplayError("Incorrect number of fields received.", owner);
+                    }
+                }
+                else
+                    DisplayError("Could no longer retrieve record.", owner);
+            }
             return true;
         }
 
@@ -770,7 +796,7 @@ namespace BridgeOpsClient
             if (App.Select("Visit",
                            new List<string> { "*" },
                            new List<string> { Glo.Tab.VISIT_ID },
-                           new List<string> { id.ToString() },
+                           new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
                            out columnNames, out rows, true, false, owner))
             {
@@ -801,7 +827,7 @@ namespace BridgeOpsClient
             if (App.Select("Document",
                            new List<string> { "*" },
                            new List<string> { Glo.Tab.DOCUMENT_ID },
-                           new List<string> { id.ToString() },
+                           new List<string> { id },
                            new List<Conditional> { Conditional.Equals },
                            out columnNames, out rows, true, false, owner))
             {

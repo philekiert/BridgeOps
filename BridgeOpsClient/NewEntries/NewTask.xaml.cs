@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using SendReceiveClasses;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace BridgeOpsClient
@@ -51,17 +52,39 @@ namespace BridgeOpsClient
 
         public void Populate(List<object?> data)
         {
+            txtTaskRef.Text = (string?)data[1];
+            datOpened.SelectedDate = (DateTime?)data[2];
+            datClosed.SelectedDate = (DateTime?)data[3];
+            txtNotes.Text = (string?)data[4];
 
+            dit.Populate(data.GetRange(5, data.Count - 5));
+
+            PopulateDocuments();
+            PopulateVisits();
         }
 
-        public void PopulateVisits()
+        public void PopulateVisits() { PopulateTable("Visit"); }
+        public void PopulateDocuments() { PopulateTable("Document"); }
+        public void PopulateTable(string table)
         {
+            if (txtTaskRef.Text == null)
+                return;
 
-        }
+            bool doc = table == "Document";
 
-        public void PopulateDocuments()
-        {
+            var dict = doc ? ColumnRecord.orderedDocument : ColumnRecord.orderedVisit;
 
+            List<string?> colNames;
+            List<List<object?>> rows;
+            SelectRequest req = new(App.sd.sessionID, ColumnRecord.columnRecordID, table, false,
+                                    new(), new(), new(), new(),
+                                    dict.Keys.Cast<string>().ToList(), Enumerable.Repeat(string.Empty, dict.Count).ToList(),
+                                    new() { Glo.Tab.TASK_REFERENCE }, new() { "=" },
+                                    new() { txtTaskRef.Text }, new() { true }, new(), new(), new(),
+                                    new() { doc ? Glo.Tab.DOCUMENT_DATE : Glo.Tab.VISIT_DATE },
+                                    new() { true });
+            if (App.SendSelectRequest(req, out colNames, out rows, this))
+                (doc ? dtgDocs : dtgVisits).Update(dict, colNames, rows);
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -92,6 +115,14 @@ namespace BridgeOpsClient
                     App.Abort("Could not ascertain the task's ID.", this);
                     return;
                 }
+
+                if (App.SendUpdate(Glo.CLIENT_UPDATE_TASK, task, this))
+                {
+                    if (MainWindow.pageDatabase != null)
+                        MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Task);
+                    changeMade = true;
+                    Close();
+                }
             }
             else
             {
@@ -105,6 +136,28 @@ namespace BridgeOpsClient
                     Close();
                 }
             }
+        }
+
+        private void btnAddDoc_Click(object sender, RoutedEventArgs e)
+        {
+            NewDocument newTask = new();
+            newTask.cmbTaskRef.Text = txtTaskRef.Text;
+            newTask.Show();
+        }
+
+        private void btnAddVisit_Click(object sender, RoutedEventArgs e)
+        {
+            NewDocument newVisit = new();
+            newVisit.cmbTaskRef.Text = txtTaskRef.Text;
+            newVisit.Show();
+        }
+
+        private void dtg_CustomDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender == dtgDocs)
+                App.EditDocument(dtgDocs.GetCurrentlySelectedID(), App.mainWindow);
+            else
+                App.EditVisit(dtgVisits.GetCurrentlySelectedID(), App.mainWindow);
         }
     }
 }

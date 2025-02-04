@@ -22,6 +22,8 @@ using System.IO;
 using System.Xml;
 using System.Windows.Markup;
 using DocumentFormat.OpenXml.Drawing.Charts;
+using static BridgeOpsClient.SelectBuilder;
+using System.Security.Principal;
 
 namespace BridgeOpsClient
 {
@@ -95,6 +97,79 @@ namespace BridgeOpsClient
             btnRemoveTab.IsEnabled = tabControl.Items.Count > 1;
 
             return pageSelectStatement;
+        }
+
+        // Table relevancy for statement and builder tabs to use.
+        public enum RelevantTable
+        {
+            None, Organisation, Asset, Contact, Conference, Recurrence, Resource,
+            Task, Visit, Document
+        }
+        public static bool GetRelevancy(RelevantTable relevantTable,
+                                        out string table, out string idColumn, out int identity)
+        {
+            if (relevantTable == RelevantTable.Organisation)
+            {
+                table = "Organisation";
+                idColumn = Glo.Tab.ORGANISATION_ID;
+                identity = (int)UserSettings.TableIndex.Organisation;
+            }
+            else if (relevantTable == RelevantTable.Asset)
+            {
+                table = "Asset";
+                idColumn = Glo.Tab.ASSET_ID;
+                identity = (int)UserSettings.TableIndex.Asset;
+            }
+            else if (relevantTable == RelevantTable.Contact)
+            {
+                table = "Contact";
+                idColumn = Glo.Tab.CONTACT_ID;
+                identity = (int)UserSettings.TableIndex.Contact;
+            }
+            else if (relevantTable == RelevantTable.Conference)
+            {
+                table = "Conference";
+                idColumn = Glo.Tab.CONFERENCE_ID;
+                identity = (int)UserSettings.TableIndex.Conference;
+            }
+            else if (relevantTable == RelevantTable.Recurrence)
+            {
+                table = "Recurrence";
+                idColumn = Glo.Tab.RECURRENCE_ID;
+                identity = (int)UserSettings.TableIndex.Recurrence;
+            }
+            else if (relevantTable == RelevantTable.Resource)
+            {
+                table = "Resource";
+                idColumn = Glo.Tab.RESOURCE_ID;
+                identity = (int)UserSettings.TableIndex.Resource;
+            }
+            else if (relevantTable == RelevantTable.Task)
+            {
+                table = "Task";
+                idColumn = Glo.Tab.TASK_ID;
+                identity = (int)UserSettings.TableIndex.Task;
+            }
+            else if (relevantTable == RelevantTable.Visit)
+            {
+                table = "Visit";
+                idColumn = Glo.Tab.VISIT_ID;
+                identity = (int)UserSettings.TableIndex.Visit;
+            }
+            else if (relevantTable == RelevantTable.Document)
+            {
+                table = "Document";
+                idColumn = Glo.Tab.DOCUMENT_ID;
+                identity = (int)UserSettings.TableIndex.Document;
+            }
+            else
+            {
+                table = "";
+                idColumn = "";
+                identity = -1;
+            }
+
+            return table != "";
         }
 
         object GetBuilder(TabItem tabItem)

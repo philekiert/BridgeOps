@@ -57,14 +57,15 @@
 
             <Label Margin="10 10 0 0" Padding="0" Grid.Row="0" Grid.Column="0"
                    Content="Documents" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <Button x:Name="btnAddDoc" Margin="10 10 10 0" Content="Add Document" Width="110"
+            <Button x:Name="btnAddDoc" Margin="10 10 10 0" Content="New Document" Width="106" Click="btnAddDoc_Click"
                     HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"/>
-            <customcontrols:SqlDataGrid Grid.Row="1" x:Name="dtgDocs"/>
+            <customcontrols:SqlDataGrid Grid.Row="1" x:Name="dtgDocs" CustomDoubleClick="dtg_CustomDoubleClick"/>
             <Label Margin="10 10 0 0" Padding="0" Grid.Row="2" Grid.Column="0"
                    Content="Visits" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <Button Grid.Row="2" x:Name="btnAddVisit" Margin="10 10 10 0" Content="Add Visit" Width="74"
-                    HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"/>
-            <customcontrols:SqlDataGrid Grid.Row="3" x:Name="dtgVisits"/>
+            <Button Grid.Row="2" x:Name="btnAddVisit" Margin="10 10 10 0" Content="New Visit" Width="74"
+                    HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"
+                    Click="btnAddVisit_Click"/>
+            <customcontrols:SqlDataGrid Grid.Row="3" x:Name="dtgVisits" CustomDoubleClick="dtg_CustomDoubleClick"/>
         </Grid>
 
         <!-- Notes and buttons area -->
