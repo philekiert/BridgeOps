@@ -6,6 +6,9 @@
 - Improved the time field UX.
 #### Fixed
 - Stopped the date field from being focusable when hidden in connections.
+- Fixed a bug preventing the conference updates from the query builder window.
+- Conference duplications now omit the closure field as intended.
+- Fixed a bug causing the program to crash when exporting data from the query builder if there was an invalid Excel tab name.
   
 ## 1.0.2
 ### Changed
