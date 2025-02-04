@@ -345,7 +345,16 @@ namespace BridgeOpsClient
                     return;
                 }
 
-                IXLWorksheet sheet = xl.AddWorksheet((string)tab.Header);
+                IXLWorksheet sheet;
+                try
+                {
+                    sheet = xl.AddWorksheet((string)tab.Header);
+                }
+                catch (Exception ex)
+                {
+                    App.DisplayError(App.ErrorConcat("Invalid tab name.", ex.Message), this);
+                    return;
+                }
 
                 // Add headers.
                 IXLCell cell = sheet.Cell(1, 1);
