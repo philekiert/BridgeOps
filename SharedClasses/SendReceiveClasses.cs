@@ -571,6 +571,7 @@ namespace SendReceiveClasses
                         {
                             reAddKeys = true;
                             commands.Add("DROP INDEX u_OrgTaskRef ON Organisation;");
+                            commands.Add("DROP INDEX U_TaskRef ON Task;");
                             commands.Add($"ALTER TABLE Organisation ALTER COLUMN {column} {columnType};");
                             commands.Add($"ALTER TABLE Visit ALTER COLUMN {column} {columnType};");
                             commands.Add($"ALTER TABLE Document ALTER COLUMN {column} {columnType};");
@@ -670,7 +671,11 @@ namespace SendReceiveClasses
                             if (column == Glo.Tab.TASK_ID)
                                 commands.Add("ALTER TABLE Task ADD CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID);");
                             else if (column == Glo.Tab.TASK_REFERENCE)
+                            {
+                                commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType} NOT NULL;");
+                                commands.Add("CREATE UNIQUE INDEX u_TaskRef ON Task (Task_Reference);");
                                 commands.Add("CREATE UNIQUE INDEX u_OrgTaskRef ON Organisation (Task_Reference) WHERE Task_Reference IS NOT NULL;");
+                            }
                         }
                         else if (table == "Visit" && column == Glo.Tab.VISIT_ID)
                             commands.Add("ALTER TABLE Visit ADD CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID);");

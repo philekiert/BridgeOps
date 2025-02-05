@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using static FieldDefs;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -471,8 +472,9 @@ public class DatabaseCreator
             //               We have to manually implement the Edit_Login_ID cascades below due to SQL Server's cautious nature regarding cascade cycles.
             //            Reccurrence ID would be a foreign key but for the cascade loop it would cause with the Recurrence table.
             recurrence += ", CONSTRAINT pk_ConfRecID PRIMARY KEY (Recurrence_ID) );";
-            task += ", CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID)" +
-                    ", CONSTRAINT u_TaskRef UNIQUE (Task_Reference) );";
+            task += ", CONSTRAINT pk_TaskID PRIMARY KEY (Task_ID) ); ";
+            task += $"ALTER TABLE Task ALTER COLUMN Task_Reference {fieldDefs.defs["Task Reference"].sqlType} NOT NULL; "; // Not a primary key, but has to be NOT NULL.
+            task += "CREATE UNIQUE INDEX u_TaskRef ON Task (Task_Reference); ";
             // No task reference for either of these, same goes for organisations. Task references are kept very loose at the request of the team.
             visit += ", CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID)" +
                      ", CONSTRAINT chk_VisitType CHECK (Visit_Type IN ('')) );";
