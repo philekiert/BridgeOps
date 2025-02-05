@@ -69,7 +69,17 @@
                     </Grid>
                     <Label Content="Task Reference" Grid.Row="4" Grid.Column="0" x:Name="lblTask"
                            VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <TextBox x:Name="txtTask" Grid.Row="4" Grid.Column="1" TextChanged="ValueChanged" Height="24"/>
+                    <Grid Grid.Row="4" Grid.Column="1" Margin="10 0 10 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- The task ref's changed event is assigned to the TextBox element in the code. -->
+                        <ComboBox x:Name="cmbTaskRef" IsEditable="True" Height="24"
+                                  Margin="0 4 0 10" Loaded="cmbTaskRef_Loaded"/>
+                        <Button x:Name="btnTask" Grid.Column="1" Content="View" Margin="-1 4 0 10" IsEnabled="False"
+                                Click="btnTask_Click"/>
+                    </Grid>
                 </Grid>
                 <custom:DataInputTable x:Name="ditOrganisation" Grid.Row="2" Margin="10,10,10,10"/>
                 <Label Grid.Row="3" Content="Notes" x:Name="lblNotes" HorizontalAlignment="Left"

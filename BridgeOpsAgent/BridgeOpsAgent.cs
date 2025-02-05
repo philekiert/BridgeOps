@@ -3622,16 +3622,17 @@ GROUP BY
 
             // Get list of distinct values of all task references in use across all relevant tables.
             string command = @$"
-SELECT DISTINCT Task_reference
+SELECT DISTINCT Task_Reference
 FROM (
-    SELECT Task_reference FROM Organisation
+    SELECT Task_Reference FROM Organisation
     UNION
-    SELECT Task_reference FROM Task
+    SELECT Task_Reference FROM Task
     UNION
-    SELECT Task_reference FROM Visit
+    SELECT Task_Reference FROM Visit
     UNION
-    SELECT Task_reference FROM Document
+    SELECT Task_Reference FROM Document
 ) AS Refs
+WHERE Task_Reference IS NOT NULL
 ORDER BY Task_reference ASC;";
 
             SqlCommand com = new(command, sqlConnect);

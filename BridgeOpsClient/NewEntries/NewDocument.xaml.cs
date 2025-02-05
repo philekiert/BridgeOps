@@ -115,6 +115,13 @@ namespace BridgeOpsClient
                                                                          Glo.Tab.TASK_REFERENCE).restriction);
         }
 
+        private void cmbTaskRef_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
+                txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
+                                                                         Glo.Tab.TASK_REFERENCE).restriction);
+        }
+
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (!App.DeleteConfirm(false, this))

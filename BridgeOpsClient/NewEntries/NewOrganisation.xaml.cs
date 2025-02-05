@@ -48,7 +48,6 @@ namespace BridgeOpsClient
                 btnAssetAdd.IsEnabled = false;
                 btnAssetRemove.IsEnabled = false;
                 txtOrgRef.IsReadOnly = true;
-                txtTask.IsReadOnly = true;
                 ToggleFieldsEnabled(false);
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
@@ -102,6 +101,9 @@ namespace BridgeOpsClient
             ApplyPermissions();
         }
 
+        // Used to store actual task references for enabling/disabling task button.
+        HashSet<string> knownTaskRefs = new();
+
         private void InitialiseFields()
         {
             ditOrganisation.headers = ColumnRecord.organisationHeaders;
@@ -114,8 +116,7 @@ namespace BridgeOpsClient
                                                                          Glo.Tab.ORGANISATION_NAME).restriction);
             txtDialNo.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                                            Glo.Tab.DIAL_NO).restriction);
-            txtTask.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
-                                                                         Glo.Tab.TASK_REFERENCE).restriction);
+            // Task ref max length set in cmbTaskRef's Loaded function at the bottom of the file.
             txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.organisation,
                                                                           Glo.Tab.NOTES).restriction);
 
@@ -146,6 +147,16 @@ namespace BridgeOpsClient
             dtgAssets.identity = 3;
             dtgContacts.canHideColumns = true;
             dtgContacts.identity = 4;
+
+            // List all known task references.
+            List<string> taskRefs;
+            App.GetAllTaskRefs(out taskRefs, this);
+            cmbTaskRef.ItemsSource = taskRefs;
+
+            // Store all task references of actual tasks.
+            List<List<object?>> rows;
+            if (App.Select("Task", new() { Glo.Tab.TASK_REFERENCE }, out _, out rows, false, this))
+                knownTaskRefs = rows.Select(i => (string)i[0]!).ToHashSet(); // Type is NOT NULL in database.
         }
 
         public void PopulateAssets()
@@ -199,9 +210,9 @@ namespace BridgeOpsClient
             else
                 chkAvailable.IsChecked = false;
             if (data[6] != null)
-                txtTask.Text = data[6].ToString();
+                cmbTaskRef.Text = data[6].ToString();
             else
-                txtTask.Text = null;
+                cmbTaskRef.Text = null;
             if (data[7] != null)
                 txtNotes.Text = data[7].ToString();
             else
@@ -214,7 +225,7 @@ namespace BridgeOpsClient
             originalName = txtName.Text;
             originalDialNo = txtDialNo.Text;
             originalAvailable = chkAvailable.IsChecked;
-            originalTask = txtTask.Text;
+            originalTask = cmbTaskRef.Text;
             originalNotes = txtNotes.Text;
 
             ditOrganisation.ValueChangedHandler = AnyInteraction; // Must be set before Populate().
@@ -228,6 +239,10 @@ namespace BridgeOpsClient
             Title = "Organisation - " + originalRef;
             if (!edit)
                 Title += " (Change)";
+
+            // Won't trigger when set above for some reason.
+            if (cmbTaskRef.Text != null)
+                btnTask.IsEnabled = knownTaskRefs.Contains(cmbTaskRef.Text);
 
             // Sort out contact and asset tables.
             PopulateAssets();
@@ -274,7 +289,7 @@ namespace BridgeOpsClient
                 newOrg.name = txtName.Text.Length == 0 ? null : txtName.Text;
                 newOrg.dialNo = txtDialNo.Text.Length == 0 ? null : txtDialNo.Text;
                 newOrg.available = chkAvailable.IsChecked;
-                newOrg.taskRef = txtTask.Text.Length == 0 ? null : txtTask.Text;
+                newOrg.taskRef = cmbTaskRef.Text.Length == 0 ? null : cmbTaskRef.Text;
                 newOrg.notes = txtNotes.Text.Length == 0 ? null : txtNotes.Text;
 
                 ditOrganisation.ExtractValues(out newOrg.additionalCols, out newOrg.additionalVals);
@@ -367,9 +382,9 @@ namespace BridgeOpsClient
                     org.available = chkAvailable.IsChecked == true;
                     org.availableChanged = true;
                 }
-                if (txtTask.Text != originalTask)
+                if (cmbTaskRef.Text != originalTask)
                 {
-                    org.taskRef = txtTask.Text;
+                    org.taskRef = cmbTaskRef.Text;
                     org.taskChanged = true;
                 }
                 if (txtNotes.Text != originalNotes)
@@ -636,7 +651,12 @@ namespace BridgeOpsClient
         }
 
         // Check for changes whenever the user interacts with a control.
-        private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
+        private void ValueChanged(object sender, EventArgs e)
+        {
+            AnyInteraction();
+            if (sender == txtTaskRef)
+                btnTask.IsEnabled = knownTaskRefs.Contains(txtTaskRef.Text);
+        }
         private void chkAvailable_Click(object sender, RoutedEventArgs e)
         { AnyInteraction(); }
         public bool AnyInteraction()
@@ -644,13 +664,13 @@ namespace BridgeOpsClient
             if (!IsLoaded)
                 return false;
 
-            string currentParent = cmbOrgParentID.SelectedItem == null ? null : (string)cmbOrgParentID.SelectedItem;
+            string? currentParent = cmbOrgParentID.SelectedItem == null ? null : (string)cmbOrgParentID.SelectedItem;
             btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
                                 originalParent != currentParent ||
                                 originalName != txtName.Text ||
                                 originalDialNo != txtDialNo.Text ||
                                 originalAvailable != chkAvailable.IsChecked ||
-                                originalTask != txtTask.Text ||
+                                originalTask != cmbTaskRef.Text ||
                                 originalNotes != txtNotes.Text ||
                                 ditOrganisation.CheckForValueChanges();
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
@@ -701,6 +721,32 @@ namespace BridgeOpsClient
                 Left = screenWidth - 1000;
             if (Left < 0)
                 Left = 0;
+        }
+
+        TextBox? txtTaskRef;
+        private void cmbTaskRef_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
+            {
+                txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
+                                                                         Glo.Tab.TASK_REFERENCE).restriction);
+                txtTaskRef = txt;
+                txtTaskRef.TextChanged += ValueChanged;
+            }
+        }
+
+        private void btnTask_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the ID for the reference, then edit.
+            List<List<object?>> rows;
+            if (App.Select("Task", new() { Glo.Tab.TASK_ID },
+                           new() { Glo.Tab.TASK_REFERENCE }, new() { txtTaskRef!.Text }, new() { Conditional.Equals },
+                           out _, out rows, false, false, this))
+            {
+                if (rows.Count != 1)
+                    App.DisplayError("Could not find the requested task.", this);
+                App.EditTask(rows[0][0]!.ToString()!, this); // Primary key, won't be null.
+            }
         }
     }
 }

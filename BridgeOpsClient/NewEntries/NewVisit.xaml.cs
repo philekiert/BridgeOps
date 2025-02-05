@@ -107,7 +107,7 @@ namespace BridgeOpsClient
             }
         }
 
-        private void cmbType_Loaded(object sender, RoutedEventArgs e)
+        private void cmbTaskRef_Loaded(object sender, RoutedEventArgs e)
         {
             if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
                 txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
