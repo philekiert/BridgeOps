@@ -21,6 +21,7 @@ namespace BridgeOpsClient
         bool edit = false;
         public string id = "";
         public bool changeMade = false;
+        string? orgID = null;
 
         public NewTask()
         {
@@ -45,6 +46,8 @@ namespace BridgeOpsClient
             edit = true;
             this.id = id;
 
+
+            btnOrganisation.IsEnabled = true;
             btnAddDoc.IsEnabled = true;
             btnAddVisit.IsEnabled = true;
             btnDelete.Visibility = Visibility.Visible;
@@ -52,15 +55,34 @@ namespace BridgeOpsClient
 
         public void Populate(List<object?> data)
         {
-            txtTaskRef.Text = (string?)data[1];
-            datOpened.SelectedDate = (DateTime?)data[2];
-            datClosed.SelectedDate = (DateTime?)data[3];
-            txtNotes.Text = (string?)data[4];
+            try
+            {
+                txtTaskRef.Text = (string)data[1]!; // NOT NULL in database, can't be null.
+                datOpened.SelectedDate = (DateTime?)data[2];
+                datClosed.SelectedDate = (DateTime?)data[3];
+                txtNotes.Text = (string?)data[4];
 
-            dit.Populate(data.GetRange(5, data.Count - 5));
+                dit.Populate(data.GetRange(5, data.Count - 5));
 
-            PopulateDocuments();
-            PopulateVisits();
+                PopulateDocuments();
+                PopulateVisits();
+
+                List<List<object?>> rows;
+                if (App.Select("Organisation", new() { Glo.Tab.ORGANISATION_REF },
+                               new() { Glo.Tab.TASK_REFERENCE }, new() { txtTaskRef.Text },
+                               new() { Conditional.Equals }, out _, out rows, false, false, this))
+                {
+                    if (rows.Count < 1)
+                        return;
+                    // Task_Reference is unique in the database, so there can only be one result if any.
+                    btnOrganisation.Content = (string)rows[0][0]!;
+                    orgID = (string)btnOrganisation.Content;
+                }
+            }
+            catch
+            {
+                App.DisplayError("Something went wrong when pulling the data for this task.", this);
+            }
         }
 
         public void PopulateVisits() { PopulateTable("Visit"); }
@@ -138,18 +160,20 @@ namespace BridgeOpsClient
             }
         }
 
-        private void btnAddDoc_Click(object sender, RoutedEventArgs e)
-        {
-            NewDocument newTask = new();
-            newTask.cmbTaskRef.Text = txtTaskRef.Text;
-            newTask.Show();
-        }
-
         private void btnAddVisit_Click(object sender, RoutedEventArgs e)
         {
-            NewDocument newVisit = new();
+            NewVisit newVisit = new();
             newVisit.cmbTaskRef.Text = txtTaskRef.Text;
+            newVisit.Populate(new());
             newVisit.Show();
+        }
+
+        private void btnAddDoc_Click(object sender, RoutedEventArgs e)
+        {
+            NewDocument newDoc = new();
+            newDoc.cmbTaskRef.Text = txtTaskRef.Text;
+            newDoc.Populate(new());
+            newDoc.Show();
         }
 
         private void dtg_CustomDoubleClick(object sender, MouseButtonEventArgs e)
@@ -158,6 +182,30 @@ namespace BridgeOpsClient
                 App.EditDocument(dtgDocs.GetCurrentlySelectedID(), App.mainWindow);
             else
                 App.EditVisit(dtgVisits.GetCurrentlySelectedID(), App.mainWindow);
+        }
+
+        private void btnOrganisation_Click(object sender, RoutedEventArgs e)
+        {
+            if (orgID != null)
+            {
+                // Get the ID for the reference, then edit.
+                List<List<object?>> rows;
+                if (App.Select("Organisation", new() { Glo.Tab.ORGANISATION_ID },
+                               new() { Glo.Tab.ORGANISATION_REF }, new() { orgID }, new() { Conditional.Equals },
+                               out _, out rows, false, false, this))
+                {
+                    if (rows.Count != 1)
+                        App.DisplayError("Could not find the requested task.", this);
+                    App.EditOrganisation(rows[0][0]!.ToString()!, this); // Primary key, won't be null.
+                }
+
+                return;
+            }
+
+            // Create new.
+            NewOrganisation org = new();
+            org.PopulateOnlyTaskRef(txtTaskRef.Text);
+            org.Show();
         }
     }
 }

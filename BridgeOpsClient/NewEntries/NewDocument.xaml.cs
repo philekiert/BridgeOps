@@ -33,9 +33,16 @@ namespace BridgeOpsClient
                                                                           Glo.Tab.NOTES).restriction);
             // cmbTaskRef max length is set in cmbTaskRef_Loaded() further down once it's loaded as it's not as simple.
 
+            // List all known task references.
             List<string> taskRefs;
             App.GetAllTaskRefs(out taskRefs, this);
             cmbTaskRef.ItemsSource = taskRefs;
+
+            // Store all task references of actual tasks.
+            List<List<object?>> rows;
+            if (App.Select("Task", new() { Glo.Tab.TASK_REFERENCE }, out _, out rows, false, this))
+                knownTaskRefs = rows.Select(i => (string)i[0]!).ToHashSet(); // Type is NOT NULL in database.
+
             cmbType.ItemsSource = ColumnRecord.GetColumn(ColumnRecord.document, Glo.Tab.DOCUMENT_TYPE).allowed;
         }
 
@@ -53,12 +60,19 @@ namespace BridgeOpsClient
 
         public void Populate(List<object?> data)
         {
-            cmbTaskRef.Text = (string?)data[1];
-            dat.SelectedDate = (DateTime?)data[2];
-            cmbType.Text = (string?)data[3];
-            txtNotes.Text = (string?)data[4];
+            if (data.Count >= 5) // Task will run this method with empty data in order to enable the task button.
+            {
+                cmbTaskRef.Text = (string?)data[1];
+                dat.SelectedDate = (DateTime?)data[2];
+                cmbType.Text = (string?)data[3];
+                txtNotes.Text = (string?)data[4];
 
-            dit.Populate(data.GetRange(5, data.Count - 5));
+                dit.Populate(data.GetRange(5, data.Count - 5));
+            }
+
+            // Won't trigger when set above for some reason.
+            if (cmbTaskRef.Text != null)
+                btnTask.IsEnabled = knownTaskRefs.Contains(cmbTaskRef.Text);
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -108,20 +122,6 @@ namespace BridgeOpsClient
             }
         }
 
-        private void cmbType_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
-                txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.document,
-                                                                         Glo.Tab.TASK_REFERENCE).restriction);
-        }
-
-        private void cmbTaskRef_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
-                txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
-                                                                         Glo.Tab.TASK_REFERENCE).restriction);
-        }
-
         private void btnDelete_Click(object sender, RoutedEventArgs e)
         {
             if (!App.DeleteConfirm(false, this))
@@ -133,6 +133,40 @@ namespace BridgeOpsClient
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Visit);
                 Close();
+            }
+        }
+
+        // Used to store actual task references for enabling/disabling task button.
+        HashSet<string> knownTaskRefs = new();
+
+        private void txtTaskRef_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            btnTask.IsEnabled = knownTaskRefs.Contains(txtTaskRef!.Text);
+        }
+
+        TextBox? txtTaskRef;
+        private void cmbTaskRef_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (cmbTaskRef.Template.FindName("PART_EditableTextBox", cmbTaskRef) is TextBox txt)
+            {
+                txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
+                                                                         Glo.Tab.TASK_REFERENCE).restriction);
+                txtTaskRef = txt;
+                txtTaskRef.TextChanged += txtTaskRef_TextChanged;
+            }
+        }
+
+        private void btnTask_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the ID for the reference, then edit.
+            List<List<object?>> rows;
+            if (App.Select("Task", new() { Glo.Tab.TASK_ID },
+                           new() { Glo.Tab.TASK_REFERENCE }, new() { txtTaskRef!.Text },
+                           new() { SendReceiveClasses.Conditional.Equals }, out _, out rows, false, false, this))
+            {
+                if (rows.Count != 1)
+                    App.DisplayError("Could not find the requested task.", this);
+                App.EditTask(rows[0][0]!.ToString()!, this); // Primary key, won't be null.
             }
         }
     }

@@ -31,19 +31,25 @@
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="30"/>
                 <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Margin="0" Padding="0" Grid.Row="0" Grid.Column="0"
                    Content="Task Reference" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <TextBox x:Name="txtTaskRef" Margin="15 2 5 2" Grid.Row="0" Grid.Column="1" Height="24"
-                     VerticalContentAlignment="Center"/>
+                     VerticalContentAlignment="Center" Padding="2 0 0 0"/>
             <Label Margin="0" Padding="0" Grid.Row="1" Grid.Column="0"
                    Content="Opened" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <DatePicker x:Name="datOpened" Margin="15 2 5 2" Grid.Row="1" Grid.Column="1" Height="24"/>
             <Label Margin="0" Padding="0" Grid.Row="2" Grid.Column="0"
                    Content="Closed" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <DatePicker x:Name="datClosed" Margin="15 2 5 2" Grid.Row="2" Grid.Column="1" Height="24"/>
-            <customcontrols:DataInputTable Margin="0 15 0 5" Grid.ColumnSpan="2" Grid.Row="3" x:Name="dit"/>
+            <Label Margin="0" Padding="0" Grid.Row="3" Grid.Column="0"
+                   Content="Organisation" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Button Content="Create New" Grid.Row="3" Grid.Column="1" Margin="15 2 5 2" x:Name="btnOrganisation"
+                    HorizontalContentAlignment="Left" IsEnabled="False" Click="btnOrganisation_Click"
+                    Padding="5 0 0 0"/>
+            <customcontrols:DataInputTable Margin="0 15 0 5" Grid.ColumnSpan="2" Grid.Row="4" x:Name="dit"/>
         </Grid>
 
         <!-- Tables area -->
@@ -55,17 +61,18 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Label Margin="10 10 0 0" Padding="0" Grid.Row="0" Grid.Column="0"
+            <Label Margin="10 10 0 0" Padding="0" Grid.Row="2" Grid.Column="0"
                    Content="Documents" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <Button x:Name="btnAddDoc" Margin="10 10 10 0" Content="New Document" Width="106" Click="btnAddDoc_Click"
-                    HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"/>
-            <customcontrols:SqlDataGrid Grid.Row="1" x:Name="dtgDocs" CustomDoubleClick="dtg_CustomDoubleClick"/>
-            <Label Margin="10 10 0 0" Padding="0" Grid.Row="2" Grid.Column="0"
+                    HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"
+                    Grid.Row="2"/>
+            <customcontrols:SqlDataGrid Grid.Row="3" x:Name="dtgDocs" CustomDoubleClick="dtg_CustomDoubleClick"/>
+            <Label Margin="10 10 0 0" Padding="0" Grid.Row="0" Grid.Column="0"
                    Content="Visits" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <Button Grid.Row="2" x:Name="btnAddVisit" Margin="10 10 10 0" Content="New Visit" Width="74"
+            <Button Grid.Row="0" x:Name="btnAddVisit" Margin="10 10 10 0" Content="New Visit" Width="74"
                     HorizontalAlignment="Right" Style="{StaticResource primary-button}" IsEnabled="False"
                     Click="btnAddVisit_Click"/>
-            <customcontrols:SqlDataGrid Grid.Row="3" x:Name="dtgVisits" CustomDoubleClick="dtg_CustomDoubleClick"/>
+            <customcontrols:SqlDataGrid Grid.Row="1" x:Name="dtgVisits" CustomDoubleClick="dtg_CustomDoubleClick"/>
         </Grid>
 
         <!-- Notes and buttons area -->

@@ -185,6 +185,15 @@ namespace BridgeOpsClient
                 dtgContacts.Update(ColumnRecord.contact, columnNames, rows, Glo.Tab.CONTACT_ID);
         }
 
+        public void PopulateOnlyTaskRef(string taskRef)
+        {
+            cmbTaskRef.Text = taskRef;
+
+            // Won't trigger when set above for some reason.
+            if (cmbTaskRef.Text != null)
+                btnTask.IsEnabled = knownTaskRefs.Contains(cmbTaskRef.Text);
+        }
+
         public void PopulateExistingData(List<object?> data)
         {
 #pragma warning disable CS8602
