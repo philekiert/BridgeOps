@@ -879,7 +879,8 @@ internal class BridgeOpsAgent
 
             try
             {
-                // Move this ridiculousness to a dictionary at some point.
+                // Would be more performant as a switch statement, but some signals resolve to the same method, so for
+                // maintainability it's an if else. Enjoy!
 
                 int fncByte = stream.ReadByte();
                 if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
@@ -896,32 +897,13 @@ internal class BridgeOpsAgent
                     ClientPasswordReset(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LOGGEDIN_LIST)
                     ClientLoggedInUserList(stream);
-                else if (fncByte == Glo.CLIENT_NEW_ORGANISATION ||
-                         fncByte == Glo.CLIENT_NEW_CONTACT ||
-                         fncByte == Glo.CLIENT_NEW_ASSET ||
-                         fncByte == Glo.CLIENT_NEW_CONFERENCE_TYPE ||
-                         fncByte == Glo.CLIENT_NEW_CONFERENCE ||
-                         fncByte == Glo.CLIENT_NEW_RESOURCE ||
-                         fncByte == Glo.CLIENT_NEW_RECURRENCE ||
-                         fncByte == Glo.CLIENT_NEW_TASK ||
-                         fncByte == Glo.CLIENT_NEW_VISIT ||
-                         fncByte == Glo.CLIENT_NEW_DOCUMENT ||
-                         fncByte == Glo.CLIENT_NEW_LOGIN)
+                else if (fncByte >= Glo.CLIENT_NEW_LOGIN &&
+                         fncByte <= Glo.CLIENT_NEW_DOCUMENT)
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_UPDATE)
                     ClientUpdate(stream, sqlConnect);
-                else if (fncByte == Glo.CLIENT_UPDATE_ORGANISATION ||
-                         fncByte == Glo.CLIENT_UPDATE_CONTACT ||
-                         fncByte == Glo.CLIENT_UPDATE_ASSET ||
-                         fncByte == Glo.CLIENT_UPDATE_CONFERENCE_TYPE ||
-                         fncByte == Glo.CLIENT_UPDATE_CONFERENCE ||
-                         fncByte == Glo.CLIENT_UPDATE_RECURRENCE ||
-                         fncByte == Glo.CLIENT_UPDATE_RESOURCE ||
-                         fncByte == Glo.CLIENT_UPDATE_TASK ||
-                         fncByte == Glo.CLIENT_UPDATE_VISIT ||
-                         fncByte == Glo.CLIENT_UPDATE_DOCUMENT ||
-                         fncByte == Glo.CLIENT_UPDATE_LOGIN ||
-                         fncByte == Glo.CLIENT_UPDATE_CHANGE_REASON)
+                else if (fncByte >= Glo.CLIENT_UPDATE_LOGIN ||
+                         fncByte <= Glo.CLIENT_UPDATE_CHANGE_REASON)
                     ClientUpdate(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)
                     ClientSelectColumnPrimary(stream, sqlConnect);
