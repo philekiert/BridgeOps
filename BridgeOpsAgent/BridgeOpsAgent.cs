@@ -902,7 +902,7 @@ internal class BridgeOpsAgent
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_UPDATE)
                     ClientUpdate(stream, sqlConnect);
-                else if (fncByte >= Glo.CLIENT_UPDATE_LOGIN ||
+                else if (fncByte >= Glo.CLIENT_UPDATE_LOGIN &&
                          fncByte <= Glo.CLIENT_UPDATE_CHANGE_REASON)
                     ClientUpdate(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_SELECT_COLUMN_PRIMARY)

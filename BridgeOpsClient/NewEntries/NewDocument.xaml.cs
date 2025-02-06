@@ -131,7 +131,7 @@ namespace BridgeOpsClient
             {
                 changeMade = true;
                 if (MainWindow.pageDatabase != null)
-                    MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Visit);
+                    MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Document);
                 Close();
             }
         }

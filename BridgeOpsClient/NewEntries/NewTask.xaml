@@ -81,7 +81,10 @@
         <StackPanel Grid.Row="3" Orientation="Horizontal">
             <Button x:Name="btnSave" Margin="10" Content="Save" Style="{StaticResource primary-button}"
                     Click="btnSave_Click"/>
-            <Button x:Name="btnDelete" Margin="0" Content="Delete" Visibility="Collapsed"/>
+            <Button x:Name="btnDelete" Margin="0" Content="Delete" Visibility="Visible" Click="btnDelete_Click"/>
         </StackPanel>
+        <Button x:Name="btnBreakOut" Grid.Row="3" Grid.Column="1" Content="Break Out" Visibility="Visible"
+                Click="btnBreakOut_Click" HorizontalAlignment="Right" Margin="0 0 10 0"
+                Style="{StaticResource primary-button}"/>
     </Grid>
 </local:CustomWindow>

@@ -46,7 +46,6 @@ namespace BridgeOpsClient
             edit = true;
             this.id = id;
 
-
             btnOrganisation.IsEnabled = true;
             btnAddDoc.IsEnabled = true;
             btnAddVisit.IsEnabled = true;
@@ -61,6 +60,8 @@ namespace BridgeOpsClient
                 datOpened.SelectedDate = (DateTime?)data[2];
                 datClosed.SelectedDate = (DateTime?)data[3];
                 txtNotes.Text = (string?)data[4];
+
+                Title = "Task " + txtTaskRef.Text;
 
                 dit.Populate(data.GetRange(5, data.Count - 5));
 
@@ -164,7 +165,7 @@ namespace BridgeOpsClient
         {
             NewVisit newVisit = new();
             newVisit.cmbTaskRef.Text = txtTaskRef.Text;
-            newVisit.Populate(new());
+            newVisit.Populate(new()); // This enables or disables the View task button based on the above if empty.
             newVisit.Show();
         }
 
@@ -172,7 +173,7 @@ namespace BridgeOpsClient
         {
             NewDocument newDoc = new();
             newDoc.cmbTaskRef.Text = txtTaskRef.Text;
-            newDoc.Populate(new());
+            newDoc.Populate(new()); // This enables or disables the View task button based on the above if empty.
             newDoc.Show();
         }
 
@@ -205,7 +206,28 @@ namespace BridgeOpsClient
             // Create new.
             NewOrganisation org = new();
             org.PopulateOnlyTaskRef(txtTaskRef.Text);
+            org.createdFromTask = true;
             org.Show();
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (!App.DeleteConfirm(false, this))
+                return;
+
+            if (App.SendDelete("Task", Glo.Tab.TASK_ID, id, false, this))
+            {
+                changeMade = true;
+                if (MainWindow.pageDatabase != null)
+                    MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Task);
+                Close();
+            }
+        }
+
+        private void btnBreakOut_Click(object sender, RoutedEventArgs e)
+        {
+            TaskBreakOut breakOut = new(txtTaskRef.Text, orgID == null ? null : (string)btnOrganisation.Content);
+            breakOut.ShowDialog();
         }
     }
 }
