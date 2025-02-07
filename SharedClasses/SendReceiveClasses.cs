@@ -3671,6 +3671,25 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                     return o.ToString()!;
             }
         }
+        public static string ConvertObjectToSqlStringWithQuotes(object? o)
+        {
+            if (o == null)
+                return "NULL";
+            else if (o is DateTime dt)
+                return DateTimeToSQL(dt, false, true);
+            else if (o is byte b)
+                return b.ToString();
+            else if (o is Int16 i16)
+                return i16.ToString();
+            else if (o is Int32 i32)
+                return i32.ToString();
+            else if (o is TimeSpan ts)
+                return "'" + TimeSpanToSQL(ts) + "'";
+            else if (o is string s)
+                return "'" + s + "'";
+            else
+                return "NULL";
+        }
 
         public static string HashBytes(string str)
         {

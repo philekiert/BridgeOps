@@ -265,7 +265,7 @@ internal class BridgeOpsAgent
     private static void LogError(Exception e) { LogError("", e); }
     private static void LogError(string s) { LogError(s, null); }
 
-    // For if we want to let a client know that a request failed in a catch block.
+    // For when we want to let a client know that a request failed in a catch block.
     private static void SafeFail(NetworkStream stream)
     {
         try { stream.WriteByte(Glo.CLIENT_REQUEST_FAILED); } catch { }
@@ -951,6 +951,8 @@ internal class BridgeOpsAgent
                     ClientConferenceAdjust(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT_CONNECTIONS)
                     ClientConferenceSelectConnections(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_TASK_BREAKOUT)
+                    ClientTaskBreakout(stream, sqlConnect);
                 else
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -3627,6 +3629,125 @@ ORDER BY Task_reference ASC;";
         catch (Exception e)
         {
             LogError("Couldn't load a list of task references, see error:", e);
+            SafeFail(stream, e.Message);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    // Permission restricted
+    private static void ClientTaskBreakout(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            string sessionID = sr.ReadString(stream);
+            string sourceTaskRef = sr.ReadString(stream);
+            List<string> taskRefs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
+            List<string> orgRefs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
+
+            lock (clientSessions)
+                if (!clientSessions.ContainsKey(sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+
+            if (!CheckSessionPermission(clientSessions[sessionID],
+                                        Glo.PERMISSION_CONFERENCES, Glo.PERMISSION_EDIT))
+            {
+                stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
+                return;
+            }
+
+            // Build a list of columns along with a list to indicate whether or not they are unique.
+
+            List<string> BuildColoumnList(OrderedDictionary colDict, List<bool> colsUnique)
+            {
+                List<string> colDefs = new();
+                foreach (DictionaryEntry de in colDict)
+                {
+                    //string type = ((ColumnRecord.Column)de.Value!).type;
+                    //long restriction = ((ColumnRecord.Column)de.Value!).restriction;
+                    //if (type == "VARCHAR")
+                    //    type += $"({(restriction > 8000 ? "MAX" : restriction.ToString())})";
+                    //string colDef = $"{(string)de.Key} {type}";
+
+                    colsUnique.Add(((ColumnRecord.Column)de.Value!).unique);
+                    colDefs.Add((string)de.Key);
+                }
+                return colDefs;
+            }
+            List<bool> taskUniqueIndices = new();
+            List<bool> orgUniqueIndices = new();
+            List<string> taskCols = BuildColoumnList(ColumnRecord.task, taskUniqueIndices);
+            List<string> orgCols = BuildColoumnList(ColumnRecord.organisation, orgUniqueIndices);
+            int taskRefIndex = taskCols.IndexOf(Glo.Tab.TASK_REFERENCE);
+            int orgRefIndex = orgCols.IndexOf(Glo.Tab.ORGANISATION_REF);
+
+            // Select the data for the existing task and organisation.
+            SqlDataReader reader = new SqlCommand($"SELECT * FROM Task " +
+                                                  $"WHERE {Glo.Tab.TASK_REFERENCE} = {sourceTaskRef}",
+                                                  sqlConnect).ExecuteReader();
+            SelectResult taskSelect = new(reader, false);
+            reader = new SqlCommand($"SELECT * FROM Organisation " +
+                                    $"WHERE {Glo.Tab.TASK_REFERENCE} = {sourceTaskRef}",
+                                    sqlConnect).ExecuteReader();
+            SelectResult orgSelect = new(reader, false);
+
+            // Cancel if task is not found.
+            if (taskSelect.rows.Count != 1)
+                throw new("Could not discern the source task from the reference.");
+            if (orgSelect.rows.Count > 1) // Allow a count of 0, as this means we're breaking out a task on its own.
+                throw new("It appears there is more than one organisation linked to this task."); // Not possible.
+
+            // Create new insert statements.
+            List<string> GetInsertStrings(string table, List<string> newRefs, int refIndex,
+                                          List<string> colNames, List<object?> existingVals, List<bool> uniqueIndices)
+            {
+                string colsJoined = string.Join(", ", colNames);
+                List<string> inserts = new();
+
+                for (int i = 0; i < newRefs.Count; ++i)
+                {
+                    string command = $"INSERT INTO {table} ({colsJoined})\nVALUES (";
+                    List<string> vals = new();
+                    for (int n = 0; n < colNames.Count; ++n)
+                    {
+                        if (n == refIndex)
+                            vals.Add(newRefs[n]);
+                        else if (uniqueIndices[n])
+                            vals.Add("NULL");
+                        else
+                            vals.Add(SqlAssist.ConvertObjectToSqlStringWithQuotes(existingVals[n]));
+                    }
+                    inserts.Add(command);
+                }
+                return inserts;
+            }
+
+            List<string> taskInserts = GetInsertStrings("Task", taskRefs, taskRefIndex,
+                                                        taskCols, taskSelect.rows[0], taskUniqueIndices);
+            List<string> orgInserts = new();
+            if (orgSelect.rows.Count > 0)
+                orgInserts = GetInsertStrings("Organisation", orgRefs, orgRefIndex,
+                                              orgCols, orgSelect.rows[0], orgUniqueIndices);
+
+            // YOU WERE HERE :) MAKE A TRANSACTION THAT DELETES THE ORIGINAL RECORDS, THEN CARRIED OUT THE NEW INSERTS.
+
+
+            SqlCommand com = new("", sqlConnect);
+            sqlConnect.Open();
+            SelectResult res = new(com.ExecuteReader(), false);
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(res));
+        }
+        catch (Exception e)
+        {
+            LogError("Take couldn't be broken out, see error:", e);
             SafeFail(stream, e.Message);
         }
         finally

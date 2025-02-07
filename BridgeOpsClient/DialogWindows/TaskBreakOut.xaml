@@ -4,16 +4,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BridgeOpsClient"
-        mc:Ignorable="d"
-        Title="TaskBreakOut" Height="450" Width="500" MinWidth="500" UseLayoutRounding="True">
+        xmlns:local="clr-namespace:BridgeOpsClient" ResizeMode="NoResize"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen" SizeToContent="Height"
+        Title="TaskBreakOut" Width="500" MinWidth="500" UseLayoutRounding="True">
     <Window.Resources>
         <DataTemplate x:Key="fieldRemoveButton">
             <Button Grid.Column="0" Content="-" Click="btnRemove_Click"
-                Margin="10 5 10 5" Style="{StaticResource minus-button}" HorizontalAlignment="Left"/>
+                Margin="10 2 10 2" Style="{StaticResource minus-button}" HorizontalAlignment="Left"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldTextBox">
-            <TextBox Margin="0 5 10 5" VerticalContentAlignment="Center" Height="24"/>
+            <TextBox Margin="0 2 10 2" VerticalContentAlignment="Center" Height="24" TextChanged="ValueChanged"/>
         </DataTemplate>
     </Window.Resources>
     <Grid>
@@ -36,7 +36,7 @@
                VerticalAlignment="Center"/>
 
         <!-- Fields Section -->
-        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" MaxWidth="790" MaxHeight="600" MinHeight="100"
+        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" MaxWidth="790" MaxHeight="300"
                       VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <Grid x:Name="grdFields">
                 <Grid.ColumnDefinitions>
