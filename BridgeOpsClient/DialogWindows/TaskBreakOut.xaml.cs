@@ -173,6 +173,25 @@ namespace BridgeOpsClient
                                 App.sr.Serialise(referencePairs.Select(i => i.txtTask.Text).ToList()));
                             App.sr.WriteAndFlush(stream,
                                 App.sr.Serialise(referencePairs.Select(i => i.txtOrganisation.Text).ToList()));
+
+                            int result = App.sr.ReadByte(stream);
+                            if (result == Glo.CLIENT_REQUEST_SUCCESS)
+                            {
+                                App.DisplayError("Task broken out successfully.", this);
+                                if (MainWindow.pageDatabase != null)
+                                {
+                                    MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Task);
+                                    MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Organisation);
+                                }
+                                Close();
+                                return;
+                            }
+                            else if (result == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                            {
+                                App.DisplayError(App.ErrorConcat("Unable to break out task.",
+                                                 App.sr.ReadString(stream)), this);
+                                return;
+                            }
                         }
                         throw new Exception();
                     }

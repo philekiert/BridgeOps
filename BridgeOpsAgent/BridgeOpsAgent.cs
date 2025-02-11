@@ -3678,7 +3678,8 @@ ORDER BY Task_reference ASC;";
                     colsUnique.Add(((ColumnRecord.Column)de.Value!).unique);
                     colDefs.Add((string)de.Key);
                 }
-                return colDefs;
+                // Exclude the first column, as that's the ID.
+                return colDefs.GetRange(1, colDefs.Count - 1);
             }
             List<bool> taskUniqueIndices = new();
             List<bool> orgUniqueIndices = new();
@@ -3687,13 +3688,15 @@ ORDER BY Task_reference ASC;";
             int taskRefIndex = taskCols.IndexOf(Glo.Tab.TASK_REFERENCE);
             int orgRefIndex = orgCols.IndexOf(Glo.Tab.ORGANISATION_REF);
 
+            sqlConnect.Open();
+
             // Select the data for the existing task and organisation.
             SqlDataReader reader = new SqlCommand($"SELECT * FROM Task " +
-                                                  $"WHERE {Glo.Tab.TASK_REFERENCE} = {sourceTaskRef}",
+                                                  $"WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'",
                                                   sqlConnect).ExecuteReader();
             SelectResult taskSelect = new(reader, false);
             reader = new SqlCommand($"SELECT * FROM Organisation " +
-                                    $"WHERE {Glo.Tab.TASK_REFERENCE} = {sourceTaskRef}",
+                                    $"WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'",
                                     sqlConnect).ExecuteReader();
             SelectResult orgSelect = new(reader, false);
 
@@ -3717,33 +3720,27 @@ ORDER BY Task_reference ASC;";
                     for (int n = 0; n < colNames.Count; ++n)
                     {
                         if (n == refIndex)
-                            vals.Add(newRefs[n]);
+                            vals.Add("'" + newRefs[i] + "'");
                         else if (uniqueIndices[n])
                             vals.Add("NULL");
                         else
                             vals.Add(SqlAssist.ConvertObjectToSqlStringWithQuotes(existingVals[n]));
                     }
-                    inserts.Add(command);
+                    inserts.Add(command + string.Join(", ", vals) + ");");
                 }
                 return inserts;
             }
+            
+            List<string> commands = GetInsertStrings("Task", taskRefs, taskRefIndex,
+                                                    taskCols, taskSelect.rows[0], taskUniqueIndices);
+            // Delete the original record and recreate with the new reference for simplicity's sake.
+            commands.Insert(0, $"DELETE FROM Task WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'");
 
-            List<string> taskInserts = GetInsertStrings("Task", taskRefs, taskRefIndex,
-                                                        taskCols, taskSelect.rows[0], taskUniqueIndices);
-            List<string> orgInserts = new();
-            if (orgSelect.rows.Count > 0)
-                orgInserts = GetInsertStrings("Organisation", orgRefs, orgRefIndex,
-                                              orgCols, orgSelect.rows[0], orgUniqueIndices);
-
-            // YOU WERE HERE :) MAKE A TRANSACTION THAT DELETES THE ORIGINAL RECORDS, THEN CARRIED OUT THE NEW INSERTS.
-
-
-            SqlCommand com = new("", sqlConnect);
-            sqlConnect.Open();
-            SelectResult res = new(com.ExecuteReader(), false);
-
-            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            sr.WriteAndFlush(stream, sr.Serialise(res));
+            SqlCommand com = new(SqlAssist.Transaction(commands.ToArray()), sqlConnect);
+            if (com.ExecuteNonQuery() > 0)
+                stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            else
+                throw new("No changes were made to the database.");
         }
         catch (Exception e)
         {

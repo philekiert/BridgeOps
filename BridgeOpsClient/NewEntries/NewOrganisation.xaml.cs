@@ -34,8 +34,6 @@ namespace BridgeOpsClient
         string? originalTask = "";
         string? originalNotes = "";
 
-        public bool createdFromTask = false; // The reference will need feeding back to the task window.
-
         public void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])

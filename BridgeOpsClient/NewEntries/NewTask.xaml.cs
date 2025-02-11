@@ -67,22 +67,29 @@ namespace BridgeOpsClient
 
                 PopulateDocuments();
                 PopulateVisits();
-
-                List<List<object?>> rows;
-                if (App.Select("Organisation", new() { Glo.Tab.ORGANISATION_REF },
-                               new() { Glo.Tab.TASK_REFERENCE }, new() { txtTaskRef.Text },
-                               new() { Conditional.Equals }, out _, out rows, false, false, this))
-                {
-                    if (rows.Count < 1)
-                        return;
-                    // Task_Reference is unique in the database, so there can only be one result if any.
-                    btnOrganisation.Content = (string)rows[0][0]!;
-                    orgID = (string)btnOrganisation.Content;
-                }
             }
             catch
             {
                 App.DisplayError("Something went wrong when pulling the data for this task.", this);
+            }
+        }
+        public void SetOrganisationButton()
+        {
+            List<List<object?>> rows;
+            if (App.Select("Organisation", new() { Glo.Tab.ORGANISATION_REF },
+                           new() { Glo.Tab.TASK_REFERENCE }, new() { txtTaskRef.Text },
+                           new() { Conditional.Equals }, out _, out rows, false, false, this))
+            {
+                if (rows.Count >= 1) // Task_Reference is unique in the database, so there can only be one result if any.
+                {
+                    btnOrganisation.Content = (string)rows[0][0]!;
+                    orgID = (string)btnOrganisation.Content;
+                }
+                else
+                {
+                    btnOrganisation.Content = "Create New";
+                    orgID = null;
+                }
             }
         }
 
@@ -206,7 +213,6 @@ namespace BridgeOpsClient
             // Create new.
             NewOrganisation org = new();
             org.PopulateOnlyTaskRef(txtTaskRef.Text);
-            org.createdFromTask = true;
             org.Show();
         }
 
