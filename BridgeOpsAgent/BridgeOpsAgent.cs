@@ -3641,6 +3641,12 @@ ORDER BY Task_reference ASC;";
     // Permission restricted
     private static void ClientTaskBreakout(NetworkStream stream, SqlConnection sqlConnect)
     {
+        // This method isn't the simplest thing in the world because the following has to occur:
+        // 1) Update original task's reference.
+        // 2) Create additional tasks with the new references.
+        // 3) Update the original task's organisation's reference, if it exists, respecting the change log.
+        // 4) If needed, create additional organisations with the new reference, respecting the change log.
+
         try
         {
             string sessionID = sr.ReadString(stream);
@@ -3648,15 +3654,27 @@ ORDER BY Task_reference ASC;";
             List<string> taskRefs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
             List<string> orgRefs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
 
+            int loginID;
+
             lock (clientSessions)
                 if (!clientSessions.ContainsKey(sessionID))
                 {
                     stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
                     return;
                 }
+                else
+                    loginID = clientSessions[sessionID].loginID; // Stored for organisation creation.
 
+            // Task edit and create permissions are required, plus organisation edit and create if one is involved.
             if (!CheckSessionPermission(clientSessions[sessionID],
-                                        Glo.PERMISSION_CONFERENCES, Glo.PERMISSION_EDIT))
+                                        Glo.PERMISSION_TASKS, Glo.PERMISSION_CREATE) ||
+                !CheckSessionPermission(clientSessions[sessionID],
+                                        Glo.PERMISSION_TASKS, Glo.PERMISSION_EDIT) ||
+                (orgRefs.Count > 0 &&
+                 (!CheckSessionPermission(clientSessions[sessionID],
+                                         Glo.PERMISSION_RECORDS, Glo.PERMISSION_CREATE) ||
+                  !CheckSessionPermission(clientSessions[sessionID],
+                                         Glo.PERMISSION_RECORDS, Glo.PERMISSION_EDIT))))
             {
                 stream.WriteByte(Glo.CLIENT_INSUFFICIENT_PERMISSIONS);
                 return;
@@ -3669,24 +3687,23 @@ ORDER BY Task_reference ASC;";
                 List<string> colDefs = new();
                 foreach (DictionaryEntry de in colDict)
                 {
-                    //string type = ((ColumnRecord.Column)de.Value!).type;
-                    //long restriction = ((ColumnRecord.Column)de.Value!).restriction;
-                    //if (type == "VARCHAR")
-                    //    type += $"({(restriction > 8000 ? "MAX" : restriction.ToString())})";
-                    //string colDef = $"{(string)de.Key} {type}";
-
                     colsUnique.Add(((ColumnRecord.Column)de.Value!).unique);
                     colDefs.Add((string)de.Key);
                 }
-                // Exclude the first column, as that's the ID.
-                return colDefs.GetRange(1, colDefs.Count - 1);
+                return colDefs;
             }
             List<bool> taskUniqueIndices = new();
             List<bool> orgUniqueIndices = new();
             List<string> taskCols = BuildColoumnList(ColumnRecord.task, taskUniqueIndices);
             List<string> orgCols = BuildColoumnList(ColumnRecord.organisation, orgUniqueIndices);
-            int taskRefIndex = taskCols.IndexOf(Glo.Tab.TASK_REFERENCE);
-            int orgRefIndex = orgCols.IndexOf(Glo.Tab.ORGANISATION_REF);
+
+            List<string> commands = new(); ;
+
+            // First, edit the original task.
+            commands.Add($"UPDATE Task SET {Glo.Tab.TASK_REFERENCE} = '{taskRefs[0]}' " +
+                         $"WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'");
+            // Then, create new tasks for each duplication.
+
 
             sqlConnect.Open();
 
@@ -3700,6 +3717,9 @@ ORDER BY Task_reference ASC;";
                                     sqlConnect).ExecuteReader();
             SelectResult orgSelect = new(reader, false);
 
+
+            // T A S K S
+
             // Cancel if task is not found.
             if (taskSelect.rows.Count != 1)
                 throw new("Could not discern the source task from the reference.");
@@ -3707,34 +3727,73 @@ ORDER BY Task_reference ASC;";
                 throw new("It appears there is more than one organisation linked to this task."); // Not possible.
 
             // Create new insert statements.
-            List<string> GetInsertStrings(string table, List<string> newRefs, int refIndex,
-                                          List<string> colNames, List<object?> existingVals, List<bool> uniqueIndices)
-            {
-                string colsJoined = string.Join(", ", colNames);
-                List<string> inserts = new();
+            string colsJoined = string.Join(", ", taskCols.GetRange(1, taskCols.Count - 1)); // Skip ID.
 
-                for (int i = 0; i < newRefs.Count; ++i)
-                {
-                    string command = $"INSERT INTO {table} ({colsJoined})\nVALUES (";
-                    List<string> vals = new();
-                    for (int n = 0; n < colNames.Count; ++n)
-                    {
-                        if (n == refIndex)
-                            vals.Add("'" + newRefs[i] + "'");
-                        else if (uniqueIndices[n])
-                            vals.Add("NULL");
-                        else
-                            vals.Add(SqlAssist.ConvertObjectToSqlStringWithQuotes(existingVals[n]));
-                    }
-                    inserts.Add(command + string.Join(", ", vals) + ");");
-                }
-                return inserts;
+            // Skip the first one as we just updated it rather than recreated it.
+            for (int i = 1; i < taskRefs.Count; ++i)
+            {
+                string command = $"INSERT INTO Task ({colsJoined})\nVALUES (";
+                List<string> vals = new() { $"'{taskRefs[i]}'" };
+                // Skip the first two (task ID and reference).
+                for (int n = 2; n < taskCols.Count; ++n)
+                    if (taskUniqueIndices[n])
+                        vals.Add("NULL");
+                    else
+                        vals.Add(SqlAssist.ConvertObjectToSqlStringWithQuotes(taskSelect.rows[0][n]));
+                commands.Add(command + string.Join(", ", vals) + ");");
             }
-            
-            List<string> commands = GetInsertStrings("Task", taskRefs, taskRefIndex,
-                                                    taskCols, taskSelect.rows[0], taskUniqueIndices);
-            // Delete the original record and recreate with the new reference for simplicity's sake.
-            commands.Insert(0, $"DELETE FROM Task WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'");
+
+
+            // O R G A N I S A T I O N S
+
+            if (orgRefs.Count > 0)
+            {
+                List<object?> row = orgSelect.rows[0];
+
+                // First, adjust the original
+                Organisation baseOrg = new();
+                baseOrg.organisationID = (int)row[0]!;
+                baseOrg.organisationRef = orgRefs[0];
+                baseOrg.organisationRefChanged = true;
+                baseOrg.taskRef = taskRefs[0];
+                baseOrg.taskChanged = true;
+                baseOrg.additionalCols = new();
+                baseOrg.additionalVals = new();
+                baseOrg.additionalNeedsQuotes = new();
+                baseOrg.changeReason = $"Task reference updated to '{taskRefs[0]}' and Organisation reference " +
+                                       $"updated to '{orgRefs[0]}' as part of task {sourceTaskRef} breakout.";
+                baseOrg.overrideTransaction = true;
+                commands.Add(baseOrg.SqlUpdate(loginID));
+
+                // Then create the duplicates, with each referencing its respective task.
+                for (int o = 1; o < orgRefs.Count; ++o)
+                {
+
+                    Organisation newOrg = new();
+                    newOrg.organisationRef = orgRefs[o];
+                    newOrg.parentOrgRef = (string?)row[2];
+                    newOrg.name = (string?)row[3];
+                    // Leave dial no null.
+                    newOrg.available = (bool?)row[5];
+                    newOrg.taskRef = taskRefs[o];
+                    newOrg.notes = (string?)row[7];
+                    newOrg.additionalCols = new();
+                    newOrg.additionalVals = new();
+                    newOrg.additionalNeedsQuotes = new();
+                    for (int i = 8; i < row.Count; ++i)
+                    {
+                        newOrg.additionalCols.Add(orgCols[i]);
+                        bool needsQuotes = false;
+                        newOrg.additionalVals.Add(orgUniqueIndices[i] ? null :
+                                                  SqlAssist.ConvertObjectToSqlString(row[i], out needsQuotes));
+                        newOrg.additionalNeedsQuotes.Add(needsQuotes);
+                    }
+                    newOrg.changeReason = $"Duplicated from organisation '{orgSelect.rows[0][1]}' as a part " +
+                                          $"of task {sourceTaskRef} breakout.";
+                    newOrg.overrideTransaction = true;
+                    commands.Add(newOrg.SqlInsert(loginID));
+                }
+            }
 
             SqlCommand com = new(SqlAssist.Transaction(commands.ToArray()), sqlConnect);
             if (com.ExecuteNonQuery() > 0)

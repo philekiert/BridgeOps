@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" ResizeMode="NoResize"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" SizeToContent="Height"
-        Title="TaskBreakOut" Width="500" MinWidth="500" UseLayoutRounding="True">
+        Title="Task Breakout" Width="500" MinWidth="500" UseLayoutRounding="True">
     <Window.Resources>
         <DataTemplate x:Key="fieldRemoveButton">
             <Button Grid.Column="0" Content="-" Click="btnRemove_Click"

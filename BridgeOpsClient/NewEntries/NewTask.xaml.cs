@@ -61,12 +61,14 @@ namespace BridgeOpsClient
                 datClosed.SelectedDate = (DateTime?)data[3];
                 txtNotes.Text = (string?)data[4];
 
-                Title = "Task " + txtTaskRef.Text;
+                Title = "Task - " + txtTaskRef.Text;
 
                 dit.Populate(data.GetRange(5, data.Count - 5));
 
                 PopulateDocuments();
                 PopulateVisits();
+
+                SetOrganisationButton();
             }
             catch
             {
@@ -232,7 +234,7 @@ namespace BridgeOpsClient
 
         private void btnBreakOut_Click(object sender, RoutedEventArgs e)
         {
-            TaskBreakOut breakOut = new(txtTaskRef.Text, orgID == null ? null : (string)btnOrganisation.Content);
+            TaskBreakOut breakOut = new(txtTaskRef.Text, orgID == null ? null : (string)btnOrganisation.Content, this);
             breakOut.ShowDialog();
         }
     }

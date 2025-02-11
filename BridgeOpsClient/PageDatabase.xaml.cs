@@ -228,13 +228,13 @@ namespace BridgeOpsClient
                     if (window is NewTask task)
                         task.SetOrganisationButton();
             }
-            if (identity == 1)
+            else if (identity == (int)UserSettings.TableIndex.Asset)
             {
                 foreach (Window window in Application.Current.Windows)
                     if (window is NewOrganisation org)
                         org.PopulateAssets();
             }
-            else if (identity == 2)
+            else if (identity == (int)UserSettings.TableIndex.Contact)
             {
                 foreach (Window window in Application.Current.Windows)
                     if (window is NewOrganisation org)

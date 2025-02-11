@@ -879,6 +879,10 @@ namespace SendReceiveClasses
         public List<bool> additionalNeedsQuotes;
         public string changeReason;
 
+        // Bool to disable encasing the commands in transactions. The task breakout method in Agent
+        // needs this - it should not be used in any other case.
+        public bool overrideTransaction = false;
+
         public Organisation(string sessionID, int columnRecordID,
                             int organisationID, string? organisationRef, string? parentOrgRef, string? name,
                             string? dialNo, bool? available, string? taskRef,
@@ -994,7 +998,10 @@ namespace SendReceiveClasses
                                                             available == true ? "1" : "0", "1",
                                                             taskRef, "1",
                                                             notes, "1"));
-            return SqlAssist.Transaction(com);
+            if (overrideTransaction)
+                return com;
+            else
+                return SqlAssist.Transaction(com);
         }
 
         public string SqlUpdate(int loginID)
@@ -1156,7 +1163,10 @@ namespace SendReceiveClasses
                              $"REFERENCES Organisation({Glo.Tab.ORGANISATION_REF});");
             }
 
-            return SqlAssist.Transaction(commands.ToArray());
+            if (overrideTransaction)
+                return string.Join(' ', commands);
+            else
+                return SqlAssist.Transaction(commands.ToArray());
         }
     }
 
@@ -3665,6 +3675,52 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                 return s;
             else // Hopefully this catches anything I missed...
             {
+                if (o.ToString() == null)
+                    return "";
+                else
+                    return o.ToString()!;
+            }
+        }
+        public static string? ConvertObjectToSqlString(object? o, out bool needsQuotes)
+        {
+            if (o == null)
+            {
+                needsQuotes = false;
+                return null;
+            }
+            else if (o is DateTime dt)
+            {
+                needsQuotes = true;
+                return DateTimeToSQL(dt, false, false);
+            }
+            else if (o is byte b)
+            {
+                needsQuotes = false;
+                return b.ToString();
+            }
+            else if (o is Int16 i16)
+            {
+                needsQuotes = false;
+                return i16.ToString();
+            }
+            else if (o is Int32 i32)
+            {
+                needsQuotes = false;
+                return i32.ToString();
+            }
+            else if (o is TimeSpan ts)
+            {
+                needsQuotes = true;
+                return TimeSpanToSQL(ts);
+            }
+            else if (o is string s)
+            {
+                needsQuotes = true;
+                return s;
+            }
+            else // Hopefully this catches anything I missed...
+            {
+                needsQuotes = false; // Not reliable in this instance.
                 if (o.ToString() == null)
                     return "";
                 else

@@ -27,8 +27,12 @@ namespace BridgeOpsClient
         int maxTaskRefLength;
         int maxOrgRefLength;
 
-        public TaskBreakOut(string taskRef, string? orgRef)
+        NewTask taskWindow; // For feeding back the new reference to the task window.
+
+        public TaskBreakOut(string taskRef, string? orgRef, NewTask taskWindow)
         {
+            this.taskWindow = taskWindow;
+
             originalTaskRef = taskRef;
             displayOrgRefs = orgRef != null;
 
@@ -180,6 +184,8 @@ namespace BridgeOpsClient
                                 App.DisplayError("Task broken out successfully.", this);
                                 if (MainWindow.pageDatabase != null)
                                 {
+                                    taskWindow.Title = "Task - " + referencePairs[0].txtTask.Text;
+                                    taskWindow.txtTaskRef.Text = referencePairs[0].txtTask.Text;
                                     MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Task);
                                     MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Organisation);
                                 }
