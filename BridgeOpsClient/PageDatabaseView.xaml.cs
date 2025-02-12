@@ -50,6 +50,9 @@ namespace BridgeOpsClient
         MenuItem btnUpdate;
         MenuItem btnDelete;
 
+        Separator sepTask;
+        MenuItem btnAddVisits;
+
         public PageDatabaseView(PageDatabase containingPage, Frame containingFrame)
         {
             InitializeComponent();
@@ -86,6 +89,8 @@ namespace BridgeOpsClient
                                                                         false, btnConfRemoveFromRecurrence_Click);
             btnConfEditRecurrence = dtgResults.AddContextMenuItem("View Recurrence",
                                                                   false, btnConfEditRecurrence_Click);
+            sepTask = dtgResults.AddSeparator(false);
+            btnAddVisits = dtgResults.AddContextMenuItem("Add Visit", false, btnAddVisit_Click);
 
             for (int n = 0; n < 7; ++n)
             {
@@ -1320,6 +1325,12 @@ namespace BridgeOpsClient
                 btnConfRemoveFromRecurrence.Visibility = Visibility.Collapsed;
                 btnConfEditRecurrence.Visibility = Visibility.Collapsed;
             }
+
+            // Task button visibility.
+            Visibility visTask = dtgResults.identity == (int)UserSettings.TableIndex.Task ? Visibility.Visible :
+                                                                                            Visibility.Collapsed;
+            sepTask.Visibility = visTask;
+            btnAddVisits.Visibility = visTask;
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
@@ -1491,6 +1502,11 @@ namespace BridgeOpsClient
                 App.EditRecurrence(int.Parse(recID));
             }
             catch { }
+        }
+
+        private void btnAddVisit_Click(object sender, RoutedEventArgs e)
+        {
+            new NewVisit(dtgResults.GetCurrentlySelectedCells(1)).ShowDialog();
         }
 
         private void cmbSearchType_SelectionChanged(object sender, SelectionChangedEventArgs e)

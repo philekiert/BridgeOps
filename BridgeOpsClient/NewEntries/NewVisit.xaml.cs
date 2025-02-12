@@ -60,9 +60,8 @@ namespace BridgeOpsClient
         {
             multiRefs = taskRefs;
             Title = "New Visits";
-
-            txtTaskRef!.Visibility = Visibility.Collapsed;
             grd.RowDefinitions[0].Height = new(0);
+            cmbTaskRef.Visibility = Visibility.Collapsed;
         }
 
         public void Populate(List<object?> data)
@@ -126,6 +125,8 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_VISIT, visits, out id, this))
                 {
+                    if (multiRefs.Count > 0)
+                        App.DisplayError("Visit addition successful.", this);
                     changeMade = true;
                     // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
                     // table in the application but the Organisation that added it, if there was one.

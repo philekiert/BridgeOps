@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,6 +24,11 @@ namespace BridgeOpsClient
         public bool changeMade = false;
         string? orgID = null;
 
+        MenuItem btnUpdateVisit;
+        MenuItem btnDeleteVisit;
+        MenuItem btnUpdateDocument;
+        MenuItem btnDeleteDocument;
+
         public NewTask()
         {
             InitializeComponent();
@@ -34,9 +40,20 @@ namespace BridgeOpsClient
                                                                             Glo.Tab.TASK_REFERENCE).restriction);
             txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.contact,
                                                                           Glo.Tab.NOTES).restriction);
-
+            // SqlDataGrids and their context menu items.
             dtgDocs.identity = (int)UserSettings.TableIndex.TaskDocument;
+            dtgDocs.canHideColumns = true;
+            dtgDocs.EnableMultiSelect();
+            dtgDocs.AddSeparator(false);
+            btnUpdateDocument = dtgDocs.AddContextMenuItem("Update", false, btnUpdateDocument_Click);
+            btnDeleteDocument = dtgDocs.AddContextMenuItem("Delete", false, btnDeleteDocument_Click);
             dtgVisits.identity = (int)UserSettings.TableIndex.TaskVisit;
+            dtgVisits.canHideColumns = true;
+            dtgVisits.EnableMultiSelect();
+            dtgVisits.AddSeparator(false);
+            btnUpdateVisit = dtgVisits.AddContextMenuItem("Update", false, btnUpdateVisit_Click);
+            btnDeleteVisit = dtgVisits.AddContextMenuItem("Delete", false, btnDeleteVisit_Click);
+
         }
 
         public NewTask(string id) : this()
@@ -240,6 +257,60 @@ namespace BridgeOpsClient
                 TaskBreakOut breakOut = new(txtTaskRef.Text, orgID == null ? null : (string)btnOrganisation.Content, this);
                 breakOut.ShowDialog();
             }
+        }
+
+        private void btnDeleteVisit_Click(object sender, RoutedEventArgs e)
+        {
+            if (dtgVisits.dtg.SelectedItems.Count < 1)
+            {
+                App.DisplayError("You must select at least one item to delete.", this);
+                return;
+            }
+
+            if (!App.DeleteConfirm(dtgVisits.dtg.SelectedItems.Count > 1, this))
+                return;
+
+            if (App.SendDelete("Visit", Glo.Tab.VISIT_ID, dtgVisits.GetCurrentlySelectedIDs(), false, this) &&
+                MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches(dtgVisits.identity);
+        }
+        private void btnDeleteDocument_Click(object sender, RoutedEventArgs e)
+        {
+            if (dtgDocs.dtg.SelectedItems.Count < 1)
+            {
+                App.DisplayError("You must select at least one item to delete.", this);
+                return;
+            }
+
+            if (!App.DeleteConfirm(dtgDocs.dtg.SelectedItems.Count > 1, this))
+                return;
+
+            if (App.SendDelete("Document", Glo.Tab.DOCUMENT_ID, dtgDocs.GetCurrentlySelectedIDs(), false, this) &&
+                MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches(dtgDocs.identity);
+        }
+
+        private void btnUpdateVisit_Click(object sender, RoutedEventArgs e)
+        {
+            if (dtgVisits.dtg.SelectedItems.Count < 1)
+            {
+                App.DisplayError("You must select at least one item to update.", this);
+                return;
+            }
+
+            new UpdateMultiple(dtgVisits.identity, "Visit", ColumnRecord.orderedVisit, Glo.Tab.VISIT_ID,
+                               dtgVisits.GetCurrentlySelectedIDs(), false).ShowDialog();
+        }
+        private void btnUpdateDocument_Click(object sender, RoutedEventArgs e)
+        {
+            if (dtgDocs.dtg.SelectedItems.Count < 1)
+            {
+                App.DisplayError("You must select at least one item to update.", this);
+                return;
+            }
+
+            new UpdateMultiple(dtgDocs.identity, "Document", ColumnRecord.orderedDocument, Glo.Tab.DOCUMENT_ID,
+                               dtgDocs.GetCurrentlySelectedIDs(), false).ShowDialog();
         }
     }
 }

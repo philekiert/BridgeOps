@@ -219,6 +219,12 @@ namespace BridgeOpsClient
 
         public void RepeatSearches(int identity)
         {
+            // Makes sense to make this alteration here, as we still want the same repeat searches.
+            if (identity == (int)UserSettings.TableIndex.TaskVisit)
+                identity = (int)UserSettings.TableIndex.Visit;
+            else if (identity == (int)UserSettings.TableIndex.TaskDocument)
+                identity = (int)UserSettings.TableIndex.Document;
+
             // Force any open organisation windows to refresh their asset and contact lists just in case they're
             // effected by a change.
 
