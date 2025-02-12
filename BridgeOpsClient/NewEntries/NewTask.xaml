@@ -85,6 +85,6 @@
         </StackPanel>
         <Button x:Name="btnBreakOut" Grid.Row="3" Grid.Column="1" Content="Break Out" Visibility="Visible"
                 Click="btnBreakOut_Click" HorizontalAlignment="Right" Margin="0 0 10 0"
-                Style="{StaticResource primary-button}"/>
+                Style="{StaticResource primary-button}" IsEnabled="False"/>
     </Grid>
 </local:CustomWindow>

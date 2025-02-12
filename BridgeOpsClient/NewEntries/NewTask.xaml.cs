@@ -50,6 +50,7 @@ namespace BridgeOpsClient
             btnAddDoc.IsEnabled = true;
             btnAddVisit.IsEnabled = true;
             btnDelete.Visibility = Visibility.Visible;
+            btnBreakOut.IsEnabled = true;
         }
 
         public void Populate(List<object?> data)
@@ -234,8 +235,11 @@ namespace BridgeOpsClient
 
         private void btnBreakOut_Click(object sender, RoutedEventArgs e)
         {
-            TaskBreakOut breakOut = new(txtTaskRef.Text, orgID == null ? null : (string)btnOrganisation.Content, this);
-            breakOut.ShowDialog();
+            if (id != "")
+            {
+                TaskBreakOut breakOut = new(txtTaskRef.Text, orgID == null ? null : (string)btnOrganisation.Content, this);
+                breakOut.ShowDialog();
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace BridgeOpsClient
     public partial class TaskBreakOut : CustomWindow
     {
         string originalTaskRef;
-        bool displayOrgRefs = false;
+        bool hideOrgRefs = false;
 
         DataTemplate btnRemoveTemplate;
         DataTemplate txtTemplate;
@@ -34,11 +34,17 @@ namespace BridgeOpsClient
             this.taskWindow = taskWindow;
 
             originalTaskRef = taskRef;
-            displayOrgRefs = orgRef != null;
+            hideOrgRefs = orgRef == null;
 
             InitializeComponent();
             btnRemoveTemplate = (DataTemplate)FindResource("fieldRemoveButton");
             txtTemplate = (DataTemplate)FindResource("fieldTextBox");
+
+            if (hideOrgRefs)
+            {
+                grdMain.ColumnDefinitions[2].Width = new(0);
+                grdFields.ColumnDefinitions[2].Width = new(0);
+            }
 
             maxTaskRefLength = Glo.Fun.LongToInt(
                 ((ColumnRecord.Column)ColumnRecord.task[Glo.Tab.TASK_REFERENCE]!).restriction);
@@ -49,7 +55,7 @@ namespace BridgeOpsClient
             btnAdd_Click(null, null);
             btnAdd_Click(null, null);
 
-            if (displayOrgRefs)
+            if (!hideOrgRefs)
                 referencePairs[0].txtOrganisation.Text = orgRef;
         }
 
@@ -64,6 +70,7 @@ namespace BridgeOpsClient
                 grd.Children.Remove(txtTask);
                 grd.Children.Remove(txtOrganisation);
                 grd.Children.Remove(btnRemove);
+                grd.RowDefinitions.RemoveAt(0);
             }
 
             public void SetGridRow(int row)
@@ -88,8 +95,9 @@ namespace BridgeOpsClient
 
             foreach (ReferencePair pair in referencePairs)
             {
-                if (pair.txtTask.Text.Length == 0 || pair.txtOrganisation.Text.Length == 0 ||
-                    taskRefs.Contains(pair.txtTask.Text) || orgRefs.Contains(pair.txtOrganisation.Text))
+                if (pair.txtTask.Text.Length == 0 || taskRefs.Contains(pair.txtTask.Text) || 
+                    (!hideOrgRefs && // Only consider organisation references if they're visible.
+                     (pair.txtOrganisation.Text.Length == 0 || orgRefs.Contains(pair.txtOrganisation.Text))))
                 {
                     btnBreakOut.IsEnabled = false;
                     return false;
@@ -110,6 +118,8 @@ namespace BridgeOpsClient
             refPair.btnRemove = (btnRemoveTemplate.LoadContent() as Button)!;
             refPair.txtTask = (txtTemplate.LoadContent() as TextBox)!;
             refPair.txtOrganisation = (txtTemplate.LoadContent() as TextBox)!;
+            if (hideOrgRefs)
+                refPair.txtOrganisation.Visibility = Visibility.Collapsed;
             refPair.txtTask.MaxLength = maxTaskRefLength;
             refPair.txtOrganisation.MaxLength = maxOrgRefLength;
             refPair.SetGridRow(row);
@@ -139,9 +149,6 @@ namespace BridgeOpsClient
             referencePairs.RemoveAt(index);
             for (int i = index; i < referencePairs.Count; ++i)
                 referencePairs[i].SetGridRow(i);
-
-            grdFields.Children.RemoveAt(0);
-
 
             if (referencePairs.Count <= 2)
             {
@@ -176,7 +183,8 @@ namespace BridgeOpsClient
                             App.sr.WriteAndFlush(stream,
                                 App.sr.Serialise(referencePairs.Select(i => i.txtTask.Text).ToList()));
                             App.sr.WriteAndFlush(stream,
-                                App.sr.Serialise(referencePairs.Select(i => i.txtOrganisation.Text).ToList()));
+                                App.sr.Serialise(hideOrgRefs ? new List<string>() : // Empty if task only.
+                                                 referencePairs.Select(i => i.txtOrganisation.Text).ToList()));
 
                             int result = App.sr.ReadByte(stream);
                             if (result == Glo.CLIENT_REQUEST_SUCCESS)

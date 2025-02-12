@@ -16,7 +16,7 @@
             <TextBox Margin="0 2 10 2" VerticalContentAlignment="Center" Height="24" TextChanged="ValueChanged"/>
         </DataTemplate>
     </Window.Resources>
-    <Grid>
+    <Grid x:Name="grdMain">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition/>
