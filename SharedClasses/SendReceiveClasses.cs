@@ -2481,6 +2481,18 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             this.notes = notes;
         }
 
+        public Visit Clone() { return Clone(null); }
+        public Visit Clone(string? taskRef)
+        {
+            Visit visit = new(sessionID, columnRecordID, taskRef, type, date, notes);
+            // Create deep copies of lists and return.
+            visit.additionalCols = additionalCols.Select(s => new string(s)).ToList();
+            visit.additionalVals = additionalVals.Select(s => s == null ? null : new string(s)).ToList();
+            visit.additionalNeedsQuotes = additionalNeedsQuotes.ToList();
+            visit.taskRef = taskRef;
+            return visit;
+        }
+
         private void Prepare()
         {
             // Make sure the columns and values are safe, then add quotes where needed.
@@ -2557,6 +2569,18 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             this.type = type;
             this.date = date;
             this.notes = notes;
+        }
+
+        public Document Clone() { return Clone(null); }
+        public Document Clone(string? taskRef)
+        {
+            Document doc = new(sessionID, columnRecordID, taskRef, type, date, notes);
+            // Create deep copies of lists and return.
+            doc.additionalCols = additionalCols.Select(s => new string(s)).ToList();
+            doc.additionalVals = additionalVals.Select(s => s == null ? null : new string(s)).ToList();
+            doc.additionalNeedsQuotes = additionalNeedsQuotes.ToList();
+            doc.taskRef = taskRef;
+            return doc;
         }
 
         private void Prepare()

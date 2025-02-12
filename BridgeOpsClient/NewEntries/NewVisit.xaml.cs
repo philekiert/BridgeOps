@@ -20,6 +20,7 @@ namespace BridgeOpsClient
         bool edit = false;
         public string id = "";
         public bool changeMade = false;
+        List<string> multiRefs = new(); //  Used to add a visit to multiple tasks at once.
 
         public NewVisit()
         {
@@ -47,14 +48,21 @@ namespace BridgeOpsClient
 
         public NewVisit(string id) : this()
         {
-            InitializeComponent();
-
             edit = true;
             this.id = id;
 
             btnDelete.Visibility = Visibility.Visible;
 
             Title = "Visit";
+        }
+
+        public NewVisit(List<string> taskRefs) : this()
+        {
+            multiRefs = taskRefs;
+            Title = "New Visits";
+
+            txtTaskRef!.Visibility = Visibility.Collapsed;
+            grd.RowDefinitions[0].Height = new(0);
         }
 
         public void Populate(List<object?> data)
@@ -109,7 +117,14 @@ namespace BridgeOpsClient
             }
             else
             {
-                if (App.SendInsert(Glo.CLIENT_NEW_VISIT, visit, out id, this))
+                List<SendReceiveClasses.Visit> visits = new();
+                if (multiRefs.Count == 0)
+                    visits.Add(visit);
+                else // if adding to multiple tasks at once.
+                    foreach (string s in multiRefs)
+                        visits.Add(visit.Clone(s));
+
+                if (App.SendInsert(Glo.CLIENT_NEW_VISIT, visits, out id, this))
                 {
                     changeMade = true;
                     // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other

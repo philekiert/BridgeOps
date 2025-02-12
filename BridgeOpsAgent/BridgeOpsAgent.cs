@@ -1528,19 +1528,19 @@ internal class BridgeOpsAgent
                 }
                 else if (target == Glo.CLIENT_NEW_VISIT)
                 {
-                    Visit newRow = sr.Deserialise<Visit>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_TASKS,
+                    List<Visit> visits = sr.Deserialise<List<Visit>>(sr.ReadString(stream))!;
+                    if (CheckSessionValidity(visits[0].sessionID, visits[0].columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[visits[0].sessionID], Glo.PERMISSION_TASKS,
                         create, out permission))
-                        com.CommandText = newRow.SqlInsert();
+                        com.CommandText = SqlAssist.Transaction(visits.Select(i => i.SqlInsert()).ToArray());
                 }
                 else if (target == Glo.CLIENT_NEW_DOCUMENT)
                 {
-                    Document newRow = sr.Deserialise<Document>(sr.ReadString(stream));
-                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
-                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_TASKS,
+                    List<Document> docs = sr.Deserialise<List<Document>>(sr.ReadString(stream))!;
+                    if (CheckSessionValidity(docs[0].sessionID, docs[0].columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[docs[0].sessionID], Glo.PERMISSION_TASKS,
                         create, out permission))
-                        com.CommandText = newRow.SqlInsert();
+                        com.CommandText = SqlAssist.Transaction(docs.Select(i => i.SqlInsert()).ToArray());
                 }
                 else if (target == Glo.CLIENT_NEW_LOGIN)
                 {
