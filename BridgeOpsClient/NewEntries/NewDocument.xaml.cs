@@ -129,7 +129,7 @@ namespace BridgeOpsClient
                 if (App.SendInsert(Glo.CLIENT_NEW_DOCUMENT, docs, out id, this))
                 {
                     if (multiRefs.Count > 0)
-                        App.DisplayError("Visit addition successful.", this);
+                        App.DisplayError("Document addition successful.", this);
                     changeMade = true;
                     // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
                     // table in the application but the Organisation that added it, if there was one.

@@ -52,6 +52,7 @@ namespace BridgeOpsClient
 
         Separator sepTask;
         MenuItem btnAddVisits;
+        MenuItem btnAddDocument;
 
         public PageDatabaseView(PageDatabase containingPage, Frame containingFrame)
         {
@@ -91,6 +92,7 @@ namespace BridgeOpsClient
                                                                   false, btnConfEditRecurrence_Click);
             sepTask = dtgResults.AddSeparator(false);
             btnAddVisits = dtgResults.AddContextMenuItem("Add Visit", false, btnAddVisit_Click);
+            btnAddDocument = dtgResults.AddContextMenuItem("Add Document", false, btnAddDocument_Click);
 
             for (int n = 0; n < 7; ++n)
             {
@@ -1331,6 +1333,7 @@ namespace BridgeOpsClient
                                                                                             Visibility.Collapsed;
             sepTask.Visibility = visTask;
             btnAddVisits.Visibility = visTask;
+            btnAddDocument.Visibility = visTask;
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
@@ -1507,6 +1510,10 @@ namespace BridgeOpsClient
         private void btnAddVisit_Click(object sender, RoutedEventArgs e)
         {
             new NewVisit(dtgResults.GetCurrentlySelectedCells(1)).ShowDialog();
+        }
+        private void btnAddDocument_Click(object sender, RoutedEventArgs e)
+        {
+            new NewDocument(dtgResults.GetCurrentlySelectedCells(1)).ShowDialog();
         }
 
         private void cmbSearchType_SelectionChanged(object sender, SelectionChangedEventArgs e)
