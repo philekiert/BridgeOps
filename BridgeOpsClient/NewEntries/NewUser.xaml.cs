@@ -88,38 +88,35 @@ namespace BridgeOpsClient
                     permissionsGrid[Grid.GetColumn(checkBox) - 1, Grid.GetRow(checkBox) - 1] = (CheckBox)checkBox;
         }
 
-#pragma warning disable CS8601
-#pragma warning disable CS8602
-#pragma warning disable CS8605
         public void Populate(List<object?> data)
         {
             // EDIT
             // This method will not be called if the data has a different Count than expected.
-            if (data[1] != null && data[1].ToString() != null)
+            if (data[1] != null && data[1]!.ToString() != null)
             {
-                originalUsername = data[1].ToString();
+                originalUsername = data[1]!.ToString()!;
                 txtUsername.Text = originalUsername;
             }
-            if (data[3] != null && data[3].GetType() == typeof(bool))
+            if (data[3] != null && data[3]!.GetType() == typeof(bool))
             {
-                originalAdmin = (bool)data[3];
+                originalAdmin = (bool)data[3]!;
                 chkAdmin.IsChecked = originalAdmin;
             }
-            if (data[4] != null && data[4].GetType() == typeof(int) &&
-                data[5] != null && data[5].GetType() == typeof(int) &&
-                data[6] != null && data[6].GetType() == typeof(int))
+            if (data[4] != null && data[4]!.GetType() == typeof(int) &&
+                data[5] != null && data[5]!.GetType() == typeof(int) &&
+                data[6] != null && data[6]!.GetType() == typeof(int))
             {
-                originalCreate = (int)data[4];
-                originalEdit = (int)data[5];
-                originalDelete = (int)data[6];
+                originalCreate = (int)data[4]!;
+                originalEdit = (int)data[5]!;
+                originalDelete = (int)data[6]!;
                 currentCreate = originalCreate;
                 currentEdit = originalEdit;
                 currentDelete = originalDelete;
                 ApplyWriteEditDelete();
             }
-            if (data[7] != null && data[7].GetType() == typeof(bool))
+            if (data[7] != null && data[7]!.GetType() == typeof(bool))
             {
-                originalEnabled = (bool)data[7];
+                originalEnabled = (bool)data[7]!;
                 chkEnabled.IsChecked = originalEnabled;
             }
 
@@ -133,9 +130,6 @@ namespace BridgeOpsClient
                 grdPermissions.Visibility = Visibility.Collapsed;
             }
         }
-#pragma warning restore CS8601
-#pragma warning restore CS8602
-#pragma warning restore CS8605
 
         private Login GetLoginFromForm()
         {

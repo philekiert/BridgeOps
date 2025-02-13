@@ -92,7 +92,8 @@ namespace BridgeOpsClient
             grdMain.RowDefinitions[0].Height = new(0);
             grdMain.RowDefinitions[1].Height = new(0);
             AssignMenuBar(menuBar, stkPaneButtons, 0);
-            if (ScheduleView.PrintColorFromLuminance((Color)Application.Current.Resources.MergedDictionaries[0]["colorTitleBar"]) == Colors.White)
+            if (ScheduleView.PrintColorFromLuminance(
+                (Color)Application.Current.Resources.MergedDictionaries[0]["colorTitleBar"]) == Colors.White)
                 SetIcon("/Resources/Icons/x20TitleBarIconDark.png");
             else
                 SetIcon("/Resources/Icons/x20TitleBarIcon.png");
@@ -133,6 +134,9 @@ namespace BridgeOpsClient
             menuDatabaseNewConference.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
             menuDatabaseNewRecurrence.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
             menuDatabaseNewResource.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RESOURCES];
+            menuDatabaseNewTask.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
+            menuDatabaseNewVisit.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
+            menuDatabaseNewDocument.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
 
             if (!App.sd.admin && !App.sd.createPermissions[Glo.PERMISSION_USER_ACC_MGMT] &&
                                  !App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT] &&

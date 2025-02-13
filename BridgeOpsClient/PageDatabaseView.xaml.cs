@@ -105,28 +105,37 @@ namespace BridgeOpsClient
 
         public void EnforcePermissions()
         {
-            if (dtgResults.identity == -1)
-            {
-                btnUpdate.IsEnabled = false;
-                btnDelete.IsEnabled = false;
-            }
-            if (dtgResults.identity == 7 || dtgResults.identity == 8)
-            {
-                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
-                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
-            }
-            if (dtgResults.identity == 9)
-            {
-                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RESOURCES];
-                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RESOURCES];
-            }
-
+            // Baseline
             btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RECORDS];
             btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
             btnConfAddToRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnConfRemoveFromRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
             btnConfCreateRecurrence.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES] &&
                                                 App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
+            btnAddVisits.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
+            btnAddDocument.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
+
+            // Special Cases
+            if (dtgResults.identity == -1)
+            {
+                btnUpdate.IsEnabled = false;
+                btnDelete.IsEnabled = false;
+            }
+            else if (dtgResults.identity == 7 || dtgResults.identity == 8)
+            {
+                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
+                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_CONFERENCES];
+            }
+            else if (dtgResults.identity == 9)
+            {
+                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RESOURCES];
+                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RESOURCES];
+            }
+            else if (dtgResults.identity >= (int)UserSettings.TableIndex.Task)
+            {
+                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_TASKS];
+                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_TASKS];
+            }
         }
 
         public RowDefinition GetRowDefinitionForFrame()
@@ -1224,7 +1233,7 @@ namespace BridgeOpsClient
 
             bool selectionMade = dtgResults.dtg.SelectedItems.Count > 0;
             btnDelete.IsEnabled = btnDelete.IsEnabled && selectionMade;
-            btnUpdate.IsEnabled = btnDelete.IsEnabled && selectionMade;
+            btnUpdate.IsEnabled = btnUpdate.IsEnabled && selectionMade;
 
             if (dtgResults.identity == 7)
             {
@@ -1328,7 +1337,7 @@ namespace BridgeOpsClient
                 btnConfEditRecurrence.Visibility = Visibility.Collapsed;
             }
 
-            // Task button visibility.
+            // Task button visibility and permissions
             Visibility visTask = dtgResults.identity == (int)UserSettings.TableIndex.Task ? Visibility.Visible :
                                                                                             Visibility.Collapsed;
             sepTask.Visibility = visTask;

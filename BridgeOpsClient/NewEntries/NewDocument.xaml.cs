@@ -131,7 +131,7 @@ namespace BridgeOpsClient
                     if (multiRefs.Count > 0)
                         App.DisplayError("Document addition successful.", this);
                     changeMade = true;
-                    // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
+                    // No need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
                     // table in the application but the Organisation that added it, if there was one.
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(13);
