@@ -68,6 +68,8 @@ namespace BridgeOpsClient
             btnAddVisit.IsEnabled = true;
             btnDelete.Visibility = Visibility.Visible;
             btnBreakOut.IsEnabled = true;
+
+            EnforcePermissions();
         }
 
         public void Populate(List<object?> data)
@@ -135,6 +137,33 @@ namespace BridgeOpsClient
                                     new() { true });
             if (App.SendSelectRequest(req, out colNames, out rows, this))
                 (doc ? dtgDocs : dtgVisits).Update(dict, colNames, rows);
+        }
+
+        private void EnforcePermissions()
+        {
+            // Permissions not relevant for new entry, so no need to call this from the primary constructor.
+            bool taskCreate = App.sd.createPermissions[Glo.PERMISSION_TASKS];
+            bool taskEdit = App.sd.editPermissions[Glo.PERMISSION_TASKS];
+            bool taskDelete = App.sd.deletePermissions[Glo.PERMISSION_TASKS];
+            btnSave.IsEnabled = taskEdit;
+            btnDelete.IsEnabled = taskDelete;
+            btnAddVisit.IsEnabled = taskCreate;
+            btnAddDoc.IsEnabled = taskCreate;
+            btnBreakOut.IsEnabled = taskCreate && taskEdit;
+            btnUpdateDocument.IsEnabled = taskEdit;
+            btnUpdateVisit.IsEnabled = taskEdit;
+            btnDeleteDocument.IsEnabled = taskDelete;
+            btnDeleteVisit.IsEnabled = taskDelete;
+            btnOrganisation.IsEnabled = taskEdit;
+
+            if (!taskEdit)
+            {
+                txtTaskRef.IsReadOnly = true;
+                datOpened.IsEnabled = false;
+                datClosed.IsEnabled = false;
+                dit.ToggleFieldsEnabled(false);
+                txtNotes.IsReadOnly = true;
+            }
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)

@@ -57,6 +57,8 @@ namespace BridgeOpsClient
             btnDelete.Visibility = Visibility.Visible;
 
             Title = "Document";
+
+            EnforcePermissions();
         }
 
         public NewDocument(List<string> taskRefs) : this()
@@ -82,6 +84,22 @@ namespace BridgeOpsClient
             // Won't trigger when set above for some reason.
             if (cmbTaskRef.Text != null)
                 btnTask.IsEnabled = knownTaskRefs.Contains(cmbTaskRef.Text);
+        }
+
+        private void EnforcePermissions()
+        {
+            // Permissions not relevant for new entries, so no need to call this from the primary constructor.
+            btnSave.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_TASKS];
+            btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_TASKS];
+
+            if (!App.sd.editPermissions[Glo.PERMISSION_TASKS])
+            {
+                cmbTaskRef.IsEnabled = false;
+                dat.IsEnabled = false;
+                cmbType.IsEnabled = false;
+                dit.ToggleFieldsEnabled(false);
+                txtNotes.IsReadOnly = true;
+            }
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)

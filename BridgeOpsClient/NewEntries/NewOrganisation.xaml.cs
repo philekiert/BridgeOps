@@ -47,6 +47,7 @@ namespace BridgeOpsClient
                 btnEdit.IsEnabled = false;
                 btnAssetAdd.IsEnabled = false;
                 btnAssetRemove.IsEnabled = false;
+                cmbTaskRef.IsEnabled = false;
                 txtOrgRef.IsReadOnly = true;
                 ToggleFieldsEnabled(false);
             }
