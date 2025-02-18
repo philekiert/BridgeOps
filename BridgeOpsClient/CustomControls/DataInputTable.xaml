@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="400" UseLayoutRounding="True">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                   Margin="0 0 0 0" Padding="0 0 0 0" Height="Auto">
