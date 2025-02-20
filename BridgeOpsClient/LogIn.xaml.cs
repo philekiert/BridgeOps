@@ -19,7 +19,7 @@ namespace BridgeOpsClient
     {
         MainWindow mainWindow;
 
-        bool networkSettings = false;
+        bool networkSettings = false; // Alternates button functionality between login and network settings.
 
         public LogIn(MainWindow mainWindow)
         {
