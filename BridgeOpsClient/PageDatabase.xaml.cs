@@ -263,7 +263,7 @@ namespace BridgeOpsClient
                 view.RepeatSearch(identity);
         }
 
-        public void ReflectPermissions()
+        public void ApplyPermissions()
         {
             // When logging in, it could be that a PageDatabaseView is already open. If that's the case some buttons
             // may need updating.

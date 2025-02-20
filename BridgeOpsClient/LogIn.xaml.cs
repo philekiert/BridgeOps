@@ -122,7 +122,7 @@ namespace BridgeOpsClient
                     mainWindow.ApplyPermissions();
 
                 if (MainWindow.pageDatabase != null)
-                    MainWindow.pageDatabase.ReflectPermissions();
+                    MainWindow.pageDatabase.ApplyPermissions();
             }
             else
             {
