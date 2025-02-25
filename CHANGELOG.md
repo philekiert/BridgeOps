@@ -1,6 +1,7 @@
 # Changelog
-
 ## 1.1.1
+### Changed
+- Unique key violation errors are now given in plain English.
 ### Fixed
 - Bug fixed where visit & document type fields were being saved as empty strings rather than null.
 - Visit & document type constraint names corrected in the database creation code.
