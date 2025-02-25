@@ -477,9 +477,9 @@ public class DatabaseCreator
             task += "CREATE UNIQUE INDEX u_TaskRef ON Task (Task_Reference); ";
             // No task reference for either of these, same goes for organisations. Task references are kept very loose at the request of the team.
             visit += ", CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID)" +
-                     ", CONSTRAINT chk_VisitType CHECK (Visit_Type IN ('')) );";
+                     ", CONSTRAINT chk_VisitVisitType CHECK (Visit_Type IN ('')) );";
             document += ", CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID)" +
-                        ", CONSTRAINT chk_DocumentType CHECK (Document_Type IN ('')) );";
+                        ", CONSTRAINT chk_DocumentDocumentType CHECK (Document_Type IN ('')) );";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +

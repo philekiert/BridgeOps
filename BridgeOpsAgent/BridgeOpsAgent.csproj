@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Compile Include="..\SharedClasses\ColumnRecord.cs" Link="ColumnRecord.cs" />
-    <Compile Include="..\SharedClasses\DatabaseVariables.cs" Link="DatabaseVariables.cs" />
     <Compile Include="..\SharedClasses\Glo.cs" Link="Glo.cs" />
     <Compile Include="..\SharedClasses\SendReceiveClasses.cs" Link="SendReceiveClasses.cs" />
   </ItemGroup>

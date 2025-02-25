@@ -1,12 +1,19 @@
 # Changelog
 
+## 1.1.1
+### Fixed
+- Bug fixed where visit & document type fields were being saved as empty strings rather than null.
+- Visit & document type constraint names corrected in the database creation code.
+
 ## 1.1.0
+### Major
+- Task management features added.
 ### Minor
 #### Changed
 - Improved the time field UX.
 #### Fixed
 - Stopped the date field from being focusable when hidden in connections.
-- Fixed a bug preventing the conference updates from the query builder window.
+- Fixed a bug preventing conference updates from the query builder window.
 - Conference duplications now omit the closure field as intended.
 - Fixed a bug causing the program to crash when exporting data from the query builder if there was an invalid Excel tab name.
 - Fixed a bug where the data pane's update context menu button was disabled if the user lacked delete permissions.

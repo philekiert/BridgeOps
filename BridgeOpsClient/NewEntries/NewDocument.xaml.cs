@@ -114,8 +114,8 @@ namespace BridgeOpsClient
             string? type = cmbType.Text == "" ? null : cmbType.Text;
             string? notes = txtNotes.Text == "" ? null : txtNotes.Text;
 
-            SendReceiveClasses.Document doc = new(App.sd.sessionID, ColumnRecord.columnRecordID, cmbTaskRef.Text,
-                                                  cmbType.Text, dat.SelectedDate, notes);
+            SendReceiveClasses.Document doc = new(App.sd.sessionID, ColumnRecord.columnRecordID, taskRef,
+                                                  type, dat.SelectedDate, notes);
             dit.ExtractValues(out doc.additionalCols, out doc.additionalVals);
             doc.additionalNeedsQuotes = dit.GetNeedsQuotes();
 
