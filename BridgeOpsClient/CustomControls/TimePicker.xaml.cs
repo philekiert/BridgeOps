@@ -95,7 +95,9 @@ namespace BridgeOpsClient.CustomControls
             int val;
             if (!check.Contains(':') && int.TryParse(check, out val) && val >= 0)
             {
-                if (val < 24)
+                if (check.Length == 4)
+                    check = check.Insert(2, ":");
+                else if (val < 24 && check.Length != 3) // Otherwise "010" would resolve to 10:00, for example.
                     check += ":00";
                 else if (val < 60)
                     check = "00:" + check;
