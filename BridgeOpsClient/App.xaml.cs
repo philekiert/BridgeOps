@@ -36,9 +36,59 @@ namespace BridgeOpsClient
             return null;
         }
 
+        public static string TranslateSQLServerError(string error)
+        {
+            string translated = error;
+            if (translated.StartsWith("Cannot insert duplicate key row")) // Also works for UPDATE.
+            {
+                int keyIndex = translated.IndexOf("u_");
+                if (keyIndex > -1)
+                {
+                    translated = translated.Substring(keyIndex);
+                    if (translated.StartsWith("u_OrgTaskRef"))
+                        return "This would result in more than one organisation with the same task reference.";
+                    else if (translated.StartsWith("u_TaskRef"))
+                        return "Task references must be unique.";
+                    else if (translated.StartsWith("u_OrgRef"))
+                        return "Organisation references must be unique.";
+                    else if (translated.StartsWith("u_OrgDialNo"))
+                        return "Organisation dial numbers must be unique";
+                    else if (translated.StartsWith("u_ConnectionConfIDDialNo"))
+                        return "You cannot include the same dial number twice in a conference.";
+                    else if (translated.StartsWith("u_Username"))
+                        return "Usernames must be unique.";
+                    else if (translated.StartsWith("u_AssetRef"))
+                        return "Asset references must be unique.";
+                    else if (translated.StartsWith("u_ResourceName"))
+                        return "Resource names must be unique.";
+
+                    // If none of the above caught it, then it must be a user-added column.
+                    int keyEnd = translated.IndexOf('\'');
+                    if (keyEnd > -1)
+                    {
+                        // Extract the column name. Automatically generated unique keys are always formatted like
+                        // u_TableColumn in Bridge Manager.
+                        if (translated.StartsWith("u_Task"))
+                            translated = translated.Substring(6).Remove(keyEnd - 6);
+                        else if (translated.StartsWith("u_Asset") || translated.StartsWith("u_Visit"))
+                            translated = translated.Substring(7).Remove(keyEnd - 7);
+                        else if (translated.StartsWith("u_Contact"))
+                            translated = translated.Substring(9).Remove(keyEnd - 9);
+                        else if (translated.StartsWith("u_Document"))
+                            translated = translated.Substring(10).Remove(keyEnd - 10);
+                        else if (translated.StartsWith("u_Organisation"))
+                            translated = translated.Substring(14).Remove(keyEnd - 14);
+                        return $"Values for '{translated.Replace('_', ' ')}' must be unique .";
+                    }
+                }
+            }
+
+            // Anything else, just return the original error.
+            return error;
+        }
         public static string ErrorConcat(string error, string additional)
         {
-            return additional == "" ? error : $"{error} See error:\n\n{additional}";
+            return additional == "" ? error : $"{error} See error:\n\n{TranslateSQLServerError(additional)}";
         }
         public static bool DisplayError(string error, Window? owner) { return DisplayError(error, "", owner); }
         public static bool DisplayError(string error, string title, Window? owner)
@@ -2907,9 +2957,11 @@ namespace BridgeOpsClient
         //                 14 Visit (Task links table)
         //                 15 Document (Task links table)
         public enum TableIndex
-        { Organisation, Asset, Contact, OrgAsset, OrgContact, 
-          User, Column, Conference, Recurrence, Resource, RecConference,
-          Task, Visit, Document, TaskVisit, TaskDocument}
+        {
+            Organisation, Asset, Contact, OrgAsset, OrgContact,
+            User, Column, Conference, Recurrence, Resource, RecConference,
+            Task, Visit, Document, TaskVisit, TaskDocument
+        }
         public List<string>[] dataOrder = new List<string>[16];
         public List<bool>[] dataHidden = new List<bool>[16];
         public List<double>[] dataWidths = new List<double>[16];
