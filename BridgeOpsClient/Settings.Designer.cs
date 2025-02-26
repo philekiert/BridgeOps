@@ -70,5 +70,29 @@ namespace BridgeOpsClient {
                 this["RecWinSizeY"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public double TaskWinSizeX {
+            get {
+                return ((double)(this["TaskWinSizeX"]));
+            }
+            set {
+                this["TaskWinSizeX"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public double TaskWinSizeY {
+            get {
+                return ((double)(this["TaskWinSizeY"]));
+            }
+            set {
+                this["TaskWinSizeY"] = value;
+            }
+        }
     }
 }

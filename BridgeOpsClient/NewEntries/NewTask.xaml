@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d" UseLayoutRounding="True"
-        Title="New Task" MinWidth="800" MinHeight="600" Width="800" Height="600" WindowStartupLocation="CenterScreen">
+        Title="New Task" MinWidth="800" MinHeight="600" Width="800" Height="600" WindowStartupLocation="CenterScreen"
+        Closed="CustomWindow_Closed">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="400"/>

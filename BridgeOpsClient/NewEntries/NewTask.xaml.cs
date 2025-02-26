@@ -53,7 +53,6 @@ namespace BridgeOpsClient
             dtgVisits.AddSeparator(false);
             btnUpdateVisit = dtgVisits.AddContextMenuItem("Update", false, btnUpdateVisit_Click);
             btnDeleteVisit = dtgVisits.AddContextMenuItem("Delete", false, btnDeleteVisit_Click);
-
         }
 
         public NewTask(string id) : this()
@@ -340,6 +339,17 @@ namespace BridgeOpsClient
 
             new UpdateMultiple(dtgDocs.identity, "Document", ColumnRecord.orderedDocument, Glo.Tab.DOCUMENT_ID,
                                dtgDocs.GetCurrentlySelectedIDs(), false).ShowDialog();
+        }
+
+        private void CustomWindow_Closed(object sender, EventArgs e)
+        {
+            if (WindowState != WindowState.Maximized)
+            {
+                Settings.Default.TaskWinSizeX = Width;
+                Settings.Default.TaskWinSizeY = Height;
+                Settings.Default.Save();
+                App.WindowClosed();
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 # Changelog
 ## 1.1.1
 ### Changed
+- Task window size is now remembered.
 - Unique key violation errors are now given in plain English.
 ### Fixed
 - Bug fixed where visit & document type fields were being saved as empty strings rather than null.

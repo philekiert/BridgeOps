@@ -21,6 +21,7 @@ using System.Windows.Media.TextFormatting;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using DocumentFormat.OpenXml.Office2021.DocumentTasks;
 using SendReceiveClasses;
 
 namespace BridgeOpsClient
@@ -218,6 +219,10 @@ namespace BridgeOpsClient
         private void menuDatabaseNewTask_Click(object sender, RoutedEventArgs e)
         {
             NewTask newTask = new();
+            if (Settings.Default.TaskWinSizeX > 0d)
+                newTask.Width = Settings.Default.TaskWinSizeX;
+            if (Settings.Default.TaskWinSizeY > 0d)
+                newTask.Height = Settings.Default.TaskWinSizeY;
             newTask.Show();
         }
 

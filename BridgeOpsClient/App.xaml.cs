@@ -826,6 +826,10 @@ namespace BridgeOpsClient
                     {
                         NewTask task = new(id);
                         task.Populate(rows[0]);
+                        if (Settings.Default.TaskWinSizeX > 0d)
+                            task.Width = Settings.Default.TaskWinSizeX;
+                        if (Settings.Default.TaskWinSizeY > 0d)
+                            task.Height = Settings.Default.TaskWinSizeY;
                         task.Show();
                     }
                     else
