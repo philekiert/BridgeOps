@@ -3699,12 +3699,15 @@ ORDER BY Task_reference ASC;";
 
             List<string> commands = new(); ;
 
-            // First, edit the original task.
+            // First, edit the original task and any associated visits or documents (Organisation is updated below).
             commands.Add($"UPDATE Task SET {Glo.Tab.TASK_REFERENCE} = '{taskRefs[0]}' " +
                          $"WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'");
+            commands.Add($"UPDATE Visit SET {Glo.Tab.TASK_REFERENCE} = '{taskRefs[0]}' " +
+                         $"WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'");
+            commands.Add($"UPDATE Document SET {Glo.Tab.TASK_REFERENCE} = '{taskRefs[0]}' " +
+                         $"WHERE {Glo.Tab.TASK_REFERENCE} = '{sourceTaskRef}'");
+
             // Then, create new tasks for each duplication.
-
-
             sqlConnect.Open();
 
             // Select the data for the existing task and organisation.
