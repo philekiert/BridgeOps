@@ -14,6 +14,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Security.Cryptography;
 using System.Data;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Channels;
 using System.Reflection.PortableExecutable;
@@ -3653,6 +3654,8 @@ ORDER BY Task_reference ASC;";
             string sourceTaskRef = sr.ReadString(stream);
             List<string> taskRefs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
             List<string> orgRefs = sr.Deserialise<List<string>>(sr.ReadString(stream))!;
+            bool duplicateVisits = stream.ReadByte() == 1;
+            bool duplicateDocs = stream.ReadByte() == 1;
 
             int loginID;
 
@@ -3797,6 +3800,31 @@ ORDER BY Task_reference ASC;";
                     commands.Add(newOrg.SqlInsert(loginID));
                 }
             }
+
+            // V I S I T S   A N D   D O C U M E N T S
+
+            void CreateDuplicationStatements(string table, OrderedDictionary columns)
+            {
+                List<string> colNames = new();
+                foreach (DictionaryEntry de in columns)
+                    if (!((ColumnRecord.Column)de.Value!).unique)
+                        colNames.Add((string)de.Key);
+                string colNamesJoined = string.Join(", ", colNames);
+                int taskRefIndex = colNames.IndexOf(Glo.Tab.TASK_REFERENCE); // If this is -1, we've crashed anyway.
+                string insert = $"SELECT {colNamesJoined} INTO #{table}Temp FROM {table}\n" +
+                                $"WHERE {Glo.Tab.TASK_REFERENCE} = '{taskRefs[0]}';\n";
+                for (int i = 1; i < taskRefs.Count; ++i)
+                {
+                    insert += $"UPDATE #{table}Temp SET {Glo.Tab.TASK_REFERENCE} = '{taskRefs[i]}';\n";
+                    insert += $"INSERT INTO {table} ({colNamesJoined}) SELECT * FROM #{table}Temp;\n";
+                }
+                commands.Add(insert);
+            }
+
+            if (duplicateVisits)
+                CreateDuplicationStatements("Visit", ColumnRecord.visit);
+            if (duplicateDocs)
+                CreateDuplicationStatements("Document", ColumnRecord.document);
 
             SqlCommand com = new(SqlAssist.Transaction(commands.ToArray()), sqlConnect);
             if (com.ExecuteNonQuery() > 0)

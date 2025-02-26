@@ -46,10 +46,26 @@
                 </Grid.ColumnDefinitions>
             </Grid>
         </ScrollViewer>
+        
+        <!-- Duplicate Visits & Documents? -->
+        <Grid Grid.Row="2" Grid.ColumnSpan="2" Margin="10 10 0 10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <CheckBox Grid.Row="0" x:Name="chkDupVisits" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="1" x:Name="chkDupDocs" VerticalAlignment="Center"/>
+            <Label Grid.Row="0" Grid.Column="1" Content="Duplicate Visits"/>
+            <Label Grid.Row="1" Grid.Column="1" Content="Duplicate Documents"/>
+        </Grid>
 
         <!-- Update -->
-        <Button x:Name="btnBreakOut" Content="Break Out" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
-                HorizontalAlignment="Left" Height="24" Margin="10 20 10 10" IsEnabled="False"
+        <Button x:Name="btnBreakOut" Content="Break Out" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                HorizontalAlignment="Right" Height="24" Margin="10 20 10 00" IsEnabled="False"
                 Click="btnBreakOut_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </bridgeopsclient:CustomWindow>

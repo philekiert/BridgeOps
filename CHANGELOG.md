@@ -1,7 +1,14 @@
 # Changelog
-## 1.1.1
+
+## 1.1.2
 ### Changed
 - Task window size is now remembered.
+### Fixed
+- Visit & document task references are now updated with the new reference if the task is broken out.
+- Fixed a bug where you could cause the application to crash by removing a task breakout row.
+
+## 1.1.1
+### Changed
 - Unique key violation errors are now given in plain English.
 ### Fixed
 - Bug fixed where visit & document type fields were being saved as empty strings rather than null.

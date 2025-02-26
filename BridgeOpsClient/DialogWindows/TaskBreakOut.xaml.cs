@@ -54,6 +54,9 @@ namespace BridgeOpsClient
             // Make one initial row that will use the original refs.
             btnAdd_Click(null, null);
             btnAdd_Click(null, null);
+            // Disable the minus buttons to begin with.
+            referencePairs[0].btnRemove.IsEnabled = false;
+            referencePairs[1].btnRemove.IsEnabled = false;
 
             if (!hideOrgRefs)
                 referencePairs[0].txtOrganisation.Text = orgRef;
@@ -185,6 +188,8 @@ namespace BridgeOpsClient
                             App.sr.WriteAndFlush(stream,
                                 App.sr.Serialise(hideOrgRefs ? new List<string>() : // Empty if task only.
                                                  referencePairs.Select(i => i.txtOrganisation.Text).ToList()));
+                            stream.WriteByte((byte)(chkDupVisits.IsChecked == true ? 1 : 0));
+                            stream.WriteByte((byte)(chkDupDocs.IsChecked == true ? 1 : 0));
 
                             int result = App.sr.ReadByte(stream);
                             if (result == Glo.CLIENT_REQUEST_SUCCESS)
