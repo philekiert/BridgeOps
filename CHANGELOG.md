@@ -3,6 +3,7 @@
 ## 1.1.2
 ### Added
 - An option to replicate visits and documents into broken out tasks.
+- An option to update all associated visits and documents, as well as the attached organisation if present, when updating a task reference.
 ### Changed
 - Task window size is now remembered.
 ### Fixed

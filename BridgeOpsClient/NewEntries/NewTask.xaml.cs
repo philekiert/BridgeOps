@@ -23,6 +23,8 @@ namespace BridgeOpsClient
         public string id = "";
         public bool changeMade = false;
         string? orgID = null;
+        // Used to check whether or not to ask the user if task refs should be updated on all attached records.
+        string originalTaskRef = "";
 
         MenuItem btnUpdateVisit;
         MenuItem btnDeleteVisit;
@@ -76,6 +78,7 @@ namespace BridgeOpsClient
             try
             {
                 txtTaskRef.Text = (string)data[1]!; // NOT NULL in database, can't be null.
+                originalTaskRef = (string)data[1]!;
                 datOpened.SelectedDate = (DateTime?)data[2];
                 datClosed.SelectedDate = (DateTime?)data[3];
                 txtNotes.Text = (string?)data[4];
@@ -188,6 +191,16 @@ namespace BridgeOpsClient
 
             if (edit)
             {
+                if (task.taskRef != originalTaskRef)
+                {
+                    task.updateAllTaskRefs = App.DisplayQuestion("Would you like to update the task reference for " +
+                                                                 "any attached organisation, as well as any visits " +
+                                                                 "and documents?",
+                                                                 "Update Task Reference",
+                                                                 DialogWindows.DialogBox.Buttons.YesNo, this);
+                    task.oldTaskRef = originalTaskRef;
+                }
+
                 if (!int.TryParse(id, out task.taskID))
                 {
                     App.Abort("Could not ascertain the task's ID.", this);

@@ -207,17 +207,28 @@ namespace BridgeOpsClient
 
         private void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            if (AssembleUpdate() && App.SendUpdate(request, this))
+            if (AssembleUpdate())
             {
-                DialogResult = true;
-                if (MainWindow.pageDatabase != null)
+                if (table == "Task" && request.columns.Contains(Glo.Tab.TASK_REFERENCE) &&
+                    !App.DisplayQuestion("This will not update the task reference for any attached organisation, " +
+                                         "visit or document. If you wish to update these with the new task " +
+                                         "reference, open the task and make the change from there.\n\n" +
+                                         "Do you still wish to proceed?",
+                                         "Task Reference Update", DialogBox.Buttons.YesNo, this))
+                    return;
+
+                if (App.SendUpdate(request, this))
                 {
-                    MainWindow.pageDatabase.RepeatSearches(identity);
-                    if (identity == 7 || identity == 8)
-                        foreach (PageConferenceView view in MainWindow.pageConferenceViews)
-                            view.SearchTimeframe();
+                    DialogResult = true;
+                    if (MainWindow.pageDatabase != null)
+                    {
+                        MainWindow.pageDatabase.RepeatSearches(identity);
+                        if (identity == 7 || identity == 8)
+                            foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                                view.SearchTimeframe();
+                    }
+                    Close();
                 }
-                Close();
             }
         }
 

@@ -2392,6 +2392,10 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public List<string?> additionalVals = new();
         public List<bool> additionalNeedsQuotes = new();
 
+        // Used for updating any attached organisations, visits and documents.
+        public string oldTaskRef = "";
+        public bool updateAllTaskRefs = false;
+
         public Task(string sessionID, int columnRecordID,
                        string taskRef, DateTime? opened, DateTime? closed, string? notes)
         {
@@ -2412,6 +2416,8 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             SqlAssist.SecureColumn(additionalCols);
             SqlAssist.SecureValue(additionalVals);
             SqlAssist.AddQuotes(additionalVals, additionalNeedsQuotes);
+
+            oldTaskRef = SqlAssist.AddQuotes(SqlAssist.SecureValue(oldTaskRef));
         }
 
         public string SqlInsert()
@@ -2452,8 +2458,19 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
             for (int i = 0; i < additionalCols.Count; ++i)
                 setters.Add(SqlAssist.Setter(additionalCols[i], additionalVals[i]));
 
-            return SqlAssist.Update("Task", string.Join(", ", setters),
-                                    Glo.Tab.TASK_ID, taskID);
+            List<string> commands = new() { SqlAssist.Update("Task", string.Join(", ", setters),
+                                                             Glo.Tab.TASK_ID, taskID) };
+            if (updateAllTaskRefs)
+            {
+                commands.Add(SqlAssist.Update("Organisation", $"{Glo.Tab.TASK_REFERENCE} = {taskRef}",
+                                              Glo.Tab.TASK_REFERENCE, oldTaskRef));
+                commands.Add(SqlAssist.Update("Visit", $"{Glo.Tab.TASK_REFERENCE} = {taskRef}",
+                                              Glo.Tab.TASK_REFERENCE, oldTaskRef));
+                commands.Add(SqlAssist.Update("Document", $"{Glo.Tab.TASK_REFERENCE} = {taskRef}",
+                                              Glo.Tab.TASK_REFERENCE, oldTaskRef));
+            }
+
+            return SqlAssist.Transaction(commands.ToArray());
         }
     }
 
