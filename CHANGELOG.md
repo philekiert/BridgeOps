@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.1.2
+### Added
+- An option to replicate visits and documents into broken out tasks.
 ### Changed
 - Task window size is now remembered.
 ### Fixed
