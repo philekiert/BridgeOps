@@ -446,12 +446,20 @@ namespace BridgeOpsClient
         private void menuSelect_Click(object sender, RoutedEventArgs e)
         {
             SelectBuilder selectBuilder = new(true);
+            if (Settings.Default.QueryWinSizeX > 0d)
+                selectBuilder.Width = Settings.Default.QueryWinSizeX;
+            if (Settings.Default.QueryWinSizeY > 0d)
+                selectBuilder.Height = Settings.Default.QueryWinSizeY;
             selectBuilder.Show();
         }
 
         private void menuSelectStatement_Click(object sender, RoutedEventArgs e)
         {
             SelectBuilder selectBuilder = new(false);
+            if (Settings.Default.QueryWinSizeX > 0d)
+                selectBuilder.Width = Settings.Default.QueryWinSizeX;
+            if (Settings.Default.QueryWinSizeY > 0d)
+                selectBuilder.Height = Settings.Default.QueryWinSizeY;
             selectBuilder.Show();
         }
 

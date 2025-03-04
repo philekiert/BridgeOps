@@ -909,5 +909,16 @@ namespace BridgeOpsClient
         {
             ClearDown();
         }
+
+        private void CustomWindow_Closed(object sender, EventArgs e)
+        {
+            if (WindowState != WindowState.Maximized)
+            {
+                Settings.Default.QueryWinSizeX = Width;
+                Settings.Default.QueryWinSizeY = Height;
+                Settings.Default.Save();
+                App.WindowClosed();
+            }
+        }
     }
 }

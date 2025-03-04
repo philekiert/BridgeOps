@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d" MinHeight="400"
         Title="Select Query Builder" Width="1050" Height="600" UseLayoutRounding="True"
-        MinWidth="1210">
+        MinWidth="1210" Closed="CustomWindow_Closed">
     <Grid Margin="0 5 0 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
