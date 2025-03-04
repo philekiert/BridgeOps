@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient" xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d" MinHeight="400"
         Title="Select Query Builder" Width="1050" Height="600" UseLayoutRounding="True"
-        MinWidth="1200">
+        MinWidth="1210">
     <Grid Margin="0 5 0 0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -99,7 +99,7 @@
                 <Image Source="/Resources/Icons/17Delete.png"/>
             </Button.Content>
         </Button>
-        <Button x:Name="btnRenamePreset" Grid.Column="16" Width="56" Content="Rename"
+        <Button x:Name="btnRenamePreset" Grid.Column="16" Width="65" Content="Rename"
                 Height="24" Margin="5 10 10 10" Click="btnRenamePreset_Click" IsEnabled="False"/>
 
         <!-- Start of lower section -->
