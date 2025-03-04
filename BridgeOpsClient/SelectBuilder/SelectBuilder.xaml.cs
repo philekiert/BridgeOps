@@ -568,6 +568,15 @@ namespace BridgeOpsClient
                                      DialogWindows.DialogBox.Buttons.YesNo, this))
                 return;
 
+            // This section should never run in the current design due to name parsing in NameObject.xaml.cs
+            HashSet<char> illegalCharacters = name.Where(c => System.IO.Path.GetInvalidFileNameChars().Contains(c)).ToHashSet();
+            if (illegalCharacters.Any())
+            {
+                App.DisplayError("The chosen preset name contains the following illegal characters:\n\n" +
+                                 string.Join(", ", illegalCharacters), this);
+                return;
+            }
+
             JsonObject json = new();
             json["Name"] = name;
             json["TabCount"] = tabControl.Items.Count;

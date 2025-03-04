@@ -2881,9 +2881,10 @@ internal class BridgeOpsAgent
                 }
             }
 
-            // Don't serialise the whole thing because it'll just waste time.
-            int index = jsonString.IndexOf("\",");
-            string name = jsonString.Substring(9, index - 9);
+            // Would be cheaper to manually extract the preset name from jsonString, but we need to deserialise in
+            // order to correctly read back symbols like '&' that are stored in JSON with escape sequences.
+            JsonObject deserialised = sr.Deserialise<JsonObject>(jsonString)!;
+            string name = deserialised["Name"]!.ToString();
             string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string folder = Path.Combine(documents, "Bridge Manager", Glo.FOLDER_QUERY_BUILDER_PRESETS);
             lock (selectBuilderPresetFileLock)
