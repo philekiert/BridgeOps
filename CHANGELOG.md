@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3
+### Changed
+- Query builder window now remembers its size.
+### Fixed
+- Fixed an issue where presets with special characters in their name failed to save.
+- Fixed a layout issue in the query builder window.
+
 ## 1.1.2
 ### Added
 - An option to replicate visits and documents into broken out tasks.
