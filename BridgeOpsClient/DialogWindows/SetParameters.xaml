@@ -56,7 +56,7 @@
                BorderThickness="0 0 0 1" BorderBrush="CornflowerBlue" Padding="0 5 25 5"/>
 
         <!-- Fields Section -->
-        <ScrollViewer Grid.Row="2" MaxWidth="790" MaxHeight="800" MinHeight="100"
+        <ScrollViewer Grid.Row="2" MaxWidth="790" MaxHeight="700" MinHeight="100"
                       VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <StackPanel x:Name="stkParams">
 
