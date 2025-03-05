@@ -34,7 +34,7 @@
             <CheckBox Margin="10 10 10 10" VerticalAlignment="Center"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldLst">
-            <ScrollViewer Width="480" MaxHeight="300" Margin="10 6 10 10" BorderBrush="Gray" BorderThickness="1">
+            <ScrollViewer Width="480" MaxHeight="400" Margin="10 6 10 10" BorderBrush="Gray" BorderThickness="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="30"/>
