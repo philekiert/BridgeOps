@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.1.3
+### Added
+- Added multi-line text support to added column input fields.
 ### Changed
 - Query builder window now remembers its size.
 ### Fixed
