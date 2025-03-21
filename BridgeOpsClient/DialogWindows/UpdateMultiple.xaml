@@ -6,22 +6,24 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:customcontrols="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Update Multiple" SizeToContent="Height" ResizeMode="NoResize"
-        MinWidth="500" MaxWidth="500">
+        Title="Update Multiple" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        MinWidth="500" Width="500">
     <Window.Resources>
         <DataTemplate x:Key="fieldRemoveButton">
-            <Button Grid.Column="0" Content="-" Click="btnRemove_Click"
+            <Button Grid.Column="0" Content="-" Click="btnRemove_Click" VerticalAlignment="Top"
                 Margin="10 10 10 10" Style="{StaticResource minus-button}" HorizontalAlignment="Left"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldSelector">
             <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" Width="200"
-                      SelectionChanged="ComboBox_SelectionChanged" Height="24"/>
+                      SelectionChanged="ComboBox_SelectionChanged" Height="24" VerticalAlignment="Top"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldTxt">
-            <TextBox Grid.Column="2" Margin="0 10 10 10" VerticalContentAlignment="Center" MinWidth="200" Height="24"/>
+            <TextBox Grid.Column="2" Margin="0 10 10 10" VerticalContentAlignment="Center" MinWidth="224"
+                     MaxWidth="224" MinHeight="24" MaxHeight="200" VerticalScrollBarVisibility="Auto"
+                     HorizontalAlignment="Left"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldCmb">
-            <ComboBox Grid.Column="2" Margin="0 10 10 10" MinWidth="200"/>
+            <ComboBox Grid.Column="2" Margin="0 10 10 10" MinWidth="224" MaxWidth="224"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldDtm">
             <customcontrols:DateTimePicker Grid.Column="2" Margin="0 10 10 10"/>
@@ -33,7 +35,7 @@
             <customcontrols:TimePicker Grid.Column="2" Margin="0 10 10 10"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldNum">
-            <customcontrols:NumberEntry Grid.Column="2" Margin="0 10 10 10"/>
+            <customcontrols:NumberEntry Grid.Column="2" Margin="0 10 10 10" MinWidth="224" MaxWidth="224"/>
         </DataTemplate>
         <DataTemplate x:Key="fieldChk">
             <CheckBox Grid.Column="2" Margin="0 10 10 10" VerticalAlignment="Center"/>
@@ -55,7 +57,7 @@
         <Label Content="Add Field" Grid.Row="0" Grid.Column="1" Margin="0 10 10 10"/>
 
         <!-- Fields Section -->
-        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" MaxWidth="790" MaxHeight="600" MinHeight="100"
+        <ScrollViewer Grid.Row="1" Grid.ColumnSpan="3" MaxWidth="800" MaxHeight="600" MinHeight="100"
                       VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <Grid x:Name="grdFields">
                 <Grid.ColumnDefinitions>

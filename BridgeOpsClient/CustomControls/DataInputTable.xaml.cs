@@ -169,6 +169,20 @@ namespace BridgeOpsClient.CustomControls
                             txtInput.TextChanged += GenericValueChangedHandler;
 #pragma warning restore CS8622
                             grdMain.Children.Add(txtInput);
+
+                            // For VARCHAR(MAX), allow multi-line input.
+                            if (col.Value.restriction == Int32.MaxValue)
+                            {
+                                txtInput.MinHeight = 60;
+                                txtInput.MaxHeight = 60;
+                                txtInput.VerticalContentAlignment = VerticalAlignment.Top;
+                                txtInput.Padding = new Thickness(txtInput.Padding.Left, 2,
+                                                                 txtInput.Padding.Right,
+                                                                 txtInput.Padding.Bottom);
+                                txtInput.AcceptsReturn = true;
+                                txtInput.TextWrapping = TextWrapping.Wrap;
+                                txtInput.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                            }
                         }
                         else
                         {

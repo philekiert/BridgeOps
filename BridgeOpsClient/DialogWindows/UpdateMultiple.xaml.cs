@@ -180,7 +180,19 @@ namespace BridgeOpsClient
             else if (ColumnRecord.IsTypeString(column))
             {
                 value = (txtTemplate.LoadContent() as TextBox)!;
-                ((TextBox)value).MaxLength = (int)column.restriction;
+                TextBox field = (TextBox)value;
+                field.MaxLength = (int)column.restriction;
+                // Treat VARCHAR(MAX) a little differently by enabling multi line.
+                if (column.restriction == Int32.MaxValue)
+                {
+                    field.MinWidth = 300;
+                    field.MaxWidth = 300;
+                    field.AcceptsReturn = true;
+                    field.TextWrapping = TextWrapping.Wrap;
+                    field.VerticalContentAlignment = VerticalAlignment.Top;
+                    field.Padding = new Thickness(field.Padding.Left, 2, field.Padding.Right, field.Padding.Bottom);
+                    field.MinHeight = 200;
+                }
             }
             else if (ColumnRecord.IsTypeInt(column))
             {
