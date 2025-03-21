@@ -184,8 +184,8 @@ namespace BridgeOpsClient
                 // Treat VARCHAR(MAX) a little differently by enabling multi line.
                 if (column.restriction == Int32.MaxValue)
                 {
-                    field.MinWidth = 300;
-                    field.MaxWidth = 300;
+                    field.MinWidth = 500;
+                    field.MaxWidth = 500;
                     field.AcceptsReturn = true;
                     field.TextWrapping = TextWrapping.Wrap;
                     field.VerticalContentAlignment = VerticalAlignment.Top;
