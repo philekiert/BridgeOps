@@ -86,15 +86,14 @@ namespace BridgeOpsClient
             foreach (DictionaryEntry de in columns)
             {
                 string colName = (string)de.Key;
-                if (colName != idColumn && !(table == "Organisation" && (colName == Glo.Tab.ORGANISATION_REF ||
-                                                                         colName == Glo.Tab.DIAL_NO)) &&
-                                           !(table == "Asset" && colName == Glo.Tab.ASSET_REF) &&
-                                           !(table == "Conference" && (colName == Glo.Tab.RESOURCE_ID ||
-                                                                       colName == Glo.Tab.CONFERENCE_RESOURCE_ROW ||
-                                                                       colName == Glo.Tab.CONFERENCE_CREATION_LOGIN ||
-                                                                       colName == Glo.Tab.CONFERENCE_CREATION_TIME ||
-                                                                       colName == Glo.Tab.CONFERENCE_EDIT_LOGIN ||
-                                                                       colName == Glo.Tab.CONFERENCE_EDIT_TIME)))
+                if (colName != idColumn &&
+                    !((ColumnRecord.Column)de.Value!).unique &&
+                    !(table == "Conference" && (colName == Glo.Tab.RESOURCE_ID ||
+                                                colName == Glo.Tab.CONFERENCE_RESOURCE_ROW ||
+                                                colName == Glo.Tab.CONFERENCE_CREATION_LOGIN ||
+                                                colName == Glo.Tab.CONFERENCE_CREATION_TIME ||
+                                                colName == Glo.Tab.CONFERENCE_EDIT_LOGIN ||
+                                                colName == Glo.Tab.CONFERENCE_EDIT_TIME)))
                     columnNames.Add(ColumnRecord.GetPrintName(de));
             }
         }
