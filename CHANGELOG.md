@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.4
+- Fixed a bug where the parent organisation dropdown list wasn't populating when creating an organisation from the task window.
+
 ## 1.1.3
 ### Added
 - Added multi-line text support to added column input fields.
