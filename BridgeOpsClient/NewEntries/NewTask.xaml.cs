@@ -273,6 +273,13 @@ namespace BridgeOpsClient
 
             // Create new.
             NewOrganisation org = new();
+            // Populate parent organisation list.
+            bool successful;
+            string[]? organisationList = App.GetOrganisationList(out successful, this);
+            if (!successful || organisationList == null)
+                App.DisplayError("Could not pull organisation list from server.", this);
+            else
+                org.cmbOrgParentID.ItemsSource = organisationList;
             org.PopulateOnlyTaskRef(txtTaskRef.Text);
             org.Show();
         }
