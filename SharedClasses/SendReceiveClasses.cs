@@ -3214,6 +3214,11 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
                 for (int i = 0; i < count; ++i)
                     values.Add("1");
 
+                // Replace any null values with "NULL"
+                for (int i = 0; i < values.Count; ++i)
+                    if (values[i] == null)
+                        values[i] = "NULL";
+
                 // I tried this all in one command together using INSERT INTO / SELECT / FROM, but there was literally
                 // no speed increase with 24,000-odd records. I'll leave it like this as I feel like it's slightly
                 // more readable.
