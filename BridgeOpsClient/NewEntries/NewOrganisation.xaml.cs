@@ -496,20 +496,19 @@ namespace BridgeOpsClient
             lr.EnableMultiLink();
             lr.Owner = this;
             lr.ShowDialog();
-            string? assetID = lr.id;
-            int assetIdInt;
-            if (assetID == null || !int.TryParse(assetID, out assetIdInt))
-                return;
 
-            Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
-                                    assetIdInt, null, originalRef, null, new(), new(), new());
-            asset.organisationRefChanged = true;
-            asset.changeReason = "Added to organisation " + originalRef + ".";
-            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset, this))
+            if (lr.ids == null)
             {
-                if (MainWindow.pageDatabase != null)
-                    MainWindow.pageDatabase.RepeatSearches(1);
-            }
+                App.DisplayError("Could not ascertain asset IDs", this);
+                return;
+            }    
+
+            if (App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+                               "Asset", new() { Glo.Tab.ORGANISATION_REF }, new() { originalRef }, new() { true },
+                               Glo.Tab.ASSET_ID, lr.ids!, false)
+            { changeReason = $"Added to organisation {originalRef}." }, this)
+                && MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches(1);
         }
 
         private void btnAssetRemove_Click(object sender, RoutedEventArgs e)
@@ -518,7 +517,10 @@ namespace BridgeOpsClient
                 return;
 
             // Set organisation reference to null for all selected assets, 
-            if (App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+            if ((dtgAssets.dtg.SelectedItems.Count == 1 ||
+                App.DisplayQuestion("Are you sure you wish to detach this asset from the organisation?",
+                                    "Detach Asset", DialogBox.Buttons.YesNo, this)) &&
+                App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                "Asset", new() { Glo.Tab.ORGANISATION_REF }, new() { null }, new() { true },
                                Glo.Tab.ASSET_ID, dtgAssets.GetCurrentlySelectedIDs(), false)
             { changeReason = $"Removed from organisation {originalRef}." }, this)
