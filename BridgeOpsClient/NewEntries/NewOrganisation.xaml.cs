@@ -81,6 +81,8 @@ namespace BridgeOpsClient
             this.id = id;
             Title = "Organisation";
 
+            dtgAssets.EnableMultiSelect();
+
             ApplyPermissions();
         } // Edit existing record.
         public NewOrganisation(int id, string record) // History lookup.
@@ -491,6 +493,7 @@ namespace BridgeOpsClient
                 return;
 
             LinkRecord lr = new("Asset", ColumnRecord.asset, "Link Asset", typeof(string), new() { originalRef }, 2);
+            lr.EnableMultiLink();
             lr.Owner = this;
             lr.ShowDialog();
             string? assetID = lr.id;
@@ -514,23 +517,13 @@ namespace BridgeOpsClient
             if (originalRef == null)
                 return;
 
-            int assetID;
-            if (!int.TryParse(dtgAssets.GetCurrentlySelectedID(), out assetID))
-            {
-                App.DisplayError("Could not discern asset ID from record.", this);
-                return;
-            }
-            Asset asset = new Asset(App.sd.sessionID, ColumnRecord.columnRecordID,
-                                    assetID, null, null, null, new(), new(), new());
-            asset.organisationRefChanged = true;
-            asset.changeReason = "Removed from organisation " + originalRef + ".";
-            if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset, this))
-            {
-                if (MainWindow.pageDatabase != null)
-                    MainWindow.pageDatabase.RepeatSearches(1);
-            }
-            else
-                App.DisplayError("Could not update specified asset.", this);
+            // Set organisation reference to null for all selected assets, 
+            if (App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
+                               "Asset", new() { Glo.Tab.ORGANISATION_REF }, new() { null }, new() { true },
+                               Glo.Tab.ASSET_ID, dtgAssets.GetCurrentlySelectedIDs(), false)
+            { changeReason = $"Removed from organisation {originalRef}." }, this)
+                && MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches(1);
         }
 
         private void btnAssetsRefresh_Click(object sender, RoutedEventArgs e)
