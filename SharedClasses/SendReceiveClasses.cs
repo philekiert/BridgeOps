@@ -3358,16 +3358,16 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public string sessionID;
         public int columnRecordID;
         public string organisationRef;
-        public int contactID;
+        public List<int> contactIDs;
         public bool unlink;
 
         public LinkContactRequest(string sessionID, int columnRecordID,
-                                  string organisationRef, int contactID, bool unlink)
+                                  string organisationRef, List<int> contactIDs, bool unlink)
         {
             this.sessionID = sessionID;
             this.columnRecordID = columnRecordID;
             this.organisationRef = organisationRef;
-            this.contactID = contactID;
+            this.contactIDs = contactIDs;
             this.unlink = unlink;
         }
 
@@ -3379,17 +3379,23 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         public string SqlInsert()
         {
             Prepare();
-            return SqlAssist.InsertInto("OrganisationContacts",
-                                        Glo.Tab.ORGANISATION_REF + ", " + Glo.Tab.CONTACT_ID,
-                                        organisationRef + ", " + contactID.ToString());
+            List<string> commands = new();
+            foreach (int i in contactIDs)
+                commands.Add(SqlAssist.InsertInto("OrganisationContacts",
+                                                  Glo.Tab.ORGANISATION_REF + ", " + Glo.Tab.CONTACT_ID,
+                                                  organisationRef + ", " + i.ToString()));
+            return SqlAssist.Transaction(commands.ToArray());
         }
 
         public string SqlDelete()
         {
             Prepare();
-            return "DELETE FROM OrganisationContacts " +
-                   "WHERE " + Glo.Tab.ORGANISATION_REF + " = " + organisationRef +
-                  " AND " + Glo.Tab.CONTACT_ID + " = " + contactID.ToString() + ";";
+            List<string> commands = new();
+            foreach (int i in contactIDs)
+                commands.Add("DELETE FROM OrganisationContacts " +
+                            $"WHERE {Glo.Tab.ORGANISATION_REF} = {organisationRef} " +
+                            $"AND {Glo.Tab.CONTACT_ID} = {i};");
+            return SqlAssist.Transaction(commands.ToArray());
         }
     }
 

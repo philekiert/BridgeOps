@@ -2128,7 +2128,7 @@ namespace BridgeOpsClient
             }
         }
 
-        public static bool LinkContact(string organisationRef, int contactID, bool unlink, Window? owner)
+        public static bool LinkContact(string organisationRef, List<int> contactIDs, bool unlink, Window? owner)
         {
             lock (streamLock)
             {
@@ -2138,7 +2138,7 @@ namespace BridgeOpsClient
                     if (stream != null)
                     {
                         LinkContactRequest req = new(sd.sessionID, ColumnRecord.columnRecordID,
-                                                     organisationRef, contactID, unlink);
+                                                     organisationRef, contactIDs, unlink);
 
                         stream.WriteByte(Glo.CLIENT_LINK_CONTACT);
                         sr.WriteAndFlush(stream, sr.Serialise(req));

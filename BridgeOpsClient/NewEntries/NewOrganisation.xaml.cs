@@ -82,6 +82,7 @@ namespace BridgeOpsClient
             Title = "Organisation";
 
             dtgAssets.EnableMultiSelect();
+            dtgContacts.EnableMultiSelect();
 
             ApplyPermissions();
         } // Edit existing record.
@@ -501,7 +502,14 @@ namespace BridgeOpsClient
             {
                 App.DisplayError("Could not ascertain asset IDs", this);
                 return;
-            }    
+            }
+            else if (lr.DialogResult == false)
+                return;
+            else if (lr.ids.Count == 0)
+            {
+                App.DisplayError("No assets selected.", this);
+                return;
+            }
 
             if (App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                "Asset", new() { Glo.Tab.ORGANISATION_REF }, new() { originalRef }, new() { true },
@@ -518,7 +526,7 @@ namespace BridgeOpsClient
 
             // Set organisation reference to null for all selected assets, 
             if ((dtgAssets.dtg.SelectedItems.Count == 1 ||
-                App.DisplayQuestion("Are you sure you wish to detach this asset from the organisation?",
+                App.DisplayQuestion("Are you sure you wish to detach these assets from the organisation?",
                                     "Detach Asset", DialogBox.Buttons.YesNo, this)) &&
                 App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                "Asset", new() { Glo.Tab.ORGANISATION_REF }, new() { null }, new() { true },
@@ -550,7 +558,7 @@ namespace BridgeOpsClient
                 if (int.TryParse(newContact.id, out contactID))
                 {
                     // Error message presented by LinkContact() if needed.
-                    App.LinkContact(originalRef, contactID, false, this);
+                    App.LinkContact(originalRef, new() { contactID }, false, this);
                     PopulateContacts();
                 }
                 else
@@ -575,14 +583,32 @@ namespace BridgeOpsClient
             catch { }
 
             LinkRecord lr = new("Contact", ColumnRecord.contact, "Link Contact", typeof(int), excludeIDs, 0);
+            lr.EnableMultiLink();
             lr.Owner = this;
             lr.ShowDialog();
-            int contactIdInt;
-            if (lr.id == null || !int.TryParse(lr.id, out contactIdInt))
+
+            if (lr.DialogResult == false)
                 return;
 
+            List<int> ids;
+            try
+            {
+                ids = lr.ids!.Select(i => int.Parse(i)).ToList();
+            }
+            catch
+            {
+                App.DisplayError("Could not ascertain contact IDs", this);
+                return; 
+            }
+
+            if (ids.Count == 0)
+            {
+                App.DisplayError("No contacts selected.", this);
+                return;
+            }
+
             // Error message handled in LinkContact().
-            if (App.LinkContact(originalRef, contactIdInt, false, this))
+            if (App.LinkContact(originalRef, ids, false, this))
                 PopulateContacts();
         }
 
@@ -591,14 +617,22 @@ namespace BridgeOpsClient
             if (originalRef == null)
                 return;
 
-            string? contactID = dtgContacts.GetCurrentlySelectedID();
-            int contactIdInt;
-            if (contactID == null || !int.TryParse(contactID, out contactIdInt))
+            if (dtgContacts.dtg.SelectedItems.Count > 1 &&
+                !App.DisplayQuestion("Are you sure you wish to detach these contacts from the organisation?",
+                                     "Detach Asset", DialogBox.Buttons.YesNo, this))
+                return;
+
+            List<int> ids;
+            try
             {
-                App.DisplayError("Could not discern contact ID from record.", this);
+                ids = dtgContacts.GetCurrentlySelectedIDs().Select(i => int.Parse(i)).ToList();
+            }
+            catch
+            {
+                App.DisplayError("Could not ascertain contact IDs", this);
                 return;
             }
-            if (App.LinkContact(originalRef, contactIdInt, true, this))
+            if (App.LinkContact(originalRef, ids, true, this))
                 PopulateContacts();
             else
                 App.DisplayError("Could not update specified asset.", this);
