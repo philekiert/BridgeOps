@@ -34,6 +34,11 @@ namespace BridgeOpsClient
         string? originalTask = "";
         string? originalNotes = "";
 
+        MenuItem btnAssetUpdate;
+        MenuItem btnAssetDelete;
+        MenuItem btnContactUpdate;
+        MenuItem btnContactDelete;
+
         public void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -49,30 +54,46 @@ namespace BridgeOpsClient
                 btnAssetRemove.IsEnabled = false;
                 cmbTaskRef.IsEnabled = false;
                 txtOrgRef.IsReadOnly = true;
+                btnAssetUpdate.IsEnabled = false;
+                btnContactUpdate.IsEnabled = false;
                 ToggleFieldsEnabled(false);
             }
             if (!App.sd.deletePermissions[Glo.PERMISSION_RECORDS])
+            {
                 btnDelete.IsEnabled = false;
+                btnAssetDelete.IsEnabled = false;
+                btnContactDelete.IsEnabled = false;
+            }
 
             btnCorrectReason.IsEnabled = App.sd.admin;
         }
 
-        public NewOrganisation() // New organisation.
+        // New organisation.
+        public NewOrganisation()
         {
             InitializeComponent();
             InitialiseFields();
-
-            tabAssetsContacts.IsEnabled = false;
-            tabChangeLog.IsEnabled = false;
-
-            ApplyPermissions();
 
             txtOrgRef.Focus();
+
+            dtgAssets.EnableMultiSelect();
+            dtgAssets.AddSeparator(false);
+            btnAssetUpdate = dtgAssets.AddContextMenuItem("Update Selected", false, btnAssetUpdate_Click);
+            btnAssetDelete = dtgAssets.AddContextMenuItem("Delete Selected", false, btnAssetDelete_Click);
+            dtgAssets.dtg.ContextMenuOpening += dtgAssets_ContextMenuOpening;
+            dtgContacts.EnableMultiSelect();
+            dtgContacts.AddSeparator(false);
+            btnContactUpdate = dtgContacts.AddContextMenuItem("Update Selected", false, btnContactUpdate_Click);
+            btnContactDelete = dtgContacts.AddContextMenuItem("Delete Selected", false, btnContactDelete_Click);
+            dtgContacts.dtg.ContextMenuOpening += dtgContacts_ContextMenuOpening;
+
+            ApplyPermissions();
         }
-        public NewOrganisation(int id)
+        // Edit existing record.
+        public NewOrganisation(int id) : this()
         {
-            InitializeComponent();
-            InitialiseFields();
+            tabAssetsContacts.IsEnabled = true;
+            tabChangeLog.IsEnabled = true;
 
             edit = true;
             btnAdd.Visibility = Visibility.Hidden;
@@ -80,17 +101,9 @@ namespace BridgeOpsClient
             btnDelete.Visibility = Visibility.Visible;
             this.id = id;
             Title = "Organisation";
-
-            dtgAssets.EnableMultiSelect();
-            dtgContacts.EnableMultiSelect();
-
-            ApplyPermissions();
-        } // Edit existing record.
-        public NewOrganisation(int id, string record) // History lookup.
+        }
+        public NewOrganisation(int id, string record) : this() // History lookup.
         {
-            InitializeComponent();
-            InitialiseFields();
-
             btnAdd.Visibility = Visibility.Hidden;
             btnEdit.Visibility = Visibility.Hidden;
             btnDelete.Visibility = Visibility.Hidden;
@@ -98,11 +111,6 @@ namespace BridgeOpsClient
 
             cmbOrgParentID.IsEditable = true; // This makes it so we can set the value without loading the list of IDs.
             ToggleFieldsEnabled(false);
-
-            tabAssetsContacts.IsEnabled = false;
-            tabChangeLog.IsEnabled = false;
-
-            ApplyPermissions();
         }
 
         // Used to store actual task references for enabling/disabling task button.
@@ -531,7 +539,7 @@ namespace BridgeOpsClient
                 App.SendUpdate(new(App.sd.sessionID, ColumnRecord.columnRecordID, App.sd.loginID,
                                "Asset", new() { Glo.Tab.ORGANISATION_REF }, new() { null }, new() { true },
                                Glo.Tab.ASSET_ID, dtgAssets.GetCurrentlySelectedIDs(), false)
-            { changeReason = $"Removed from organisation {originalRef}." }, this)
+                { changeReason = $"Removed from organisation {originalRef}." }, this)
                 && MainWindow.pageDatabase != null)
                 MainWindow.pageDatabase.RepeatSearches(1);
         }
@@ -598,7 +606,7 @@ namespace BridgeOpsClient
             catch
             {
                 App.DisplayError("Could not ascertain contact IDs", this);
-                return; 
+                return;
             }
 
             if (ids.Count == 0)
@@ -641,6 +649,64 @@ namespace BridgeOpsClient
         private void btnContactsRefresh_Click(object sender, RoutedEventArgs e)
         {
             PopulateContacts();
+        }
+
+        // Context menu controls
+        private void btnAssetUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateMultiple updateMultiple = new((int)UserSettings.TableIndex.Asset, "Asset", ColumnRecord.orderedAsset,
+                                                Glo.Tab.ASSET_ID, dtgAssets.GetCurrentlySelectedIDs(), false);
+            updateMultiple.Owner = App.mainWindow;
+            updateMultiple.ShowDialog();
+            PopulateAssets();
+        }
+
+        private void btnAssetDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (!App.DeleteConfirm(dtgAssets.dtg.SelectedItems.Count > 0, this))
+                return;
+
+            if (App.SendDelete("Asset", Glo.Tab.ASSET_ID, dtgAssets.GetCurrentlySelectedIDs(), false,
+                App.mainWindow) && MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Asset);
+            PopulateAssets();
+        }
+
+        private void btnContactUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateMultiple updateMultiple = new((int)UserSettings.TableIndex.Contact, "Contact",
+                                                ColumnRecord.orderedContact,
+                                                Glo.Tab.CONTACT_ID, dtgContacts.GetCurrentlySelectedIDs(), false);
+            updateMultiple.Owner = App.mainWindow;
+            updateMultiple.ShowDialog();
+            PopulateContacts();
+        }
+
+        private void btnContactDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (!App.DeleteConfirm(dtgContacts.dtg.SelectedItems.Count > 0, this))
+                return;
+
+            if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, dtgContacts.GetCurrentlySelectedIDs(), false,
+                App.mainWindow) && MainWindow.pageDatabase != null)
+                MainWindow.pageDatabase.RepeatSearches((int)UserSettings.TableIndex.Contact);
+            PopulateContacts();
+        }
+
+        // Enable/disable the update and delete context menu buttons for assets and contacts.
+        private void dtgAssets_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            btnAssetUpdate.IsEnabled = dtgAssets.dtg.SelectedItems.Count > 0 &&
+                                       App.sd.editPermissions[Glo.PERMISSION_RECORDS];
+            btnAssetDelete.IsEnabled = dtgAssets.dtg.SelectedItems.Count > 0 &&
+                                       App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
+        }
+        private void dtgContacts_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            btnContactUpdate.IsEnabled = dtgContacts.dtg.SelectedItems.Count > 0 &&
+                                         App.sd.editPermissions[Glo.PERMISSION_RECORDS];
+            btnContactDelete.IsEnabled = dtgContacts.dtg.SelectedItems.Count > 0 &&
+                                         App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
         }
 
         // Pick up history only on the first time the tab is clicked. After that, the user will need to click Refresh.

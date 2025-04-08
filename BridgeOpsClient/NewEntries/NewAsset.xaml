@@ -84,9 +84,9 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Button Grid.Row="0" Grid.Column="0" x:Name="btnRefresh" Content="Refresh" Height="24"
-                        Margin="10 10 10 0" Width="60" HorizontalAlignment="Left" Click="btnRefresh_Click"/>
+                        Margin="10 10 10 0" HorizontalAlignment="Left" Click="btnRefresh_Click"/>
                 <Button Grid.Row="0" Grid.Column="1" x:Name="btnCorrectReason" Content="Correct Reason"
-                        Margin="10 10 10 0" Width="100" HorizontalAlignment="Right" Click="btnCorrectReason_Click"
+                        Margin="10 10 10 0" HorizontalAlignment="Right" Click="btnCorrectReason_Click"
                         IsEnabled="False" Height="24"/>
                 <custom:SqlDataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                     x:Name="dtgChangeLog" Width="980" Height="400"
