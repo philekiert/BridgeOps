@@ -105,12 +105,12 @@ namespace BridgeOpsClient
         }
         public enum QuestionOptions
         { YesNo, OKCancel }
-        public static bool DisplayQuestion(string error, string title, DialogWindows.DialogBox.Buttons buttons,
+        public static bool DisplayQuestion(string question, string title, DialogWindows.DialogBox.Buttons buttons,
                                            Window? owner)
         {
             try
             {
-                DialogWindows.DialogBox dialog = new(error, title, buttons);
+                DialogWindows.DialogBox dialog = new(question, title, buttons);
                 dialog.Owner = owner;
                 return dialog.ShowDialog() == true;
             }
