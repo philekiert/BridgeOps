@@ -102,6 +102,7 @@ namespace BridgeOpsClient
             this.id = id;
             Title = "Organisation";
         }
+        // Load historical record.
         public NewOrganisation(int id, string record) : this() // History lookup.
         {
             btnAdd.Visibility = Visibility.Hidden;
@@ -769,7 +770,7 @@ namespace BridgeOpsClient
             if (!IsLoaded)
                 return false;
 
-            string? currentParent = cmbOrgParentID.SelectedItem == null ? null : (string)cmbOrgParentID.SelectedItem;
+            string currentParent = cmbOrgParentID.SelectedItem == null ? "" : (string)cmbOrgParentID.SelectedItem;
             btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
                                 originalParent != currentParent ||
                                 originalName != txtName.Text ||
