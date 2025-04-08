@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.5
+- Added multi-select, update and deletion functionality to the asset and contact lists in the organisation window.
+
 ## 1.1.4
 - Fixed a bug where the parent organisation dropdown list wasn't populating when creating an organisation from the task window.
 
