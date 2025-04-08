@@ -415,12 +415,12 @@ namespace BridgeOpsClient
                 TextBlock tbDialNo = new()
                 { Text = dialNo, FontWeight = FontWeights.Bold };
 
-                if (orgRef != null && orgName != null)
+                if (orgId != null)
                 {
                     TextBlock tbOrgRef = new()
-                    { Margin = new(15, 0, 15, 0), Text = orgRef };
+                    { Margin = new(15, 0, 15, 0), Text = orgRef ?? "" };
                     TextBlock tbOrgName = new()
-                    { Text = orgName, FontStyle = FontStyles.Italic };
+                    { Text = orgName ?? "", FontStyle = FontStyles.Italic };
 
                     btnOrgSummary.Content = new StackPanel()
                     { Children = { tbDialNo, tbOrgRef, tbOrgName }, Orientation = Orientation.Horizontal };
@@ -645,11 +645,11 @@ namespace BridgeOpsClient
                     connection.ToggleSearch(false);
                     connection.ApplySite(txt.Text);
                 }
-                else if (rows[0][0] is string d && rows[0][1] is string r &&
-                         rows[0][2] is string n && rows[0][3] is int i)
+                else if (rows[0][0] is string d)
                 {
                     connection.ToggleSearch(false);
-                    connection.ApplySite(d, r, n, i);
+                    try { connection.ApplySite(d, (string?)rows[0][1], (string?)rows[0][2], (int?)rows[0][3]); }
+                    catch { connection.ApplySite(d, null, null, null); }
                 }
             }
         }
