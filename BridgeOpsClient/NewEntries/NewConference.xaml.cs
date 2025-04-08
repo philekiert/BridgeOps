@@ -44,6 +44,21 @@ namespace BridgeOpsClient
                 .restriction;
             txtNotes.MaxLength = (int)((ColumnRecord.Column)ColumnRecord.conference[Glo.Tab.NOTES]!)
                 .restriction;
+
+            // This gets called again in the inheriting constructors since various values get set.
+            RecordOriginalValues();
+            DetectEdit();
+
+            txtTitle.TextChanged += AnyInteraction;
+            dtpStart.datePicker.SelectedDateChanged += AnyInteraction;
+            dtpStart.timePicker.txt.TextChanged += AnyInteraction;
+            dtpEnd.datePicker.SelectedDateChanged += AnyInteraction;
+            dtpEnd.timePicker.txt.TextChanged += AnyInteraction;
+            cmbResource.SelectionChanged += AnyInteraction;
+            cmbClosure.SelectionChanged += AnyInteraction;
+            // Recurrence button needs to be called on Click().
+            txtTitle.TextChanged += AnyInteraction;
+            btnAddConnection.Click += AnyInteraction;
         }
 
         public NewConference(PageConferenceView.ResourceInfo? resource, DateTime start) : this()
@@ -67,6 +82,9 @@ namespace BridgeOpsClient
             ditConference.Initialise(ColumnRecord.orderedConference, "Conference");
 
             btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
+
+            RecordOriginalValues();
+            btnSave.IsEnabled = false;
         }
 
         public NewConference(Conference conf) : this()
@@ -182,6 +200,9 @@ namespace BridgeOpsClient
             dtpEnd.datePicker.SelectedDateChanged += ToggleConnectionDates;
 
             Title = "Conference C-" + id;
+
+            RecordOriginalValues();
+            btnSave.IsEnabled = false;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -193,6 +214,79 @@ namespace BridgeOpsClient
                 Settings.Default.Save();
                 App.WindowClosed();
             }
+        }
+
+        string originalTitle = "";
+        DateTime? originalStart = new();
+        DateTime? originalEnd = new();
+        string originalResource = "";
+        string originalClosure = "";
+        string originalRecurrence = "";
+        string originalNotes = "";
+
+        List<(bool, DateTime?, DateTime?, string, int?, string?, string?)> originalConnections = new();
+
+        public void RecordOriginalValues()
+        {
+            originalTitle = txtTitle.Text;
+            originalStart = dtpStart.GetDateTime();
+            originalEnd = dtpEnd.GetDateTime();
+            originalResource = (string?)cmbResource.SelectedItem ?? "";
+            originalClosure = (string?)cmbClosure.SelectedItem ?? "";
+            originalRecurrence = (string?)btnRecurrence.Content ?? "";
+            originalNotes = txtNotes.Text;
+
+            ditConference.RememberStartingValues();
+
+            originalConnections.Clear();
+            foreach (Connection c in connections)
+                originalConnections.Add((c.chkIsTest.IsChecked == true,
+                                         ConvertConnectionTime(c.dtpConnected),
+                                         ConvertConnectionTime(c.dtpDisconnected),
+                                         c.dialNo,
+                                         c.orgId,
+                                         c.orgName,
+                                         c.orgRef));
+        }
+        private bool DetectEdit()
+        {
+            if (originalTitle != txtTitle.Text ||
+                originalStart != dtpStart.GetDateTime() ||
+                originalEnd != dtpEnd.GetDateTime() ||
+                originalResource != ((string?)cmbResource.SelectedItem ?? "") ||
+                originalClosure != ((string?)cmbClosure.SelectedItem ?? "") ||
+                originalRecurrence != ((string?)btnRecurrence.Content ?? "") ||
+                originalNotes != txtNotes.Text)
+                return true;
+
+            if (connections.Count != originalConnections.Count)
+                return true;
+
+            for (int i = 0; i < originalConnections.Count && i < connections.Count; ++i)
+            {
+                Connection c = connections[i];
+                if (originalConnections[i] != (c.chkIsTest.IsChecked == true,
+                                               ConvertConnectionTime(c.dtpConnected),
+                                               ConvertConnectionTime(c.dtpDisconnected),
+                                               c.dialNo,
+                                               c.orgId,
+                                               c.orgName,
+                                               c.orgRef))
+                    return true;
+            }
+
+            if (ditConference.CheckForValueChanges())
+                return true;
+
+            return false;
+        }
+        private void AnyInteraction(object? o, EventArgs? e)
+        {
+            changesMade = DetectEdit();
+            // Only enable the save button if changes have been made and if the user has the relevant permissions.
+            btnSave.IsEnabled = changesMade &&
+                                ((edit && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES]) ||
+                                (!edit && App.sd.createPermissions[Glo.PERMISSION_CONFERENCES]));
         }
 
         public class Connection
@@ -462,6 +556,16 @@ namespace BridgeOpsClient
             connection.txtSearch.KeyDown += txtSearch_KeyDown;
             connection.btnOrgSummary.Click += btnSummary_Click;
 
+            connection.btnRemove.Click += AnyInteraction;
+            connection.btnUp.Click += AnyInteraction;
+            connection.btnDown.Click += AnyInteraction;
+            connection.chkIsTest.Click += AnyInteraction;
+            connection.dtpConnected.datePicker.SelectedDateChanged += AnyInteraction;
+            connection.dtpConnected.timePicker.txt.LostFocus += AnyInteraction;
+            connection.dtpDisconnected.datePicker.SelectedDateChanged += AnyInteraction;
+            connection.dtpDisconnected.timePicker.txt.LostFocus += AnyInteraction;
+            // AnyInteraction for site search is implemented in txtSearch_KeyDown.
+
             connection.btnRemove.Style = (Style)FindResource("minus-button");
 
             connections.Add(connection);
@@ -556,6 +660,7 @@ namespace BridgeOpsClient
             {
                 SearchSite(sender, e);
                 UpdateConnectionIndicators();
+                AnyInteraction(null, null);
             }
             else if (e.Key == Key.Escape)
             {
@@ -709,6 +814,15 @@ namespace BridgeOpsClient
             }
         }
 
+        // If the datepicker on a connection is invisible, GetDateTime() will resolve to null, so we need to build it
+        // from the conference's start date and connection time (or disconnection time).
+        private DateTime? ConvertConnectionTime(CustomControls.DateTimePicker dtp)
+        {
+            if (!dtp.DateVisible && dtp.GetTime() != null)
+                return new DateTime(dtpStart.GetDate()!.Value.Ticks + dtp.GetTime()!.Value.Ticks);
+            return dtp.GetDateTime();
+        }
+
         private bool Save()
         {
             // Vet all inputs.
@@ -773,10 +887,8 @@ namespace BridgeOpsClient
 
                 // If the date pickers aren't visible and times are set, automatically set them to the day of the
                 // conference.
-                if (!c.dtpConnected.DateVisible && c.dtpConnected.GetTime() != null)
-                    confC.connected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpConnected.GetTime()!.Value.Ticks);
-                if (!c.dtpDisconnected.DateVisible && c.dtpDisconnected.GetTime() != null)
-                    confC.disconnected = new DateTime(dtpStart.GetDate()!.Value.Ticks + c.dtpDisconnected.GetTime()!.Value.Ticks);
+                confC.connected = ConvertConnectionTime(c.dtpConnected);
+                confC.disconnected = ConvertConnectionTime(c.dtpDisconnected);
 
                 if (confC.connected != null && confC.disconnected != null && confC.connected >= confC.disconnected)
                     return App.Abort("Disconnection times must be later than connection times.", this);
@@ -893,6 +1005,7 @@ namespace BridgeOpsClient
                             btnRecurrence.Content = "";
                             btnRecurrence.IsEnabled = false;
                         }
+                        AnyInteraction(null, null);
                     }
                 }
             }
