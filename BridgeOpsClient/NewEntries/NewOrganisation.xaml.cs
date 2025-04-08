@@ -269,6 +269,8 @@ namespace BridgeOpsClient
             // Sort out contact and asset tables.
             PopulateAssets();
             PopulateContacts();
+
+            AnyInteraction(); // Call this again, as the order of events above can cause some issues.
         }
 
         private void GetHistory()
@@ -493,7 +495,7 @@ namespace BridgeOpsClient
             newAsset.cmbOrgRef.IsEnabled = false;
             newAsset.Owner = this;
             newAsset.ShowDialog();
-            if (newAsset.changeMade)
+            if (newAsset.changesMade)
                 PopulateAssets();
         }
 
@@ -771,14 +773,15 @@ namespace BridgeOpsClient
                 return false;
 
             string currentParent = cmbOrgParentID.SelectedItem == null ? "" : (string)cmbOrgParentID.SelectedItem;
-            btnEdit.IsEnabled = originalRef != txtOrgRef.Text ||
-                                originalParent != currentParent ||
-                                originalName != txtName.Text ||
-                                originalDialNo != txtDialNo.Text ||
-                                originalAvailable != chkAvailable.IsChecked ||
-                                originalTask != cmbTaskRef.Text ||
-                                originalNotes != txtNotes.Text ||
-                                ditOrganisation.CheckForValueChanges();
+            changesMade = originalRef != txtOrgRef.Text ||
+                          originalParent != currentParent ||
+                          originalName != txtName.Text ||
+                          originalDialNo != txtDialNo.Text ||
+                          originalAvailable != chkAvailable.IsChecked ||
+                          originalTask != cmbTaskRef.Text ||
+                          originalNotes != txtNotes.Text ||
+                          ditOrganisation.CheckForValueChanges();
+            btnEdit.IsEnabled = changesMade;
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
 

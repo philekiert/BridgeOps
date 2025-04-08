@@ -15,7 +15,7 @@ using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
-    // Partially adapted from the wonderful XAML code posted by David Rickard at:
+    // Aapted from the wonderful XAML code posted by David Rickard at:
     // https://engy.us/blog/2020/01/01/implementing-a-custom-window-title-bar-in-wpf/
 
     public class CustomWindow : Window
@@ -37,6 +37,9 @@ namespace BridgeOpsClient
         }
         const double borderRadius = 7d;
         public const double titleBarHeight = 26;
+
+        // Used by some windows to track changes made so that a warning appears when clicking X to close.
+        internal bool changesMade = false;
 
         private Border windowBorder;
         private Grid grid;
@@ -417,7 +420,12 @@ namespace BridgeOpsClient
         private void CloseButton_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (buttonPressed == 2)
-                Close();
+            {
+                if (!changesMade || App.DisplayQuestion("Are you sure? You will lose any unsaved changes.",
+                                                        "Confirm",
+                                                        DialogWindows.DialogBox.Buttons.YesNo, this))
+                    Close();
+            }
             buttonPressed = -1;
         }
 

@@ -25,8 +25,6 @@ namespace BridgeOpsClient
         public bool isDialog = false;
         string? originalNotes = "";
 
-        public bool changeMade = false;
-
         private void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -94,6 +92,8 @@ namespace BridgeOpsClient
             ditContact.Populate(data.GetRange(2, data.Count - 2));
             if (edit)
                 ditContact.RememberStartingValues();
+
+            AnyInteraction(); // Call this again, as the order of events above can cause some issues.
         }
 #pragma warning restore CS8602
 
@@ -123,7 +123,7 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_CONTACT, nc, out id, this))
                 {
-                    changeMade = true;
+                    changesMade = true;
                     // Not need to call pageDatabase.RepeatSearches() here, as it can't possibly affected any other
                     // table in the application but the Organisation that added it, if there was one.
                     if (isDialog)
@@ -195,7 +195,6 @@ namespace BridgeOpsClient
                 {
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(2);
-                    changeMade = true;
                     Close();
                 }
             }
@@ -215,7 +214,7 @@ namespace BridgeOpsClient
 
             if (App.SendDelete("Contact", Glo.Tab.CONTACT_ID, id, false, this))
             {
-                changeMade = true;
+                changesMade = true;
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(2);
                 Close();
@@ -226,8 +225,9 @@ namespace BridgeOpsClient
         private void ValueChanged(object sender, EventArgs e) { AnyInteraction(); }
         public bool AnyInteraction()
         {
-            btnEdit.IsEnabled = originalNotes != txtNotes.Text ||
-                                ditContact.CheckForValueChanges();
+            changesMade = originalNotes != txtNotes.Text ||
+                          ditContact.CheckForValueChanges();
+            btnEdit.IsEnabled = changesMade;
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
 

@@ -27,8 +27,6 @@ namespace BridgeOpsClient
         string? originalOrg = "";
         string? originalNotes = "";
 
-        public bool changeMade = false;
-
         private void ApplyPermissions()
         {
             if (!App.sd.createPermissions[Glo.PERMISSION_RECORDS])
@@ -140,6 +138,8 @@ namespace BridgeOpsClient
             Title = "Asset - " + originalRef;
             if (!edit)
                 Title += " (Change)";
+
+            AnyInteraction(); // Call this again, as the order of events above can cause some issues.
         }
 
         private void GetHistory()
@@ -193,7 +193,7 @@ namespace BridgeOpsClient
 
                 if (App.SendInsert(Glo.CLIENT_NEW_ASSET, newAsset, this))
                 {
-                    changeMade = true;
+                    changesMade = true;
                     if (MainWindow.pageDatabase != null)
                         MainWindow.pageDatabase.RepeatSearches(1);
                     Close();
@@ -272,7 +272,6 @@ namespace BridgeOpsClient
                     asset.changeReason = reasonDialog.txtReason.Text;
                     if (App.SendUpdate(Glo.CLIENT_UPDATE_ASSET, asset, this))
                     {
-                        changeMade = true;
                         if (MainWindow.pageDatabase != null)
                             MainWindow.pageDatabase.RepeatSearches(1);
                         Close();
@@ -297,7 +296,7 @@ namespace BridgeOpsClient
             {
                 if (MainWindow.pageDatabase != null)
                     MainWindow.pageDatabase.RepeatSearches(1);
-                changeMade = true;
+                changesMade = true;
                 Close();
             }
         }
@@ -358,12 +357,15 @@ namespace BridgeOpsClient
                 return false;
 
             string currentOrgID = cmbOrgRef.SelectedItem == null ? "" : (string)cmbOrgRef.SelectedItem;
-            btnEdit.IsEnabled = originalRef != txtAssetRef.Text ||
-                                originalOrg != currentOrgID ||
-                                originalNotes != txtNotes.Text ||
-                                ditAsset.CheckForValueChanges();
+            changesMade = originalRef != txtAssetRef.Text ||
+                          originalOrg != currentOrgID ||
+                          originalNotes != txtNotes.Text ||
+                          ditAsset.CheckForValueChanges();
+            btnEdit.IsEnabled = changesMade;
             return true; // Only because Func<void> isn't legal, and this needs feeding to ditOrganisation.
         }
+
+        
 
         private void btnCorrectReason_Click(object sender, RoutedEventArgs e)
         {
