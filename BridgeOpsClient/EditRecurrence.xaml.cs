@@ -113,9 +113,15 @@ namespace BridgeOpsClient
                 return Abort();
 
             if (recurrenceInfoRows[0][0] is string name)
+            {
+                originalName = name;
                 txtName.Text = name;
+            }
             if (recurrenceInfoRows[0][1] is string notes)
+            {
+                originalNotes = notes;
                 txtNotes.Text = notes;
+            }
 
             List<List<object?>> confIdSelectRows;
             if (!App.Select("Conference", new() { Glo.Tab.CONFERENCE_ID },
@@ -439,6 +445,13 @@ namespace BridgeOpsClient
                 Settings.Default.Save();
                 App.WindowClosed();
             }
+        }
+
+        string originalNotes = "";
+        string originalName = "";
+        private void AnyInteraction(object? o, EventArgs? e)
+        {
+            changesMade = txtName.Text != originalName || txtNotes.Text != originalNotes;
         }
     }
 }
