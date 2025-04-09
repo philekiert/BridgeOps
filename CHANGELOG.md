@@ -3,7 +3,7 @@
 ## 1.1.5
 ### Added
 - Added multi-select, update and deletion functionality to the asset and contact lists in the organisation window.
-- Added warnings about unsaved changes to the following windows:
+- Added edit detection and warnings about unsaved changes to the following windows:
 	- Organisation
 	- Asset
 	- Contact
