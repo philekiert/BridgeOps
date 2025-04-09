@@ -47,7 +47,7 @@ namespace BridgeOpsClient
 
             // This gets called again in the inheriting constructors since various values get set.
             RecordOriginalValues();
-            DetectEdit();
+            AnyInteraction(null, null);
 
             txtTitle.TextChanged += AnyInteraction;
             dtpStart.datePicker.SelectedDateChanged += AnyInteraction;
@@ -84,7 +84,7 @@ namespace BridgeOpsClient
             btnSave.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_CONFERENCES];
 
             RecordOriginalValues();
-            btnSave.IsEnabled = false;
+            AnyInteraction(null, null);
         }
 
         public NewConference(Conference conf) : this()
@@ -202,7 +202,7 @@ namespace BridgeOpsClient
             Title = "Conference C-" + id;
 
             RecordOriginalValues();
-            btnSave.IsEnabled = false;
+            AnyInteraction(null, null);
         }
 
         private void Window_Closed(object sender, EventArgs e)
