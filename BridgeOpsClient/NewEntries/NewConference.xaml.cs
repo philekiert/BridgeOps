@@ -56,7 +56,7 @@ namespace BridgeOpsClient
             dtpEnd.timePicker.txt.TextChanged += AnyInteraction;
             cmbResource.SelectionChanged += AnyInteraction;
             cmbClosure.SelectionChanged += AnyInteraction;
-            // Recurrence button needs to be called on Click().
+            // Recurrence button doesn't need this, as it saves on change rather than on clicking save.
             txtTitle.TextChanged += AnyInteraction;
             btnAddConnection.Click += AnyInteraction;
         }
@@ -221,7 +221,6 @@ namespace BridgeOpsClient
         DateTime? originalEnd = new();
         string originalResource = "";
         string originalClosure = "";
-        string originalRecurrence = "";
         string originalNotes = "";
 
         List<(bool, DateTime?, DateTime?, string, int?, string?, string?)> originalConnections = new();
@@ -233,7 +232,6 @@ namespace BridgeOpsClient
             originalEnd = dtpEnd.GetDateTime();
             originalResource = (string?)cmbResource.SelectedItem ?? "";
             originalClosure = (string?)cmbClosure.SelectedItem ?? "";
-            originalRecurrence = (string?)btnRecurrence.Content ?? "";
             originalNotes = txtNotes.Text;
 
             ditConference.RememberStartingValues();
@@ -255,7 +253,6 @@ namespace BridgeOpsClient
                 originalEnd != dtpEnd.GetDateTime() ||
                 originalResource != ((string?)cmbResource.SelectedItem ?? "") ||
                 originalClosure != ((string?)cmbClosure.SelectedItem ?? "") ||
-                originalRecurrence != ((string?)btnRecurrence.Content ?? "") ||
                 originalNotes != txtNotes.Text)
                 return true;
 
