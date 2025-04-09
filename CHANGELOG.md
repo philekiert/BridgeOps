@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.1.5
+### Fixed
+- Fixed a bug where the an organisation's task reference wasn't being recorded on initial load, leading to edit detection providing false positives.
+
+## 1.1.5
 ### Added
 - Added multi-select, update and deletion functionality to the asset and contact lists in the organisation window.
 - Added edit detection and warnings about unsaved changes to the following windows:

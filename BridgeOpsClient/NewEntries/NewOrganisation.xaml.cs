@@ -840,6 +840,7 @@ namespace BridgeOpsClient
                 txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
                                                                          Glo.Tab.TASK_REFERENCE).restriction);
                 txtTaskRef = txt;
+                originalTask = txt.Text;
                 txtTaskRef.TextChanged += ValueChanged;
             }
         }
