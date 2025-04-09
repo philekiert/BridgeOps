@@ -13,7 +13,7 @@
 	- Document
 	- Visit
 ### Fixed
-- Fixed a bug preventing organisation references from displaying if the name was set to null.
+- Fixed a bug preventing organisation references from displaying in connections if the name was set to null.
 - Fixed a bug preventing date pickers reverting to null when the textbox is cleared.
 
 ## 1.1.4
