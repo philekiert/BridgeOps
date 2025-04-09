@@ -49,6 +49,8 @@ namespace BridgeOpsClient
             RecordOriginalValues();
             AnyInteraction(null, null);
 
+            ditConference.ValueChangedHandler = () => { AnyInteraction(null, null); return true; } ;
+
             txtTitle.TextChanged += AnyInteraction;
             dtpStart.datePicker.SelectedDateChanged += AnyInteraction;
             dtpStart.timePicker.txt.TextChanged += AnyInteraction;
