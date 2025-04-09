@@ -452,6 +452,7 @@ namespace BridgeOpsClient
         private void AnyInteraction(object? o, EventArgs? e)
         {
             changesMade = txtName.Text != originalName || txtNotes.Text != originalNotes;
+            btnSave.IsEnabled = changesMade && App.sd.editPermissions[Glo.PERMISSION_CONFERENCES];
         }
     }
 }
