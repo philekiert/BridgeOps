@@ -23,8 +23,6 @@ namespace BridgeOpsClient
         public string id = "";
         public bool changeMade = false;
         string? orgID = null;
-        // Used to check whether or not to ask the user if task refs should be updated on all attached records.
-        string originalTaskRef = "";
 
         MenuItem btnUpdateVisit;
         MenuItem btnDeleteVisit;
@@ -55,6 +53,9 @@ namespace BridgeOpsClient
             dtgVisits.AddSeparator(false);
             btnUpdateVisit = dtgVisits.AddContextMenuItem("Update", false, btnUpdateVisit_Click);
             btnDeleteVisit = dtgVisits.AddContextMenuItem("Delete", false, btnDeleteVisit_Click);
+
+            StoreOriginalValues();
+            AnyInteraction(null, null);
         }
 
         public NewTask(string id) : this()
@@ -71,6 +72,8 @@ namespace BridgeOpsClient
             btnBreakOut.IsEnabled = true;
 
             EnforcePermissions();
+
+            dit.ValueChangedHandler = () => { AnyInteraction(null, null); return true; };
         }
 
         public void Populate(List<object?> data)
@@ -91,6 +94,9 @@ namespace BridgeOpsClient
                 PopulateVisits();
 
                 SetOrganisationButton();
+
+                StoreOriginalValues();
+                AnyInteraction(null, null);
             }
             catch
             {
@@ -115,6 +121,34 @@ namespace BridgeOpsClient
                     orgID = null;
                 }
             }
+        }
+
+        // Edit detection.
+        string originalTaskRef = ""; // Also to check whether to ask if refs should be updated on all attached records.
+        DateTime? originalOpened;
+        DateTime? originalClosed;
+        string originalNotes = "";
+        
+        private void StoreOriginalValues()
+        {
+            originalTaskRef = txtTaskRef.Text ?? "";
+            originalOpened = datOpened.SelectedDate;
+            originalClosed = datClosed.SelectedDate;
+            originalNotes = txtNotes.Text ?? "";
+
+            dit.RememberStartingValues();
+        }
+        private void AnyInteraction(object? o, EventArgs? e)
+        {
+            changesMade = originalTaskRef != (txtTaskRef.Text ?? "") ||
+                          originalOpened != datOpened.SelectedDate ||
+                          originalClosed != datClosed.SelectedDate ||
+                          originalNotes != (txtNotes.Text ?? "") ||
+                          dit.CheckForValueChanges();
+
+            btnSave.IsEnabled = changesMade &&
+                                ((edit && App.sd.editPermissions[Glo.PERMISSION_TASKS]) ||
+                                (!edit && App.sd.createPermissions[Glo.PERMISSION_TASKS]));
         }
 
         public void PopulateVisits() { PopulateTable("Visit"); }

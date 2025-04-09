@@ -3,9 +3,18 @@
 ## 1.1.5
 ### Added
 - Added multi-select, update and deletion functionality to the asset and contact lists in the organisation window.
-- Added warnings about unsaved changes to the organisation, asset, contact and conference windows.
+- Added warnings about unsaved changes to the following windows:
+	- Organisation
+	- Asset
+	- Contact
+	- Conference
+	- Recurrence
+	- Task
+	- Document
+	- Visit
 ### Fixed
 - Fixed a bug preventing organisation references from displaying if the name was set to null.
+- Fixed a bug preventing date pickers reverting to null when the textbox is cleared.
 
 ## 1.1.4
 - Fixed a bug where the parent organisation dropdown list wasn't populating when creating an organisation from the task window.

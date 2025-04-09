@@ -28,6 +28,7 @@ namespace BridgeOpsClient
 
             dit.headers = ColumnRecord.visitHeaders;
             dit.Initialise(ColumnRecord.orderedVisit, "Visit");
+            dit.ValueChangedHandler = () => { AnyInteraction(null, null); return false; };
 
             txtNotes.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
                                                                           Glo.Tab.NOTES).restriction);
@@ -43,7 +44,12 @@ namespace BridgeOpsClient
             if (App.Select("Task", new() { Glo.Tab.TASK_REFERENCE }, out _, out rows, false, this))
                 knownTaskRefs = rows.Select(i => (string)i[0]!).ToHashSet(); // Type is NOT NULL in database.
 
-            cmbType.ItemsSource = ColumnRecord.GetColumn(ColumnRecord.visit, Glo.Tab.VISIT_TYPE).allowed;
+            List<string> types = ColumnRecord.GetColumn(ColumnRecord.visit, Glo.Tab.VISIT_TYPE).allowed.ToList();
+            types.Insert(0, "");
+            cmbType.ItemsSource = types;
+
+            StoreOriginalValues();
+            AnyInteraction(null, null);
         }
 
         public NewVisit(string id) : this()
@@ -56,6 +62,9 @@ namespace BridgeOpsClient
             Title = "Visit";
 
             EnforcePermissions();
+
+            StoreOriginalValues();
+            AnyInteraction(null, null);
         }
 
         public NewVisit(List<string> taskRefs) : this()
@@ -81,6 +90,41 @@ namespace BridgeOpsClient
             // Won't trigger when set above for some reason.
             if (cmbTaskRef.Text != null)
                 btnTask.IsEnabled = knownTaskRefs.Contains(cmbTaskRef.Text);
+
+            StoreOriginalValues();
+            AnyInteraction(null, null);
+        }
+
+        // Edit detection.
+        string originalTaskRef = ""; // Also to check whether to ask if refs should be updated on all attached records.
+        DateTime? originalDate;
+        string originalType = "";
+        string originalNotes = "";
+
+        private void StoreOriginalValues()
+        {
+            if (txtTaskRef != null)
+                originalTaskRef = txtTaskRef.Text ?? "";
+            originalDate = dat.SelectedDate;
+            originalType = cmbType.SelectedItem == null ? "" : cmbType.SelectedItem.ToString()!;
+            originalNotes = txtNotes.Text ?? "";
+
+            dit.RememberStartingValues();
+        }
+        private void AnyInteraction(object? o, EventArgs? e)
+        {
+            bool taskRefChanged = false;
+            if (txtTaskRef != null)
+                taskRefChanged = originalTaskRef != txtTaskRef.Text;
+            changesMade = taskRefChanged ||
+                          originalDate != dat.SelectedDate ||
+                          originalType != (cmbType.SelectedItem == null ? "" : cmbType.SelectedItem.ToString()!) ||
+                          originalNotes != (txtNotes.Text ?? "") ||
+                          dit.CheckForValueChanges();
+
+            btnSave.IsEnabled = changesMade &&
+                                ((edit && App.sd.editPermissions[Glo.PERMISSION_TASKS]) ||
+                                (!edit && App.sd.createPermissions[Glo.PERMISSION_TASKS]));
         }
 
         private void EnforcePermissions()
@@ -185,7 +229,9 @@ namespace BridgeOpsClient
                 txt.MaxLength = Glo.Fun.LongToInt(ColumnRecord.GetColumn(ColumnRecord.visit,
                                                                          Glo.Tab.TASK_REFERENCE).restriction);
                 txtTaskRef = txt;
+                originalTaskRef = txt.Text; // Set again here just in case Loaded happens after StoreOriginalValues().
                 txtTaskRef.TextChanged += txtTaskRef_TextChanged;
+                txtTaskRef.TextChanged += AnyInteraction;
             }
         }
 
