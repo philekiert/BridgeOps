@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.5
+## 1.1.6
 ### Fixed
 - Fixed a bug where the an organisation's task reference wasn't being recorded on initial load, leading to edit detection providing false positives.
 - Fixed a bug where the Document window's Type field was using the Visit window's Type list.
