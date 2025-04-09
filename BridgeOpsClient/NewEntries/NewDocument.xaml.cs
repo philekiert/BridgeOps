@@ -45,7 +45,7 @@ namespace BridgeOpsClient
             if (App.Select("Task", new() { Glo.Tab.TASK_REFERENCE }, out _, out rows, false, this))
                 knownTaskRefs = rows.Select(i => (string)i[0]!).ToHashSet(); // Type is NOT NULL in database.
 
-            List<string> types = ColumnRecord.GetColumn(ColumnRecord.visit, Glo.Tab.VISIT_TYPE).allowed.ToList();
+            List<string> types = ColumnRecord.GetColumn(ColumnRecord.document, Glo.Tab.DOCUMENT_TYPE).allowed.ToList();
             types.Insert(0, "");
             cmbType.ItemsSource = types;
         }
