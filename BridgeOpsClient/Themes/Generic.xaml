@@ -163,47 +163,6 @@
         </Setter>
     </Style>
 
-    <Style TargetType="DatePicker">
-        <Setter Property="SelectedDateFormat" Value="Long"/>
-        <Setter Property="Language" Value="en-GB"/>
-        <Setter Property="HorizontalAlignment" Value="Left"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="DatePicker">
-                    <Grid UseLayoutRounding="True">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="PART_TextBox"
-                                 Grid.Column="0"
-                                 Width="100"
-                                 MaxWidth="100"
-                                 Height="24"
-                                 VerticalContentAlignment="Center"
-                                 Padding="2 2 2 2"
-                                 Margin="0"
-                                 Text="{Binding Path=SelectedDate, RelativeSource={RelativeSource TemplatedParent}, StringFormat='{}{0:dd/MM/yyyy}'}"/>
-                        <Button x:Name="PART_Button"
-                                HorizontalAlignment="Right"
-                                Grid.Column="0"
-                                Style="{StaticResource toolbar-button}">
-                            <Button.Content>
-                                <Image Source="/Resources/Icons/11Date.png" Width="22" Height="22"/>
-                            </Button.Content>
-                        </Button>
-                        <Popup x:Name="PART_Popup" Width="500"
-                               Placement="Bottom"
-                               StaysOpen="False"
-                               AllowsTransparency="True"
-                               IsOpen="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}">
-                        </Popup>
-                    </Grid>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <Style TargetType="Button" x:Key="plus-button">
         <Setter Property="Width" Value="24"/>
         <Setter Property="Height" Value="24"/>
