@@ -560,9 +560,9 @@ namespace BridgeOpsClient
             connection.btnDown.Click += AnyInteraction;
             connection.chkIsTest.Click += AnyInteraction;
             connection.dtpConnected.datePicker.SelectedDateChanged += AnyInteraction;
-            connection.dtpConnected.timePicker.txt.LostFocus += AnyInteraction;
+            connection.dtpConnected.timePicker.txt.TextChanged += AnyInteraction;
             connection.dtpDisconnected.datePicker.SelectedDateChanged += AnyInteraction;
-            connection.dtpDisconnected.timePicker.txt.LostFocus += AnyInteraction;
+            connection.dtpDisconnected.timePicker.txt.TextChanged += AnyInteraction;
             // AnyInteraction for site search is implemented in txtSearch_KeyDown.
 
             connection.btnRemove.Style = (Style)FindResource("minus-button");

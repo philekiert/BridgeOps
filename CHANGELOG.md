@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.7
+- Fixed a bug preventing conference edits from being detected properly, leaving the Save button disabled.
+
 ## 1.1.6
 ### Fixed
 - Fixed a bug where the an organisation's task reference wasn't being recorded on initial load, leading to edit detection providing false positives.
