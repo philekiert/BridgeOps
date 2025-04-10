@@ -39,11 +39,7 @@ namespace BridgeOpsClient.CustomControls
 
         public TimeSpan? GetTime()
         {
-            TimeSpan time;
-            if (TimeSpan.TryParse(txt.Text, out time))
-                return time;
-            else
-                return null;
+            return ConstrictToTimeSpan();
         }
 
         public void ToggleEnabled(bool enabled)
@@ -81,14 +77,15 @@ namespace BridgeOpsClient.CustomControls
 
         }
 
-        private void txt_LostFocus(object sender, RoutedEventArgs e)
+        private TimeSpan? ConstrictToTimeSpan()
         {
-            // If this isn't here and we had stuff highlighted when we lost focus, the next mouse down will reselect.
-            txt.SelectionLength = 0;
-
             // Tidy up if possible, otherwise set to blank.
-
             string check = txt.Text;
+
+            if (check.StartsWith(":") && check.Length < 5)
+                check = "0" + check;
+            else if (check.EndsWith(":") && check.Length < 5)
+                check = check += "0";
 
             // If someone types "1", for example, change that to an hour selection. This is all way more comprehensive
             // than it needs to be, but I love it.
@@ -120,7 +117,7 @@ namespace BridgeOpsClient.CustomControls
                 if (parts.Length != 2)
                 {
                     txt.Text = "";
-                    return;
+                    return null;
                 }
                 if (int.TryParse(parts[0], out val) && val > max.Hours)
                     parts[0] = max.Hours.ToString();
@@ -131,25 +128,31 @@ namespace BridgeOpsClient.CustomControls
 
             TimeSpan ts;
             if (!TimeSpan.TryParse(check, out ts))
-            {
-                txt.Text = "";
-                return;
-            }
+                return null;
             if (ts < TimeSpan.Zero)
-            {
-                txt.Text = "";
-                return;
-            }
+                return null;
 
             if (ts > max)
                 ts = max;
 
-            txt.Text = $"{ts.Hours:00}:{ts.Minutes:00}";
+            return ts;
+        }
+
+        private void txt_LostFocus(object sender, RoutedEventArgs e)
+        {
+            // If this isn't here and we had stuff highlighted when we lost focus, the next mouse down will reselect.
+            txt.SelectionLength = 0;
+
+            TimeSpan? ts = ConstrictToTimeSpan();
+            if (ts == null)
+                txt.Text = "";
+            else
+                txt.Text = $"{ts.Value.Hours:00}:{ts.Value.Minutes:00}";
         }
 
         private void txt_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (!int.TryParse(e.Text, out _) && e.Text != ":")
+            if (!int.TryParse(e.Text, out _) && (e.Text != ":" || (e.Text == ":" && txt.Text.Contains(':') && txt.SelectedText != txt.Text)))
                 e.Handled = true;
         }
 
