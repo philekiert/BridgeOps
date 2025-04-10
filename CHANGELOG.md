@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.8
+- Fixed a bug preventing new blank visits and documents from being saved.
+
 ## 1.1.7
 - Fixed a bug preventing conference edits from being detected properly, leaving the Save button disabled.
 
