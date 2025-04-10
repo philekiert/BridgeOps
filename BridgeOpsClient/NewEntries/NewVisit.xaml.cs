@@ -122,6 +122,13 @@ namespace BridgeOpsClient
                           originalNotes != (txtNotes.Text ?? "") ||
                           dit.CheckForValueChanges();
 
+            // Never grey out for new documents.
+            if (!edit)
+            {
+                btnSave.IsEnabled = true;
+                return;
+            }
+
             btnSave.IsEnabled = changesMade &&
                                 ((edit && App.sd.editPermissions[Glo.PERMISSION_TASKS]) ||
                                 (!edit && App.sd.createPermissions[Glo.PERMISSION_TASKS]));
