@@ -29,7 +29,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120"/>
-            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="180"/>
         </Grid.ColumnDefinitions>
         <Label Content="Username" Grid.Row="0" Grid.Column="0" x:Name="lblUsername" Padding="5 6 5 5"/>
         <TextBox Grid.Row="0" Grid.Column="1" x:Name="txtUsername" TextChanged="ValueChanged" Height="20"/>
@@ -41,7 +41,7 @@
                 Click="btnResetPassword_Click" Height="24"/>
         <Label Content="Administrator" Grid.Row="4" Grid.Column="0" x:Name="lblAdministrator" />
         <CheckBox Grid.Row="4" Grid.Column="1" Margin="9, 5, 0, 5" x:Name="chkAdmin" Click="chkAdmin_Clicked"/>
-        <Grid Grid.Row="5" Grid.ColumnSpan="2" x:Name="grdPermissions" Margin="0 0 0 20">
+        <Grid Grid.Row="5" Grid.ColumnSpan="2" x:Name="grdPermissions" Margin="0 16 0 20">
             <Grid.Resources>
                 <Style TargetType="CheckBox">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -59,11 +59,12 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="160"/>
+                <ColumnDefinition Width="115"/>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="44"/>
                 <ColumnDefinition Width="44"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Content="Create" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center"/>
             <Label Content="Edit" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center"/>
@@ -94,7 +95,7 @@
             <CheckBox Grid.Row="5" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkReportsEdit"/>
             <CheckBox Grid.Row="5" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkReportsDelete"/>
             <CheckBox Grid.Row="5" Grid.Column="4" Margin="0, 5, 0, 5" x:Name="chkReportsAll"/>
-            <Label Content="User Account Management" Grid.Row="6" Grid.Column="0" x:Name="lblUserAccountManagement"/>
+            <Label Content="Users" Grid.Row="6" Grid.Column="0" x:Name="lblUserAccountManagement"/>
             <CheckBox Grid.Row="6" Grid.Column="1" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementCreate"/>
             <CheckBox Grid.Row="6" Grid.Column="2" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementEdit"/>
             <CheckBox Grid.Row="6" Grid.Column="3" Margin="0, 5, 0, 5" x:Name="chkUserAccountManagementDelete"/>
