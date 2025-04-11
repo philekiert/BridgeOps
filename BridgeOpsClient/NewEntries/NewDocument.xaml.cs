@@ -46,7 +46,8 @@ namespace BridgeOpsClient
                 knownTaskRefs = rows.Select(i => (string)i[0]!).ToHashSet(); // Type is NOT NULL in database.
 
             List<string> types = ColumnRecord.GetColumn(ColumnRecord.document, Glo.Tab.DOCUMENT_TYPE).allowed.ToList();
-            types.Insert(0, "");
+            if (types.Count == 0 || types[0] != "") // Ensure that there's always the ability to set to null.
+                types.Insert(0, "");
             cmbType.ItemsSource = types;
         }
 
