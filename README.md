@@ -1,21 +1,21 @@
 # Bridge Manager
 
-Bridge Manager (originally BridgeOps) is a conference, asset and task management solution.
+Bridge Manager (originally BridgeOps) is a conference, asset and task management solution developed for internal use by Akkodis.
 
 The solution file consists of three projects:
 
 ### BridgeOpsClient
-This is the user-facing application. It offers asset and task management, conference scheduling, and reporting, among other features.
+This is the user-facing application. It offers asset, task, conference and report management, among other features.
 
 ### BridgeOpsAgent
-This is the server-side program responsible for receiving requests from the client and processing them, interacting with SQL Server, and handling user sessions. It runs as a background process only.
+This is the server-side program responsible for receiving requests from the client and processing them, interacting with SQL Server, data migration and handling user sessions. It runs as a background process only.
 
 ### BridgeOpsConsole
 The administrator will carry out most of their server-side tasks with this console application. It is responsible for database creation and controlling the agent.
 
 ## Setup
 
-To set up your environment, install Visual Studio 2022 and clone this project using its built in tools. All dependencies are included in the csproj files. The project uses .NET 6.0, with WPF for its window management.
+To set up your environment, install Visual Studio 2022 and clone this repository using its built-in tools. All dependencies are included in the .csproj files, and should download automatically. The project uses .NET 6.0 (SDK may need installing separately), with WPF for its window management (install as a Visual Studio workload).
 
 Set up SQL Server with the following options applied to your instance:
 - Enable Windows Authentication and SQL Server Authentication.
@@ -26,9 +26,10 @@ Set up SQL Server with the following options applied to your instance:
  - The login must be mapped to BridgeManager (not possible until after the application has been set up).
  - The login should have only the public and db_datareader roles enabled for the BridgeManager database (not possible until after the application has been set up).
 
-Note that Bridge Manager by default wants the SQL Server Instance to be called SQLSERVER. If you called it something else, that's fine. After building the agent, you will find a file in Documents/Bridge Manager/Config Files named sql-server-name.txt. Open it, and update it with your desired server name.
+Note that Bridge Manager by default wants the SQL Server instance to be called SQLSERVER. If you called it something else, that's fine. After building the agent, you will find a file in Documents/Bridge Manager/Config Files named sql-server-name.txt. Open it, and update it with your desired server name.
 
 ## Build
+*(process tested 25/04/2025)*
 
 Once SQL Server is running, carry out the following steps to set up a basic Bridge Manager test environment:
 
@@ -44,10 +45,10 @@ NB: There is a known bug in the client where it can crash while moving windows a
 
 ## Publish
 
-The publish settings should be contained within the solution files.
+Publish to folder only (don't use ClickOnce).
 
 Make sure that BridgeOpsConsole and BridgeOpsAgent are published to the same directory, ideally named Bridge Manager Server. It doesn't matter which order they're published in.
 
 ## Docs
 
-For more information on the application's operation and use, see the Word/PDF docs in the Documentation folder in BridgeOpsClient. This folder and its files are copied to the build directory when building on publishing.
+For more information on the application's operation and use, see the Word/PDF docs in the Documentation folder in BridgeOpsClient. This folder and its files are copied to the build directory when building or publishing.
