@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.9
+- Changed the application to prefer the local Documents folder in cases where Windows might refer the application to a sync'd OneDrive Documents folder.
+
 ## 1.1.8
 - Fixed a bug preventing new blank visits and documents from being saved.
 

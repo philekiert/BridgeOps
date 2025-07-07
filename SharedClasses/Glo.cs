@@ -5,9 +5,9 @@ using System.Xml.Linq;
 using System.Reflection;
 
 // Application version
-[assembly: AssemblyVersion("1.1.8")]
-[assembly: AssemblyFileVersion("1.1.8")]
-[assembly: AssemblyInformationalVersion("1.1.8")]
+[assembly: AssemblyVersion("1.1.9")]
+[assembly: AssemblyFileVersion("1.1.9")]
+[assembly: AssemblyInformationalVersion("1.1.9")]
 
 public static class Glo
 {
@@ -419,15 +419,26 @@ public static class Glo
             if (!System.IO.Directory.Exists(folder))
                 System.IO.Directory.CreateDirectory(folder);
         }
+        public static string DocumentsFolder()
+        {
+            // Windows can now default to providing OneDrive's documents folder, which is REALLY not ideal for database
+            // storage, so make sure we're getting the local one, whatever it's called.
+            string userDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string userDocs = System.IO.Path.Combine(userDirectory, "Documents");
+            if (!System.IO.Directory.Exists(userDocs))
+                userDocs = System.IO.Path.Combine(userDirectory, "My Documents");
+            // Fall back on the system's idea of the Documents folder as a last resort.
+            if (!System.IO.Directory.Exists(userDocs))
+                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            return userDocs;
+        }
         public static string ApplicationFolder()
         {
-            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                          "Bridge Manager");
+            return System.IO.Path.Combine(DocumentsFolder(), "Bridge Manager");
         }
         public static string ApplicationFolder(string subdir)
         {
-            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                          "Bridge Manager", subdir);
+            return System.IO.Path.Combine(DocumentsFolder(), "Bridge Manager", subdir);
         }
 
         public static bool IsUnsafeForCSV(string s)
