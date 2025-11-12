@@ -16,7 +16,6 @@ using System.Windows.Threading;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2010.Excel;
-using Irony;
 using SendReceiveClasses;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using static BridgeOpsClient.PageConferenceView;
