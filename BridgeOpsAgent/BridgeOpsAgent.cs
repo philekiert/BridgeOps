@@ -2885,8 +2885,7 @@ internal class BridgeOpsAgent
             // order to correctly read back symbols like '&' that are stored in JSON with escape sequences.
             JsonObject deserialised = sr.Deserialise<JsonObject>(jsonString)!;
             string name = deserialised["Name"]!.ToString();
-            string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string folder = Path.Combine(documents, "Bridge Manager", Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
             lock (selectBuilderPresetFileLock)
             {
                 Glo.Fun.ExistsOrCreateFolder(folder);
