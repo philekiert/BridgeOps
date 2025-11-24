@@ -325,7 +325,10 @@ namespace BridgeOpsClient
                     resourcesOrder.Add(i);
 
             if (App.storedResourceZooms.Count > 0)
+            {
                 schView.zoomResource = App.storedResourceZooms[0];
+                schView.zoomResourceCurrent = schView.zoomResource;
+            }
 
             SetResources();
 
