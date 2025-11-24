@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.10
+- Prevented the application from defaulting to OneDrive's Documents folder in some instances.
+- Fixed a bug where the client would crash on login, resulting from a stored non-default vertical zoom while the schedule pane was hidden.
+
 ## 1.1.9
 - Changed the application to prefer the local Documents folder in cases where Windows might refer the application to a sync'd OneDrive Documents folder.
 
