@@ -463,6 +463,16 @@ namespace BridgeOpsClient
             selectBuilder.Show();
         }
 
+        private void menuReportToTemplates_Click(object sender, RoutedEventArgs e)
+        {
+            ReportToTemplates reportToTemplates = new(false);
+            if (Settings.Default.QueryWinSizeX > 0d)
+                reportToTemplates.Width = Settings.Default.QueryWinSizeX;
+            if (Settings.Default.QueryWinSizeY > 0d)
+                reportToTemplates.Height = Settings.Default.QueryWinSizeY;
+            reportToTemplates.Show();
+        }
+
         private void CustomWindow_KeyDown(object sender, KeyEventArgs e)
         {
             if (!(sender is TextBox) && !(sender is ComboBox) && !(sender is DataGrid))

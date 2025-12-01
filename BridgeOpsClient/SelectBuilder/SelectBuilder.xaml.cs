@@ -24,6 +24,7 @@ using System.Windows.Markup;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using static BridgeOpsClient.SelectBuilder;
 using System.Security.Principal;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BridgeOpsClient
 {
@@ -579,6 +580,7 @@ namespace BridgeOpsClient
 
             JsonObject json = new();
             json["Name"] = name;
+            json["Context"] = Glo.CLIENT_PRESET_CONTEXT_SELECT_QUERY_BUILDER;
             json["TabCount"] = tabControl.Items.Count;
 
             int tabIndex = 0;
@@ -656,7 +658,7 @@ namespace BridgeOpsClient
                 ++tabIndex;
             }
 
-            if (App.SendJsonObject(Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE, json, this))
+            if (App.SendJsonObject(Glo.CLIENT_PRESET_SAVE, json, this))
             {
                 skipPresetLoad = true;
                 PresetLoad(true);
@@ -682,12 +684,13 @@ namespace BridgeOpsClient
                             App.DisplayError(App.NO_NETWORK_STREAM, this);
                             return;
                         }
-                        stream.WriteByte(Glo.CLIENT_SELECT_BUILDER_PRESET_LOAD);
+                        stream.WriteByte(Glo.CLIENT_PRESET_LOAD);
                         App.sr.WriteAndFlush(stream, App.sd.sessionID);
                         if (list) // if loading the preset list
                             App.sr.WriteAndFlush(stream, "/");
                         else // if loading a specific preset
                             App.sr.WriteAndFlush(stream, (string)cmbPresets.Items[cmbPresets.SelectedIndex]);
+                        App.sr.WriteAndFlush(stream, Glo.FOLDER_QUERY_BUILDER_PRESETS);
 
                         int response = App.sr.ReadByte(stream);
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
@@ -714,6 +717,10 @@ namespace BridgeOpsClient
                         }
                         if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
+                            // We can slip the preset load when reverting back to the last selection, since it was already loaded.
+                            skipPresetLoad = true;
+                            cmbPresets.SelectedIndex = lastSelectedIndex;
+                            skipPresetLoad = false;
                             throw new Exception(App.sr.ReadString(stream));
                         }
                     }
@@ -721,7 +728,8 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                App.DisplayError(App.ErrorConcat("Could not retrieve preset list.", e.Message), this);
+                App.DisplayError(App.ErrorConcat("Could not retrieve preset" + (list ? " list." : "."), e.Message),
+                                 this);
             }
         }
 
@@ -739,7 +747,7 @@ namespace BridgeOpsClient
         private void cmbPresets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Clear down.
-            if (cmbPresets.SelectedIndex <= 0 && !skipPresetLoad)
+            if (cmbPresets.SelectedIndex <= 0)
             {
                 btnRemovePreset.IsEnabled = false;
                 btnRenamePreset.IsEnabled = false;
@@ -761,7 +769,6 @@ namespace BridgeOpsClient
 
                 if (!skipPresetLoad)
                     PresetLoad(false);
-                txtTabName.Text = (string)(((TabItem)tabControl.Items[0]).Header);
             }
             lastSelectedIndex = cmbPresets.SelectedIndex;
         }
@@ -794,10 +801,11 @@ namespace BridgeOpsClient
                             App.DisplayError(App.NO_NETWORK_STREAM, this);
                             return;
                         }
-                        stream.WriteByte(Glo.CLIENT_SELECT_BUILDER_PRESET_DELETE);
+                        stream.WriteByte(Glo.CLIENT_PRESET_DELETE);
                         App.sr.WriteAndFlush(stream, App.sd.sessionID);
                         string preset = (string)cmbPresets.Items[cmbPresets.SelectedIndex];
                         App.sr.WriteAndFlush(stream, preset);
+                        App.sr.WriteAndFlush(stream, Glo.FOLDER_QUERY_BUILDER_PRESETS);
 
                         int response = App.sr.ReadByte(stream);
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
@@ -849,11 +857,12 @@ namespace BridgeOpsClient
                             App.DisplayError(App.NO_NETWORK_STREAM, this);
                             return;
                         }
-                        stream.WriteByte(Glo.CLIENT_SELECT_BUILDER_PRESET_RENAME);
+                        stream.WriteByte(Glo.CLIENT_PRESET_RENAME);
                         App.sr.WriteAndFlush(stream, App.sd.sessionID);
                         string preset = (string)cmbPresets.Items[cmbPresets.SelectedIndex];
                         preset += "/" + newName;
                         App.sr.WriteAndFlush(stream, preset);
+                        App.sr.WriteAndFlush(stream, Glo.FOLDER_QUERY_BUILDER_PRESETS);
 
                         int response = App.sr.ReadByte(stream);
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)

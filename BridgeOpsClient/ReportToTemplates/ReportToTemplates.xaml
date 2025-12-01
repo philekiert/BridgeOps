@@ -1,0 +1,119 @@
+﻿<local:CustomWindow x:Class="BridgeOpsClient.ReportToTemplates"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BridgeOpsClient"
+        xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
+        mc:Ignorable="d" MinHeight="400"
+        Title="Select Query Builder" Width="485" Height="600" UseLayoutRounding="True"
+        MinWidth="485" Closed="CustomWindow_Closed">
+    <Grid>
+        <!-- Preset Control -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Width="485" HorizontalAlignment="Left">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+
+            <Label Content="Preset" Grid.Column="0" VerticalAlignment="Center" Margin="10 10 10 10"
+                   HorizontalAlignment="Right" Padding="0 5 5 5"/>
+            <ComboBox x:Name="cmbPresets" Grid.Column="1" Margin="0 10 10 10" Width="260"
+                      SelectionChanged="cmbPresets_SelectionChanged" Height="24"/>
+            <Button x:Name="btnAddPreset" Grid.Column="2" Click=
+                    "btnAddPreset_Click"
+                    Margin="0 10 0 10" Style="{StaticResource toolbar-button}" ToolTip="Save As New">
+                <Button.Content>
+                    <Image Source="/Resources/Icons/14SaveAs.png"/>
+                </Button.Content>
+            </Button>
+            <Button x:Name="btnSaveChanges" Grid.Column="3" Click="btnSaveChanges_Click" ToolTip="Save Changes"
+                    Margin="0 10 0 10" Style="{StaticResource toolbar-button}" IsEnabled="False">
+                <Button.Content>
+                    <Image Source="/Resources/Icons/13Save.png"/>
+                </Button.Content>
+            </Button>
+            <Button x:Name="btnRemovePreset" Grid.Column="4" Click="btnRemovePreset_Click" ToolTip="Delete Preset"
+                    Margin="0 10 0 10" Style="{StaticResource toolbar-button}" IsEnabled="False">
+                <Button.Content>
+                    <Image Source="/Resources/Icons/17Delete.png"/>
+                </Button.Content>
+            </Button>
+            <Button x:Name="btnRenamePreset" Grid.Column="5" Width="65" Content="Rename"
+                    Height="24" Margin="5 10 10 10" Click="btnRenamePreset_Click" IsEnabled="False"
+                    HorizontalAlignment="Left"/>
+        </Grid>
+
+        <!-- File Selection -->
+        <Grid Grid.Row="1" Margin="10 0 10 0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="File Selection" Height="26" FontWeight="Bold" Margin="0 0 0 2" Padding="0 5 5 5"/>
+            <ListView Grid.RowSpan="4" Grid.Row="1" x:Name="lstFiles">
+            </ListView>
+            <Button x:Name="btnAddFile" Grid.Row="1" Grid.Column="1" ToolTip="Add File"
+                    Margin="10,0,0,0" Style="{StaticResource plus-button}" Height="24" VerticalAlignment="Top" Click="btnAddFile_Click"/>
+            <Button x:Name="btnRemoveFile" Grid.Row="2" Grid.Column="1" ToolTip="Remove File"
+                    Margin="10 0 0 10" Style="{StaticResource minus-button}" Click="btnRemoveFile_Click"/>
+            <Button Grid.Row="3" Grid.Column="1" Content="▲" x:Name="btnFileUp" FontSize="9"
+                    Margin="10 0 0 0" Width="24" Height="24" HorizontalAlignment="Right"
+                    IsEnabled="False" Padding="0 -2 0 0" Click="btnFileUp_Click"/>
+            <Button Grid.Row="4" Grid.Column="1" Content="▼" x:Name="btnFileDown" FontSize="9"
+                    Margin="10 -1 0 0" Width="24" Height="24" HorizontalAlignment="Right"
+                    IsEnabled="False" Padding="0 -2 0 0"
+                    VerticalAlignment="Top" Click="btnFileDown_Click"/>
+        </Grid>
+
+        <!-- File & Task Summary -->
+        <Grid Grid.Row="2" Margin="0 10 0 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Content="Reports Located" Height="26" FontWeight="Bold" Margin="10 0 0 2" Padding="0 5 5 5"/>
+            <custom:SqlDataGrid Grid.Row="1" Margin="0 -10 0 0"/>
+        </Grid>
+
+        <!-- Output Location Selection -->
+        <Grid Grid.Row="3" Margin="10 0 10 0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Output Location" Height="26" FontWeight="Bold" Margin="0 0 0 2" Padding="0 5 5 5"/>
+            <TextBox Grid.Column="1" Margin="10 0 -1 0" Height="24"/>
+            <Button Content="Select" Grid.Column="2"/>
+        </Grid>
+
+        <!-- Run -->
+        <Button Grid.Row="4" Margin="10 10 10 10" Style="{StaticResource primary-button}" Content="Run"/>
+    </Grid>
+</local:CustomWindow>

@@ -63,6 +63,7 @@ public static class Glo
     public const string CONFIG_HEADERS = "section-headers";
     public const string CONFIG_SOFT_DUPLICATE_CHECKS = "soft-duplicate-checks";
     public const string FOLDER_QUERY_BUILDER_PRESETS = "Query Builder Presets";
+    public const string FOLDER_REPORT_TO_TEMPLATES_PRESETS = "Report To Template Presets";
 
     // Client/Agent Function Specifiers
     public const int CLIENT_PULL_COLUMN_RECORD = 0;
@@ -110,10 +111,10 @@ public static class Glo
     public const int CLIENT_SELECT_HISTORICAL_RECORD = 73;
     public const int CLIENT_TABLE_MODIFICATION = 80;
     public const int CLIENT_COLUMN_ORDER_UPDATE = 81;
-    public const int CLIENT_SELECT_BUILDER_PRESET_SAVE = 90;
-    public const int CLIENT_SELECT_BUILDER_PRESET_LOAD = 91;
-    public const int CLIENT_SELECT_BUILDER_PRESET_DELETE = 92;
-    public const int CLIENT_SELECT_BUILDER_PRESET_RENAME = 93;
+    public const int CLIENT_PRESET_SAVE = 90;
+    public const int CLIENT_PRESET_LOAD = 91;
+    public const int CLIENT_PRESET_DELETE = 92;
+    public const int CLIENT_PRESET_RENAME = 93;
     public const int CLIENT_CONFERENCE_VIEW_SEARCH = 100;
     public const int CLIENT_CONFERENCE_SELECT = 101;
     public const int CLIENT_CONFERENCE_CANCEL = 102;
@@ -155,6 +156,8 @@ public static class Glo
     public const string CLIENT_LOGIN_REJECT_USER_DUPLICATE = "User already logged in"; // Currently unused by agent
     public const string CLIENT_LOGIN_REJECT_IP_DUPLICATE = "IP already connected"; // Currently unused by agent
     public const string CLIENT_LOGIN_REJECT_IP_UNKNOWN = "IP unknown";
+    public const string CLIENT_PRESET_CONTEXT_SELECT_QUERY_BUILDER = "Select Query Builder";
+    public const string CLIENT_PRESET_CONTEXT_REPORT_TO_TEMPLATES = "Report to Templates";
 
     // Permissions
     public const int PERMISSION_CREATE = 0;

@@ -934,14 +934,14 @@ internal class BridgeOpsAgent
                     ClientColumnModification(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_COLUMN_ORDER_UPDATE)
                     ClientColumnOrderUpdate(stream, sqlConnect);
-                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_SAVE)
-                    ClientSaveSelectBuilderPreset(stream);
-                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_LOAD)
-                    ClientLoadSelectBuilder(stream);
-                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_DELETE)
-                    ClientDeleteSelectBuilderPreset(stream);
-                else if (fncByte == Glo.CLIENT_SELECT_BUILDER_PRESET_RENAME)
-                    ClientRenameSelectBuilderPreset(stream);
+                else if (fncByte == Glo.CLIENT_PRESET_SAVE)
+                    ClientSavePreset(stream);
+                else if (fncByte == Glo.CLIENT_PRESET_LOAD)
+                    ClientLoadPreset(stream);
+                else if (fncByte == Glo.CLIENT_PRESET_DELETE)
+                    ClientDeletePreset(stream);
+                else if (fncByte == Glo.CLIENT_PRESET_RENAME)
+                    ClientRenamePreset(stream);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_VIEW_SEARCH)
                     ClientConferenceViewSearch(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT)
@@ -2855,16 +2855,19 @@ internal class BridgeOpsAgent
         }
     }
 
-    static readonly object selectBuilderPresetFileLock = new();
+    static readonly object presetFolderLock = new();
 
     // Permission restricted.
-    private static void ClientSaveSelectBuilderPreset(NetworkStream stream)
+    private static void ClientSavePreset(NetworkStream stream)
     {
         try
         {
             string sessionID = sr.ReadString(stream);
             // No need to check record ID for this, if it fails, it fails.
             string jsonString = sr.ReadString(stream);
+            
+            // Context (select query builder / report to templates) not needed as it's included in the JSON.
+
 
             lock (clientSessions)
             {
@@ -2881,12 +2884,18 @@ internal class BridgeOpsAgent
                 }
             }
 
-            // Would be cheaper to manually extract the preset name from jsonString, but we need to deserialise in
-            // order to correctly read back symbols like '&' that are stored in JSON with escape sequences.
             JsonObject deserialised = sr.Deserialise<JsonObject>(jsonString)!;
             string name = deserialised["Name"]!.ToString();
-            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
-            lock (selectBuilderPresetFileLock)
+            string context = deserialised["Context"]!.ToString();
+            if (context == Glo.CLIENT_PRESET_CONTEXT_SELECT_QUERY_BUILDER)
+                context = Glo.FOLDER_QUERY_BUILDER_PRESETS;
+            else if (context == Glo.CLIENT_PRESET_CONTEXT_REPORT_TO_TEMPLATES)
+                context = Glo.FOLDER_REPORT_TO_TEMPLATES_PRESETS;
+            else
+                throw new Exception("Preset context could not be determined.");
+
+            string folder = Glo.Fun.ApplicationFolder(context);
+            lock (presetFolderLock)
             {
                 Glo.Fun.ExistsOrCreateFolder(folder);
                 string file = Path.Combine(folder, name + ".pre");
@@ -2905,14 +2914,17 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientLoadSelectBuilder(NetworkStream stream)
+    private static void ClientLoadPreset(NetworkStream stream)
     {
         // This method is used both for getting the preset list and loading a specific preset.
         try
         {
             string sessionID = sr.ReadString(stream);
             string presetName = sr.ReadString(stream);
-            bool list = presetName == "/"; // Forward slashes are disallowed in preset names.
+            // Context makes use of the preset folder names, since that's a sensible identifier for preset type.
+            string context = sr.ReadString(stream);
+            // Forward slashes are disallowed in preset names, so use this to identify list requests.
+            bool list = presetName == "/";
 
             lock (clientSessions)
             {
@@ -2923,7 +2935,7 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            string folder = Glo.Fun.ApplicationFolder(context);
             if (!Directory.Exists(folder)) // In this case, we succeed with no files to report.
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
@@ -2933,7 +2945,7 @@ internal class BridgeOpsAgent
             if (list)
             {
                 List<string> files = new();
-                lock (selectBuilderPresetFileLock)
+                lock (presetFolderLock)
                 {
                     foreach (string s in Directory.GetFiles(folder))
                         files.Add(Path.GetFileName(s));
@@ -2944,7 +2956,7 @@ internal class BridgeOpsAgent
             else
             {
                 string jsonString;
-                lock (selectBuilderPresetFileLock)
+                lock (presetFolderLock)
                 {
                     jsonString = File.ReadAllText(Path.Combine(folder, presetName + ".pre"));
                 }
@@ -2964,13 +2976,15 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientDeleteSelectBuilderPreset(NetworkStream stream)
+    private static void ClientDeletePreset(NetworkStream stream)
     {
         try
         {
             string sessionID = sr.ReadString(stream);
             // No need to check record ID for this, if it fails, it fails.
             string file = sr.ReadString(stream) + ".pre";
+            // Context makes use of the preset folder names, since that's a sensible identifier for preset type.
+            string context = sr.ReadString(stream);
 
             lock (clientSessions)
             {
@@ -2987,8 +3001,8 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
-            lock (selectBuilderPresetFileLock)
+            string folder = Glo.Fun.ApplicationFolder(context);
+            lock (presetFolderLock)
             {
                 File.Delete(Path.Combine(folder, file));
             }
@@ -3006,7 +3020,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientRenameSelectBuilderPreset(NetworkStream stream)
+    private static void ClientRenamePreset(NetworkStream stream)
     {
         try
         {
@@ -3015,6 +3029,8 @@ internal class BridgeOpsAgent
             string[] files = sr.ReadString(stream).Split('/');
             string oldName = files[0] + ".pre";
             string newName = files[1] + ".pre";
+            // Context makes use of the preset folder names, since that's a sensible identifier for preset type.
+            string context = sr.ReadString(stream);
 
             lock (clientSessions)
             {
@@ -3031,8 +3047,8 @@ internal class BridgeOpsAgent
                 }
             }
 
-            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
-            lock (selectBuilderPresetFileLock)
+            string folder = Glo.Fun.ApplicationFolder(context);
+            lock (presetFolderLock)
             {
                 File.Move(Path.Combine(folder, oldName), Path.Combine(folder, newName));
             }

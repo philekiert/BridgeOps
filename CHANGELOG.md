@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+- Modified behaviour when failing to load a preset. It now falls back to the previous selection instead of ambiguously selecting the broken preset and resetting the view.
+
 ## 1.1.10
 - Prevented the application from defaulting to OneDrive's Documents folder in some instances.
 - Fixed a bug where the client would crash on login, resulting from a stored non-default vertical zoom while the schedule pane was hidden.
