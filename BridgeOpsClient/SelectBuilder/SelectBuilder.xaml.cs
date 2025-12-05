@@ -478,8 +478,6 @@ namespace BridgeOpsClient
 
                 tabControl.Items.Clear();
 
-                JsonNode? node = JsonNode.Parse(jsonString);
-
                 JsonObject json = JsonNode.Parse(jsonString).AsObject();
 
                 int totalTabs = json["TabCount"].GetValue<int>();

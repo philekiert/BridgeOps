@@ -1,7 +1,7 @@
 ﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using DocumentFormat.OpenXml.Office2016.Excel;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using SendReceiveClasses;
 using System;
@@ -9,21 +9,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Markup;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Xml;
 
 namespace BridgeOpsClient
 {
@@ -72,10 +63,14 @@ namespace BridgeOpsClient
                 // has been corrupted and an exception should be thrown anyway.
 #pragma warning disable CS8602
 
-                JsonNode? node = JsonNode.Parse(jsonString);
                 JsonObject json = JsonNode.Parse(jsonString).AsObject();
 
-                // APPLY PRESET HERE.
+                // Not using ItemsSource since we want to work directly with the collection when the user modifies the list.
+                lstFiles.Items.Clear();
+                foreach (string s in json["Templates"].Deserialize<List<string>>()!)
+                    lstFiles.Items.Add(s);
+
+                txtFolder.Text = json["OutputFolder"].GetValue<string>().ToString();
 
 #pragma warning restore CS8602
             }
@@ -83,6 +78,8 @@ namespace BridgeOpsClient
             {
                 App.DisplayError("JSON file could not be read. It could be corrupted.", this);
             }
+
+            ToggleFileButtons();
         }
 
         private void SavePreset(string name)
@@ -104,6 +101,11 @@ namespace BridgeOpsClient
             JsonObject json = new();
             json["Name"] = name;
             json["Context"] = Glo.CLIENT_PRESET_CONTEXT_REPORT_TO_TEMPLATES;
+            JsonArray templates = new();
+            foreach (string s in lstFiles.Items)
+                templates.Add(s);
+            json["Templates"] = templates;
+            json["OutputFolder"] = txtFolder.Text;
 
             if (App.SendJsonObject(Glo.CLIENT_PRESET_SAVE, json, this))
             {
@@ -351,13 +353,25 @@ namespace BridgeOpsClient
         {
             Microsoft.Win32.OpenFileDialog dialog = new();
             dialog.Multiselect = true;
+            dialog.Filter = "Excel Workbooks & Word Documents|*.xlsx;*.xlsm;*.docx";
             string[] files;
             if (dialog.ShowDialog() == false)
                 return;
 
             files = dialog.FileNames;
+
+            bool foundMacroFile = false; // ClosedXML doesn't like macros, so warn the user if .xlsm files are found.
             foreach (string f in files)
-                lstFiles.Items.Add(f);
+            {
+                if (!lstFiles.Items.Contains(f) && ((f.EndsWith(".docx") || f.EndsWith(".xlsx") || f.EndsWith(".xlsm"))))
+                    lstFiles.Items.Add(f);
+                if (!foundMacroFile && f.EndsWith("xlsm"))
+                    foundMacroFile = true;
+            }
+            if (foundMacroFile)
+                App.DisplayError("Note that macros in .xlsm files will not be carried over to the output.", this);
+
+            ToggleFileButtons();
         }
 
         private void btnRemoveFile_Click(object sender, RoutedEventArgs e)
@@ -368,16 +382,232 @@ namespace BridgeOpsClient
                     lstFiles.Items.RemoveAt(i);
                     --i;
                 }
+
+            ToggleFileButtons();
         }
 
         private void btnFileUp_Click(object sender, RoutedEventArgs e)
         {
+            for (int i = 1; i < lstFiles.Items.Count; ++i)
+                if (lstFiles.SelectedItems.Contains(lstFiles.Items[i]))
+                {
+                    var temp = lstFiles.Items[i];
+                    skipFileSelectionChanged = true;
+                    lstFiles.Items.RemoveAt(i);
+                    lstFiles.Items.Insert(i - 1, temp);
+                    lstFiles.SelectedItems.Add(temp);
+                    skipFileSelectionChanged = false;
+                }
 
+            ToggleFileButtons();
         }
 
         private void btnFileDown_Click(object sender, RoutedEventArgs e)
         {
+            if (lstFiles.Items.Count < 2)
+                return;
+            for (int i = lstFiles.Items.Count - 2; i >= 0; --i)
+                if (lstFiles.SelectedItems.Contains(lstFiles.Items[i]))
+                {
+                    var temp = lstFiles.Items[i];
+                    skipFileSelectionChanged = true;
+                    lstFiles.Items.RemoveAt(i);
+                    if (i == lstFiles.Items.Count)
+                        lstFiles.Items.Add(temp);
+                    else
+                        lstFiles.Items.Insert(i + 1, temp);
+                    lstFiles.SelectedItems.Add(temp);
+                    skipFileSelectionChanged = false;
+                }
 
+            ToggleFileButtons();
+        }
+
+        private void ToggleFileButtons()
+        {
+            btnAddFile.IsEnabled = true;
+            btnRemoveFile.IsEnabled = lstFiles.SelectedItems.Count > 0;
+            btnCheck.IsEnabled = lstFiles.Items.Count > 0;
+            if (lstFiles.Items.Count > 1)
+            {
+                btnFileUp.IsEnabled = !lstFiles.SelectedItems.Contains(lstFiles.Items[0]);
+                btnFileDown.IsEnabled = !lstFiles.SelectedItems.Contains(lstFiles.Items[lstFiles.Items.Count - 1]);
+            }
+            else
+            {
+                btnFileUp.IsEnabled = false;
+                btnFileDown.IsEnabled = false;
+            }
+        }
+
+        bool skipFileSelectionChanged = false;
+        private void lstFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!skipFileSelectionChanged)
+                ToggleFileButtons();
+        }
+
+        private void btnFolder_Click(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Forms.FolderBrowserDialog dialog = new();
+            if (Directory.Exists(txtFolder.Text))
+                dialog.InitialDirectory = txtFolder.Text;
+
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+            if (result != System.Windows.Forms.DialogResult.OK)
+                return;
+            txtFolder.Text = dialog.SelectedPath;
+        }
+
+        class ReportTag
+        {
+            public string filepath;   // Path including filename.
+            public string filename;   // Filename only.
+            public string tag;        // The tag's original text.
+            public string presetName; // The tag's preset name.
+            public string tabName;    // The tag's preset tab name.
+        }
+        class ReportTagExcel : ReportTag
+        {
+            public string sheetName;  // Name of the tab in the Excel file.
+            public int x;             // Column number, 1-indexed.
+            public string xLetter;    // Column letter.
+            public int y;             // Row number, 1-indexed.
+        }
+        class ReportTagWord : ReportTag
+        {
+        }
+
+        List<ReportTag> tags = new();
+
+        public string[]? ParseTagText(string text)
+        {
+            if (text.Length >= 8 && text.StartsWith("{{") && text.EndsWith("}}"))
+            {
+                string content = text.Substring(2, text.Length - 4);
+                string[] parts = content.Split("/");
+                if (parts.Length == 2 &&
+                    parts[0].Length > 0 && parts[1].Length > 0)
+                    return parts;
+            }
+            return null;
+        }
+
+        private void btnCheck_Click(object sender, RoutedEventArgs e)
+        {
+            tags.Clear();
+            lstSummary.Items.Clear();
+
+            TextBlock CreateTextBlock(string text, Brush brush)
+            {
+                return new TextBlock()
+                {
+                    Text = text,
+                    Foreground = brush
+                };
+            }
+
+            List<List<object>> report = new();
+            foreach (string filepath in lstFiles.Items)
+            {
+                string filename = Path.GetFileName(filepath);
+                if (!File.Exists(filepath))
+                {
+                    lstSummary.Items.Add(CreateTextBlock($"{filename} could not be located.", Brushes.Red));
+                    continue;
+                }
+
+                try
+                {
+                    string? tag = null;
+
+                    // Excel files.
+                    if (filename.EndsWith(".xlsx") || filename.EndsWith(".xlsm"))
+                        using (XLWorkbook file = new(filepath))
+                        {
+                            foreach (var sheet in file.Worksheets)
+                                foreach (var cell in sheet.CellsUsed())
+                                {
+                                    string celltext = cell.GetText();
+                                    string[]? names = ParseTagText(celltext);
+                                    if (names == null)
+                                        continue;
+                                    tags.Add(new ReportTagExcel()
+                                    {
+                                        filepath = filepath,
+                                        filename = filename,
+                                        sheetName = sheet.Name,
+                                        x = cell.Address.ColumnNumber,
+                                        xLetter = cell.Address.ColumnLetter,
+                                        y = cell.Address.RowNumber,
+                                        tag = celltext,
+                                        presetName = names[0],
+                                        tabName = names[1]
+                                    });
+                                }
+                        }
+                    // Word files.
+                    else if (filename.EndsWith(".docx"))
+                        using (WordprocessingDocument doc = WordprocessingDocument.Open(filepath, false))
+                        { // All tables in the body (you can extend to headers/footers if needed)
+                            foreach (var table in doc.MainDocumentPart!.Document.Body!
+                                                     .Descendants<DocumentFormat.OpenXml.Wordprocessing.Table>())
+                            {
+                                var firstRow = table.Elements<TableRow>().FirstOrDefault();
+                                var firstCell = firstRow?.Elements<TableCell>().FirstOrDefault();
+                                if (firstCell == null)
+                                    continue;
+
+                                string text = "";
+                                foreach (var t in firstCell.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
+                                    text += t.Text;
+
+                                string[]? names = ParseTagText(text);
+                                if (names == null)
+                                    continue;
+                                tags.Add(new ReportTagWord()
+                                {
+                                    filepath = filepath,
+                                    filename = filename,
+                                    tag = text,
+                                    presetName = names[0],
+                                    tabName = names[1]
+                                });
+                            }
+                        }
+                }
+                catch (Exception except)
+                {
+                    App.DisplayError($"Unable to open file, see error: {except.Message}", this);
+                }
+            }
+
+            PresetCheckRequest pcr;
+            if (App.SendPresetCheckList(tags.Select(t => t.presetName).ToList(),
+                                        tags.Select(t => t.tabName).ToList(), out pcr, this) &&
+                pcr.presets.Count == pcr.tabs.Count &&
+                pcr.presets.Count == pcr.present.Count)
+            {
+                HashSet<string> existingPresetTabs = new();
+                for (int i = 0; i < pcr.presets.Count; ++i)
+                    if (pcr.present[i])
+                        existingPresetTabs.Add("{{" + pcr.presets[i] + "/" + pcr.tabs[i] + "}}");
+
+                foreach (ReportTag foundTag in tags)
+                {
+                    string row;
+                    if (foundTag is ReportTagExcel rte)
+                        row = $"{rte.filename}/{rte.sheetName} | {rte.xLetter}{rte.y}: {rte.presetName}, {rte.tabName}";
+                    else if (foundTag is ReportTagWord rtw)
+                        row = $"{rtw.filename} | {rtw.presetName}, {rtw.tabName}";
+                    else
+                        row = "Error";
+                    if (existingPresetTabs.Contains(foundTag.tag))
+                        lstSummary.Items.Add(CreateTextBlock(row, Brushes.Black));
+                    else
+                        lstSummary.Items.Add(CreateTextBlock(row, Brushes.Red));
+                }
+            }
         }
     }
 }
