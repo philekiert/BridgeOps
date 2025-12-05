@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -2751,6 +2752,56 @@ namespace BridgeOpsClient
                     {
                         DisplayError("Could not select task reference list.", owner);
                         references = new();
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
+        }
+
+        public static bool SendPresetCheckList(List<string> presets, List<string> tabs, out PresetCheckRequest pcr,
+                                               Window? owner)
+        {
+            PresetCheckRequest pcrToSend = new()
+            {
+                sessionID = App.sd.sessionID,
+                presets = presets,
+                tabs = tabs
+            };
+
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    if (stream == null)
+                        throw new();
+                    try
+                    {
+                        stream.WriteByte(Glo.CLIENT_PRESET_CHECK);
+                        sr.WriteAndFlush(stream, sr.Serialise(pcrToSend));
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                        {
+                            pcr = sr.Deserialise<PresetCheckRequest>(sr.ReadString(stream));
+                            return true;
+                        }
+                        if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
+                        {
+                            DisplayError(ErrorConcat("Could not check preset existence.", sr.ReadString(stream)),
+                                         owner);
+                            pcr = new();
+                        }
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        DisplayError("Could not check preset existence.", owner);
+                        pcr = new();
                         return false;
                     }
                     finally

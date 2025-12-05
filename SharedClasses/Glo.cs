@@ -115,6 +115,7 @@ public static class Glo
     public const int CLIENT_PRESET_LOAD = 91;
     public const int CLIENT_PRESET_DELETE = 92;
     public const int CLIENT_PRESET_RENAME = 93;
+    public const int CLIENT_PRESET_CHECK = 94;
     public const int CLIENT_CONFERENCE_VIEW_SEARCH = 100;
     public const int CLIENT_CONFERENCE_SELECT = 101;
     public const int CLIENT_CONFERENCE_CANCEL = 102;

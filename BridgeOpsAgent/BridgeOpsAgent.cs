@@ -942,6 +942,8 @@ internal class BridgeOpsAgent
                     ClientDeletePreset(stream);
                 else if (fncByte == Glo.CLIENT_PRESET_RENAME)
                     ClientRenamePreset(stream);
+                else if (fncByte == Glo.CLIENT_PRESET_CHECK)
+                    ClientSearchPresets(stream);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_VIEW_SEARCH)
                     ClientConferenceViewSearch(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_CONFERENCE_SELECT)
@@ -3053,6 +3055,90 @@ internal class BridgeOpsAgent
                 File.Move(Path.Combine(folder, oldName), Path.Combine(folder, newName));
             }
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            SafeFail(stream, e.Message);
+            LogError(e);
+        }
+        finally
+        {
+            stream.Close();
+        }
+    }
+
+    private static void ClientSearchPresets(NetworkStream stream)
+    {
+        // This method is used both for getting the preset list and loading a specific preset.
+        try
+        {
+            PresetCheckRequest pcr = sr.Deserialise<PresetCheckRequest>(sr.ReadString(stream));
+
+            lock (clientSessions)
+            {
+                if (!clientSessions.ContainsKey(pcr.sessionID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+            }
+
+            if (pcr.presets.Count != pcr.tabs.Count)
+                throw new Exception("Invalid preset search request.");
+            pcr.present = new();
+
+            Dictionary<string, HashSet<string>> presetTabRegister = new();
+
+            // First thing's first, build up a register of tabs by preset.
+            string folder = Glo.Fun.ApplicationFolder(Glo.FOLDER_QUERY_BUILDER_PRESETS);
+            lock (presetFolderLock)
+            {
+                for (int i = 0; i < pcr.presets.Count; ++i)
+                {
+                    string preset = pcr.presets[i];
+                    if (presetTabRegister.ContainsKey(preset))
+                        continue;
+                    try
+                    {
+                        JsonNode? json = JsonObject.Parse(File.ReadAllText(Path.Combine(folder, preset + ".pre")))!
+                                                   .AsObject();
+                        int totalTabs = json["TabCount"]!.GetValue<int>();
+                        presetTabRegister.Add(preset, new()); // Only add once we know the preset is present and valid.
+                        for (int n = 0; n < totalTabs; ++n)
+                        {
+                            try
+                            {
+                                presetTabRegister[preset].Add(json![n.ToString()]!
+                                                         .AsObject()["Name"]!.GetValue<string>());
+                            }
+                            catch
+                            {
+                                // preset tab not found.
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Preset not found.
+                    }
+                }
+            }
+
+            pcr.present.Clear(); // Make sure we're starting from scratch, since we're working on the sent object.
+            for (int i = 0; i < pcr.presets.Count; ++i)
+            {
+                HashSet<string>? tabs;
+                if (presetTabRegister.TryGetValue(pcr.presets[i], out tabs))
+                    if (tabs.Contains(pcr.tabs[i]))
+                    {
+                        pcr.present.Add(true);
+                        continue;
+                    }
+                pcr.present.Add(false);
+            }
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+            sr.WriteAndFlush(stream, sr.Serialise(pcr));
         }
         catch (Exception e)
         {

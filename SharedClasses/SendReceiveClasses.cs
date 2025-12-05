@@ -3543,6 +3543,14 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
         }
     }
 
+    public struct PresetCheckRequest
+    {
+        public string sessionID;
+        public List<string> presets;
+        public List<string> tabs;
+        public List<bool> present;
+    }
+
 
     //   H E L P E R   F U N C T I O N S
 
