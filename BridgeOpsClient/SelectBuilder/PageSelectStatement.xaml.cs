@@ -148,14 +148,12 @@ namespace BridgeOpsClient
                 };
             }
         }
-        List<Param> paramList = new();
 
-        Dictionary<string, Param> paramVariables = new();
-
-        private bool InsertParameters(string input, out string result, string? pageName)
+        public static bool InsertParameters(string input, out string result, string? pageName, Window owner,
+                                            Dictionary<string, object?> storedVariables)
         {
-            paramList.Clear();
-            paramVariables.Clear();
+            List<Param> paramList = new();
+            Dictionary<string, Param> paramVariables = new();
 
             result = input;
 
@@ -325,7 +323,7 @@ namespace BridgeOpsClient
             if (paramsToSet)
             {
                 SetParameters setParameters = new(pageName, paramList);
-                setParameters.Owner = App.GetParentWindow(this);
+                setParameters.Owner = owner;
                 setParameters.ShowDialog();
                 if (setParameters.DialogResult == false)
                     return false;
@@ -345,7 +343,7 @@ namespace BridgeOpsClient
             foreach (Param param in paramList)
             {
                 if (param.value == null)
-                    return App.Abort("Not all parameter values could be read. Run cancelled.", builderWindow);
+                    return App.Abort("Not all parameter values could be read. Run cancelled.", owner);
 
                 string value;
                 if (param.value is string txt)
@@ -361,7 +359,7 @@ namespace BridgeOpsClient
                 else if (param.value is bool boo)
                     value = boo ? "1" : "0";
                 else
-                    return App.Abort("Not all parameter values could be read. Run cancelled.", builderWindow);
+                    return App.Abort("Not all parameter values could be read. Run cancelled.", owner);
 
                 int originalLength = input.Length;
                 input = input.Remove(param.start - lengthMod, param.length);
@@ -373,7 +371,7 @@ namespace BridgeOpsClient
             result = input;
             return true;
         }
-
+        
         public bool Run(out List<string?> columnNames, out List<string?> columnTypes, out List<List<object?>> rows)
         {
             columnNames = new();
@@ -381,7 +379,8 @@ namespace BridgeOpsClient
             rows = new();
 
             string final;
-            if (!InsertParameters(txtStatement.Text, out final, tabItem == null ? null : tabItem.Header.ToString()))
+            if (!InsertParameters(txtStatement.Text, out final, tabItem == null ? null : tabItem.Header.ToString(),
+                                  builderWindow!, SelectBuilder.storedVariables))
                 return false;
 
             if (!App.SendSelectStatement(final, out columnNames, out rows, out columnTypes, builderWindow))

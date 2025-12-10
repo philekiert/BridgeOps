@@ -650,6 +650,10 @@ namespace BridgeOpsClient
                         jsonOrderBy["AscDesc"] = orderBy.cmbAscDesc.Text;
                         jsonTab["OrderBy" + i.ToString()] = jsonOrderBy;
                     }
+
+                    // Update the SQL code and store it, even if it's just an error message. This is so that the Report
+                    // to Template feature has a statement to run without having to reassemble it.
+                    jsonTab["Statement"] = pageSelectBuilder.GenerateCodeExternally();
                 }
 
                 json[tabIndex.ToString()] = jsonTab;
@@ -715,7 +719,8 @@ namespace BridgeOpsClient
                         }
                         if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            // We can slip the preset load when reverting back to the last selection, since it was already loaded.
+                            // We can skip the preset load when reverting back to the last selection,
+                            // since it was already loaded.
                             skipPresetLoad = true;
                             cmbPresets.SelectedIndex = lastSelectedIndex;
                             skipPresetLoad = false;
@@ -745,7 +750,7 @@ namespace BridgeOpsClient
         private void cmbPresets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Clear down.
-            if (cmbPresets.SelectedIndex <= 0)
+            if (cmbPresets.SelectedIndex == 0)
             {
                 btnRemovePreset.IsEnabled = false;
                 btnRenamePreset.IsEnabled = false;
@@ -753,8 +758,11 @@ namespace BridgeOpsClient
 
                 if (lastSelectedIndex > 0)
                 {
-                    ClearDown();
-                    txtTabName.Text = (string)((TabItem)tabControl.Items[0]).Header; // Botch, but it's late.
+                    if (!skipPresetLoad)
+                    {
+                        ClearDown();
+                        txtTabName.Text = (string)((TabItem)tabControl.Items[0]).Header; // Botch, but it's late.
+                    }
                 }
             }
 

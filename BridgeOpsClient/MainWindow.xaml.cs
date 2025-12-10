@@ -466,10 +466,10 @@ namespace BridgeOpsClient
         private void menuReportToTemplates_Click(object sender, RoutedEventArgs e)
         {
             ReportToTemplates reportToTemplates = new(false);
-            if (Settings.Default.QueryWinSizeX > 0d)
-                reportToTemplates.Width = Settings.Default.QueryWinSizeX;
-            if (Settings.Default.QueryWinSizeY > 0d)
-                reportToTemplates.Height = Settings.Default.QueryWinSizeY;
+            if (Settings.Default.ReportToTempWinSizeX > 0d)
+                reportToTemplates.Width = Settings.Default.ReportToTempWinSizeX;
+            if (Settings.Default.ReportToTempWinSizeY > 0d)
+                reportToTemplates.Height = Settings.Default.ReportToTempWinSizeY;
             reportToTemplates.Show();
         }
 

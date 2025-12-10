@@ -55,33 +55,6 @@ namespace BridgeOpsClient
             return nameObject.txtName.Text;
         }
 
-        private void ApplyLoadedPreset(string jsonString)
-        {
-            try
-            {
-                // A lot could go wrong in terms of trying to read potentially null objects, but if that happens, the file
-                // has been corrupted and an exception should be thrown anyway.
-#pragma warning disable CS8602
-
-                JsonObject json = JsonNode.Parse(jsonString).AsObject();
-
-                // Not using ItemsSource since we want to work directly with the collection when the user modifies the list.
-                lstFiles.Items.Clear();
-                foreach (string s in json["Templates"].Deserialize<List<string>>()!)
-                    lstFiles.Items.Add(s);
-
-                txtFolder.Text = json["OutputFolder"].GetValue<string>().ToString();
-
-#pragma warning restore CS8602
-            }
-            catch
-            {
-                App.DisplayError("JSON file could not be read. It could be corrupted.", this);
-            }
-
-            ToggleFileButtons();
-        }
-
         private void SavePreset(string name)
         {
             if (cmbPresets.Text != "<New>" && !savingNew &&
@@ -166,7 +139,8 @@ namespace BridgeOpsClient
                         }
                         if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
-                            // We can slip the preset load when reverting back to the last selection, since it was already loaded.
+                            // We can skip the preset load when reverting back to the last selection,
+                            // since it was already loaded.
                             skipPresetLoad = true;
                             cmbPresets.SelectedIndex = lastSelectedIndex;
                             skipPresetLoad = false;
@@ -177,14 +151,47 @@ namespace BridgeOpsClient
             }
             catch (Exception e)
             {
-                App.DisplayError(App.ErrorConcat("Could not retrieve preset list.", e.Message), this);
+                App.DisplayError(App.ErrorConcat("Could not retrieve preset" + (list ? " list." : "."), e.Message),
+                                 this);
             }
+        }
+
+        private void ApplyLoadedPreset(string jsonString)
+        {
+            try
+            {
+                // A lot could go wrong in terms of trying to read potentially null objects, but if that happens, the file
+                // has been corrupted and an exception should be thrown anyway.
+#pragma warning disable CS8602
+
+                JsonObject json = JsonNode.Parse(jsonString).AsObject();
+
+                // Not using ItemsSource since we want to work directly with the collection when the user modifies the list.
+                lstFiles.Items.Clear();
+                foreach (string s in json["Templates"].Deserialize<List<string>>()!)
+                    lstFiles.Items.Add(s);
+
+                txtFolder.Text = json["OutputFolder"].GetValue<string>().ToString();
+
+#pragma warning restore CS8602
+            }
+            catch
+            {
+                App.DisplayError("JSON file could not be read. It could be corrupted.", this);
+            }
+
+            ToggleFileButtons();
         }
 
 
         /// <summary> Reset the window to a blank configuration. </summary>
         private void ClearDown()
         {
+            lstFiles.Items.Clear();
+            lstSummary.Items.Clear();
+            btnCheck.IsEnabled = false;
+            btnRun.IsEnabled = false;
+            validTagCount = 0;
         }
 
         bool skipPresetLoad = false;
@@ -213,6 +220,8 @@ namespace BridgeOpsClient
                     PresetLoad(false);
             }
             lastSelectedIndex = cmbPresets.SelectedIndex;
+
+            btnRun.IsEnabled = false;
         }
 
         bool savingNew = false;
@@ -342,8 +351,8 @@ namespace BridgeOpsClient
         {
             if (WindowState != WindowState.Maximized)
             {
-                Settings.Default.QueryWinSizeX = Width;
-                Settings.Default.QueryWinSizeY = Height;
+                Settings.Default.ReportToTempWinSizeX = Width;
+                Settings.Default.ReportToTempWinSizeY = Height;
                 Settings.Default.Save();
                 App.WindowClosed();
             }
@@ -440,6 +449,11 @@ namespace BridgeOpsClient
             }
         }
 
+        private void ToggleRunButton()
+        {
+            btnRun.IsEnabled = lstFiles.Items.Count > 0 && validTagCount > 0 && txtFolder.Text.Length > 0;
+        }
+
         bool skipFileSelectionChanged = false;
         private void lstFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -459,26 +473,27 @@ namespace BridgeOpsClient
             txtFolder.Text = dialog.SelectedPath;
         }
 
-        class ReportTag
+        public class ReportTag
         {
             public string filepath;   // Path including filename.
             public string filename;   // Filename only.
             public string tag;        // The tag's original text.
             public string presetName; // The tag's preset name.
             public string tabName;    // The tag's preset tab name.
+            public bool valid;
         }
-        class ReportTagExcel : ReportTag
+        public class ReportTagExcel : ReportTag
         {
             public string sheetName;  // Name of the tab in the Excel file.
             public int x;             // Column number, 1-indexed.
             public string xLetter;    // Column letter.
             public int y;             // Row number, 1-indexed.
         }
-        class ReportTagWord : ReportTag
+        public class ReportTagWord : ReportTag
         {
         }
 
-        List<ReportTag> tags = new();
+        List<ReportTag> reportTags = new();
 
         public string[]? ParseTagText(string text)
         {
@@ -493,9 +508,10 @@ namespace BridgeOpsClient
             return null;
         }
 
+        private int validTagCount = 0;
         private void btnCheck_Click(object sender, RoutedEventArgs e)
         {
-            tags.Clear();
+            reportTags.Clear();
             lstSummary.Items.Clear();
 
             TextBlock CreateTextBlock(string text, Brush brush)
@@ -506,6 +522,8 @@ namespace BridgeOpsClient
                     Foreground = brush
                 };
             }
+
+            validTagCount = 0;
 
             List<List<object>> report = new();
             foreach (string filepath in lstFiles.Items)
@@ -532,7 +550,7 @@ namespace BridgeOpsClient
                                     string[]? names = ParseTagText(celltext);
                                     if (names == null)
                                         continue;
-                                    tags.Add(new ReportTagExcel()
+                                    reportTags.Add(new ReportTagExcel()
                                     {
                                         filepath = filepath,
                                         filename = filename,
@@ -542,7 +560,8 @@ namespace BridgeOpsClient
                                         y = cell.Address.RowNumber,
                                         tag = celltext,
                                         presetName = names[0],
-                                        tabName = names[1]
+                                        tabName = names[1],
+                                        valid = false
                                     });
                                 }
                         }
@@ -565,13 +584,14 @@ namespace BridgeOpsClient
                                 string[]? names = ParseTagText(text);
                                 if (names == null)
                                     continue;
-                                tags.Add(new ReportTagWord()
+                                reportTags.Add(new ReportTagWord()
                                 {
                                     filepath = filepath,
                                     filename = filename,
                                     tag = text,
                                     presetName = names[0],
-                                    tabName = names[1]
+                                    tabName = names[1],
+                                    valid = false
                                 });
                             }
                         }
@@ -583,8 +603,8 @@ namespace BridgeOpsClient
             }
 
             PresetCheckRequest pcr;
-            if (App.SendPresetCheckList(tags.Select(t => t.presetName).ToList(),
-                                        tags.Select(t => t.tabName).ToList(), out pcr, this) &&
+            if (App.SendPresetCheckList(reportTags.Select(t => t.presetName).ToList(),
+                                        reportTags.Select(t => t.tabName).ToList(), out pcr, this) &&
                 pcr.presets.Count == pcr.tabs.Count &&
                 pcr.presets.Count == pcr.present.Count)
             {
@@ -593,21 +613,44 @@ namespace BridgeOpsClient
                     if (pcr.present[i])
                         existingPresetTabs.Add("{{" + pcr.presets[i] + "/" + pcr.tabs[i] + "}}");
 
-                foreach (ReportTag foundTag in tags)
+                foreach (ReportTag tag in reportTags)
                 {
                     string row;
-                    if (foundTag is ReportTagExcel rte)
+                    if (tag is ReportTagExcel rte)
                         row = $"{rte.filename}/{rte.sheetName} | {rte.xLetter}{rte.y}: {rte.presetName}, {rte.tabName}";
-                    else if (foundTag is ReportTagWord rtw)
+                    else if (tag is ReportTagWord rtw)
                         row = $"{rtw.filename} | {rtw.presetName}, {rtw.tabName}";
                     else
                         row = "Error";
-                    if (existingPresetTabs.Contains(foundTag.tag))
+                    if (existingPresetTabs.Contains(tag.tag))
+                    {
                         lstSummary.Items.Add(CreateTextBlock(row, Brushes.Black));
+                        tag.valid = true;
+                        ++validTagCount;
+                    }
                     else
                         lstSummary.Items.Add(CreateTextBlock(row, Brushes.Red));
                 }
             }
+
+            btnRun.IsEnabled = validTagCount > 0;
+        }
+
+        private void btnRun_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Directory.Exists(txtFolder.Text))
+            {
+                App.DisplayError("The output directory does not exist.", this);
+                return;
+            }
+
+            ReportToTemplatesRun runner = new(reportTags, txtFolder.Text);
+            runner.ShowDialog();
+        }
+
+        private void txtFolder_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ToggleRunButton();
         }
     }
 }

@@ -446,14 +446,15 @@ namespace BridgeOpsClient
 
         // Used for retaining friendly names as we don't have the dictionaries to help us in the output stage.
         private List<string> chosenColumnNames = new();
-        private SelectRequest selectRequest = new();
-        private bool BuildQuery()
+        public SelectRequest selectRequest = new();
+        private bool BuildQuery(bool suppressErrors = false)
         {
             chosenColumnNames = new();
 
             bool Abort(string message)
             {
-                App.DisplayError(message, builderWindow);
+                if (!suppressErrors)
+                    App.DisplayError(message, builderWindow);
                 return false;
             }
 
@@ -604,12 +605,21 @@ namespace BridgeOpsClient
             return true;
         }
 
-        private void DisplayCode()
+        public void DisplayCode()
         {
             txtCode.Text = selectRequest.SqlSelect();
             dtgOutput.Wipe();
             btnDeleteSelected.IsEnabled = false;
             btnUpdateSelected.IsEnabled = false;
+        }
+
+        // Used by SelectBuilder.cs to generate the code at time of saving a preset.
+        public string GenerateCodeExternally()
+        {
+            if (BuildQuery(true))
+                return selectRequest.SqlSelect();
+            else
+                return "SQL code for preset could not be generated.";
         }
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
