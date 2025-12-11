@@ -1,9 +1,10 @@
-﻿using DocumentFormat.OpenXml.Office2010.ExcelAc;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows;
@@ -44,80 +45,115 @@ namespace BridgeOpsClient
 
         Dictionary<string, JsonObject?> presetJsonObjects = new();
         Dictionary<string, Dictionary<string, string?>> selectStatements = new();
-        Dictionary<string, Dictionary<string, object?>> storedVariables = new();
 
         // Process starts here.
         private void CustomWindow_ContentRendered(object sender, EventArgs e)
         {
-            SelectBuilder.storedVariables.Clear();
-
-            // Load all required presets so that we don't make more calls than necessary to the agent to load
-            // individual tabs or repeated queries.
-            float p = 0;
-            foreach (ReportToTemplates.ReportTag reportTag in reportTags)
+            // Build a dictionary of presets and tabs to load.
+            Dictionary<string, HashSet<string>> presetsAndTabs = new();
+            foreach (ReportToTemplates.ReportTag tag in reportTags)
             {
-                if (!presetJsonObjects.ContainsKey(reportTag.presetName) && reportTag.valid)
+                if (!tag.valid)
+                    continue;
+                presetsAndTabs.TryAdd(tag.presetName, new());
+                presetsAndTabs[tag.presetName].Add(tag.tabName);
+            }
+
+            // Build a dictionary of all loaded presets.
+            float p = 0;
+            foreach (string presetName in presetsAndTabs.Keys)
+            {
+                if (!presetJsonObjects.ContainsKey(presetName))
                 {
                     try
                     {
                         string presetJson;
-                        if (PresetLoad(reportTag.presetName, out presetJson))
-                            presetJsonObjects.Add(reportTag.presetName, JsonNode.Parse(presetJson)!.AsObject());
+                        if (PresetLoad(presetName, out presetJson))
+                            presetJsonObjects.Add(presetName, JsonNode.Parse(presetJson)!.AsObject());
                     }
                     catch
                     {
                         // Add to dictionary as null so we don't repeat failed loads.
-                        presetJsonObjects.Add(reportTag.presetName, null);
-                        Log("Unable to load preset: " + reportTag.presetName);
+                        presetJsonObjects.Add(presetName, null);
+                        Log("Unable to load preset: " + presetName);
                     }
-                    storedVariables.Add(reportTag.presetName, new());
-                    selectStatements.Add(reportTag.presetName, new());
+                    selectStatements.Add(presetName, new());
                 }
 
                 SetProgress(progressSteps[0] * (p++ / reportTags.Count));
             }
 
-            // Build a dictionaries of select statements by tab name inside an enclosing dictionary of preset names.
-            p = 0;
-            foreach (ReportToTemplates.ReportTag reportTag in reportTags)
-            {
-                // Do this first, since there are some continues and a break in play.
-                SetProgress(progressSteps[0] + (progressSteps[1] * (p++ / reportTags.Count)));
+            int totalStatementsToGather = 0;
+            foreach (var tabs in presetsAndTabs.Values)
+                totalStatementsToGather += tabs.Count;
 
-                if (!reportTag.valid ||
-                    presetJsonObjects[reportTag.presetName] == null ||
-                    selectStatements[reportTag.presetName].ContainsKey(reportTag.tabName))
+
+            // Build a dictionary of select statements by tab name inside an enclosing dictionary of preset names.
+            p = 0;
+            foreach (string presetName in presetsAndTabs.Keys)
+            {
+                SelectBuilder.storedVariables.Clear();
+                Dictionary<string, object?> presetStoredVariables = new();
+
+                if (presetJsonObjects[presetName] == null)
                     continue;
 
-                JsonObject? jsonObj = presetJsonObjects[reportTag.presetName]!;
-                Dictionary<string, string?> presetStatements = selectStatements[reportTag.presetName];
+                JsonObject jsonObj = presetJsonObjects[presetName]!;
+                Dictionary<string, string?> presetStatements = selectStatements[presetName];
 
-                for (int i = 0; true; ++i)
-                    try
+                foreach (string tabName in presetsAndTabs[presetName])
+                {
+                    // Do this first, since there are some continues and a break in play.
+                    SetProgress(progressSteps[0] + (progressSteps[1] * (p++ / totalStatementsToGather)));
+
+                    // Search through the preset for the tab index we're looking for.
+                    int index = 0;
+                    while (true)
                     {
                         JsonNode? tab;
-                        if (jsonObj.TryGetPropertyValue(i.ToString(), out tab))
+                        if (jsonObj.TryGetPropertyValue(index.ToString(), out tab))
                         {
-                            if (tab!["Name"]!.GetValue<string>() != reportTag.tabName)
-                                continue;
-                            presetStatements.Add(reportTag.tabName, tab!["Statement"]!.GetValue<string>());
-                            if (tab!["Type"]!.GetValue<string>() == "Statement")
-                            {
-                                string finalStatement;
-                                if (PageSelectStatement.InsertParameters(presetStatements[reportTag.tabName]!,
-                                                                         out finalStatement,
-                                                                         $"{reportTag.presetName} > {reportTag.tabName}",
-                                                                         this, storedVariables[reportTag.presetName]))
-                                    presetStatements[reportTag.presetName] = finalStatement;
-                            }
+                            if (tab!["Name"]!.GetValue<string>() == tabName)
+                                break;
+                        }
+                        else // The tab index didn't exist in the preset, so we've reached the end and found nothing.
+                        {
+                            index = -1;
+                            break;
+                        }
+                        ++index;
+                    }
+                    if (index == -1)
+                    {
+                        presetStatements.Add(tabName, null);
+                        continue;
+                    }
+                    // Gather the statement for the preset.
+                    try
+                    {
+                        JsonObject tab = jsonObj[index.ToString()]!.AsObject();
+                        string rawStatement = tab!["Statement"]!.GetValue<string>();
+                        if (tab!["Type"]!.GetValue<string>() == "Statement")
+                        {
+                            string finalStatement;
+                            if (PageSelectStatement.InsertParameters(rawStatement!,
+                                                                     out finalStatement,
+                                                                     $"{presetName} > {tabName}",
+                                                                     this,
+                                                                     presetStoredVariables))
+                                presetStatements.Add(tabName, finalStatement);
+                            else
+                                presetStatements.Add(tabName, null);
+                            break;
                         }
                         else
-                            break;
+                            presetStatements.Add(tabName, rawStatement);
                     }
                     catch
                     {
-                        presetStatements.Add(reportTag.presetName, null);
+                        presetStatements.Add(tabName, null);
                     }
+                }
             }
         }
 
