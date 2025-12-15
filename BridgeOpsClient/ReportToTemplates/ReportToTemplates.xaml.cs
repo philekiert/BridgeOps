@@ -475,19 +475,19 @@ namespace BridgeOpsClient
 
         public class ReportTag
         {
-            public string filepath;   // Path including filename.
-            public string filename;   // Filename only.
-            public string tag;        // The tag's original text.
-            public string presetName; // The tag's preset name.
-            public string tabName;    // The tag's preset tab name.
+            public string filepath = "";    // Path including filename.
+            public string filename = "";    // Filename only.
+            public string tag = "";         // The tag's original text.
+            public string presetName = "";  // The tag's preset name.
+            public string tabName = "";     // The tag's preset tab name.
             public bool valid;
         }
         public class ReportTagExcel : ReportTag
         {
-            public string sheetName;  // Name of the tab in the Excel file.
-            public int x;             // Column number, 1-indexed.
-            public string xLetter;    // Column letter.
-            public int y;             // Row number, 1-indexed.
+            public string sheetName = "";  // Name of the tab in the Excel file.
+            public int x;                  // Column number, 1-indexed.
+            public string xLetter = "";    // Column letter.
+            public int y;                  // Row number, 1-indexed.
         }
         public class ReportTagWord : ReportTag
         {
@@ -642,6 +642,11 @@ namespace BridgeOpsClient
             {
                 App.DisplayError("The output directory does not exist.", this);
                 return;
+            }
+
+            if (validTagCount == 0)
+            {
+                App.DisplayError("No valid tags could be found.", this);
             }
 
             ReportToTemplatesRun runner = new(reportTags, txtFolder.Text);

@@ -1,4 +1,9 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Office2016.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -10,20 +15,26 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using static BridgeOpsClient.ReportToTemplates;
 
 namespace BridgeOpsClient
 {
     public partial class ReportToTemplatesRun : CustomWindow
     {
-        float[] progressSteps = new float[] { .2f, .2f, .6f };
-        private void SetProgress(float percentage)
+        // progressSteps represent progress chunks between things like running the queries and inserting the data.
+        float[] progressSteps = new float[] { .2f, .2f, .2f, .4f };
+        int progressStep = 0;
+        private void SetProgress(float percentageAlongStep)
         {
-            bdrProgressBar.Width = bdrProgressBarRail.ActualWidth * percentage;
+            float progress = 0f;
+            for (int i = 0; i < progressStep; ++i)
+                progress += progressSteps[i];
+            progress += progressSteps[progressStep] * percentageAlongStep;
+            bdrProgressBar.Width = bdrProgressBarRail.ActualWidth * percentageAlongStep;
         }
 
         List<ReportToTemplates.ReportTag> reportTags;
@@ -45,6 +56,7 @@ namespace BridgeOpsClient
 
         Dictionary<string, JsonObject?> presetJsonObjects = new();
         Dictionary<string, Dictionary<string, string?>> selectStatements = new();
+        Dictionary<string, Dictionary<string, List<List<object?>>>> data = new();
 
         // Process starts here.
         private void CustomWindow_ContentRendered(object sender, EventArgs e)
@@ -80,16 +92,16 @@ namespace BridgeOpsClient
                     selectStatements.Add(presetName, new());
                 }
 
-                SetProgress(progressSteps[0] * (p++ / reportTags.Count));
+                SetProgress(p++ / reportTags.Count);
             }
 
             int totalStatementsToGather = 0;
             foreach (var tabs in presetsAndTabs.Values)
                 totalStatementsToGather += tabs.Count;
 
-
             // Build a dictionary of select statements by tab name inside an enclosing dictionary of preset names.
             p = 0;
+            ++progressStep;
             foreach (string presetName in presetsAndTabs.Keys)
             {
                 SelectBuilder.storedVariables.Clear();
@@ -104,7 +116,7 @@ namespace BridgeOpsClient
                 foreach (string tabName in presetsAndTabs[presetName])
                 {
                     // Do this first, since there are some continues and a break in play.
-                    SetProgress(progressSteps[0] + (progressSteps[1] * (p++ / totalStatementsToGather)));
+                    SetProgress(p++ / totalStatementsToGather);
 
                     // Search through the preset for the tab index we're looking for.
                     int index = 0;
@@ -143,8 +155,10 @@ namespace BridgeOpsClient
                                                                      presetStoredVariables))
                                 presetStatements.Add(tabName, finalStatement);
                             else
+                            {
                                 presetStatements.Add(tabName, null);
-                            break;
+                                break;
+                            }
                         }
                         else
                             presetStatements.Add(tabName, rawStatement);
@@ -155,6 +169,29 @@ namespace BridgeOpsClient
                     }
                 }
             }
+
+            // Load the results for all queries into memory. This shouldn't pose an issue, as the returned data would
+            // have to be gargantuan to exceed memory capacity.
+            p = 0;
+            ++progressStep;
+            foreach (string presetName in presetsAndTabs.Keys)
+            {
+                data.Add(presetName, new());
+                foreach (string tabName in presetsAndTabs[presetName])
+                {
+                    data[presetName].Add(tabName, new());
+                    if (selectStatements[presetName][tabName] == null)
+                        continue;
+                    List<List<object?>> dataTemp;
+                    if (App.SendSelectStatement(selectStatements[presetName][tabName]!, out _, out dataTemp, this))
+                        data[presetName][tabName] = dataTemp;
+                }
+
+                // Do this first, since there are some continues and a break in play.
+                SetProgress(p++ / totalStatementsToGather);
+            }
+
+
         }
 
         private bool PresetLoad(string presetName, out string presetJSON)

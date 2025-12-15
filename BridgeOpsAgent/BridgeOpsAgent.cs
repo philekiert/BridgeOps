@@ -33,7 +33,7 @@ internal class BridgeOpsAgent
     static string columnRecord = "";
     static bool columnRecordIntact = false;
 
-    const int clientNudgeInterval = 10_000;
+    const int clientNudgeInterval = 100_000;
     const int notificationSendRetries = 3;
     const int maxMissedNudges = 2;
 
