@@ -477,5 +477,48 @@ public static class Glo
                 return i64;
             return null;
         }
+
+
+        public static string UnknownObjectToString(object? val)
+        {
+            if (val == null)
+                return "";
+            else if (val.GetType() == typeof(string))
+                return ((string)val).Replace("'", "''");
+            else if (val.GetType() == typeof(int))
+                return ((int)val).ToString();
+            else if (val.GetType() == typeof(TimeSpan))
+                return ((TimeSpan)val).ToString("hh\\:mm");
+            else if (val.GetType() == typeof(DateTime))
+            {
+                DateTime valCast = (DateTime)val;
+                if (valCast.Ticks % 864_000_000_000 == 0) // On the day
+                    return valCast.ToString("yyyy/MM/dd");
+                else
+                    return valCast.ToString("yyyy/MM/dd HH:mm");
+            }
+            else
+                return "";
+        }
+        public static string UnknownObjectToString(object val, string type)
+        {
+            type = type.ToLower();
+            if (type == "string")
+                return "'" + ((string)val).Replace("'", "''") + "'";
+            else if (type == "int")
+                return ((int)val).ToString().Replace("'", "''");
+            else if (type == "timespan")
+                return ((TimeSpan)val).ToString("hh\\:mm");
+            else if (type == "datetime")
+            {
+                DateTime valCast = (DateTime)val;
+                if (valCast.Ticks % 864_000_000_000 == 0) // On the day
+                    return valCast.ToString("yyyy-MM-dd");
+                else
+                    return valCast.ToString("yyyy-MM-dd HH:mm");
+            }
+            else
+                return "";
+        }
     }
 }
