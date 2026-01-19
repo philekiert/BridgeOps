@@ -513,9 +513,9 @@ public static class Glo
             {
                 DateTime valCast = (DateTime)val;
                 if (valCast.Ticks % 864_000_000_000 == 0) // On the day
-                    return valCast.ToString("yyyy-MM-dd");
+                    return valCast.ToString("yyyy/MM/dd");
                 else
-                    return valCast.ToString("yyyy-MM-dd HH:mm");
+                    return valCast.ToString("yyyy/MM/dd HH:mm");
             }
             else
                 return "";

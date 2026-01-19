@@ -481,16 +481,17 @@ namespace BridgeOpsClient
             public string presetName = "";  // The tag's preset name.
             public string tabName = "";     // The tag's preset tab name.
             public bool valid;
+            public int x;                  // Column number, 1-indexed.
+            public int y;                  // Row number, 1-indexed.
         }
         public class ReportTagExcel : ReportTag
         {
             public string sheetName = "";  // Name of the tab in the Excel file.
-            public int x;                  // Column number, 1-indexed.
             public string xLetter = "";    // Column letter.
-            public int y;                  // Row number, 1-indexed.
         }
         public class ReportTagWord : ReportTag
         {
+            public int tableNo = 0;
         }
 
         List<ReportTag> reportTags = new();
@@ -568,31 +569,41 @@ namespace BridgeOpsClient
                     // Word files.
                     else if (filename.EndsWith(".docx"))
                         using (WordprocessingDocument doc = WordprocessingDocument.Open(filepath, false))
-                        { // All tables in the body (you can extend to headers/footers if needed)
+                        {
+                            int tableNo = 0;
                             foreach (var table in doc.MainDocumentPart!.Document.Body!
                                                      .Descendants<DocumentFormat.OpenXml.Wordprocessing.Table>())
                             {
-                                var firstRow = table.Elements<TableRow>().FirstOrDefault();
-                                var firstCell = firstRow?.Elements<TableCell>().FirstOrDefault();
-                                if (firstCell == null)
-                                    continue;
-
-                                string text = "";
-                                foreach (var t in firstCell.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
-                                    text += t.Text;
-
-                                string[]? names = ParseTagText(text);
-                                if (names == null)
-                                    continue;
-                                reportTags.Add(new ReportTagWord()
+                                int y = 0;
+                                foreach (var row in table.Elements<TableRow>())
                                 {
-                                    filepath = filepath,
-                                    filename = filename,
-                                    tag = text,
-                                    presetName = names[0],
-                                    tabName = names[1],
-                                    valid = false
-                                });
+                                    int x = 0;
+                                    foreach (var cell in row.Elements<TableCell>())
+                                    {
+                                        // Get all text in the cell.
+                                        string text = "";
+                                        foreach (var t in cell.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
+                                            text += t.Text;
+
+                                        string[]? names = ParseTagText(text);
+                                        if (names != null)
+                                            reportTags.Add(new ReportTagWord()
+                                            {
+                                                filepath = filepath,
+                                                filename = filename,
+                                                tag = text,
+                                                presetName = names[0],
+                                                tabName = names[1],
+                                                valid = false,
+                                                x = x,
+                                                y = y,
+                                                tableNo = tableNo
+                                            });
+                                        ++x;
+                                    }
+                                    ++y;
+                                }
+                                ++tableNo;
                             }
                         }
                 }
@@ -615,21 +626,22 @@ namespace BridgeOpsClient
 
                 foreach (ReportTag tag in reportTags)
                 {
-                    string row;
+                    string s;
                     if (tag is ReportTagExcel rte)
-                        row = $"{rte.filename}/{rte.sheetName} | {rte.xLetter}{rte.y}: {rte.presetName}, {rte.tabName}";
+                        s = $"{rte.filename}/{rte.sheetName} [{rte.xLetter}{rte.y}]: {rte.presetName}, {rte.tabName}";
                     else if (tag is ReportTagWord rtw)
-                        row = $"{rtw.filename} | {rtw.presetName}, {rtw.tabName}";
+                        s = $"{rtw.filename}/Table {rtw.tableNo + 1} [x{rtw.x + 1},y{rtw.y + 1}]: " +
+                            $"{rtw.presetName}, {rtw.tabName}";
                     else
-                        row = "Error";
+                        s = "Error";
                     if (existingPresetTabs.Contains(tag.tag))
                     {
-                        lstSummary.Items.Add(CreateTextBlock(row, Brushes.Black));
+                        lstSummary.Items.Add(CreateTextBlock(s, Brushes.Black));
                         tag.valid = true;
                         ++validTagCount;
                     }
                     else
-                        lstSummary.Items.Add(CreateTextBlock(row, Brushes.Red));
+                        lstSummary.Items.Add(CreateTextBlock(s, Brushes.Red));
                 }
             }
 

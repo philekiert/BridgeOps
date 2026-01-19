@@ -54,7 +54,7 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             if (pageNme != null)
-                lblTitle.Content = $"{pageNme} Parameters";
+                lblTitle.Content = $"{pageNme}";
 
             this.paramList = paramList;
 

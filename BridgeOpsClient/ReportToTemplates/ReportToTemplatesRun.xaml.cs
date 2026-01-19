@@ -1,11 +1,14 @@
-﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Packaging;
+﻿using Azure;
+using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Office2016.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Vml.Office;
 using DocumentFormat.OpenXml.Wordprocessing;
+using ExcelNumberFormat;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -18,7 +21,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using static BridgeOpsClient.CustomControls.SqlDataGrid;
 using static BridgeOpsClient.ReportToTemplates;
 
 namespace BridgeOpsClient
@@ -26,7 +29,10 @@ namespace BridgeOpsClient
     public partial class ReportToTemplatesRun : CustomWindow
     {
         // progressSteps represent progress chunks between things like running the queries and inserting the data.
-        float[] progressSteps = new float[] { .2f, .2f, .2f, .4f };
+        float[] progressSteps = new float[] { .3f, .3f, .4f };
+        // Step 0: Load/construct select statements for each preset tab.
+        // Step 1: Run each query.
+        // Step 2: Inject data into each file.
         int progressStep = 0;
         private void SetProgress(float percentageAlongStep)
         {
@@ -34,13 +40,13 @@ namespace BridgeOpsClient
             for (int i = 0; i < progressStep; ++i)
                 progress += progressSteps[i];
             progress += progressSteps[progressStep] * percentageAlongStep;
-            bdrProgressBar.Width = bdrProgressBarRail.ActualWidth * percentageAlongStep;
+            bdrProgressBar.Width = bdrProgressBarRail.ActualWidth * progress;
         }
 
-        List<ReportToTemplates.ReportTag> reportTags;
+        List<ReportTag> reportTags;
         string outputDirectory;
 
-        public ReportToTemplatesRun(List<ReportToTemplates.ReportTag> reportTags, string outputDirectory)
+        public ReportToTemplatesRun(List<ReportTag> reportTags, string outputDirectory)
         {
             InitializeComponent();
             SetProgress(0); // Rail ActualWidth is 0 due to not being rendered, but it doesn't matter here.
@@ -56,7 +62,12 @@ namespace BridgeOpsClient
 
         Dictionary<string, JsonObject?> presetJsonObjects = new();
         Dictionary<string, Dictionary<string, string?>> selectStatements = new();
-        Dictionary<string, Dictionary<string, List<List<object?>>>> data = new();
+        Dictionary<string, Dictionary<string, List<List<object?>>>> dataDict = new();
+        Dictionary<string, Dictionary<string, List<string?>>> colTypesDict = new();
+
+        // Used to consolidate tags into files, so that we can interact with files sequentially without repetition.
+        Dictionary<string, Dictionary<string, List<ReportTagExcel>>> excelFileDict = new();
+        Dictionary<string, Dictionary<int, List<ReportTagWord>>> wordFileDict = new();
 
         // Process starts here.
         private void CustomWindow_ContentRendered(object sender, EventArgs e)
@@ -71,8 +82,24 @@ namespace BridgeOpsClient
                 presetsAndTabs[tag.presetName].Add(tag.tabName);
             }
 
+            // Sort report tags into files and sheets.
+            foreach (ReportTag tag in reportTags)
+            {
+                if (tag is ReportTagExcel eTag)
+                {
+                    excelFileDict.TryAdd(eTag.filepath, new());
+                    excelFileDict[eTag.filepath].TryAdd(eTag.sheetName, new());
+                    excelFileDict[eTag.filepath][eTag.sheetName].Add(eTag);
+                }
+                else if (tag is ReportTagWord wTag)
+                {
+                    wordFileDict.TryAdd(wTag.filepath, new());
+                    wordFileDict[wTag.filepath].TryAdd(wTag.tableNo, new());
+                    wordFileDict[wTag.filepath][wTag.tableNo].Add(wTag);
+                }
+            }
+
             // Build a dictionary of all loaded presets.
-            float p = 0;
             foreach (string presetName in presetsAndTabs.Keys)
             {
                 if (!presetJsonObjects.ContainsKey(presetName))
@@ -91,17 +118,14 @@ namespace BridgeOpsClient
                     }
                     selectStatements.Add(presetName, new());
                 }
-
-                SetProgress(p++ / reportTags.Count);
             }
 
             int totalStatementsToGather = 0;
             foreach (var tabs in presetsAndTabs.Values)
                 totalStatementsToGather += tabs.Count;
+            float p = 0;
 
             // Build a dictionary of select statements by tab name inside an enclosing dictionary of preset names.
-            p = 0;
-            ++progressStep;
             foreach (string presetName in presetsAndTabs.Keys)
             {
                 SelectBuilder.storedVariables.Clear();
@@ -115,7 +139,6 @@ namespace BridgeOpsClient
 
                 foreach (string tabName in presetsAndTabs[presetName])
                 {
-                    // Do this first, since there are some continues and a break in play.
                     SetProgress(p++ / totalStatementsToGather);
 
                     // Search through the preset for the tab index we're looking for.
@@ -176,22 +199,44 @@ namespace BridgeOpsClient
             ++progressStep;
             foreach (string presetName in presetsAndTabs.Keys)
             {
-                data.Add(presetName, new());
+                SetProgress(p++ / presetsAndTabs.Count);
+
+                dataDict.Add(presetName, new());
+                colTypesDict.Add(presetName, new());
                 foreach (string tabName in presetsAndTabs[presetName])
                 {
-                    data[presetName].Add(tabName, new());
+                    dataDict[presetName].Add(tabName, new());
+                    colTypesDict[presetName].Add(tabName, new());
                     if (selectStatements[presetName][tabName] == null)
                         continue;
+                    List<string?> colTypesTemp;
                     List<List<object?>> dataTemp;
-                    if (App.SendSelectStatement(selectStatements[presetName][tabName]!, out _, out dataTemp, this))
-                        data[presetName][tabName] = dataTemp;
+                    if (App.SendSelectStatement(selectStatements[presetName][tabName]!, out _, out dataTemp, out colTypesTemp, this))
+                    {
+                        dataDict[presetName][tabName] = dataTemp;
+                        colTypesDict[presetName][tabName] = colTypesTemp;
+                    }
                 }
-
-                // Do this first, since there are some continues and a break in play.
-                SetProgress(p++ / totalStatementsToGather);
             }
 
+            // Insert the data into each file.
+            int destinationCount = excelFileDict.Count + wordFileDict.Count;
+            p = 0;
+            ++progressStep;
+            // Excel files.
+            foreach (string filepath in excelFileDict.Keys)
+            {
+                InsertDataExcel(filepath);
+                SetProgress(p++ / destinationCount);
+            }
+            // Word files.
+            foreach (string filename in wordFileDict.Keys)
+            {
+                InsertDataWord(filename);
+                SetProgress(p++ / destinationCount);
+            }
 
+            SetProgress(1); // Done :)
         }
 
         private bool PresetLoad(string presetName, out string presetJSON)
@@ -236,6 +281,257 @@ namespace BridgeOpsClient
                 presetJSON = e.Message;
                 return false;
             }
+        }
+
+        private bool InsertDataExcel(string filepath)
+        {
+            if (!excelFileDict.ContainsKey(filepath))
+                return false;
+            string newFilePath = Path.Combine(outputDirectory, Path.GetFileName(filepath));
+            if (File.Exists(newFilePath))
+            {
+                if (!App.DisplayQuestion("Would you like to replace this file?", newFilePath + " already exists.",
+                                         DialogWindows.DialogBox.Buttons.YesNo, this))
+                    return false;
+                try
+                {
+                    File.Delete(newFilePath);
+                }
+                catch (Exception e)
+                {
+                    App.DisplayError(e.Message, "Unable to delete file", this);
+                }
+            }
+
+
+            try
+            {
+                using (XLWorkbook file = new(filepath))
+                {
+                    foreach (string sheetName in excelFileDict[filepath].Keys)
+                    {
+                        IXLWorksheet sheet;
+                        if (file.TryGetWorksheet(sheetName, out sheet))
+                        {
+                            // Start at the bottom of the sheet and work up to avoid row insertions creating gaps in
+                            // previous data chunks.
+                            var tags = excelFileDict[filepath][sheetName].OrderByDescending(t => t.y)
+                                                                     .ThenBy(t => t.x).ToList();
+                            // Record the greatest number of insertions for a single row to accont for multiple tags on
+                            // one row. If a row has already been 'expanded', we may not need to insert any more rows
+                            // for subsequent insertions on one row, or we certainly won't need to insert as many.
+                            Dictionary<int, int> insertionCounts = new();
+                            foreach (ReportTagExcel tag in tags)
+                            {
+                                if (!tag.valid ||
+                                    !dataDict.ContainsKey(tag.presetName) ||
+                                    !dataDict[tag.presetName].ContainsKey(tag.tabName))
+                                    continue;
+                                List<List<object?>> data = dataDict[tag.presetName][tag.tabName];
+                                List<string?> colTypes = colTypesDict[tag.presetName][tag.tabName];
+                                var topRow = sheet.Row(tag.y);
+                                topRow.Cell(tag.x).SetValue(""); // Wipe the tag (don't .Clear(), that wipes the formatting).
+                                // Store the 
+
+                                // Insert rows as needed.
+                                if (data.Count > 1)
+                                {
+                                    if (!insertionCounts.ContainsKey(tag.y))
+                                    {
+                                        topRow.InsertRowsBelow(data.Count - 1);
+                                        insertionCounts.Add(tag.y, data.Count - 1);
+                                    }
+                                    else if (data.Count - 1 > insertionCounts[tag.y])
+                                    {
+                                        int lastIn = insertionCounts[tag.y];
+                                        sheet.Row(tag.y + lastIn).InsertRowsBelow((data.Count - 1) - lastIn);
+                                        insertionCounts[tag.y] = data.Count - 1;
+                                    }
+                                }
+                                // else do nothing
+
+                                for (int y = 0; y < data.Count; ++y)
+                                    for (int x = 0; x < data[y].Count; ++x)
+                                    {
+                                        var c = sheet.Row(tag.y + y).Cell(tag.x + x);
+
+                                        // The desired behaviour here is to set the appropriate number format if the
+                                        // source cell was set to General, but if it was manually set to something else
+                                        // like a custom format in the top row, we want to retain the user's choice.
+                                        bool wasGeneral = c.Style.NumberFormat.NumberFormatId == 0;
+                                        IXLStyle oldStyle = c.Style;
+
+                                        if (colTypes[x]!.Contains("Int") || colTypes[x] == "Byte") // Can be left as General
+                                        {
+                                            c.Value = (int?)data[y][x];
+                                            if (!wasGeneral)
+                                                c.Style = oldStyle;
+                                        }
+                                        else if (colTypes[x] == "Date")
+                                        {
+                                            c.Value = (DateTime?)data[y][x];
+                                            if (wasGeneral)
+                                                c.Style.NumberFormat.Format = "dd/mm/yyyy";
+                                            else
+                                                c.Style = oldStyle;
+                                        }
+                                        else if (colTypes[x] == "DateTime")
+                                        {
+                                            c.Value = (DateTime?)data[y][x];
+                                            if (wasGeneral)
+                                                c.Style.NumberFormat.Format = "dd/mm/yyyy hh:mm";
+                                            else
+                                                c.Style = oldStyle;
+                                        }
+                                        else if (colTypes[x] == "TimeSpan")
+                                        {
+                                            c.Value = (TimeSpan?)data[y][x];
+                                            if (wasGeneral)
+                                                c.Style.NumberFormat.Format = "hh:mm";
+                                            else
+                                                c.Style = oldStyle;
+                                        }
+                                        else if (colTypes[x] == "Boolean")  // Can be left as General
+                                        {
+                                            c.Value = (bool?)data[y][x] == true ? "Yes" : "No";
+                                            if (!wasGeneral)
+                                                c.Style = oldStyle;
+                                        }
+                                        else // String or otherwise, can be left as General
+                                        {
+                                            c.Value = data[y][x] == null ? "" : data[y][x]!.ToString();
+                                            if (!wasGeneral)
+                                                c.Style = oldStyle;
+                                        }
+                                    }
+                            }
+                        }
+                    }
+                    file.SaveAs(newFilePath);
+                }
+                return true;
+            }
+            catch (Exception except)
+            {
+                App.DisplayError($"Unable to open file, see error: {except.Message}", this);
+                return false;
+            }
+        }
+
+        private bool InsertDataWord(string filepath)
+        {
+            if (!wordFileDict.ContainsKey(filepath))
+                return false;
+            string newFilePath = Path.Combine(outputDirectory, Path.GetFileName(filepath));
+            if (File.Exists(newFilePath))
+            {
+                if (!App.DisplayQuestion("Would you like to replace this file?", newFilePath + " already exists.",
+                                         DialogWindows.DialogBox.Buttons.YesNo, this))
+                    return false;
+                File.Delete(newFilePath);
+            }
+            try
+            {
+                File.Delete(newFilePath);
+            }
+            catch (Exception e)
+            {
+                App.DisplayError(e.Message, "Unable to delete file", this);
+            }
+
+            bool copied = false;
+            try
+            {
+                File.Copy(filepath, newFilePath);
+                copied = true;
+
+                using (WordprocessingDocument doc = WordprocessingDocument.Open(newFilePath, true))
+                {
+                    var tables = doc.MainDocumentPart!.Document.Body!
+                                    .Descendants<DocumentFormat.OpenXml.Wordprocessing.Table>();
+
+                    foreach (int tableNo in wordFileDict[filepath].Keys)
+                    {
+                        var table = tables.ElementAt(tableNo);
+
+                        Dictionary<int, int> insertionCounts = new();
+
+                        // Start at the bottom of the sheet and work up to avoid row insertions creating gaps in
+                        // previous data chunks.
+                        var tags = wordFileDict[filepath][tableNo].OrderByDescending(t => t.y)
+                                                                  .ThenBy(t => t.x).ToList();
+                        foreach (ReportTagWord tag in tags)
+                        {
+                            if (!tag.valid || !dataDict.ContainsKey(tag.presetName) ||
+                                !dataDict[tag.presetName].ContainsKey(tag.tabName))
+                                continue;
+                            List<List<object?>> data = dataDict[tag.presetName][tag.tabName];
+                            List<string?> colTypes = colTypesDict[tag.presetName][tag.tabName];
+                            var topRow = table.Elements<TableRow>().ElementAt(0);
+                            // Remove the tag.
+                            SetWordTableCell(topRow.Elements<TableCell>().ElementAt(tag.x));
+
+                            // Insert rows as needed.
+                            if (data.Count > 1)
+                            {
+                                if (!insertionCounts.ContainsKey(tag.y))
+                                {
+                                    InsertBlankRowsBelow(topRow, data.Count - 1);
+                                    insertionCounts.Add(tag.y, data.Count - 1);
+                                }
+                                else if (data.Count - 1 > insertionCounts[tag.y])
+                                {
+                                    int lastIn = insertionCounts[tag.y];
+                                    InsertBlankRowsBelow(table.Elements<TableRow>()
+                                                              .ElementAt(tag.y + lastIn), (data.Count - 1) - lastIn);
+                                    insertionCounts[tag.y] = data.Count - 1;
+                                }
+                            }
+                            // else do nothing
+
+                            var rows = table.Elements<TableRow>().ToList();
+                            for (int y = 0; y < data.Count; ++y)
+                            {
+                                var cells = rows[y + tag.y].Elements<TableCell>().ToList();
+                                for (int x = 0; x < data[y].Count && x + tag.x < cells.Count; ++x)
+                                {
+                                    var cell = cells[tag.x + x];
+                                    SetWordTableCell(cell, Glo.Fun.UnknownObjectToString(data[y][x]));
+                                }
+                            }
+                        }
+                    }
+                    doc.Save();
+                }
+                return true;
+            }
+            catch (Exception except)
+            {
+                App.DisplayError($"Unable to open file, see error: {except.Message}", this);
+                if (copied)
+                    File.Delete(newFilePath);
+                return false;
+            }
+        }
+        private void InsertBlankRowsBelow(TableRow referenceRow, int rowCount)
+        {
+            TableRow templateRow = (TableRow)referenceRow.CloneNode(true);
+            // Wipe all contents.
+            foreach (TableCell cell in templateRow.Elements<TableCell>())
+                SetWordTableCell(cell);
+            TableRow currentRow = referenceRow;
+            for (int i = 0; i < rowCount; i++)
+            {
+                TableRow newRow = (TableRow)templateRow.CloneNode(true);
+                currentRow.InsertAfterSelf(newRow);
+                currentRow = newRow;
+            }
+        }
+        private void SetWordTableCell(TableCell cell, string text = "")
+        {
+            Paragraph para = cell.Elements<Paragraph>().First();
+            para.RemoveAllChildren<Run>();
+            para.AppendChild(new Run(new Text(text))); // Important to keep Word happy.
         }
     }
 }
