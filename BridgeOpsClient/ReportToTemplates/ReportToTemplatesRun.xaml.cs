@@ -465,7 +465,7 @@ namespace BridgeOpsClient
                                 continue;
                             List<List<object?>> data = tag.data;
                             List<string?> colTypes = tag.types;
-                            var topRow = table.Elements<TableRow>().ElementAt(0);
+                            var topRow = table.Elements<TableRow>().ElementAt(tag.y);
                             // Remove the tag.
                             SetWordTableCell(topRow.Elements<TableCell>().ElementAt(tag.x));
 
@@ -488,9 +488,9 @@ namespace BridgeOpsClient
                             // else do nothing
 
                             var rows = table.Elements<TableRow>().ToList();
-
+                                
                             if (data.Count == 0) // If nothing, just clear the tag's cell.
-                                SetWordTableCell(rows[tag.y].Elements<TableCell>().ToList()[tag.x]);
+                                SetWordTableCell(topRow.Elements<TableCell>().ToList()[tag.x]);
                             else
                                 for (int y = 0; y < data.Count; ++y)
                                 {
