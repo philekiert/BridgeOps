@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:BridgeOpsClient"
         xmlns:custom="clr-namespace:BridgeOpsClient.CustomControls"
         mc:Ignorable="d"
-        Title="Select Query Builder" Width="485" Height="578" MinHeight="651" UseLayoutRounding="True"
+        Title="Report to Templates" Width="485" Height="578" MinHeight="651" UseLayoutRounding="True"
         MinWidth="485" Closed="CustomWindow_Closed">
     <Grid>
         <!-- Preset Control -->

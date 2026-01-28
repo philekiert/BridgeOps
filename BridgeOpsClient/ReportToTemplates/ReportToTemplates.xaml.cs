@@ -575,11 +575,15 @@ namespace BridgeOpsClient
                 });
                 ++i;
             }
+
             SetParameters setParameters = new("Date Setters", paramList);
-            setParameters.ShowDialog();
-            // Allow the user to bypass setting these if needed, the process will continue with them unset as normal.
-            if (setParameters.DialogResult == false)
-                return;
+            if (setParameters.paramsToSet)
+            {
+                setParameters.ShowDialog();
+                // Allow the user to bypass setting these if needed, the process will continue with them unset as normal.
+                if (setParameters.DialogResult == false)
+                    return;
+            }
 
             // Build a dictionary of file/preset/tab/param identifiers that stores the values to insert.
             foreach (PageSelectStatement.Param param in paramList)
