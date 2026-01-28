@@ -488,7 +488,7 @@ public static class Glo
             else if (val.GetType() == typeof(int))
                 return ((int)val).ToString();
             else if (val.GetType() == typeof(TimeSpan))
-                return $"{((TimeSpan)val).TotalHours.ToString():D2}:{((TimeSpan)val).Minutes.ToString():D2}";
+                return $"{((int)((TimeSpan)val).TotalHours).ToString():D2}:{((TimeSpan)val).Minutes.ToString():D2}";
             else if (val.GetType() == typeof(DateTime))
             {
                 DateTime valCast = (DateTime)val;
@@ -508,7 +508,7 @@ public static class Glo
             else if (type == "int")
                 return ((int)val).ToString().Replace("'", "''");
             else if (type == "timespan")
-                return $"{((TimeSpan)val).TotalHours.ToString():D2}:{((TimeSpan)val).Minutes.ToString():D2}";
+                return $"{((int)((TimeSpan)val).TotalHours).ToString():D2}:{((TimeSpan)val).Minutes.ToString():D2}";
             else if (type == "datetime")
             {
                 DateTime valCast = (DateTime)val;
