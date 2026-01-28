@@ -538,8 +538,13 @@ namespace BridgeOpsClient
         private void SetWordTableCell(TableCell cell, string text = "")
         {
             Paragraph para = cell.Elements<Paragraph>().First();
+            Run firstRun = para.Elements<Run>().FirstOrDefault()!;
+            RunProperties? runProperties = firstRun?.RunProperties?.CloneNode(true)! as RunProperties;
             para.RemoveAllChildren<Run>();
-            para.AppendChild(new Run(new Text(text))); // Important to keep Word happy.
+            Run newRun = new Run(new Text(text));
+            if (runProperties != null)
+                newRun.RunProperties = runProperties;
+            para.AppendChild(newRun);
         }
     }
 }
