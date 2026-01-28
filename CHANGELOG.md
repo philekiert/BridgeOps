@@ -1,6 +1,9 @@
 # Changelog
 
 ## 1.2.0
+### Major
+- Bulk reporting feature added.
+### Changed
 - Modified behaviour when failing to load a preset. It now falls back to the previous selection instead of ambiguously selecting the broken preset and resetting the view.
 
 ## 1.1.10

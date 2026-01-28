@@ -149,8 +149,10 @@ namespace BridgeOpsClient
             }
         }
 
+        // Returns false if the user backs out of the parameter screen.
         public static bool InsertParameters(string input, out string result, string? pageName, Window owner,
-                                            Dictionary<string, object?> storedVariables)
+                                            Dictionary<string, object?> storedVariables, // Currently unused
+                                            Dictionary<string, string>? templateParams = null)
         {
             List<Param> paramList = new();
             Dictionary<string, Param> paramVariables = new();
@@ -322,11 +324,14 @@ namespace BridgeOpsClient
                 }
             if (paramsToSet)
             {
-                SetParameters setParameters = new(pageName, paramList);
-                setParameters.Owner = owner;
-                setParameters.ShowDialog();
-                if (setParameters.DialogResult == false)
-                    return false;
+                SetParameters setParameters = new(pageName, paramList, templateParams);
+                if (setParameters.paramsToSet)
+                {
+                    setParameters.Owner = owner;
+                    setParameters.ShowDialog();
+                    if (setParameters.DialogResult == false)
+                        return false;
+                }
             }
 
             // Store any variables that might have been assigned values for the first time.

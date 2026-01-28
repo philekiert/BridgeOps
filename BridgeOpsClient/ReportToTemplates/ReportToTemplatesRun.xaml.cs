@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -29,7 +30,7 @@ namespace BridgeOpsClient
     public partial class ReportToTemplatesRun : CustomWindow
     {
         // progressSteps represent progress chunks between things like running the queries and inserting the data.
-        float[] progressSteps = new float[] { .3f, .3f, .4f };
+        float[] progressSteps = new float[] { .4f, .6f };
         // Step 0: Load/construct select statements for each preset tab.
         // Step 1: Run each query.
         // Step 2: Inject data into each file.
@@ -45,31 +46,28 @@ namespace BridgeOpsClient
 
         List<ReportTag> reportTags;
         string outputDirectory;
+        bool autoOverwite;
 
-        public ReportToTemplatesRun(List<ReportTag> reportTags, string outputDirectory)
+        public ReportToTemplatesRun(List<ReportTag> reportTags, string outputDirectory, bool autoOverwrite)
         {
             InitializeComponent();
             SetProgress(0); // Rail ActualWidth is 0 due to not being rendered, but it doesn't matter here.
 
             this.reportTags = reportTags;
             this.outputDirectory = outputDirectory;
+            this.autoOverwite = autoOverwrite;
         }
 
         private void Log(string message)
         { Log(message, Brushes.Black); }
+        private void LogError(string message)
+        { Log(message, Brushes.Red); }
         private void Log(string message, Brush brush)
         { lstEventLog.Items.Add(new TextBlock() { Text = message, Foreground = brush }); }
 
         Dictionary<string, JsonObject?> presetJsonObjects = new();
         Dictionary<string, Dictionary<string, string?>> selectStatements = new();
-        Dictionary<string, Dictionary<string, List<List<object?>>>> dataDict = new();
-        Dictionary<string, Dictionary<string, List<string?>>> colTypesDict = new();
 
-        // Used to consolidate tags into files, so that we can interact with files sequentially without repetition.
-        Dictionary<string, Dictionary<string, List<ReportTagExcel>>> excelFileDict = new();
-        Dictionary<string, Dictionary<int, List<ReportTagWord>>> wordFileDict = new();
-
-        // Process starts here.
         private void CustomWindow_ContentRendered(object sender, EventArgs e)
         {
             // Build a dictionary of presets and tabs to load.
@@ -80,23 +78,6 @@ namespace BridgeOpsClient
                     continue;
                 presetsAndTabs.TryAdd(tag.presetName, new());
                 presetsAndTabs[tag.presetName].Add(tag.tabName);
-            }
-
-            // Sort report tags into files and sheets.
-            foreach (ReportTag tag in reportTags)
-            {
-                if (tag is ReportTagExcel eTag)
-                {
-                    excelFileDict.TryAdd(eTag.filepath, new());
-                    excelFileDict[eTag.filepath].TryAdd(eTag.sheetName, new());
-                    excelFileDict[eTag.filepath][eTag.sheetName].Add(eTag);
-                }
-                else if (tag is ReportTagWord wTag)
-                {
-                    wordFileDict.TryAdd(wTag.filepath, new());
-                    wordFileDict[wTag.filepath].TryAdd(wTag.tableNo, new());
-                    wordFileDict[wTag.filepath][wTag.tableNo].Add(wTag);
-                }
             }
 
             // Build a dictionary of all loaded presets.
@@ -161,30 +142,14 @@ namespace BridgeOpsClient
                     if (index == -1)
                     {
                         presetStatements.Add(tabName, null);
+                        LogError($"Not found in presets: {presetName} / {tabName}");
                         continue;
                     }
                     // Gather the statement for the preset.
                     try
                     {
                         JsonObject tab = jsonObj[index.ToString()]!.AsObject();
-                        string rawStatement = tab!["Statement"]!.GetValue<string>();
-                        if (tab!["Type"]!.GetValue<string>() == "Statement")
-                        {
-                            string finalStatement;
-                            if (PageSelectStatement.InsertParameters(rawStatement!,
-                                                                     out finalStatement,
-                                                                     $"{presetName} > {tabName}",
-                                                                     this,
-                                                                     presetStoredVariables))
-                                presetStatements.Add(tabName, finalStatement);
-                            else
-                            {
-                                presetStatements.Add(tabName, null);
-                                break;
-                            }
-                        }
-                        else
-                            presetStatements.Add(tabName, rawStatement);
+                        presetStatements.Add(tabName, tab!["Statement"]!.GetValue<string>());
                     }
                     catch
                     {
@@ -193,47 +158,49 @@ namespace BridgeOpsClient
                 }
             }
 
-            // Load the results for all queries into memory. This shouldn't pose an issue, as the returned data would
-            // have to be gargantuan to exceed memory capacity.
             p = 0;
             ++progressStep;
-            foreach (string presetName in presetsAndTabs.Keys)
+            // This LINQ sorts the tags into a list for each filename, with their original filename ordering preserved.
+            List<List<ReportTag>> grouped = reportTags.Select((item, index) => (Item: item, Index: index))
+                                                      .GroupBy(x => x.Item.filename)
+                                                      .OrderBy(g => g.Min(x => x.Index))
+                                                      .Select(g => g.Select(x => x.Item).ToList())
+                                                      .ToList();
+            int stepCount = grouped.Count + reportTags.Count; // To account for query selects and file writes.
+            foreach (List<ReportTag> tagList in grouped)
             {
-                SetProgress(p++ / presetsAndTabs.Count);
-
-                dataDict.Add(presetName, new());
-                colTypesDict.Add(presetName, new());
-                foreach (string tabName in presetsAndTabs[presetName])
+                if (tagList.Count == 0)
                 {
-                    dataDict[presetName].Add(tabName, new());
-                    colTypesDict[presetName].Add(tabName, new());
-                    if (selectStatements[presetName][tabName] == null)
-                        continue;
-                    List<string?> colTypesTemp;
-                    List<List<object?>> dataTemp;
-                    if (App.SendSelectStatement(selectStatements[presetName][tabName]!, out _, out dataTemp, out colTypesTemp, this))
-                    {
-                        dataDict[presetName][tabName] = dataTemp;
-                        colTypesDict[presetName][tabName] = colTypesTemp;
-                    }
+                    SetProgress(p++ / stepCount);
+                    continue;
                 }
-            }
+                foreach (ReportTag tag in tagList)
+                {
+                    SetProgress(p++ / stepCount);
+                    if (!tag.valid)
+                        continue;
 
-            // Insert the data into each file.
-            int destinationCount = excelFileDict.Count + wordFileDict.Count;
-            p = 0;
-            ++progressStep;
-            // Excel files.
-            foreach (string filepath in excelFileDict.Keys)
-            {
-                InsertDataExcel(filepath);
-                SetProgress(p++ / destinationCount);
-            }
-            // Word files.
-            foreach (string filename in wordFileDict.Keys)
-            {
-                InsertDataWord(filename);
-                SetProgress(p++ / destinationCount);
+                    string failPre = $"Failed to run: {tag.filename} > {tag.presetName} > {tag.tabName}. ";
+
+                    string? sqlStatement = selectStatements[tag.presetName][tag.tabName];
+                    if (sqlStatement == null)
+                        continue;
+                    else if (!PageSelectStatement.InsertParameters(sqlStatement!,
+                                                             out sqlStatement,
+                                                             $"{tag.filename} > {tag.presetName} > {tag.tabName}",
+                                                             this, new(),
+                                                             tag.paramSetters))
+                        LogError(failPre + "User opted not to set parameters.");
+                    else if (!App.SendSelectStatement(sqlStatement,
+                            out _, out tag.data, out tag.types, this))
+                        LogError(failPre + "Data could not be retrieved.");
+                    // We don't want to reference old set params with templates in subsequent iterations.
+                    SelectBuilder.storedVariables.Clear();
+                }
+
+                SetProgress(p++ / stepCount);
+                InsertDataExcel(tagList.OfType<ReportTagExcel>().ToList());
+                InsertDataWord(tagList.OfType<ReportTagWord>().ToList());
             }
 
             SetProgress(1); // Done :)
@@ -283,52 +250,65 @@ namespace BridgeOpsClient
             }
         }
 
-        private bool InsertDataExcel(string filepath)
+        private bool InsertDataExcel(List<ReportTagExcel> tags)
         {
-            if (!excelFileDict.ContainsKey(filepath))
-                return false;
+            if (tags.Count == 0)
+                return true;
+            string filepath = tags[0].filepath;
             string newFilePath = Path.Combine(outputDirectory, Path.GetFileName(filepath));
             if (File.Exists(newFilePath))
             {
-                if (!App.DisplayQuestion("Would you like to replace this file?", newFilePath + " already exists.",
+                if (!autoOverwite &&
+                    !App.DisplayQuestion("Would you like to replace this file?\n" + newFilePath, "File already exists",
                                          DialogWindows.DialogBox.Buttons.YesNo, this))
+                {
+                    LogError($" ✘  Skipped by user (file already existed): ${filepath}");
                     return false;
+                }
                 try
                 {
                     File.Delete(newFilePath);
                 }
                 catch (Exception e)
                 {
-                    App.DisplayError(e.Message, "Unable to delete file", this);
+                    App.DisplayError(e.Message, "Unable to replace file", this);
+                    LogError($" ✘  File skipped as it could not be replaced: ${filepath}");
+                    return false;
                 }
             }
 
+            Dictionary<string, List<ReportTagExcel>> tagsBySheet = new();
+            foreach (ReportTagExcel tag in tags)
+            {
+                tagsBySheet.TryAdd(tag.sheetName, new());
+                tagsBySheet[tag.sheetName].Add(tag);
+            }
 
             try
             {
                 using (XLWorkbook file = new(filepath))
                 {
-                    foreach (string sheetName in excelFileDict[filepath].Keys)
+                    string successMessage = "";
+
+                    foreach (string sheetName in tagsBySheet.Keys)
                     {
                         IXLWorksheet sheet;
                         if (file.TryGetWorksheet(sheetName, out sheet))
                         {
                             // Start at the bottom of the sheet and work up to avoid row insertions creating gaps in
                             // previous data chunks.
-                            var tags = excelFileDict[filepath][sheetName].OrderByDescending(t => t.y)
+                            var sheetTags = tagsBySheet[sheetName].OrderByDescending(t => t.y)
                                                                      .ThenBy(t => t.x).ToList();
                             // Record the greatest number of insertions for a single row to accont for multiple tags on
                             // one row. If a row has already been 'expanded', we may not need to insert any more rows
                             // for subsequent insertions on one row, or we certainly won't need to insert as many.
                             Dictionary<int, int> insertionCounts = new();
-                            foreach (ReportTagExcel tag in tags)
+                            foreach (ReportTagExcel tag in sheetTags)
                             {
-                                if (!tag.valid ||
-                                    !dataDict.ContainsKey(tag.presetName) ||
-                                    !dataDict[tag.presetName].ContainsKey(tag.tabName))
+                                List<List<object?>> data = tag.data!;
+                                List<string?> colTypes = tag.types;
+                                if (!tag.valid || tag.data == null || colTypes == null)
                                     continue;
-                                List<List<object?>> data = dataDict[tag.presetName][tag.tabName];
-                                List<string?> colTypes = colTypesDict[tag.presetName][tag.tabName];
                                 var topRow = sheet.Row(tag.y);
                                 topRow.Cell(tag.x).SetValue(""); // Wipe the tag (don't .Clear(), that wipes the formatting).
                                 // Store the 
@@ -404,39 +384,57 @@ namespace BridgeOpsClient
                                                 c.Style = oldStyle;
                                         }
                                     }
+                                successMessage += " └  Tag processed: " + tag.descriptor + "\n";
                             }
                         }
                     }
                     file.SaveAs(newFilePath);
+                    if (successMessage.EndsWith("\n"))
+                        successMessage = successMessage.Remove(successMessage.Length - 1);
+                    Log("✔ " + tags[0].filepath + "\n" + successMessage);
                 }
                 return true;
             }
             catch (Exception except)
             {
-                App.DisplayError($"Unable to open file, see error: {except.Message}", this);
+                App.DisplayError($"Unable to process file, see error: {except.Message}", this);
+                LogError($" ✘  Could not process file: \"{filepath}\". Error: {except.Message}");
                 return false;
             }
         }
 
-        private bool InsertDataWord(string filepath)
+        private bool InsertDataWord(List<ReportTagWord> tags)
         {
-            if (!wordFileDict.ContainsKey(filepath))
-                return false;
+            if (tags.Count == 0)
+                return true;
+            string filepath = tags[0].filepath;
             string newFilePath = Path.Combine(outputDirectory, Path.GetFileName(filepath));
             if (File.Exists(newFilePath))
             {
-                if (!App.DisplayQuestion("Would you like to replace this file?", newFilePath + " already exists.",
+                if (!autoOverwite &&
+                    !App.DisplayQuestion("Would you like to replace this file?\n" + newFilePath, "File already exists",
                                          DialogWindows.DialogBox.Buttons.YesNo, this))
+                {
+                    LogError($" ✘  Skipped by user (file already existed): ${filepath}");
                     return false;
-                File.Delete(newFilePath);
+                }
+                try
+                {
+                    File.Delete(newFilePath);
+                }
+                catch (Exception e)
+                {
+                    App.DisplayError(e.Message, "Unable to replace file", this);
+                    LogError($" ✘  File skipped as it could not be replaced: ${filepath}");
+                    return false;
+                }
             }
-            try
+
+            Dictionary<int, List<ReportTagWord>> tagsByTable = new();
+            foreach (ReportTagWord tag in tags)
             {
-                File.Delete(newFilePath);
-            }
-            catch (Exception e)
-            {
-                App.DisplayError(e.Message, "Unable to delete file", this);
+                tagsByTable.TryAdd(tag.tableNo, new());
+                tagsByTable[tag.tableNo].Add(tag);
             }
 
             bool copied = false;
@@ -450,23 +448,23 @@ namespace BridgeOpsClient
                     var tables = doc.MainDocumentPart!.Document.Body!
                                     .Descendants<DocumentFormat.OpenXml.Wordprocessing.Table>();
 
-                    foreach (int tableNo in wordFileDict[filepath].Keys)
+                    string successMessage = "";
+
+                    foreach (int tableNo in tagsByTable.Keys)
                     {
                         var table = tables.ElementAt(tableNo);
 
                         Dictionary<int, int> insertionCounts = new();
 
-                        // Start at the bottom of the sheet and work up to avoid row insertions creating gaps in
+                        // Start at the bottom of the table and work up to avoid row insertions creating gaps in
                         // previous data chunks.
-                        var tags = wordFileDict[filepath][tableNo].OrderByDescending(t => t.y)
-                                                                  .ThenBy(t => t.x).ToList();
-                        foreach (ReportTagWord tag in tags)
+                        var tableTags = tagsByTable[tableNo].OrderByDescending(t => t.y).ThenBy(t => t.x).ToList();
+                        foreach (ReportTagWord tag in tableTags)
                         {
-                            if (!tag.valid || !dataDict.ContainsKey(tag.presetName) ||
-                                !dataDict[tag.presetName].ContainsKey(tag.tabName))
+                            if (!tag.valid || tag.data == null || tag.types == null)
                                 continue;
-                            List<List<object?>> data = dataDict[tag.presetName][tag.tabName];
-                            List<string?> colTypes = colTypesDict[tag.presetName][tag.tabName];
+                            List<List<object?>> data = tag.data;
+                            List<string?> colTypes = tag.types;
                             var topRow = table.Elements<TableRow>().ElementAt(0);
                             // Remove the tag.
                             SetWordTableCell(topRow.Elements<TableCell>().ElementAt(tag.x));
@@ -490,24 +488,34 @@ namespace BridgeOpsClient
                             // else do nothing
 
                             var rows = table.Elements<TableRow>().ToList();
-                            for (int y = 0; y < data.Count; ++y)
-                            {
-                                var cells = rows[y + tag.y].Elements<TableCell>().ToList();
-                                for (int x = 0; x < data[y].Count && x + tag.x < cells.Count; ++x)
+
+                            if (data.Count == 0) // If nothing, just clear the tag's cell.
+                                SetWordTableCell(rows[tag.y].Elements<TableCell>().ToList()[tag.x]);
+                            else
+                                for (int y = 0; y < data.Count; ++y)
                                 {
-                                    var cell = cells[tag.x + x];
-                                    SetWordTableCell(cell, Glo.Fun.UnknownObjectToString(data[y][x]));
+                                    var cells = rows[y + tag.y].Elements<TableCell>().ToList();
+                                    for (int x = 0; x < data[y].Count && x + tag.x < cells.Count; ++x)
+                                    {
+                                        var cell = cells[tag.x + x];
+                                        SetWordTableCell(cell, Glo.Fun.UnknownObjectToString(data[y][x]));
+                                    }
                                 }
-                            }
+
+                            successMessage += " └  Tag processed: " + tag.descriptor + "\n";
                         }
                     }
                     doc.Save();
+                    if (successMessage.EndsWith("\n"))
+                        successMessage = successMessage.Remove(successMessage.Length - 1);
+                    Log("✔ " + tags[0].filepath + "\n" + successMessage);
                 }
                 return true;
             }
             catch (Exception except)
             {
-                App.DisplayError($"Unable to open file, see error: {except.Message}", this);
+                App.DisplayError($"Unable to process file, see error: {except.Message}", this);
+                LogError($" ✘  Could not process file: \"{filepath}\". Error: {except.Message}");
                 if (copied)
                     File.Delete(newFilePath);
                 return false;

@@ -5,9 +5,9 @@ using System.Xml.Linq;
 using System.Reflection;
 
 // Application version
-[assembly: AssemblyVersion("1.1.10")]
-[assembly: AssemblyFileVersion("1.1.10")]
-[assembly: AssemblyInformationalVersion("1.1.10")]
+[assembly: AssemblyVersion("1.2.0")]
+[assembly: AssemblyFileVersion("1.2.0")]
+[assembly: AssemblyInformationalVersion("1.2.0")]
 
 public static class Glo
 {
@@ -488,7 +488,7 @@ public static class Glo
             else if (val.GetType() == typeof(int))
                 return ((int)val).ToString();
             else if (val.GetType() == typeof(TimeSpan))
-                return ((TimeSpan)val).ToString("hh\\:mm");
+                return $"{((TimeSpan)val).TotalHours.ToString():D2}:{((TimeSpan)val).Minutes.ToString():D2}";
             else if (val.GetType() == typeof(DateTime))
             {
                 DateTime valCast = (DateTime)val;
@@ -508,7 +508,7 @@ public static class Glo
             else if (type == "int")
                 return ((int)val).ToString().Replace("'", "''");
             else if (type == "timespan")
-                return ((TimeSpan)val).ToString("hh\\:mm");
+                return $"{((TimeSpan)val).TotalHours.ToString():D2}:{((TimeSpan)val).Minutes.ToString():D2}";
             else if (type == "datetime")
             {
                 DateTime valCast = (DateTime)val;

@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2016.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -15,6 +16,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace BridgeOpsClient
 {
@@ -74,10 +76,12 @@ namespace BridgeOpsClient
             JsonObject json = new();
             json["Name"] = name;
             json["Context"] = Glo.CLIENT_PRESET_CONTEXT_REPORT_TO_TEMPLATES;
+            json["AutoOverwrite"] = chkOverwrite.IsChecked == true;
             JsonArray templates = new();
             foreach (string s in lstFiles.Items)
                 templates.Add(s);
             json["Templates"] = templates;
+            json["ParamsFile"] = txtParams.Text;
             json["OutputFolder"] = txtFolder.Text;
 
             if (App.SendJsonObject(Glo.CLIENT_PRESET_SAVE, json, this))
@@ -171,7 +175,9 @@ namespace BridgeOpsClient
                 foreach (string s in json["Templates"].Deserialize<List<string>>()!)
                     lstFiles.Items.Add(s);
 
+                txtParams.Text = json["ParamsFile"].GetValue<string>().ToString();
                 txtFolder.Text = json["OutputFolder"].GetValue<string>().ToString();
+                chkOverwrite.IsChecked = json["AutoOverwrite"].GetValue<bool>();
 
 #pragma warning restore CS8602
             }
@@ -439,8 +445,10 @@ namespace BridgeOpsClient
             btnCheck.IsEnabled = lstFiles.Items.Count > 0;
             if (lstFiles.Items.Count > 1)
             {
-                btnFileUp.IsEnabled = !lstFiles.SelectedItems.Contains(lstFiles.Items[0]);
-                btnFileDown.IsEnabled = !lstFiles.SelectedItems.Contains(lstFiles.Items[lstFiles.Items.Count - 1]);
+                btnFileUp.IsEnabled = lstFiles.SelectedItems.Count > 0 &&
+                                      !lstFiles.SelectedItems.Contains(lstFiles.Items[0]);
+                btnFileDown.IsEnabled = lstFiles.SelectedItems.Count > 0 &&
+                                        !lstFiles.SelectedItems.Contains(lstFiles.Items[lstFiles.Items.Count - 1]);
             }
             else
             {
@@ -459,6 +467,21 @@ namespace BridgeOpsClient
         {
             if (!skipFileSelectionChanged)
                 ToggleFileButtons();
+        }
+
+        private void btnParams_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog openDialog = new();
+            openDialog.DefaultExt = ".txt";
+            openDialog.Filter = "Text File|*.txt";
+            bool? result = openDialog.ShowDialog();
+
+            if (result != true)
+                return;
+            if (!openDialog.FileName.EndsWith(".txt"))
+                App.DisplayError("Invalid file extension.", this);
+            else
+                txtParams.Text = openDialog.FileName;
         }
 
         private void btnFolder_Click(object sender, RoutedEventArgs e)
@@ -480,9 +503,13 @@ namespace BridgeOpsClient
             public string tag = "";         // The tag's original text.
             public string presetName = "";  // The tag's preset name.
             public string tabName = "";     // The tag's preset tab name.
+            public string descriptor = "";
             public bool valid;
             public int x;                  // Column number, 1-indexed.
             public int y;                  // Row number, 1-indexed.
+            public Dictionary<string, string> paramSetters = new();
+            public List<List<object?>> data; // Used by ReportToTemplatesRun.
+            public List<string?> types;      // Used by ReportToTemplatesRun.
         }
         public class ReportTagExcel : ReportTag
         {
@@ -496,17 +523,106 @@ namespace BridgeOpsClient
 
         List<ReportTag> reportTags = new();
 
-        public string[]? ParseTagText(string text)
+        Dictionary<(string filename, string preset, string tab), Dictionary<string, string>> paramSetterValues = new();
+        public void LoadDateSetters()
         {
+            paramSetterValues = new();
+            if (txtParams.Text.Length == 0)
+                return;
+            if (!File.Exists(txtParams.Text))
+                App.DisplayError("The selected Date Setters file could not be found.", this);
+
+            // Cycle through the param setters file and build a dictionary of params
+            string[] lines = File.ReadAllLines(txtParams.Text);
+            Dictionary<string, HashSet<(string filename, string preset, string tab, string param)>> paramSetters = new();
+            List<string> paramSettersOrder = new(); // Guaranteed unique, used to track paramSetters key order.
+            string currentParamName = "";
+            foreach (string line in lines)
+            {
+                if (line.Length <= 2)
+                    continue;
+                string s = line.Substring(2);
+                // Headers (param names)
+                if (line.StartsWith("$ "))
+                {
+                    if (paramSetters.TryAdd(s, new()))
+                        paramSettersOrder.Add(s);
+                    currentParamName = s;
+                }
+                // Param Identities (which preset tab parameters are going to be filled with the specified value)
+                else if (currentParamName != "" && line.StartsWith("+ "))
+                {
+                    string[] split = s.Split(" > ");
+                    if (split.Length != 4)
+                        continue;
+                    paramSetters[currentParamName].Add((split[0], split[1], split[2], split[3]));
+                }
+            }
+
+            // Get the desired values for all param setters.
+            List<PageSelectStatement.Param> paramList = new();
+            int i = 0;
+            foreach (string name in paramSettersOrder)
+            {
+                paramList.Add(new()
+                {
+                    type = PageSelectStatement.Param.Type.Date,
+                    position = i,
+                    name = name,
+                    start = 0,             // Unused
+                    length = 0,            // Unused
+                    unorderedPosition = i  // Unused
+                });
+                ++i;
+            }
+            SetParameters setParameters = new("Date Setters", paramList);
+            setParameters.ShowDialog();
+            // Allow the user to bypass setting these if needed, the process will continue with them unset as normal.
+            if (setParameters.DialogResult == false)
+                return;
+
+            // Build a dictionary of file/preset/tab/param identifiers that stores the values to insert.
+            foreach (PageSelectStatement.Param param in paramList)
+                foreach (var fptp in paramSetters[param.name])
+                {
+                    // SetParameters guarantees non-null values if we didn't return just above.
+                    (string filename, string preset, string tab) key = (fptp.filename, fptp.preset, fptp.tab);
+                    paramSetterValues.TryAdd(key, new());
+                    paramSetterValues[key].TryAdd(fptp.param, ((DateTime)param.value!).ToString("yyyy-MM-dd"));
+                }
+        }
+
+        public List<string[]> ParseTagText(string text)
+        {
+            List<string[]> pairs = new();
             if (text.Length >= 8 && text.StartsWith("{{") && text.EndsWith("}}"))
             {
                 string content = text.Substring(2, text.Length - 4);
-                string[] parts = content.Split("/");
-                if (parts.Length == 2 &&
-                    parts[0].Length > 0 && parts[1].Length > 0)
-                    return parts;
+                // The first pair should be a preset name followed by a tab name, the rest will be param setters.
+                string[] parts = content.Split(";;");
+                foreach (string s in parts)
+                {
+                    string[] pair = s.Split("//");
+                    if (pair.Length == 2 && pair[0].Length > 0 && pair[1].Length > 0)
+                        pairs.Add(pair);
+                }
             }
-            return null;
+            return pairs;
+        }
+
+        public Dictionary<string, string> BuildParamSetterDict(string filepath, List<string[]> setters)
+        {
+            Dictionary<string, string> setterDict = new();
+            for (int i = 1; i < setters.Count; ++i)
+                setterDict.TryAdd(setters[i][0], setters[i][1]);
+            // Pull in param setters if any were set for this file, preset and tab.
+            (string filename, string preset, string tab) key = (filepath, setters[0][0], setters[0][1]);
+            if (paramSetterValues.ContainsKey(key))
+            {
+                foreach (KeyValuePair<string, string> kvp in paramSetterValues[key])
+                    setterDict.TryAdd(kvp.Key, kvp.Value);
+            }
+            return setterDict;
         }
 
         private int validTagCount = 0;
@@ -514,6 +630,8 @@ namespace BridgeOpsClient
         {
             reportTags.Clear();
             lstSummary.Items.Clear();
+
+            LoadDateSetters();
 
             TextBlock CreateTextBlock(string text, Brush brush)
             {
@@ -538,33 +656,38 @@ namespace BridgeOpsClient
 
                 try
                 {
-                    string? tag = null;
-
                     // Excel files.
                     if (filename.EndsWith(".xlsx") || filename.EndsWith(".xlsm"))
                         using (XLWorkbook file = new(filepath))
                         {
                             foreach (var sheet in file.Worksheets)
                                 foreach (var cell in sheet.CellsUsed())
-                                {
-                                    string celltext = cell.GetText();
-                                    string[]? names = ParseTagText(celltext);
-                                    if (names == null)
-                                        continue;
-                                    reportTags.Add(new ReportTagExcel()
+                                    try
                                     {
-                                        filepath = filepath,
-                                        filename = filename,
-                                        sheetName = sheet.Name,
-                                        x = cell.Address.ColumnNumber,
-                                        xLetter = cell.Address.ColumnLetter,
-                                        y = cell.Address.RowNumber,
-                                        tag = celltext,
-                                        presetName = names[0],
-                                        tabName = names[1],
-                                        valid = false
-                                    });
-                                }
+                                        string celltext = cell.GetText();
+                                        List<string[]> pairs = ParseTagText(celltext);
+                                        if (pairs.Count == 0)
+                                            continue;
+                                        reportTags.Add(new ReportTagExcel()
+                                        {
+                                            filepath = filepath,
+                                            filename = filename,
+                                            sheetName = sheet.Name,
+                                            x = cell.Address.ColumnNumber,
+                                            xLetter = cell.Address.ColumnLetter,
+                                            y = cell.Address.RowNumber,
+                                            tag = celltext,
+                                            presetName = pairs[0][0],
+                                            tabName = pairs[0][1],
+                                            paramSetters = BuildParamSetterDict(filepath, pairs),
+                                            valid = false
+                                        });
+                                    }
+                                    catch
+                                    {
+                                        // Do nothing. Sometimes cell.GetText() hits a type cast error, so this is
+                                        // just to mitigate that.
+                                    }
                         }
                     // Word files.
                     else if (filename.EndsWith(".docx"))
@@ -585,19 +708,23 @@ namespace BridgeOpsClient
                                         foreach (var t in cell.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>())
                                             text += t.Text;
 
-                                        string[]? names = ParseTagText(text);
-                                        if (names != null)
+                                        List<string[]> pairs = ParseTagText(text);
+                                        List<string[]> paramSetters = new();
+                                        if (pairs.Count > 1)
+                                            paramSetters = pairs.GetRange(1, pairs.Count - 1);
+                                        if (pairs.Count > 0)
                                             reportTags.Add(new ReportTagWord()
                                             {
                                                 filepath = filepath,
                                                 filename = filename,
                                                 tag = text,
-                                                presetName = names[0],
-                                                tabName = names[1],
-                                                valid = false,
+                                                presetName = pairs[0][0],
+                                                tabName = pairs[0][1],
                                                 x = x,
                                                 y = y,
-                                                tableNo = tableNo
+                                                tableNo = tableNo,
+                                                paramSetters = BuildParamSetterDict(filepath, pairs),
+                                                valid = false
                                             });
                                         ++x;
                                     }
@@ -609,7 +736,7 @@ namespace BridgeOpsClient
                 }
                 catch (Exception except)
                 {
-                    App.DisplayError($"Unable to open file, see error: {except.Message}", this);
+                    App.DisplayError($"Unable to process {filepath}, see error: {except.Message}", this);
                 }
             }
 
@@ -622,26 +749,30 @@ namespace BridgeOpsClient
                 HashSet<string> existingPresetTabs = new();
                 for (int i = 0; i < pcr.presets.Count; ++i)
                     if (pcr.present[i])
-                        existingPresetTabs.Add("{{" + pcr.presets[i] + "/" + pcr.tabs[i] + "}}");
+                        existingPresetTabs.Add(pcr.presets[i] + "/" + pcr.tabs[i]);
 
                 foreach (ReportTag tag in reportTags)
                 {
-                    string s;
                     if (tag is ReportTagExcel rte)
-                        s = $"{rte.filename}/{rte.sheetName} [{rte.xLetter}{rte.y}]: {rte.presetName}, {rte.tabName}";
+                        rte.descriptor = $"{rte.filename}/{rte.sheetName} [{rte.xLetter}{rte.y}]: {rte.presetName} > {rte.tabName}";
                     else if (tag is ReportTagWord rtw)
-                        s = $"{rtw.filename}/Table {rtw.tableNo + 1} [x{rtw.x + 1},y{rtw.y + 1}]: " +
-                            $"{rtw.presetName}, {rtw.tabName}";
+                        rtw.descriptor = $"{rtw.filename}/Table {rtw.tableNo + 1} [x{rtw.x + 1},y{rtw.y + 1}]: " +
+                            $"{rtw.presetName} > {rtw.tabName}";
                     else
-                        s = "Error";
-                    if (existingPresetTabs.Contains(tag.tag))
+                        tag.descriptor = "Error";
+                    // List param setters, if present.
+                    string setters = "";
+                    foreach (KeyValuePair<string, string> kvp in tag.paramSetters)
+                        setters += "\n  •  " + kvp.Key + " = " + kvp.Value;
+                    if (existingPresetTabs.Contains(tag.presetName + "/" + tag.tabName))
                     {
-                        lstSummary.Items.Add(CreateTextBlock(s, Brushes.Black));
+                        lstSummary.Items.Add(CreateTextBlock(tag.descriptor + setters, Brushes.Black));
                         tag.valid = true;
                         ++validTagCount;
                     }
                     else
-                        lstSummary.Items.Add(CreateTextBlock(s, Brushes.Red));
+                        lstSummary.Items.Add(CreateTextBlock("Stated preset and/or preset tab not found:\n" +
+                                             tag.descriptor, Brushes.Red));
                 }
             }
 
@@ -661,7 +792,7 @@ namespace BridgeOpsClient
                 App.DisplayError("No valid tags could be found.", this);
             }
 
-            ReportToTemplatesRun runner = new(reportTags, txtFolder.Text);
+            ReportToTemplatesRun runner = new(reportTags, txtFolder.Text, chkOverwrite.IsChecked == true);
             runner.ShowDialog();
         }
 

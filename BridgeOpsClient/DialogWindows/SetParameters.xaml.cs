@@ -12,6 +12,7 @@ using System.Windows.Input;
 
 using BridgeOpsClient.CustomControls;
 using System.Diagnostics;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace BridgeOpsClient
 {
@@ -29,6 +30,9 @@ namespace BridgeOpsClient
 
         List<PageSelectStatement.Param> paramList;
         Dictionary<string, object?> duplicateParams = new();
+
+        // It might be that after applying template parameter values, we need not show the window at all.
+        public bool paramsToSet = false;
 
         class FieldRow
         {
@@ -49,12 +53,13 @@ namespace BridgeOpsClient
         }
         List<FieldRow> rows = new List<FieldRow>();
 
-        public SetParameters(string? pageNme, List<PageSelectStatement.Param> paramList)
+        public SetParameters(string? title, List<PageSelectStatement.Param> paramList,
+                             Dictionary<string, string>? templateParams = null)
         {
             InitializeComponent();
 
-            if (pageNme != null)
-                lblTitle.Content = $"{pageNme}";
+            if (title != null)
+                lblTitle.Content = $"{title}";
 
             this.paramList = paramList;
 
@@ -67,6 +72,70 @@ namespace BridgeOpsClient
             datTemplate = (DataTemplate)FindResource("fieldDat");
             timTemplate = (DataTemplate)FindResource("fieldTim");
             chkTemplate = (DataTemplate)FindResource("fieldChk");
+
+            // Apply param values set in template tags.
+            if (templateParams != null && templateParams.Count > 0)
+                foreach (var param in paramList)
+                    if (templateParams.ContainsKey(param.name))
+                    {
+                        string val = templateParams[param.name];
+                        // Skip attempts to set values that aren't allowed.
+                        if (param.allowed != null)
+                        {
+                            if (param.type != PageSelectStatement.Param.Type.Checklist)
+                            {
+                                if (!param.allowed.Contains(val))
+                                    continue;
+                            }
+                            else
+                            {
+                                // For checklists, check each individually.
+                                bool found = false;
+                                foreach (string checklistVal in val.Split(","))
+                                    if (param.allowed.Contains(checklistVal))
+                                    {
+                                        found = true;
+                                        break;
+                                    }
+                                if (!found)
+                                    continue;
+                            }
+                        }
+
+                        if (param.type == PageSelectStatement.Param.Type.Text ||
+                            param.type == PageSelectStatement.Param.Type.Dropdown)
+                            param.value = "'" + val.Replace("'", "''") + "'";
+                        else if (param.type == PageSelectStatement.Param.Type.Checklist)
+                            param.value = "('" + val.Replace("'", "''").Replace(",", "','") + "')";
+                        else if (param.type == PageSelectStatement.Param.Type.Number)
+                        {
+                            int iVal;
+                            if (int.TryParse(val, out iVal))
+                                param.value = iVal;
+                        }
+                        else if (param.type == PageSelectStatement.Param.Type.DateTime ||
+                                 param.type == PageSelectStatement.Param.Type.Date)
+                        {
+                            DateTime dtVal;
+                            if (DateTime.TryParse(val, out dtVal))
+                                param.value = dtVal;
+                        }
+                        else if (param.type == PageSelectStatement.Param.Type.Time)
+                        {
+                            TimeSpan tsVal;
+                            if (TimeSpan.TryParse(val, out tsVal))
+                                param.value = tsVal;
+                        }
+                        else if (param.type == PageSelectStatement.Param.Type.Bool)
+                        {
+                            val = val.ToUpper();
+                            if (val == "TRUE" || val == "YES" || val == "1")
+                                param.value = true;
+                            else if (val == "FALSE" || val == "NO" || val == "0")
+                                param.value = false;
+                        }
+
+                    }
 
             foreach (var param in paramList)
             {
@@ -129,6 +198,8 @@ namespace BridgeOpsClient
                 else
                     continue;
 
+                paramsToSet = true;
+
                 FieldRow fieldRow = new FieldRow(lbl, field!);
                 rows.Add(fieldRow);
 
@@ -145,6 +216,9 @@ namespace BridgeOpsClient
                 else
                     stkParams.Children.Add(fieldRow.stack);
             }
+
+            if (!paramsToSet)
+                Close();
         }
 
         private void btnExport_Click(object sender, RoutedEventArgs e)
