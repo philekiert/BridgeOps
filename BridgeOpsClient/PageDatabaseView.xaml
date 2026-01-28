@@ -159,7 +159,7 @@
         </Grid>
 
         <!-- Status -->
-        <Border Margin="10 -10 10 0" Height="23" Grid.Row="3" Visibility="Hidden"
+        <Border Margin="10 -10 10 0" Height="23" Grid.Row="3" Visibility="Visible"
                 VerticalAlignment="Top" CornerRadius="0 0 4 4" BorderThickness="1 0 1 1"
                 Background="{StaticResource brushStatusBar}" BorderBrush="{StaticResource brushStatusBarBorder}"/>
         <StackPanel Grid.Row="3" x:Name="statusBar" Orientation="Horizontal" Margin="0 -7 0 0">
