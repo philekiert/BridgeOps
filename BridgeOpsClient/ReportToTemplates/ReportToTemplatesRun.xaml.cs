@@ -365,9 +365,10 @@ namespace BridgeOpsClient
                                         }
                                         else if (colTypes[x] == "TimeSpan")
                                         {
-                                            c.Value = (TimeSpan?)data[y][x];
+                                            //c.Value = (TimeSpan?)data[y][x];
+                                            c.Value = new TimeSpan(165, 13, 0);
                                             if (wasGeneral)
-                                                c.Style.NumberFormat.Format = "hh:mm";
+                                                c.Style.NumberFormat.Format = "[h]:mm";
                                             else
                                                 c.Style = oldStyle;
                                         }

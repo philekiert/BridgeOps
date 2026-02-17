@@ -530,7 +530,10 @@ namespace BridgeOpsClient
             if (txtParams.Text.Length == 0)
                 return;
             if (!File.Exists(txtParams.Text))
+            {
                 App.DisplayError("The selected Date Setters file could not be found.", this);
+                return;
+            }
 
             // Cycle through the param setters file and build a dictionary of params
             string[] lines = File.ReadAllLines(txtParams.Text);

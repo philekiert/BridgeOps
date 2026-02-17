@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1
+- Fixed a bug with Report to Templates where TimeSpan values were formatted as 24-hour-clock values when inserted into Excel files.
+
 ## 1.2.0
 ### Major
 - Bulk reporting feature added.
