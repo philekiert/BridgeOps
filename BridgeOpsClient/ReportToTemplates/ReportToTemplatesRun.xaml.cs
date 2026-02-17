@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -48,6 +47,8 @@ namespace BridgeOpsClient
         string outputDirectory;
         bool autoOverwite;
 
+        Dictionary<ListViewItem, string> fileLinks = new(); // To allow double-clicking on rows to open relevant files.
+
         public ReportToTemplatesRun(List<ReportTag> reportTags, string outputDirectory, bool autoOverwrite)
         {
             InitializeComponent();
@@ -58,12 +59,35 @@ namespace BridgeOpsClient
             this.autoOverwite = autoOverwrite;
         }
 
-        private void Log(string message)
-        { Log(message, Brushes.Black); }
-        private void LogError(string message)
-        { Log(message, Brushes.Red); }
-        private void Log(string message, Brush brush)
-        { lstEventLog.Items.Add(new TextBlock() { Text = message, Foreground = brush }); }
+        private void Log(string message, string filepath = "")
+        { Log(message, Brushes.Black, filepath); }
+        private void LogError(string message, string filepath = "")
+        { Log(message, Brushes.Red, filepath); }
+        private void Log(string message, Brush brush, string filepath)
+        {
+            TextBlock textBlock = new TextBlock() { Text = message, Foreground = brush };
+            ListViewItem listViewItem = new ListViewItem() { Content = textBlock };
+            if (filepath != "")
+            {
+                listViewItem.MouseDoubleClick += OpenFile;
+                fileLinks.Add(listViewItem, filepath);
+            }
+            lstEventLog.Items.Add(listViewItem);
+        }
+        private void OpenFile(object sender, MouseButtonEventArgs e)
+        {
+            string file = fileLinks[(ListViewItem)sender];
+            if (!File.Exists(file))
+                App.DisplayError("File not found.", this);
+            else if (!file.EndsWith(".docx") && !file.EndsWith(".xlsx") && !file.EndsWith(".xlsm"))
+                App.DisplayError("Invalid file format.", this);
+            else
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = file,
+                    UseShellExecute = true
+                });
+        }
 
         Dictionary<string, JsonObject?> presetJsonObjects = new();
         Dictionary<string, Dictionary<string, string?>> selectStatements = new();
@@ -392,7 +416,7 @@ namespace BridgeOpsClient
                     file.SaveAs(newFilePath);
                     if (successMessage.EndsWith("\n"))
                         successMessage = successMessage.Remove(successMessage.Length - 1);
-                    Log("✔ " + tags[0].filepath + "\n" + successMessage);
+                    Log("✔ " + tags[0].filepath + "\n" + successMessage, newFilePath);
                 }
                 return true;
             }
@@ -509,7 +533,7 @@ namespace BridgeOpsClient
                     doc.Save();
                     if (successMessage.EndsWith("\n"))
                         successMessage = successMessage.Remove(successMessage.Length - 1);
-                    Log("✔ " + tags[0].filepath + "\n" + successMessage);
+                    Log("✔ " + tags[0].filepath + "\n" + successMessage, newFilePath);
                 }
                 return true;
             }

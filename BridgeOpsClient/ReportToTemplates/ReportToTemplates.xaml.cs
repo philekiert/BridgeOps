@@ -15,6 +15,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
@@ -173,7 +174,7 @@ namespace BridgeOpsClient
                 // Not using ItemsSource since we want to work directly with the collection when the user modifies the list.
                 lstFiles.Items.Clear();
                 foreach (string s in json["Templates"].Deserialize<List<string>>()!)
-                    lstFiles.Items.Add(s);
+                    AddRowToListView(lstFiles, s);
 
                 txtParams.Text = json["ParamsFile"].GetValue<string>().ToString();
                 txtFolder.Text = json["OutputFolder"].GetValue<string>().ToString();
@@ -378,8 +379,9 @@ namespace BridgeOpsClient
             bool foundMacroFile = false; // ClosedXML doesn't like macros, so warn the user if .xlsm files are found.
             foreach (string f in files)
             {
+                TextBlock fileRow = new();
                 if (!lstFiles.Items.Contains(f) && ((f.EndsWith(".docx") || f.EndsWith(".xlsx") || f.EndsWith(".xlsm"))))
-                    lstFiles.Items.Add(f);
+                    AddRowToListView(lstFiles, f);
                 if (!foundMacroFile && f.EndsWith("xlsm"))
                     foundMacroFile = true;
             }
@@ -387,6 +389,26 @@ namespace BridgeOpsClient
                 App.DisplayError("Note that macros in .xlsm files will not be carried over to the output.", this);
 
             ToggleFileButtons();
+        }
+        private void AddRowToListView(ListView listView, string text)
+        {
+            ListViewItem item = new() { Content = text };
+            item.MouseDoubleClick += OpenFileFromListView;
+            listView.Items.Add(item);
+        }
+        private void OpenFileFromListView(object sender, MouseButtonEventArgs e)
+        {
+            string file = (string)((ListViewItem)sender).Content;
+            if (!File.Exists(file))
+                App.DisplayError("File not found.", this);
+            else if (!file.EndsWith(".docx") && !file.EndsWith(".xlsx") && !file.EndsWith(".xlsm"))
+                App.DisplayError("Invalid file format.", this);
+            else
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = file,
+                    UseShellExecute = true
+                });
         }
 
         private void btnRemoveFile_Click(object sender, RoutedEventArgs e)
@@ -652,8 +674,9 @@ namespace BridgeOpsClient
             validTagCount = 0;
 
             List<List<object>> report = new();
-            foreach (string filepath in lstFiles.Items)
+            foreach (ListViewItem listViewItem in lstFiles.Items)
             {
+                string filepath = (string)listViewItem.Content;
                 string filename = Path.GetFileName(filepath);
                 if (!File.Exists(filepath))
                 {
