@@ -174,7 +174,11 @@ namespace BridgeOpsClient
                 // Not using ItemsSource since we want to work directly with the collection when the user modifies the list.
                 lstFiles.Items.Clear();
                 foreach (string s in json["Templates"].Deserialize<List<string>>()!)
-                    AddRowToListView(lstFiles, s);
+                {
+                    ListViewItem lvi = new() { Content = s };
+                    LinkFile(lvi, s);
+                    lstFiles.Items.Add(lvi);
+                }
 
                 txtParams.Text = json["ParamsFile"].GetValue<string>().ToString();
                 txtFolder.Text = json["OutputFolder"].GetValue<string>().ToString();
@@ -229,6 +233,28 @@ namespace BridgeOpsClient
             lastSelectedIndex = cmbPresets.SelectedIndex;
 
             btnRun.IsEnabled = false;
+        }
+
+        Dictionary<ListViewItem, string> fileLinks = new(); // To allow double-clicking on rows to open relevant files.
+        private void LinkFile(ListViewItem listViewItem, string filepath)
+        {
+            if (!fileLinks.TryAdd(listViewItem, filepath))
+                fileLinks[listViewItem] = filepath;
+            listViewItem.MouseDoubleClick += OpenFile;
+        }
+        private void OpenFile(object sender, MouseButtonEventArgs e)
+        {
+            string file = fileLinks[(ListViewItem)sender];
+            if (!File.Exists(file))
+                App.DisplayError("File not found.", this);
+            else if (!file.EndsWith(".docx") && !file.EndsWith(".xlsx") && !file.EndsWith(".xlsm"))
+                App.DisplayError("Invalid file format.", this);
+            else
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = file,
+                    UseShellExecute = true
+                });
         }
 
         bool savingNew = false;
@@ -381,7 +407,11 @@ namespace BridgeOpsClient
             {
                 TextBlock fileRow = new();
                 if (!lstFiles.Items.Contains(f) && ((f.EndsWith(".docx") || f.EndsWith(".xlsx") || f.EndsWith(".xlsm"))))
-                    AddRowToListView(lstFiles, f);
+                {
+                    ListViewItem lvi = new() { Content = f };
+                    LinkFile(lvi, f);
+                    lstFiles.Items.Add(lvi);
+                }
                 if (!foundMacroFile && f.EndsWith("xlsm"))
                     foundMacroFile = true;
             }
@@ -389,12 +419,6 @@ namespace BridgeOpsClient
                 App.DisplayError("Note that macros in .xlsm files will not be carried over to the output.", this);
 
             ToggleFileButtons();
-        }
-        private void AddRowToListView(ListView listView, string text)
-        {
-            ListViewItem item = new() { Content = text };
-            item.MouseDoubleClick += OpenFileFromListView;
-            listView.Items.Add(item);
         }
         private void OpenFileFromListView(object sender, MouseButtonEventArgs e)
         {
@@ -676,7 +700,7 @@ namespace BridgeOpsClient
             List<List<object>> report = new();
             foreach (ListViewItem listViewItem in lstFiles.Items)
             {
-                string filepath = (string)listViewItem.Content;
+                string filepath = fileLinks[listViewItem]; // Has to be here.
                 string filename = Path.GetFileName(filepath);
                 if (!File.Exists(filepath))
                 {
@@ -794,15 +818,18 @@ namespace BridgeOpsClient
                     string setters = "";
                     foreach (KeyValuePair<string, string> kvp in tag.paramSetters)
                         setters += "\n  •  " + kvp.Key + " = " + kvp.Value;
+                    ListViewItem listViewItem = new();
                     if (existingPresetTabs.Contains(tag.presetName + "/" + tag.tabName))
                     {
-                        lstSummary.Items.Add(CreateTextBlock(tag.descriptor + setters, Brushes.Black));
+                        listViewItem.Content = CreateTextBlock(tag.descriptor + setters, Brushes.Black);
                         tag.valid = true;
                         ++validTagCount;
                     }
                     else
-                        lstSummary.Items.Add(CreateTextBlock("Stated preset and/or preset tab not found:\n" +
-                                             tag.descriptor, Brushes.Red));
+                        listViewItem.Content = CreateTextBlock("Stated preset and/or preset tab not found:\n" +
+                                                               tag.descriptor, Brushes.Red);
+                    LinkFile(listViewItem, tag.filepath);
+                    lstSummary.Items.Add(listViewItem);
                 }
             }
 
