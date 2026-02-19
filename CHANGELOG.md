@@ -2,7 +2,7 @@
 
 ## 1.2.1
 - Fixed a bug with Report to Templates where TimeSpan values were formatted as 24-hour-clock values when inserted into Excel files.
-- Added the ability to double-click to open relevant files in the the Report to Templates' file selector and its run window's activity log.
+- Added the ability to double-click to open relevant files in all the Report to Templates list views.
 
 ## 1.2.0
 ### Major
