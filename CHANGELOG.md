@@ -4,6 +4,7 @@
 - Fixed a bug with Report to Templates where TimeSpan values were formatted as 24-hour-clock values when inserted into Excel files.
 - Fixed a bug where "Could not ascertain asset IDs" message would display when cancelling out of adding an existing asset to an organisation.
 - Added the ability to double-click to open relevant files in all the Report to Templates list views.
+- Made it so that the New Asset window doesn't forcefully retain focus when adding creating a new asset via an organisation.
 
 ## 1.2.0
 ### Major
