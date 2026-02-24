@@ -493,10 +493,7 @@ namespace BridgeOpsClient
             newAsset.cmbOrgRef.IsEditable = true;
             newAsset.cmbOrgRef.Text = originalRef;
             newAsset.cmbOrgRef.IsEnabled = false;
-            newAsset.Owner = this;
-            newAsset.ShowDialog();
-            if (newAsset.changesMade)
-                PopulateAssets();
+            newAsset.Show();
         }
 
         private void btnAssetAdd_Click(object sender, RoutedEventArgs e)
@@ -504,7 +501,8 @@ namespace BridgeOpsClient
             if (originalRef == null)
                 return;
 
-            LinkRecord lr = new("Asset", ColumnRecord.asset, "Link Asset", typeof(string), new() { originalRef }, 2);
+            LinkRecord lr = new("Asset", ColumnRecord.asset, $"Link Asset to {txtOrgRef.Text}",
+                                typeof(string), new() { originalRef }, 2);
             lr.EnableMultiLink();
             lr.Owner = this;
             lr.ShowDialog();
@@ -593,7 +591,8 @@ namespace BridgeOpsClient
             }
             catch { }
 
-            LinkRecord lr = new("Contact", ColumnRecord.contact, "Link Contact", typeof(int), excludeIDs, 0);
+            LinkRecord lr = new("Contact", ColumnRecord.contact, $"Link Contact to {txtOrgRef.Text}",
+                                typeof(int), excludeIDs, 0);
             lr.EnableMultiLink();
             lr.Owner = this;
             lr.ShowDialog();
