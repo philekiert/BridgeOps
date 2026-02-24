@@ -509,14 +509,14 @@ namespace BridgeOpsClient
             lr.Owner = this;
             lr.ShowDialog();
 
+            if (lr.DialogResult == false)
+                return;
             if (lr.ids == null)
             {
-                App.DisplayError("Could not ascertain asset IDs", this);
+                App.DisplayError("Could not ascertain asset IDs.", this);
                 return;
             }
-            else if (lr.DialogResult == false)
-                return;
-            else if (lr.ids.Count == 0)
+            if (lr.ids.Count == 0)
             {
                 App.DisplayError("No assets selected.", this);
                 return;
