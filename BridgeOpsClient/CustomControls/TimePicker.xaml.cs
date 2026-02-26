@@ -70,7 +70,7 @@ namespace BridgeOpsClient.CustomControls
             if (time != correctedTime)
             {
                 int selection = txt.SelectionStart;
-                txt.Text = $"{correctedTime.TotalHours:00}:{correctedTime.Minutes}";
+                txt.Text = $"{correctedTime.TotalHours:00}:{correctedTime.Minutes:00}";
                 // Shouldn't trigger if the user has erased both characters.
                 txt.SelectionStart = selection;
             }
