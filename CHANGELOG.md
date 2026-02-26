@@ -5,6 +5,7 @@
 - Fixed a bug where "Could not ascertain asset IDs" message would display when cancelling out of adding an existing asset to an organisation.
 - Added the ability to double-click to open relevant files in all the Report to Templates list views.
 - Made it so that the New Asset window doesn't forcefully retain focus when adding creating a new asset via an organisation.
+- Changed search text to be retained when switching between tables in the database view.
 
 ## 1.2.0
 ### Major

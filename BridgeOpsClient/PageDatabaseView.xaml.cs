@@ -227,11 +227,14 @@ namespace BridgeOpsClient
                 }
             }
 
+            // Keep the old search text - sometimes users will have accidentally searched in the wrong table or simply
+            // wish to search the same string in two tables, so it's convenient not to wipe this.
+            string oldSearchText = txtSearch.Text;
             cmbColumn.SelectedIndex = 0;
+            txtSearch.Text = oldSearchText;
 
             txtSearch.IsEnabled = cmbColumn.Items.Count > 0;
             btnSearch.IsEnabled = cmbColumn.Items.Count > 0;
-            txtSearch.Text = "";
         }
 
         struct Row
