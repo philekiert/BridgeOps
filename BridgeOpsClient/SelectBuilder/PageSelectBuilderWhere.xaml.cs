@@ -36,6 +36,10 @@ namespace BridgeOpsClient
 
             this.selectBuilder = selectBuilder;
             this.frame = frame;
+
+            // Initialise time pickers to 00:00 for better readability by the user.
+            timValue.SetTime(0);
+            dtmValue.timePicker.SetTime(0);
         }
 
         private void btnRemove_Click(object sender, RoutedEventArgs e)

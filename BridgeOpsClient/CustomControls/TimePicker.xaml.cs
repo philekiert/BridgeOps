@@ -64,8 +64,8 @@ namespace BridgeOpsClient.CustomControls
             TimeSpan correctedTime = time;
             if (time > max)
                 time = max;
-            if (time < new TimeSpan(0, 1, 0))
-                time = new(0, 1, 0);
+            if (time < new TimeSpan(0))
+                time = new(0);
 
             if (time != correctedTime)
             {
