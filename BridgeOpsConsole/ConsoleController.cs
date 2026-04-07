@@ -183,6 +183,8 @@ public class ConsoleController
                    "application, and all users will be logged out.");
         AddCommand("status", ValType.None, menu, CheckAgent,
                    "Check to see if agent is running.");
+        AddCommand("error log", ValType.None, menu, OpenErrorLog,
+                   "Open agent-error-log.txt in the system's default text editor.");
         AddCommand("logout", ValType.String, menu, LogoutUser,
                    "End session for specified user.");
         AddCommand("close", ValType.String, menu, CloseClient,
@@ -1063,6 +1065,25 @@ public class ConsoleController
         }
         else
             Writer.Negative("Agent process is not currently running. Type \"start\" to begin.");
+        return 0;
+    }
+
+    private int OpenErrorLog()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Glo.PathAgentErrorLog,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception e)
+        {
+            Writer.Negative("Could not open the file. See error:");
+            Writer.Message(e.Message, ConsoleColor.Red);
+        }
+
         return 0;
     }
 

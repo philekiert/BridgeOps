@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.2.2
+### Added
+- Added an "error log" command to the console's agent submenu as a way to quickly open agent-error-log.txt.
 ### Fixed
 - Stopped the application from crashing when a search returns one or more Sunday conferences in the data pane.
 
