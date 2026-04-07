@@ -738,8 +738,12 @@ namespace BridgeOpsClient
                 start = (DateTime)c.start!;
                 end = (DateTime)c.end!;
 
-                newDaysPresent[(int)start.DayOfWeek - 1] = true;
-                if (!daysOn[(int)start.DayOfWeek - 1])
+                int dayIndex = ((int)start.DayOfWeek - 1); // - 1 % 7 because Sunday is 0 according to Microsoft (:
+                if (dayIndex == -1)
+                    dayIndex = 6;
+
+                newDaysPresent[dayIndex] = true;
+                if (!daysOn[dayIndex])
                     continue;
                 List<object?> newRow = new()
                 {

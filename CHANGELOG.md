@@ -1,8 +1,14 @@
 # Changelog
 
+## 1.2.2
+### Fixed
+- Stopped the application from crashing when a search returns one or more Sunday conferences in the data pane.
+
 ## 1.2.1
+### Fixed
 - Fixed a bug with Report to Templates where TimeSpan values were formatted as 24-hour-clock values when inserted into Excel files.
 - Fixed a bug where "Could not ascertain asset IDs" message would display when cancelling out of adding an existing asset to an organisation.
+### Changed
 - Added the ability to double-click to open relevant files in all the Report to Templates list views.
 - Made it so that the New Asset window doesn't forcefully retain focus when adding creating a new asset via an organisation.
 - Changed search text to be retained when switching between tables in the database view.
