@@ -3,8 +3,11 @@
 ## 1.2.2
 ### Added
 - Added an "error log" command to the console's agent submenu as a way to quickly open agent-error-log.txt.
+### Changed
+- Users' view settings are now stored every 10 seconds rather than just at logout. This means that crashes and remote client terminations no longer cause changes to be lost.
 ### Fixed
 - Stopped the application from crashing when a search returns one or more Sunday conferences in the data pane.
+- Fixed a major issue preventing admins from remotely closing client sessions in some instances.
 
 ## 1.2.1
 ### Fixed

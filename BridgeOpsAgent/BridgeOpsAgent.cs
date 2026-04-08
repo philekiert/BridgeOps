@@ -888,6 +888,8 @@ internal class BridgeOpsAgent
                     ClientPullColumnRecord(stream);
                 else if (fncByte == Glo.CLIENT_PULL_USER_SETTINGS)
                     ClientPullUserSettings(stream, sqlConnect);
+                else if (fncByte == Glo.CLIENT_STORE_USER_SETTINGS)
+                    ClientStoreUserSettings(stream, sqlConnect);
                 else if (fncByte == Glo.CLIENT_LOGIN)
                     ClientLogin(stream, sqlConnect, (IPEndPoint?)client.Client.RemoteEndPoint);
                 else if (fncByte == Glo.CLIENT_LOGOUT)
@@ -1133,6 +1135,51 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("Could not pull user settings. See error", e);
+        }
+        finally
+        {
+            if (sqlConnect.State == ConnectionState.Open)
+                sqlConnect.Close();
+        }
+    }
+
+    private static void ClientStoreUserSettings(NetworkStream stream, SqlConnection sqlConnect)
+    {
+        try
+        {
+            int loginID;
+            string settings;
+            lock (clientSessions)
+            {
+                string sessionID = sr.ReadString(stream);
+                settings = SqlAssist.SecureValue(sr.ReadString(stream));
+                if (!CheckSessionValidity(sessionID, columnRecordID))
+                {
+                    stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                    return;
+                }
+                else
+                    loginID = clientSessions[sessionID].loginID;
+            }
+
+            sqlConnect.Open();
+            SqlCommand command = new("UPDATE Login " +
+                                    $"SET {Glo.Tab.LOGIN_VIEW_SETTINGS} = '{settings}' " +
+                                    $"WHERE {Glo.Tab.LOGIN_ID} = {loginID};", sqlConnect);
+            if (command.ExecuteNonQuery() == 0)
+            {
+                LogError($"Could not update user settings for login {loginID}.");
+                stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
+                return;
+            }
+
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
+        }
+        catch (Exception e)
+        {
+            LogError("Could not pull user settings. See error", e);
+            SafeFail(stream);
+            return;
         }
         finally
         {
@@ -1423,10 +1470,11 @@ internal class BridgeOpsAgent
                 }
 
                 foreach (ClientSession cs in clientSessions.Values)
-                    if (cs.username == username)
+                    if (cs.username.ToLower() == username.ToLower())
                         idToAttack = cs.sessionID;
                 if (idToAttack == "")
-                    throw new(Glo.CLIENT_CLOSE_SESSION_NOT_FOUND);
+                    throw new("Unable to close client application. See error: " + 
+                              Glo.CLIENT_CLOSE_SESSION_NOT_FOUND);
 
                 SendSingleNotification(idToAttack, Glo.SERVER_CLIENT_CLOSE);
                 clientSessions.Remove(idToAttack);

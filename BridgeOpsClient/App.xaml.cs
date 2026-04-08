@@ -1,4 +1,9 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
+using SendReceiveClasses;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -14,12 +20,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using SendReceiveClasses;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using static BridgeOpsClient.PageConferenceView;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using CR = ColumnRecord;
 
 namespace BridgeOpsClient
@@ -230,6 +232,14 @@ namespace BridgeOpsClient
                 recurrenceUpdateQueued = false;
             }
         }
+        static string? lastSettingsString = null;
+        DispatcherTimer tmrStoreSettings;
+        private void StoreSettingsTimerFunction(object? sender, EventArgs e)
+        {
+            // Also functions as a session check. If the client session has been terminated, this will trigger logout.
+            if (us.GetSettingsString() != lastSettingsString)
+                StoreUserSettings();
+        }
 
         public static void RepeatSearches(params int[] identities)
         {
@@ -304,6 +314,12 @@ namespace BridgeOpsClient
             };
             tmrStatusCheck.Tick += StatusCheck;
             tmrStatusCheck.Start();
+            tmrStoreSettings = new()
+            {
+                Interval = new TimeSpan(TimeSpan.TicksPerSecond * 10)
+            };
+            tmrStoreSettings.Tick += StoreSettingsTimerFunction;
+            tmrStoreSettings.Start();
         }
 
         public static Thread? listenerThread;
@@ -458,36 +474,9 @@ namespace BridgeOpsClient
                     // Only store the user settings if it's actually their session logging out.
                     string? settings = null;
                     if (loginID == sd.loginID && us.settingsPulled)
-                    {
-                        settings = "";
-                        // Store the data table column configurations.
-                        for (int i = 0; i < us.dataOrder.Length; ++i)
-                            settings += string.Join(";", us.dataOrder[i]) + "\n";
-                        for (int i = 0; i < us.dataHidden.Length; ++i)
-                            settings += string.Join(";", us.dataHidden[i]) + "\n";
-                        for (int i = 0; i < us.dataWidths.Length; ++i)
-                            settings += string.Join(";", us.dataWidths[i]) + "\n";
-                        // Store the conference and database view state and widths.
-                        settings += (int)BridgeOpsClient.MainWindow.oldConfWidth + ";" +
-                                    (int)BridgeOpsClient.MainWindow.oldDataWidth + ";" +
-                                    BridgeOpsClient.MainWindow.viewState + "\n";
-                        // Loosely store the database view pane states.
-                        foreach (PageDatabaseView pdv in PageDatabase.views)
-                        {
-                            settings += pdv.cmbTable.Text + ";";
-                            settings += pdv.GetRowDefinitionForFrame().Height.Value.ToString() + ";";
-                        }
-                        settings += "\n";
-                        // Store the resource selections.
-                        foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
-                            settings += string.Join(",", pcv.resourcesOrder) + ";";
-                        settings += "\n";
-                        // Store the schedule zoom.
-                        List<int> heights = new();
-                        settings += string.Join(';', BridgeOpsClient.MainWindow.pageConferenceViews
-                                                     .Select(i => i.schView.zoomResource));
-                        us = new();
-                    }
+                        settings = us.GetSettingsString();
+                    us = new();
+                    lastSettingsString = null;
 
                     lock (streamLock)
                     {
@@ -1056,7 +1045,9 @@ namespace BridgeOpsClient
                             string result = sr.ReadString(stream);
                             stream.Close();
 
+                            lastSettingsString = result;
                             string[] settings = result.Split("\n");
+
 
                             double dVal;
                             try
@@ -1181,6 +1172,43 @@ namespace BridgeOpsClient
             }
 
             return true;
+        }
+        public static bool StoreUserSettings()
+        {
+            // Assemble a settings string (this is a consequence of poor planning and needs updating to lean on JSON)
+            string? settings = us.GetSettingsString();
+
+            if (settings == null)
+                return false;
+
+            lock (streamLock)
+            {
+                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                {
+                    if (stream == null)
+                        throw new();
+                    try
+                    {
+                        stream.WriteByte(Glo.CLIENT_STORE_USER_SETTINGS);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        sr.WriteAndFlush(stream, settings);
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS)
+                            return true;
+                        if (response == Glo.CLIENT_SESSION_INVALID)
+                            SessionInvalidated();
+                        throw new Exception();
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                    finally
+                    {
+                        if (stream != null) stream.Close();
+                    }
+                }
+            }
         }
 
         public static bool SendInsert(byte fncByte, object toSerialise, Window? owner)
@@ -3042,6 +3070,46 @@ namespace BridgeOpsClient
         public List<double>[] dataWidths = new List<double>[16];
 
         public bool settingsPulled = false;
+
+        public string? GetSettingsString()
+        {
+            string settings = null;
+            try
+            {
+                if (settingsPulled)
+                {
+                    settings = "";
+                    // Store the data table column configurations.
+                    for (int i = 0; i < dataOrder.Length; ++i)
+                        settings += string.Join(";", dataOrder[i]) + "\n";
+                    for (int i = 0; i < dataHidden.Length; ++i)
+                        settings += string.Join(";", dataHidden[i]) + "\n";
+                    for (int i = 0; i < dataWidths.Length; ++i)
+                        settings += string.Join(";", dataWidths[i]) + "\n";
+                    // Store the conference and database view state and widths.
+                    settings += (int)BridgeOpsClient.MainWindow.oldConfWidth + ";" +
+                                (int)BridgeOpsClient.MainWindow.oldDataWidth + ";" +
+                                BridgeOpsClient.MainWindow.viewState + "\n";
+                    // Loosely store the database view pane states.
+                    foreach (PageDatabaseView pdv in PageDatabase.views)
+                    {
+                        settings += pdv.cmbTable.Text + ";";
+                        settings += pdv.GetRowDefinitionForFrame().Height.Value.ToString() + ";";
+                    }
+                    settings += "\n";
+                    // Store the resource selections.
+                    foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                        settings += string.Join(",", pcv.resourcesOrder) + ";";
+                    settings += "\n";
+                    // Store the schedule zoom.
+                    List<int> heights = new();
+                    settings += string.Join(';', BridgeOpsClient.MainWindow.pageConferenceViews
+                                                 .Select(i => i.schView.zoomResource));
+                }
+            }
+            catch { }
+            return settings;
+        }
 
         public UserSettings()
         {

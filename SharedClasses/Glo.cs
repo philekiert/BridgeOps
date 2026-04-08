@@ -5,9 +5,9 @@ using System.Xml.Linq;
 using System.Reflection;
 
 // Application version
-[assembly: AssemblyVersion("1.2.1")]
-[assembly: AssemblyFileVersion("1.2.1")]
-[assembly: AssemblyInformationalVersion("1.2.1")]
+[assembly: AssemblyVersion("1.2.2")]
+[assembly: AssemblyFileVersion("1.2.2")]
+[assembly: AssemblyInformationalVersion("1.2.2")]
 
 public static class Glo
 {
@@ -73,6 +73,7 @@ public static class Glo
     public const int CLIENT_PASSWORD_RESET = 4;
     public const int CLIENT_LOGGEDIN_LIST = 5;
     public const int CLIENT_PULL_USER_SETTINGS = 6;
+    public const int CLIENT_STORE_USER_SETTINGS = 7;
     public const int CLIENT_NEW_LOGIN = 10;
     public const int CLIENT_NEW_ORGANISATION = 11;
     public const int CLIENT_NEW_CONTACT = 12;
@@ -174,7 +175,7 @@ public static class Glo
 
     public const string CLIENT_LOGOUT_ACCEPT = "Safe travels";
     public const string CLIENT_LOGOUT_SESSION_NOT_FOUND = "Session not found";
-    public const string CLIENT_CLOSE_SESSION_NOT_FOUND = "Target lost";
+    public const string CLIENT_CLOSE_SESSION_NOT_FOUND = "Target lost, could not identify session by username";
 
     public const string CLIENT_LOGOUT_SESSION_INVALID = "Session invalid";
     
