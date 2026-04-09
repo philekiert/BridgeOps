@@ -200,6 +200,8 @@ namespace BridgeOpsClient
         {
             lstFiles.Items.Clear();
             lstSummary.Items.Clear();
+            txtParams.Clear();
+            txtFolder.Clear();
             btnCheck.IsEnabled = false;
             btnRun.IsEnabled = false;
             validTagCount = 0;
@@ -838,6 +840,21 @@ namespace BridgeOpsClient
 
         private void btnRun_Click(object sender, RoutedEventArgs e)
         {
+            // Make sure none of the templates originate in the output folder.
+            // This isn't the most robust solution, but should be fine since file rows and
+            // the output textbox are read-only.
+            foreach (ListViewItem listViewItem in lstFiles.Items)
+            {
+                string filepath = fileLinks[listViewItem]; // Has to be here.
+                string? fileDir = Path.GetDirectoryName(filepath);
+                if (fileDir == txtFolder.Text)
+                {
+                    App.DisplayError("Templates cannot originate in the output folder.", this);
+                    return;
+                }
+            }
+
+
             if (!Directory.Exists(txtFolder.Text))
             {
                 App.DisplayError("The output directory does not exist.", this);

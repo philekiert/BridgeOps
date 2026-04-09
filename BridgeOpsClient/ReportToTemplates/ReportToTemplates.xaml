@@ -128,7 +128,8 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Label Content="Output Location" Height="26" FontWeight="Bold" Margin="0 0 0 2" Padding="0 5 5 5"/>
-            <TextBox Grid.Column="1" Margin="10 0 -1 0" Height="24" x:Name="txtFolder" TextChanged="txtFolder_TextChanged"/>
+            <TextBox Grid.Column="1" Margin="10 0 -1 0" Height="24" x:Name="txtFolder" IsReadOnly="True"
+                     TextChanged="txtFolder_TextChanged"/>
             <Button Content="Select" Grid.Column="2" Click="btnFolder_Click"/>
         </Grid>
         <CheckBox Margin="10 10 10 10" x:Name="chkOverwrite" Grid.Row="6"
