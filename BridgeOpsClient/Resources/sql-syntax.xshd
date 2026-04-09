@@ -86,6 +86,9 @@
       <Word>Connection</Word>
       <Word>Recurrence</Word>
       <Word>Resource</Word>
+	  <Word>Task</Word>
+	  <Word>Document</Word>
+	  <Word>Visit</Word>
     </Keywords>
 
     <Keywords color="Keyword" >
