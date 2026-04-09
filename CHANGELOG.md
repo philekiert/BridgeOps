@@ -8,6 +8,7 @@
 ### Fixed
 - Stopped the application from crashing when a search returns one or more Sunday conferences in the data pane.
 - Fixed a major issue preventing admins from remotely closing client sessions in some instances.
+- Fixed another bug with Report to Template value formatting where TimeSpan minute values could appear without their preceding 0, e.g. "13:5".
 
 ## 1.2.1
 ### Fixed
