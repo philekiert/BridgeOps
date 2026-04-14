@@ -320,6 +320,8 @@ namespace BridgeOpsClient
             };
             tmrStoreSettings.Tick += StoreSettingsTimerFunction;
             tmrStoreSettings.Start();
+
+            Log.LogError("Test Context. See error:", "Application loaded.");
         }
 
         public static Thread? listenerThread;
@@ -383,14 +385,26 @@ namespace BridgeOpsClient
                         Environment.Exit(0);
                     else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
                     {
-                        foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
-                            pcv.SearchTimeframe();
-                        recurrenceUpdateQueued = true;
+                        try
+                        {
+                            foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                            {
+                                pcv.SearchTimeframe();
+                                // Set here, just in case some SearchTimeFrame()s completed before one failed.
+                                recurrenceUpdateQueued = true;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Log.LogError("Unable to update conferences following notification request. See error:",
+                                         e.Message);
+                        }
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    // Haven't decided what to do here yet.
+                    Log.LogError("Unable to update application following notification request. See error:", e.Message);
+                    
                 }
                 finally
                 {

@@ -31,7 +31,7 @@ public static class Glo
     public static string DNL = Environment.NewLine + Environment.NewLine;
 
     public static string ROW_CLASH_WARNING = "This would result in one or more row clashes. ";
-    public static string ROW_CLASH_FAILED_RESOLVE = "Could not resolve row clashes. " + 
+    public static string ROW_CLASH_FAILED_RESOLVE = "Could not resolve row clashes. " +
                                                     "Increase the resource capacity or additional rows and try again.";
     public static string DIAL_CLASH_WARNING = "This would result in one or more dial number clashes.";
     public static string RESOURCE_OVERFLOW_WARNING = "This move would result in one or more resource overflows.";
@@ -52,6 +52,8 @@ public static class Glo
     { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "Data Import"); } }
     public static string PathAgentErrorLog
     { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "agent-error-log.txt"); } }
+    public static string PathClientErrorLog
+    { get { return System.IO.Path.Combine(Fun.ApplicationFolder(), "client-error-log.txt"); } }
     public const string CONFIG_TYPE_OVERRIDES = "type-overrides.txt";
     public const string CONFIG_COLUMN_ADDITIONS = "column-additions.txt";
     public const string CONFIG_NETWORK = "network-config.txt";
@@ -178,7 +180,7 @@ public static class Glo
     public const string CLIENT_CLOSE_SESSION_NOT_FOUND = "Target lost, could not identify session by username";
 
     public const string CLIENT_LOGOUT_SESSION_INVALID = "Session invalid";
-    
+
 
     // Network Config
     public const int NETWORK_SETTINGS_LENGTH = 15; // Increase if longer settings names are used in network-config.txt
