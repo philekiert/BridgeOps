@@ -320,8 +320,6 @@ namespace BridgeOpsClient
             };
             tmrStoreSettings.Tick += StoreSettingsTimerFunction;
             tmrStoreSettings.Start();
-
-            Log.LogError("Test Context. See error:", "Application loaded.");
         }
 
         public static Thread? listenerThread;
