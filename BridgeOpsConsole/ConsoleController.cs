@@ -23,6 +23,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Net;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
@@ -156,6 +157,8 @@ public class ConsoleController
                    "Create a new database on the localhost\\SQLEXPRESS server.");
         AddCommand("delete database", ValType.None, menu, DeleteDatabase,
                    "Delete the BridgeManager database on the localhost\\SQLEXPRESS server.");
+        AddCommand("set reader credentials", ValType.String, menu, SetReaderCredentials,
+                   "Set the reader account's username and password, separated by |, e.g. username|password");
 
         // Data
         menu = MENU_DATA;
@@ -488,6 +491,37 @@ public class ConsoleController
     {
         dbCreate.DeleteDatabase();
 
+        return 0;
+    }
+
+    private int SetReaderCredentials()
+    {
+        try
+        {
+            int sep = commandValString.IndexOf('|');
+            if (sep == -1 || sep == 0 || sep == commandValString.Length - 1)
+            {
+                Writer.Negative("Must input a username and password, separated by |, e.g. username|password.");
+                return 0;
+            }
+            string username = commandValString.Remove(sep);
+            string password = commandValString.Substring(sep + 1);
+
+            string encrypted = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(password), null,
+                                                      DataProtectionScope.CurrentUser)) + "\n" +
+                               Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(password), null,
+                                                      DataProtectionScope.CurrentUser));
+            Glo.Fun.ExistsOrCreateFolder(Glo.PathConfigFiles);
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_SQL_SERVER_READER), encrypted);
+            Console.Clear(); // Important - we don't want the information to remain in the buffer unencrypted.
+            Writer.Affirmative("Credentials updated successfully.");
+        }
+        catch (Exception e)
+        {
+            Console.Clear(); // Important - we don't want the information to remain in the buffer unencrypted.
+            Console.SetCursorPosition(0, Console.CursorTop - 1); // Overwrite the previous line.
+            Writer.Message(e.Message, ConsoleColor.Red);
+        }
         return 0;
     }
 
