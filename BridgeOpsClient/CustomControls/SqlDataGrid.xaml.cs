@@ -236,6 +236,13 @@ namespace BridgeOpsClient.CustomControls
                         header.Binding = new Binding(string.Format("items[{0}]", count))
                         { Converter = new BooleanToYesNoConverter() };
                     }
+                    else if ((col.type != null &&
+                              col.type.ToUpper() == ("TEXT")) ||
+                             dataType == typeof(string))
+                    {
+                        header.Binding = new Binding(string.Format("items[{0}]", count))
+                        { Converter = new StringLineConcatConverter() };
+                    }
                     else if ((actualHeadername.EndsWith(Glo.Tab.CONFERENCE_ID) ||
                               actualHeadername.EndsWith(Glo.Tab.RECURRENCE_ID)) &&
                              ((col.type != null && col.type.ToUpper().Contains("INT")) ||
@@ -253,7 +260,9 @@ namespace BridgeOpsClient.CustomControls
                         }
                     }
                     else
+                    {
                         header.Binding = new Binding(string.Format("items[{0}]", count));
+                    }
                 }
 
                 if (s != null && columnstoOmit.ContainsKey(s))
@@ -373,6 +382,24 @@ namespace BridgeOpsClient.CustomControls
             {
                 if (value is TimeSpan ts)
                     return $"{(int)ts.TotalHours:00}:{ts.Minutes:00}";
+                return "";
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is string stringValue)
+                    return TimeSpan.Parse(stringValue);
+                return false;
+            }
+        }
+
+        // Allow TimeSpans to exceed 23:59.
+        public class StringLineConcatConverter : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is string s)
+                    return s.Replace(Glo.NL, " ");
                 return "";
             }
 
