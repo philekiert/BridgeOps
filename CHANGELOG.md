@@ -11,6 +11,8 @@
 - Fixed a major issue preventing admins from remotely closing client sessions in some instances.
 - Fixed another bug with Report to Template value formatting where TimeSpan minute values could appear without their preceding 0, e.g. "13:5".
 - Selecting \<New\> from the Report to Templates presets now correctly resets all fields to blank.
+- Fixed a bug where the client wouldn't start listening for server updates if the network settings failed to be read at application load.
+- Text cells in data results now replace line breaks with spaces for visibility of the whole text value on one line. This is a change generally, but a fix in regard to the Change Log tabs.
 
 ## 1.2.1
 ### Fixed
