@@ -23,12 +23,15 @@ namespace BridgeOpsClient
             txtIPAddress.Text = App.sd.ServerIP.ToString();
             txtPortInbound.Text = App.sd.portInbound.ToString();
             txtPortOutbound.Text = App.sd.portOutbound.ToString();
+            chkUseSSL.IsChecked = App.sd.useSSL;
 
             txtIPAddress.Focus();
         }
 
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
         {
+            int initialInbound = App.sd.portInbound;
+
             int outbound;
             int inbound;
             if (!System.Net.IPAddress.TryParse(txtIPAddress.Text, out _))
@@ -52,13 +55,20 @@ namespace BridgeOpsClient
                 return;
             }
 
+            bool useSSL = chkUseSSL.IsChecked == true;
+
             System.IO.File.WriteAllText(App.networkConfigFile, txtIPAddress.Text + ";" +
                                                                inbound.ToString() + ";" +
-                                                               outbound.ToString());
-
+                                                               outbound.ToString() + ";" +
+                                                               useSSL.ToString());
             App.sd.SetServerIP(txtIPAddress.Text);
             App.sd.portOutbound = outbound;
             App.sd.portInbound = inbound;
+            App.sd.useSSL = chkUseSSL.IsChecked == true;
+
+            if (initialInbound != inbound)
+                App.DisplayError("You must restart the application for the change to the inbound port to take effect.",
+                                 "Inbound Port Changed", this);
 
             Close();
         }

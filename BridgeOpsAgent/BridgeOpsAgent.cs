@@ -33,36 +33,40 @@ internal class BridgeOpsAgent
     static string columnRecord = "";
     static bool columnRecordIntact = false;
 
-    const int clientNudgeInterval = 100_000;
-    const int notificationSendRetries = 3;
-    const int maxMissedNudges = 2;
+    const int clientLastCheckinLimit = 100_000;
 
     class ClientSession
     {
         public string username;
-        public string ipString;
+
         public int loginID;
+        public string ip;
         public string sessionID; // This is stored in its key, but it's good to have it here as well.
         public bool admin;
         public List<bool[]> permissions;
         public bool[] createPermissions;
         public bool[] editPermissions;
         public bool[] deletePermissions;
+        public HashSet<byte> notifications;
+
+        // Updated whenever the client asks for notifications.
+        public long lastCheckin;
+        public void UpdateCheckin()
+        {
+            lastCheckin = DateTime.Now.Ticks;
+        }
 
         // This will count up each time SqlServerNudge() gets no response. If it exceeds maxMissedNudges, the session
         // is terminated.
         private int missedNudges = 0;
         public int MissedNudges { get { return missedNudges; } }
 
-        public NetworkStream? stream;
-        public IPAddress? ipAddess;
-
-        public ClientSession(string username, string ip, int loginID, string sessionID, bool admin,
+        public ClientSession(string username, int loginID, string ip, string sessionID, bool admin,
                              int createPermissions, int editPermissions, int deletePermissions)
         {
             this.username = username;
-            ipString = ip;
             this.loginID = loginID;
+            this.ip = ip;
             this.sessionID = sessionID;
             this.admin = admin;
             this.createPermissions = Glo.Fun.GetPermissionsArray(createPermissions);
@@ -71,148 +75,9 @@ internal class BridgeOpsAgent
 
             permissions = new() { this.createPermissions, this.editPermissions, this.deletePermissions };
 
-            ipAddess = Glo.Fun.GetIPAddressFromString(ip);
+            lastCheckin = DateTime.Now.Ticks;
 
-            stream = null;
-        }
-
-        // Clients should only ever be contacted using the network stream in this struct. This is to prevent multiple
-        // threads attempting to open a network stream on the same port simultaneously, and the NetworkStream needs to
-        // be locked in every instance.
-        public bool SetStream(NetworkStream? stream)
-        {
-            if (this.stream != null)
-                return false;
-            else
-            {
-                this.stream = stream;
-                return true;
-            }
-        }
-        private readonly object streamLock = new();
-
-        public void CloseStream()
-        {
-            if (stream != null)
-            {
-                stream.Close();
-                stream = null;
-            }
-        }
-
-        // This bool is only switched off after the client requests the column record. It's purpose is to prevent the
-        // agent from demanding the client make numerous column record pulls where only one would suffice.
-        public bool columnRecordChangeNotificationUnsent = false;
-        public void SendColumnRecordChangeNotification()
-        {
-            if (!columnRecordChangeNotificationUnsent)
-            {
-                columnRecordChangeNotificationUnsent = true;
-                if (!SendNotification(Glo.SERVER_COLUMN_RECORD_UPDATED))
-                    LogError($"Column record change notification could not be sent to {ipString} " +
-                             $"after {notificationSendRetries} retries.");
-            }
-        }
-        public void SendResourceChangeNotification()
-        {
-            if (!SendNotification(Glo.SERVER_RESOURCES_UPDATED))
-                LogError($"Column record change notification could not be sent to {ipString} " +
-                         $"after {notificationSendRetries} retries.");
-        }
-        public void SendLoggedOutNotification()
-        {
-            if (!SendNotification(Glo.SERVER_FORCE_LOGOUT))
-                LogError($"Logged out notification could not be sent to {ipString} " +
-                         $"after {notificationSendRetries} retries.");
-        }
-        public void SendCloseNotification()
-        {
-            if (!SendNotification(Glo.SERVER_CLIENT_CLOSE))
-                LogError($"Client close notification could not be sent to {ipString} " +
-                         $"after {notificationSendRetries} retries.");
-        }
-        public void SendConferenceChangeNotification()
-        {
-            if (!SendNotification(Glo.SERVER_CONFERENCES_UPDATED))
-                LogError($"Conferences updated notification could not be sent to {ipString} " +
-                         $"after {notificationSendRetries} retries.");
-        }
-
-        public void SendNudge()
-        {
-            if (ipAddess == null)
-                return; // Will never be the case.
-
-            lock (streamLock)
-            {
-                try
-                {
-                    stream = sr.NewClientNetworkStream(new IPEndPoint(ipAddess, portOutbound));
-
-                    if (stream != null)
-                    {
-                        stream.WriteByte(Glo.SERVER_CLIENT_NUDGE);
-                        stream.ReadTimeout = 1000; // Set to 5000ms originally by NewClientNetworkStream(), but that's
-                                                   // overkill for this.
-                        stream.ReadByte();
-                        CloseStream();
-                        missedNudges = 0;
-                    }
-                    else
-                        ++missedNudges;
-                }
-                catch
-                {
-                    CloseStream();
-                    ++missedNudges;
-                }
-            }
-
-            if (missedNudges == maxMissedNudges)
-                lock (clientSessions)
-                {
-                    if (clientSessions.ContainsKey(sessionID))
-                        clientSessions.Remove(sessionID);
-                }
-        }
-
-        private bool SendNotification(byte notificationByte)
-        {
-            bool sent = false;
-
-            // Not super happy about this, but immediate notifications ended up with things being carried
-            // out ahead of SQL changes being made somewhow. No idea how, as the transactions all commit
-            // before sending the notification, so there's something going on that I don't understand. Will
-            // look further into it when I get time.
-            Thread.Sleep(20);
-
-            if (ipAddess == null)
-                return sent;
-
-            lock (streamLock)
-            {
-                for (int i = 0; i < notificationSendRetries; ++i)
-                {
-                    try
-                    {
-                        stream = sr.NewClientNetworkStream(new IPEndPoint(ipAddess, portOutbound));
-                        if (stream != null)
-                        {
-                            stream.WriteByte(notificationByte);
-                            CloseStream();
-                            sent = true;
-                            break;
-                        }
-                    }
-                    catch
-                    { CloseStream(); }
-
-                    if (i != notificationSendRetries - 1)
-                        Thread.Sleep(1_000); // Sleep for a second if we didn't get anywhere.
-                }
-            }
-
-            return sent;
+            notifications = new();
         }
     }
     static readonly Dictionary<string, ClientSession> clientSessions = new();
@@ -267,15 +132,15 @@ internal class BridgeOpsAgent
     private static void LogError(string s) { LogError(s, null); }
 
     // For when we want to let a client know that a request failed in a catch block.
-    private static void SafeFail(NetworkStream stream)
+    private static void SafeFail(Stream stream)
     {
         try { stream.WriteByte(Glo.CLIENT_REQUEST_FAILED); } catch { }
     }
-    private static void SafeFail(NetworkStream stream, byte signal)
+    private static void SafeFail(Stream stream, byte signal)
     {
         try { stream.WriteByte(signal); } catch { }
     }
-    private static void SafeFail(NetworkStream stream, string message)
+    private static void SafeFail(Stream stream, string message)
     {
         try
         {
@@ -322,6 +187,14 @@ internal class BridgeOpsAgent
                             }
                         }
                     }
+                    else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_ON))
+                        if (bool.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out SendReceive.useSSL))
+                            ++valuesSet;
+                        else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_THUMB))
+                        {
+                            SendReceive.sslThumbprint = s.Substring(Glo.NETWORK_SETTINGS_LENGTH);
+                            ++valuesSet;
+                        }
             }
         }
         catch (Exception e)
@@ -596,23 +469,13 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void SendSingleNotification(string clientID, byte fncByte)
+    private static void QueueNotification(string clientID, byte fncByte)
     {
-        Thread? notificationThread = null;
         lock (clientSessions)
-        {
             if (clientSessions.ContainsKey(clientID))
-            {
-                if (fncByte == Glo.SERVER_FORCE_LOGOUT)
-                    notificationThread = new Thread(clientSessions[clientID].SendLoggedOutNotification);
-                if (fncByte == Glo.SERVER_CLIENT_CLOSE)
-                    notificationThread = new Thread(clientSessions[clientID].SendCloseNotification);
-            }
-        }
-        if (notificationThread != null)
-            notificationThread.Start();
+                clientSessions[clientID].notifications.Add(fncByte);
     }
-    private static void SendChangeNotifications(string? initiatorClientID, byte fncByte)
+    private static void QueueNotifications(string? initiatorClientID, byte fncByte)
     {
         lock (clientSessions)
         {
@@ -621,18 +484,7 @@ internal class BridgeOpsAgent
                 // Skip the requestor if provided, as they'll be making their own request.
                 if (initiatorClientID != null && kvp.Key == initiatorClientID)
                     continue;
-
-                Thread notificationThread;
-                if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
-                    notificationThread = new Thread(kvp.Value.SendColumnRecordChangeNotification);
-                else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
-                    notificationThread = new Thread(kvp.Value.SendResourceChangeNotification);
-                else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
-                    notificationThread = new Thread(kvp.Value.SendConferenceChangeNotification);
-                else
-                    continue;
-
-                notificationThread.Start();
+                kvp.Value.notifications.Add(fncByte);
             }
         }
     }
@@ -748,7 +600,7 @@ internal class BridgeOpsAgent
         sqlNudgeThr.Start();
 
         // Start the thread responsible for nudging clients to see if they're still there.
-        Thread clientNudgeThr = new(ClientNudge);
+        Thread clientNudgeThr = new(CullExpiredSessions);
         clientNudgeThr.Start();
 
         // Start the thread responsible for handling requests from the server console.
@@ -789,18 +641,23 @@ internal class BridgeOpsAgent
             }
         }
     }
-    private static void ClientNudge()
+    private static void CullExpiredSessions()
     {
         while (true)
         {
-            Thread.Sleep(clientNudgeInterval);
+            Thread.Sleep(clientLastCheckinLimit);
 
             lock (clientSessions)
             {
-                foreach (var kvp in clientSessions)
+                List<string> toRemove = new();
+                foreach (KeyValuePair<string, ClientSession> kvp in clientSessions)
+                    // There are 10_000 ticks in a ms, but Thread.Sleep() uses ms, not ticks. So adjust here.
+                    if (DateTime.Now.Ticks - kvp.Value.lastCheckin > clientLastCheckinLimit * 10_000)
+                        toRemove.Add(kvp.Key);
+                foreach (string key in toRemove)
                 {
-                    Thread clientNudgeThread = new(kvp.Value.SendNudge);
-                    clientNudgeThread.Start();
+                    LogError("Ended session for " + clientSessions[key].username + " due to inactivity.");
+                    clientSessions.Remove(key);
                 }
             }
         }
@@ -879,7 +736,7 @@ internal class BridgeOpsAgent
             TcpListener listener = (TcpListener)result.AsyncState;
             TcpClient client = listener.EndAcceptTcpClient(result);
 
-            NetworkStream stream = client.GetStream();
+            Stream stream = client.GetStream();
             autoResetEvent.Set();
 
             try
@@ -888,6 +745,8 @@ internal class BridgeOpsAgent
                 // maintainability it's an if else. Enjoy!
 
                 int fncByte = stream.ReadByte();
+                if (fncByte == Glo.CLIENT_CHECK_NOTIFICATIONS)
+                    ClientCheckNotifications(stream); // 255, but it's first here due to the frequency of the request.
                 if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
                     ClientPullColumnRecord(stream);
                 else if (fncByte == Glo.CLIENT_PULL_USER_SETTINGS)
@@ -994,7 +853,7 @@ internal class BridgeOpsAgent
         {
             ConnectedClients connectedClients = new();
             foreach (KeyValuePair<string, ClientSession> client in clientSessions)
-                connectedClients.Add(client.Value.ipString, client.Value.username);
+                connectedClients.Add(client.Value.ip, client.Value.username);
 
             sr.WriteAndFlush(server, sr.Serialise(connectedClients));
         }
@@ -1011,7 +870,7 @@ internal class BridgeOpsAgent
                     sessionId = client.Key;
             if (sessionId.Length > 0 && clientSessions.ContainsKey(sessionId))
             {
-                SendSingleNotification(sessionId, Glo.SERVER_FORCE_LOGOUT);
+                QueueNotification(sessionId, Glo.SERVER_FORCE_LOGOUT);
                 clientSessions.Remove(sessionId);
                 server.WriteByte(0);
                 server.Flush();
@@ -1034,7 +893,7 @@ internal class BridgeOpsAgent
                     sessionId = client.Key;
             if (sessionId.Length > 0 && clientSessions.ContainsKey(sessionId))
             {
-                SendSingleNotification(sessionId, Glo.SERVER_CLIENT_CLOSE);
+                QueueNotification(sessionId, Glo.SERVER_CLIENT_CLOSE);
                 clientSessions.Remove(sessionId);
                 server.WriteByte(0);
                 server.Flush();
@@ -1066,11 +925,30 @@ internal class BridgeOpsAgent
 
     //   C L I E N T   R E Q U E S T   F U N C T I O N S
 
-    // Multiple threads may be pulling the column record at once, so this action can't be tracked as a bool. Instead,
+    private static void ClientCheckNotifications(Stream stream)
+    {
+        string sessionID = sr.ReadString(stream);
+        lock (clientSessions)
+        {
+            if (!clientSessions.ContainsKey(sessionID))
+            {
+                stream.WriteByte(Glo.CLIENT_SESSION_INVALID);
+                return;
+            }
+            stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW);
+            ClientSession cs = clientSessions[sessionID];
+            stream.WriteByte((byte)cs.notifications.Count); // Safe to cast, will never be more than 255 by design.
+            foreach (byte b in cs.notifications)
+                stream.WriteByte(b);
+            cs.lastCheckin = DateTime.Now.Ticks;
+            cs.notifications.Clear();
+        }
+    }
 
+    // Multiple threads may be pulling the column record at once, so this action can't be tracked as a bool. Instead,
     // increment and decrement the count, and the agent will only attempt to update the record if the value is 0.
     static int pullingColumnRecord = 0;
-    private static void ClientPullColumnRecord(NetworkStream stream)
+    private static void ClientPullColumnRecord(Stream stream)
     {
         while (updatingColumnRecord)
             Thread.Sleep(10);
@@ -1088,8 +966,6 @@ internal class BridgeOpsAgent
                     --pullingColumnRecord;
                     return;
                 }
-                else
-                    clientSessions[id].columnRecordChangeNotificationUnsent = false;
             }
 
             if (columnRecordIntact)
@@ -1108,7 +984,7 @@ internal class BridgeOpsAgent
         --pullingColumnRecord;
     }
 
-    private static void ClientPullUserSettings(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientPullUserSettings(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1147,7 +1023,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientStoreUserSettings(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientStoreUserSettings(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1192,7 +1068,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientLogin(NetworkStream stream, SqlConnection sqlConnect, IPEndPoint? ep)
+    private static void ClientLogin(Stream stream, SqlConnection sqlConnect, IPEndPoint? ep)
     {
         string credentials = sr.ReadString(stream);
         LoginRequest loginReq = sr.Deserialise<LoginRequest>(credentials);
@@ -1217,7 +1093,7 @@ internal class BridgeOpsAgent
                 {
                     if (userAlreadyLoggedIn == "" && cs.Value.username == loginReq.username)
                         userAlreadyLoggedIn = cs.Key;
-                    if (ipAlreadyConnected == "" && cs.Value.ipString == ipStr)
+                    if (ipAlreadyConnected == "" && cs.Value.ip == ipStr)
                         ipAlreadyConnected = cs.Key;
 
                     if (userAlreadyLoggedIn != "" && ipAlreadyConnected != "")
@@ -1260,12 +1136,12 @@ internal class BridgeOpsAgent
                     byte editPermissions = (byte)reader.GetValue(5);
                     byte deletePermissions = (byte)reader.GetValue(6);
 
-                    clientSessions.Add(key, new ClientSession(loginReq.username, ipStr, loginID, key, admin,
+                    clientSessions.Add(key, new ClientSession(loginReq.username, loginID, ipStr, key, admin,
                                                               createPermissions,
                                                               editPermissions,
                                                               deletePermissions));
 
-                    if (clientSessions[key].ipAddess == null)
+                    if (clientSessions[key].ip == null)
                         throw new Exception();
 
                     sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_ACCEPT + key);
@@ -1291,7 +1167,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientPasswordReset(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientPasswordReset(Stream stream, SqlConnection sqlConnect)
     {
         SqlCommand com;
 
@@ -1352,7 +1228,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientLoggedInUserList(NetworkStream stream)
+    private static void ClientLoggedInUserList(Stream stream)
     {
         try
         {
@@ -1374,7 +1250,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientLogout(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientLogout(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1424,7 +1300,7 @@ internal class BridgeOpsAgent
                             return;
                         }
 
-                        SendSingleNotification(sessionToLogOut, Glo.SERVER_FORCE_LOGOUT);
+                        QueueNotification(sessionToLogOut, Glo.SERVER_FORCE_LOGOUT);
                         clientSessions.Remove(sessionToLogOut);
                         sr.WriteAndFlush(stream, Glo.CLIENT_LOGOUT_ACCEPT);
                         return;
@@ -1451,7 +1327,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientClose(NetworkStream stream)
+    private static void ClientClose(Stream stream)
     {
         try
         {
@@ -1477,10 +1353,10 @@ internal class BridgeOpsAgent
                     if (cs.username.ToLower() == username.ToLower())
                         idToAttack = cs.sessionID;
                 if (idToAttack == "")
-                    throw new("Unable to close client application. See error: " + 
+                    throw new("Unable to close client application. See error: " +
                               Glo.CLIENT_CLOSE_SESSION_NOT_FOUND);
 
-                SendSingleNotification(idToAttack, Glo.SERVER_CLIENT_CLOSE);
+                QueueNotification(idToAttack, Glo.SERVER_CLIENT_CLOSE);
                 clientSessions.Remove(idToAttack);
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             }
@@ -1498,7 +1374,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientNewInsert(NetworkStream stream, SqlConnection sqlConnect, int target)
+    private static void ClientNewInsert(Stream stream, SqlConnection sqlConnect, int target)
     {
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
@@ -1674,7 +1550,7 @@ internal class BridgeOpsAgent
                 }
 
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
             else
             {
@@ -1684,9 +1560,9 @@ internal class BridgeOpsAgent
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                     if (target == Glo.CLIENT_NEW_RESOURCE)
-                        SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                        QueueNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                     else if (target == Glo.CLIENT_NEW_CONFERENCE)
-                        SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                        QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
                 }
             }
         }
@@ -1725,7 +1601,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectColumnPrimary(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectColumnPrimary(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1766,7 +1642,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectQuick(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectQuick(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1836,7 +1712,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelect(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelect(Stream stream, SqlConnection sqlConnect)
     {
         // This function does not support historical searches.
 
@@ -1868,7 +1744,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectStatement(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectStatement(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1904,7 +1780,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectWide(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectWide(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -1985,7 +1861,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectExists(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectExists(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -2043,7 +1919,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect, int target)
+    private static void ClientUpdate(Stream stream, SqlConnection sqlConnect, int target)
     {
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
@@ -2208,7 +2084,7 @@ internal class BridgeOpsAgent
                 }
 
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
             // Otherwise, proceed normally.
             else
@@ -2217,9 +2093,9 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 // If resources were updated, clients need to know to pull a fresh batch.
                 if (target == Glo.CLIENT_UPDATE_RESOURCE)
-                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                    QueueNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                 else if (target == Glo.CLIENT_UPDATE_ORGANISATION)
-                    SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                    QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -2251,7 +2127,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientUpdate(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientUpdate(Stream stream, SqlConnection sqlConnect)
     {
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
@@ -2309,7 +2185,7 @@ internal class BridgeOpsAgent
                     stream.WriteByte(Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED);
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                    QueueNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                 }
             }
 
@@ -2348,7 +2224,7 @@ internal class BridgeOpsAgent
                 }
 
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-                SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
             // Otherwise, proceed normally. Change records for assets and organisations are handled in req.SqlUpdate().
             else
@@ -2359,9 +2235,9 @@ internal class BridgeOpsAgent
                 {
                     stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                     if (req.table == "Resource")
-                        SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                        QueueNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                     else if (req.table == "Conference" || req.table == "Organisation")
-                        SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                        QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
                 }
             }
         }
@@ -2393,7 +2269,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientDelete(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientDelete(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -2428,9 +2304,9 @@ internal class BridgeOpsAgent
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
                 if (req.table == "Resource")
-                    SendChangeNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
+                    QueueNotifications(null, Glo.SERVER_RESOURCES_UPDATED);
                 else if (req.table == "Conference" || req.table == "Organisation")
-                    SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+                    QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
             }
         }
         catch (Exception e)
@@ -2446,7 +2322,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientLinkContact(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientLinkContact(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -2491,7 +2367,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientLinkedContactSelect(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientLinkedContactSelect(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -2521,7 +2397,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSelectHistory(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectHistory(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -2551,7 +2427,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientBuildHistoricalRecord(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientBuildHistoricalRecord(Stream stream, SqlConnection sqlConnect)
     {
         /* This function builds the state of an organisation or asset from the change log. It selects all rows before
          * the chosen date, then goes down each column to find the first row where the Register value is set to 1
@@ -2638,7 +2514,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientColumnModification(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientColumnModification(Stream stream, SqlConnection sqlConnect)
     {
         while (pullingColumnRecord != 0 || updatingColumnRecord)
             Thread.Sleep(10);
@@ -2804,7 +2680,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
 
                 // All clients will now request an updated column record.
-                SendChangeNotifications(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
+                QueueNotifications(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
             }
         }
         catch (Exception e)
@@ -2821,7 +2697,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientColumnOrderUpdate(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientColumnOrderUpdate(Stream stream, SqlConnection sqlConnect)
     {
         while (pullingColumnRecord != 0 || updatingColumnRecord)
             Thread.Sleep(10);
@@ -2893,7 +2769,7 @@ internal class BridgeOpsAgent
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
 
                 // All clients will now request an updated column record.
-                SendChangeNotifications(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
+                QueueNotifications(req.sessionID, Glo.SERVER_COLUMN_RECORD_UPDATED);
             }
         }
         catch (Exception e)
@@ -2912,14 +2788,14 @@ internal class BridgeOpsAgent
     static readonly object presetFolderLock = new();
 
     // Permission restricted.
-    private static void ClientSavePreset(NetworkStream stream)
+    private static void ClientSavePreset(Stream stream)
     {
         try
         {
             string sessionID = sr.ReadString(stream);
             // No need to check record ID for this, if it fails, it fails.
             string jsonString = sr.ReadString(stream);
-            
+
             // Context (select query builder / report to templates) not needed as it's included in the JSON.
 
 
@@ -2968,7 +2844,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientLoadPreset(NetworkStream stream)
+    private static void ClientLoadPreset(Stream stream)
     {
         // This method is used both for getting the preset list and loading a specific preset.
         try
@@ -3030,7 +2906,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientDeletePreset(NetworkStream stream)
+    private static void ClientDeletePreset(Stream stream)
     {
         try
         {
@@ -3074,7 +2950,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted.
-    private static void ClientRenamePreset(NetworkStream stream)
+    private static void ClientRenamePreset(Stream stream)
     {
         try
         {
@@ -3119,7 +2995,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientSearchPresets(NetworkStream stream)
+    private static void ClientSearchPresets(Stream stream)
     {
         // This method is used both for getting the preset list and loading a specific preset.
         try
@@ -3203,7 +3079,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientConferenceViewSearch(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientConferenceViewSearch(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -3269,7 +3145,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientConferenceSelect(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientConferenceSelect(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -3424,7 +3300,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted
-    private static void ClientConferenceQuickMove(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientConferenceQuickMove(Stream stream, SqlConnection sqlConnect)
     {
         SelectResult? dialNoClashes = null;
         SelectResult? resourceOverflows = null;
@@ -3559,7 +3435,7 @@ internal class BridgeOpsAgent
             }
 
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
         }
         catch (Exception e)
         {
@@ -3589,7 +3465,7 @@ internal class BridgeOpsAgent
     }
 
     // Permission restricted
-    private static void ClientConferenceAdjust(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientConferenceAdjust(Stream stream, SqlConnection sqlConnect)
     {
         // Only used for Conference updates.
         SelectResult? dialNoClashes = null;
@@ -3661,7 +3537,7 @@ internal class BridgeOpsAgent
                 com.ExecuteNonQuery();
 
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            SendChangeNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
+            QueueNotifications(null, Glo.SERVER_CONFERENCES_UPDATED);
         }
         catch (Exception e)
         {
@@ -3690,7 +3566,7 @@ internal class BridgeOpsAgent
         }
     }
 
-    private static void ClientConferenceSelectConnections(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientConferenceSelectConnections(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -3746,7 +3622,7 @@ GROUP BY
         }
     }
 
-    private static void ClientSelectTaskRefs(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientSelectTaskRefs(Stream stream, SqlConnection sqlConnect)
     {
         try
         {
@@ -3794,7 +3670,7 @@ ORDER BY Task_reference ASC;";
     }
 
     // Permission restricted
-    private static void ClientTaskBreakout(NetworkStream stream, SqlConnection sqlConnect)
+    private static void ClientTaskBreakout(Stream stream, SqlConnection sqlConnect)
     {
         // This method isn't the simplest thing in the world because the following has to occur:
         // 1) Update original task's reference.

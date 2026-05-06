@@ -322,7 +322,7 @@ namespace BridgeOpsClient
         {
             lock (App.streamLock)
             {
-                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                 try
                 {
                     if (stream != null)

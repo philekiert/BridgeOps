@@ -18,6 +18,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Label x:Name="lblIPAddress" Content="IP Address" Grid.Row ="0" Grid.Column="0"/>
@@ -35,7 +36,9 @@
                  Margin="10 5 10 7"/>
         <Button x:Name="btnInboundDefault" Margin="0 5 10 7" Grid.Row="2" Grid.Column="2" Content=" Default "
                 Click="btnInboundDefault_Click"/>
-        <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="3" Grid.ColumnSpan="3" Height="24"
+        <Label Content="Use SSL" Grid.Row="3" Grid.Column="0"/>
+        <CheckBox x:Name="chkUseSSL" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Margin="9 0 0 0"/>
+        <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="4" Grid.ColumnSpan="3" Height="24"
                 Margin="10 10 10 10" Width="70" Click="btnConfirm_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </local:CustomWindow>

@@ -5,13 +5,16 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.Metrics;
+using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Security.Policy;
 using System.Security.Principal;
@@ -24,12 +27,11 @@ namespace SendReceiveClasses
 {
     public class SendReceive
     {
-        // Inbound/outbound from perspective of server.
-        public static int portInbound;  // Should be the same for all instances.
-        public static int portOutbound; // Should be the same for all isntances.
-
         static readonly JsonSerializerOptions jsonOpts = new();
         static readonly UnicodeEncoding unicodeEncoding = new();
+
+        public static bool useSSL = Glo.SSL_ON_DEFAULT;
+        public static string sslThumbprint = Glo.SSL_THUMB_DEFAULT;
 
         public SendReceive()
         {
@@ -44,15 +46,6 @@ namespace SendReceiveClasses
         public T? Deserialise<T>(string json)
         {
             return JsonSerializer.Deserialize<T>(json, jsonOpts);
-        }
-
-        public int ReadByte(NetworkStream stream)
-        {
-            if (!stream.DataAvailable)
-            {
-                Thread.Sleep(20);
-            }
-            return stream.ReadByte();
         }
 
         public byte[] PrepareBytes(string send)
@@ -73,7 +66,7 @@ namespace SendReceiveClasses
             server.Write(PrepareBytes(send));
             server.Flush();
         }
-        public void WriteAndFlush(NetworkStream stream, string send)
+        public void WriteAndFlush(Stream stream, string send)
         {
             stream.Write(PrepareBytes(send));
             stream.Flush();
@@ -97,7 +90,7 @@ namespace SendReceiveClasses
             server.Read(bString);
             return unicodeEncoding.GetString(bString);
         }
-        public string ReadString(NetworkStream stream)
+        public string ReadString(Stream stream)
         {
             byte[] lengthBytes = new byte[4];
             int bytesRead = 0;
@@ -132,15 +125,40 @@ namespace SendReceiveClasses
                                                                           TokenImpersonationLevel.Impersonation);
         }
 
-        public NetworkStream? NewClientNetworkStream(IPEndPoint ep)
+        public Stream? NewClientStream(IPEndPoint ep, bool useSSL, bool fromServer = false)
         {
             try
             {
                 TcpClient client = new();
-                client.Connect(ep);
-                NetworkStream stream = client.GetStream();
-                stream.ReadTimeout = 30000;
-                return stream;
+
+                if (!useSSL)
+                {
+                    client.Connect(ep);
+                    NetworkStream stream = client.GetStream();
+                    stream.ReadTimeout = 30000;
+                    return stream;
+                }
+                else if (fromServer)
+                {
+                    using X509Store store = new(StoreName.My, StoreLocation.LocalMachine);
+                    store.Open(OpenFlags.ReadOnly);
+                    // validOnly = false because the cert is self-signed.
+                    var certs = store.Certificates.Find(X509FindType.FindByThumbprint, sslThumbprint, false);
+
+                    SslStream stream = new(client.GetStream(), leaveInnerStreamOpen: false);
+                    stream.AuthenticateAsServer(new SslServerAuthenticationOptions
+                    {
+                        ServerCertificate = certs[0],
+                        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12,
+                        ClientCertificateRequired = false
+                    });
+
+                    return stream;
+                }
+                else
+                {
+                    return null;
+                }
             }
             catch
             {

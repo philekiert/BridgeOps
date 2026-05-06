@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -170,7 +171,7 @@ namespace BridgeOpsClient
 
             lock (App.streamLock)
             {
-                using NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                 {
                     try
                     {
@@ -191,7 +192,7 @@ namespace BridgeOpsClient
                             stream.WriteByte((byte)(chkDupVisits.IsChecked == true ? 1 : 0));
                             stream.WriteByte((byte)(chkDupDocs.IsChecked == true ? 1 : 0));
 
-                            int result = App.sr.ReadByte(stream);
+                            int result = stream.ReadByte();
                             if (result == Glo.CLIENT_REQUEST_SUCCESS)
                             {
                                 App.DisplayError("Task broken out successfully.", this);

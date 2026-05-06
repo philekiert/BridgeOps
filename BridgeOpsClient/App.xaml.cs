@@ -231,6 +231,8 @@ namespace BridgeOpsClient
                         er.Refresh();
                 recurrenceUpdateQueued = false;
             }
+
+            CheckForNotifications();
         }
         static string? lastSettingsString = null;
         DispatcherTimer tmrStoreSettings;
@@ -274,34 +276,29 @@ namespace BridgeOpsClient
                 if (!File.Exists(networkConfigFile))
                     File.WriteAllText(networkConfigFile, "127.0.0.1;" +
                                                          Glo.PORT_OUTBOUND_DEFAULT.ToString() + ";" +
-                                                         Glo.PORT_INBOUND_DEFAULT.ToString());
+                                                         Glo.PORT_INBOUND_DEFAULT.ToString() + ";" +
+                                                         Glo.SSL_ON_DEFAULT);
                 string[] networkSettings = File.ReadAllText(networkConfigFile).Split(';');
 
-                sd.SetServerIP(networkSettings[0]);
-                if (!int.TryParse(networkSettings[1], out sd.portInbound) ||
+                if (networkSettings.Length < 3 ||
+                    !sd.SetServerIP(networkSettings[0]) ||
+                    !int.TryParse(networkSettings[1], out sd.portInbound) ||
                     !int.TryParse(networkSettings[2], out sd.portOutbound))
                     throw new();
-                try
-                {
-                    sd.InitialiseListener();
-                    listenerThread = new Thread(new ThreadStart(ListenForServer));
-                    listenerThread.Start();
-                }
-                catch
-                {
-                    DisplayError("Could not initiate TCP listener. Please check network adapter is enabled and " +
-                                 "reload the application.", mainWindow);
-                    Environment.Exit(1);
-                }
+
+                // Read separately for backwards compatibility.
+                if (networkSettings.Length > 3)
+                    bool.TryParse(networkSettings[3], out SendReceive.useSSL);
             }
             catch
             {
                 DisplayError("Something went wrong when applying the network settings. " +
-                             "Using loopback address, and ports 52343 (outbound) and 52344 (inbound).",
+                             "Using loopback address, ports 52343 (outbound) and 52344 (inbound), no SSL.",
                              GetActiveWindow());
                 sd.SetServerIP("127.0.0.1");
                 sd.portInbound = Glo.PORT_INBOUND_DEFAULT;
                 sd.portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
+                sd.useSSL = false;
             }
 
             foreach (Window win in Application.Current.Windows)
@@ -310,7 +307,7 @@ namespace BridgeOpsClient
 
             tmrStatusCheck = new()
             {
-                Interval = new TimeSpan(TimeSpan.TicksPerSecond / 10)
+                Interval = new TimeSpan(TimeSpan.TicksPerSecond)
             };
             tmrStatusCheck.Tick += StatusCheck;
             tmrStatusCheck.Start();
@@ -320,96 +317,6 @@ namespace BridgeOpsClient
             };
             tmrStoreSettings.Tick += StoreSettingsTimerFunction;
             tmrStoreSettings.Start();
-        }
-
-        public static Thread? listenerThread;
-        private static void ListenForServer()
-        {
-            sd.InitialiseListener();
-
-            if (sd.listener == null)
-            {
-                listenerThread = null;
-                return;
-            }
-            else
-            {
-                try
-                {
-                    sd.listener.Start();
-
-                    while (true)
-                    {
-                        // Start an ASync Accept.
-                        IAsyncResult result = sd.listener.BeginAcceptTcpClient(HandleServerListenAccept, sd.listener);
-                        autoResetEvent.WaitOne();
-                        autoResetEvent.Reset();
-                    }
-                }
-                catch
-                {
-                    listenerThread = null;
-                }
-            }
-        }
-        private static AutoResetEvent autoResetEvent = new(false);
-        private static void HandleServerListenAccept(IAsyncResult result)
-        {
-            if (result.AsyncState != null)
-            {
-                TcpListener listener = (TcpListener)result.AsyncState;
-                TcpClient client = listener.EndAcceptTcpClient(result);
-
-                NetworkStream stream = client.GetStream();
-                autoResetEvent.Set();
-
-                try
-                {
-                    int fncByte = stream.ReadByte();
-                    if (fncByte == Glo.SERVER_COLUMN_RECORD_UPDATED)
-                        if (!PullColumnRecord(mainWindow))
-                            DisplayError("The column record is out of date, but a new one could not be pulled. " +
-                                         "Logging out.", mainWindow);
-                        else
-                            DisplayError("Column record has been updated. It would be advisable to restart the " +
-                                         "application.", mainWindow);
-                    else if (fncByte == Glo.SERVER_RESOURCES_UPDATED)
-                        PullResourceInformation(mainWindow);
-                    else if (fncByte == Glo.SERVER_CLIENT_NUDGE)
-                        stream.WriteByte(Glo.SERVER_CLIENT_NUDGE);
-                    else if (fncByte == Glo.SERVER_FORCE_LOGOUT)
-                        forceLogoutQueued = true;
-                    else if (fncByte == Glo.SERVER_CLIENT_CLOSE)
-                        Environment.Exit(0);
-                    else if (fncByte == Glo.SERVER_CONFERENCES_UPDATED)
-                    {
-                        try
-                        {
-                            foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
-                            {
-                                pcv.SearchTimeframe();
-                                // Set here, just in case some SearchTimeFrame()s completed before one failed.
-                                recurrenceUpdateQueued = true;
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Log.LogError("Unable to update conferences following notification request. See error:",
-                                         e.Message);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.LogError("Unable to update application following notification request. See error:", e.Message);
-                    
-                }
-                finally
-                {
-                    if (client.Connected)
-                        client.Close();
-                }
-            }
         }
 
         public static SendReceive sr = new();
@@ -433,7 +340,7 @@ namespace BridgeOpsClient
 
                 us = new UserSettings();
 
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, App.sd.useSSL);
                 try
                 {
                     if (stream == null)
@@ -492,7 +399,7 @@ namespace BridgeOpsClient
 
                     lock (streamLock)
                     {
-                        NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                        Stream? stream = sr.NewClientStream(sd.ServerEP, App.sd.useSSL);
 
                         if (stream != null)
                         {
@@ -556,7 +463,7 @@ namespace BridgeOpsClient
             {
                 lock (streamLock)
                 {
-                    NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                    Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
 
                     if (stream != null)
                     {
@@ -588,6 +495,96 @@ namespace BridgeOpsClient
                 DisplayError("Something went wrong.", owner);
                 return false;
             }
+        }
+
+        static bool checkingForNotifications = false;
+        public static bool CheckForNotifications()
+        {
+            // Skip the check if a previous one is still running for some reason.
+            if (checkingForNotifications || !IsLoggedIn)
+                return false;
+
+            lock (streamLock)
+            {
+                checkingForNotifications = true;
+
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
+                try
+                {
+                    if (stream != null)
+                    {
+                        stream.WriteByte(Glo.CLIENT_CHECK_NOTIFICATIONS);
+                        sr.WriteAndFlush(stream, sd.sessionID);
+                        int response = stream.ReadByte();
+                        if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
+                        {
+                            int count = stream.ReadByte();
+                            List<int> notifications = new();
+                            for (int i = 0; i < count; ++i)
+                                notifications.Add(stream.ReadByte());
+                            foreach (int notification in notifications)
+                            {
+                                // Don't attempt any more notification processes if our session has been invalidated.
+                                if (!IsLoggedIn)
+                                    break;
+
+                                switch (notification)
+                                {
+                                    case Glo.SERVER_COLUMN_RECORD_UPDATED:
+                                        if (!PullColumnRecord(mainWindow))
+                                            DisplayError("The column record is out of date, but a new one could not " +
+                                                         "be pulled. Logging out.", mainWindow);
+                                        else
+                                            DisplayError("Column record has been updated. It would be advisable to " +
+                                                         "restart the application.", mainWindow);
+                                        break;
+                                    case Glo.SERVER_RESOURCES_UPDATED:
+                                        PullResourceInformation(mainWindow);
+                                        break;
+                                    case Glo.SERVER_FORCE_LOGOUT:
+                                        forceLogoutQueued = true;
+                                        break;
+                                    case Glo.SERVER_CLIENT_CLOSE:
+                                        Environment.Exit(0);
+                                        break;
+                                    case Glo.SERVER_CONFERENCES_UPDATED:
+                                        try
+                                        {
+                                            foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
+                                            {
+                                                pcv.SearchTimeframe();
+                                                // Set here, just in case some SearchTimeFrame()s completed before one failed.
+                                                recurrenceUpdateQueued = true;
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Log.LogError("Unable to update conferences following notification request. See error:",
+                                                         e.Message);
+                                        }
+                                        break;
+                                }
+                            }
+                            return true;
+                        }
+
+                        // If the check fails for any reason, invalid session as something's gone wrong.
+                        return SessionInvalidated();
+                    }
+                    else
+                        return false;
+                }
+                catch
+                {
+                    return false;
+                }
+                finally
+                {
+                    if (stream != null) stream.Close();
+                    checkingForNotifications = false;
+                }
+            }
+
         }
 
         public static string[] GetOrganisationList(out bool successful, Window? owner)
@@ -929,7 +926,7 @@ namespace BridgeOpsClient
 
                 lock (streamLock)
                 {
-                    NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                    Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                     try
                     {
                         if (stream != null)
@@ -1042,7 +1039,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 if (stream != null)
                 {
                     us.settingsPulled = true;
@@ -1195,7 +1192,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     if (stream == null)
                         throw new();
@@ -1338,7 +1335,7 @@ namespace BridgeOpsClient
             // Carry out the insert.
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -1522,7 +1519,7 @@ namespace BridgeOpsClient
             // Carry out the update.
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -1665,7 +1662,7 @@ namespace BridgeOpsClient
             // Carry out the update.
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -1757,7 +1754,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -1814,7 +1811,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -1869,7 +1866,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -1946,7 +1943,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2000,7 +1997,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2063,7 +2060,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2133,7 +2130,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2182,7 +2179,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -2224,7 +2221,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -2280,7 +2277,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -2326,7 +2323,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
                     if (stream != null)
@@ -2405,7 +2402,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2487,7 +2484,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2585,7 +2582,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2640,7 +2637,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     try
                     {
@@ -2718,7 +2715,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     if (stream == null)
                         throw new();
@@ -2763,7 +2760,7 @@ namespace BridgeOpsClient
         {
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     if (stream == null)
                         throw new();
@@ -2814,7 +2811,7 @@ namespace BridgeOpsClient
 
             lock (streamLock)
             {
-                using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 {
                     if (stream == null)
                         throw new();
@@ -2938,7 +2935,7 @@ namespace BridgeOpsClient
             {
                 lock (streamLock)
                 {
-                    using NetworkStream? stream = sr.NewClientNetworkStream(sd.ServerEP);
+                    using Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                     {
                         if (stream == null)
                             throw new Exception(NO_NETWORK_STREAM);
@@ -2947,7 +2944,7 @@ namespace BridgeOpsClient
                         sr.WriteAndFlush(stream, sd.sessionID);
                         sr.WriteAndFlush(stream, jsonObject.ToJsonString());
 
-                        int response = sr.ReadByte(stream);
+                        int response = stream.ReadByte();
 
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             return true;
@@ -3012,6 +3009,7 @@ namespace BridgeOpsClient
         public byte[] serverIpAddress = new byte[] { 127, 0, 0, 1 };
         public int portOutbound = 0; // Outbound to the server.
         public int portInbound = 0; // Inbound from the server.
+        public bool useSSL { get { return SendReceive.useSSL; } set { SendReceive.useSSL = useSSL; } }
 
         public TcpListener? listener;
 
@@ -3036,19 +3034,6 @@ namespace BridgeOpsClient
                 return true;
             }
             return false;
-        }
-
-        public bool InitialiseListener()
-        {
-            try
-            {
-                listener = new TcpListener(ThisIP, portInbound);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 

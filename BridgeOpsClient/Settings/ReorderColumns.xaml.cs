@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -385,7 +386,7 @@ namespace BridgeOpsClient
 
             lock (App.streamLock)
             {
-                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                 try
                 {
                     if (stream != null)

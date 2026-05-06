@@ -679,7 +679,7 @@ namespace BridgeOpsClient
             {
                 lock (App.streamLock)
                 {
-                    using NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                    using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                     {
                         if (stream == null)
                         {
@@ -694,7 +694,7 @@ namespace BridgeOpsClient
                             App.sr.WriteAndFlush(stream, (string)cmbPresets.Items[cmbPresets.SelectedIndex]);
                         App.sr.WriteAndFlush(stream, Glo.FOLDER_QUERY_BUILDER_PRESETS);
 
-                        int response = App.sr.ReadByte(stream);
+                        int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
                             if (list)
@@ -800,7 +800,7 @@ namespace BridgeOpsClient
             {
                 lock (App.streamLock)
                 {
-                    using NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                    using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                     {
                         if (stream == null)
                         {
@@ -813,7 +813,7 @@ namespace BridgeOpsClient
                         App.sr.WriteAndFlush(stream, preset);
                         App.sr.WriteAndFlush(stream, Glo.FOLDER_QUERY_BUILDER_PRESETS);
 
-                        int response = App.sr.ReadByte(stream);
+                        int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
                             skipPresetLoad = true;
@@ -856,7 +856,7 @@ namespace BridgeOpsClient
             {
                 lock (App.streamLock)
                 {
-                    using NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                    using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                     {
                         if (stream == null)
                         {
@@ -870,7 +870,7 @@ namespace BridgeOpsClient
                         App.sr.WriteAndFlush(stream, preset);
                         App.sr.WriteAndFlush(stream, Glo.FOLDER_QUERY_BUILDER_PRESETS);
 
-                        int response = App.sr.ReadByte(stream);
+                        int response = stream.ReadByte();
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                         {
                             skipPresetLoad = true;

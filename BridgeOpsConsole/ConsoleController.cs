@@ -158,7 +158,7 @@ public class ConsoleController
         AddCommand("delete database", ValType.None, menu, DeleteDatabase,
                    "Delete the BridgeManager database on the localhost\\SQLEXPRESS server.");
         AddCommand("set reader credentials", ValType.String, menu, SetReaderCredentials,
-                   "Set the reader account's username and password, separated by |, e.g. username|password");
+                   "Set the reader account's username and password, separated by |, e.g. username|password. Make sure to restart the agent once set.");
 
         // Data
         menu = MENU_DATA;
@@ -197,6 +197,8 @@ public class ConsoleController
 
         // Network
         menu = MENU_NETWORK;
+        AddCommand("set network config", ValType.None, menu, SetNetworkSettings,
+                   "Set the desired inbound/output ports and SSL configuration. Make sure to restart the agent once set.");
         AddCommand("parse network config", ValType.None, menu, ParseNetworkSettings,
                    "Check to make sure \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) +
                    "\" is legible for agent. File path is relevent to the path of this executable.");
@@ -1273,26 +1275,76 @@ public class ConsoleController
 
     //   N E T W O R K
 
+    public class NetworkSettings
+    {
+        public int inboundPort;
+        public int outboundPort;
+        public bool sslOn;
+        public string sslThumbprint;
+    }
+    private int SetNetworkSettings()
+    {
+        string? inbound;
+        string? outbound;
+        string? sslOn;
+        string? sslThumbprint;
+
+        NetworkSettings settings = new();
+
+        Writer.Message("Inbound port:");
+        inbound = Console.ReadLine();
+        Writer.Message("Outbound port:");
+        outbound = Console.ReadLine();
+        if (!int.TryParse(inbound ?? "", out settings.inboundPort) ||
+            settings.inboundPort < 1025 || settings.inboundPort > 65535 ||
+            !int.TryParse(outbound ?? "", out settings.outboundPort) ||
+            settings.outboundPort < 1025 && settings.outboundPort > 65535)
+        {
+            Writer.Negative("Inbound and outbound ports must be integers between 1025 and 65535 inclusive.");
+            return 0;
+        }
+
+        Writer.Message("SSL On (y/n):");
+        sslOn = Console.ReadLine();
+        settings.sslOn = sslOn != null && sslOn.ToLower() == "y"; // This is fine, I think. If it's anything but a Y, it's a "no".
+
+        Writer.Message("SSL Thumbprint (leave blank if not required):");
+        sslThumbprint = Console.ReadLine();
+        settings.sslThumbprint = sslThumbprint ?? "";
+        if (settings.sslThumbprint == "")
+            settings.sslThumbprint = Glo.SSL_THUMB_DEFAULT;
+
+        CreateNetworkSettings(settings);
+
+        return 0;
+    }
     private int CreateNetworkSettings()
     {
         Writer.Message("If " + Glo.CONFIG_NETWORK +
                        " is already present, this will overwrite it with default values. Continue?");
         if (Writer.YesNo())
-            CreateNetworkSettings(true);
+            CreateNetworkSettings(null);
         else
             Writer.Message("Cancelled.");
 
         return 0;
     }
-    public void CreateNetworkSettings(bool defaultSettings)
+    public void CreateNetworkSettings(NetworkSettings? settings)
     {
-        string settings = Glo.NETWORK_SETTINGS_PORT_INBOUND + Glo.PORT_INBOUND_DEFAULT + Glo.NL +
-                          Glo.NETWORK_SETTINGS_PORT_OUTBOUND + Glo.PORT_OUTBOUND_DEFAULT + Glo.NL;
-
-        // Agent also reads from this file, so 
+        string textSettings;
+        if (settings == null)
+            textSettings = Glo.NETWORK_SETTINGS_PORT_INBOUND + Glo.PORT_INBOUND_DEFAULT + Glo.NL +
+                           Glo.NETWORK_SETTINGS_PORT_OUTBOUND + Glo.PORT_OUTBOUND_DEFAULT + Glo.NL +
+                           Glo.NETWORK_SETTINGS_SSL_ON + Glo.SSL_ON_DEFAULT + Glo.NL +
+                           Glo.NETWORK_SETTINGS_SSL_THUMB + Glo.SSL_THUMB_DEFAULT + Glo.NL;
+        else
+            textSettings = Glo.NETWORK_SETTINGS_PORT_INBOUND + settings.inboundPort + Glo.NL +
+                           Glo.NETWORK_SETTINGS_PORT_OUTBOUND + settings.outboundPort + Glo.NL +
+                           Glo.NETWORK_SETTINGS_SSL_ON + settings.sslOn + Glo.NL +
+                           Glo.NETWORK_SETTINGS_SSL_THUMB + settings.sslThumbprint + Glo.NL;
         try
         {
-            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK), settings);
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK), textSettings);
             Writer.Affirmative("Network config file written successfully.");
         }
         catch (Exception e)
@@ -1301,7 +1353,6 @@ public class ConsoleController
             Writer.Message(e.Message, ConsoleColor.Red);
         }
     }
-
 
     private int ParseNetworkSettings() // Used by the command, bypassed by BridgeOpsConsole().
     {
@@ -1326,6 +1377,7 @@ public class ConsoleController
 
         int inboundPort = Glo.PORT_INBOUND_DEFAULT; // Store inboundPort to make sure outboundPort isn't the same.
         int iVal;
+        bool bVal;
         int valuesSet = 0;
         int differedFromDefaults = 0;
         foreach (string s in settings)
@@ -1334,8 +1386,7 @@ public class ConsoleController
             {
                 if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_INBOUND))
                 {
-                    if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
-                                                 s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
+                    if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
                         iVal >= 1025 && iVal <= 65535)
                     {
                         inboundPort = iVal;
@@ -1348,8 +1399,7 @@ public class ConsoleController
                 }
                 else if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_OUTBOUND))
                 {
-                    if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
-                                                 s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
+                    if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
                         iVal >= 1025 && iVal <= 65535)
                     {
                         if (iVal != inboundPort)
@@ -1363,6 +1413,24 @@ public class ConsoleController
                     }
                     else if (detailed)
                         Writer.Negative("Outbound port must be an integral value between 1025 and 65535.");
+                }
+                else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_ON))
+                {
+                    if (bool.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out bVal))
+                    {
+                        ++valuesSet;
+                        if (bVal != Glo.SSL_ON_DEFAULT) ++differedFromDefaults;
+                        if (detailed) Writer.Affirmative("SSL enabled will be read as " + bVal);
+                    }
+                    else if (detailed)
+                        Writer.Negative("SSL must be set to true or false.");
+                }
+                else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_THUMB))
+                {
+                    ++valuesSet;
+                    string thumbprint = s.Substring(Glo.NETWORK_SETTINGS_LENGTH);
+                    if (thumbprint != Glo.SSL_THUMB_DEFAULT) ++differedFromDefaults;
+                    if (detailed) Writer.Affirmative("SSL Thumbprint will be read as " + thumbprint);
                 }
             }
         }

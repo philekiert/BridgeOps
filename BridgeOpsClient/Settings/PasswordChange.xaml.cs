@@ -1,5 +1,7 @@
-﻿using System;
+﻿using SendReceiveClasses;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -12,7 +14,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using SendReceiveClasses;
 
 namespace BridgeOpsClient
 {
@@ -60,7 +61,7 @@ namespace BridgeOpsClient
 
             lock (App.streamLock)
             {
-                NetworkStream? stream = App.sr.NewClientNetworkStream(App.sd.ServerEP);
+                using Stream? stream = App.sr.NewClientStream(App.sd.ServerEP, App.sd.useSSL);
                 try
                 {
                     if (stream == null)
@@ -68,7 +69,7 @@ namespace BridgeOpsClient
                     stream.WriteByte(Glo.CLIENT_PASSWORD_RESET);
                     App.sr.WriteAndFlush(stream, App.sr.Serialise(req));
 
-                    int result = App.sr.ReadByte(stream);
+                    int result = stream.ReadByte();
                     switch (result)
                     {
                         case Glo.CLIENT_SESSION_INVALID:
