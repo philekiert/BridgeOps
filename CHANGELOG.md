@@ -3,6 +3,7 @@
 ## 1.2.2
 ### Added
 - Added an "error log" command to the console's agent submenu as a way to quickly open agent-error-log.txt.
+- The user is now warned and logged out if their connection to the agent is lost.
 ### Changed
 - The user is now prevented from selecting template files in the Report to Templates feature that originate in the output folder.
 - Users' view settings are now stored every 10 seconds rather than just at logout. This means that crashes and remote client terminations no longer cause changes to be lost.
