@@ -511,68 +511,66 @@ namespace BridgeOpsClient
                 Stream? stream = sr.NewClientStream(sd.ServerEP, sd.useSSL);
                 try
                 {
-                    if (stream != null)
+                    if (stream == null)
+                        return ConnectionLost();
+
+                    stream.WriteByte(Glo.CLIENT_CHECK_NOTIFICATIONS);
+                    sr.WriteAndFlush(stream, sd.sessionID);
+                    int response = stream.ReadByte();
+                    if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
                     {
-                        stream.WriteByte(Glo.CLIENT_CHECK_NOTIFICATIONS);
-                        sr.WriteAndFlush(stream, sd.sessionID);
-                        int response = stream.ReadByte();
-                        if (response == Glo.CLIENT_REQUEST_SUCCESS_MORE_TO_FOLLOW)
+                        int count = stream.ReadByte();
+                        List<int> notifications = new();
+                        for (int i = 0; i < count; ++i)
+                            notifications.Add(stream.ReadByte());
+                        foreach (int notification in notifications)
                         {
-                            int count = stream.ReadByte();
-                            List<int> notifications = new();
-                            for (int i = 0; i < count; ++i)
-                                notifications.Add(stream.ReadByte());
-                            foreach (int notification in notifications)
+                            // Don't attempt any more notification processes if our session has been invalidated.
+                            if (!IsLoggedIn)
+                                break;
+
+                            switch (notification)
                             {
-                                // Don't attempt any more notification processes if our session has been invalidated.
-                                if (!IsLoggedIn)
+                                case Glo.SERVER_COLUMN_RECORD_UPDATED:
+                                    if (!PullColumnRecord(mainWindow))
+                                        DisplayError("The column record is out of date, but a new one could not " +
+                                                     "be pulled. Logging out.", mainWindow);
+                                    else
+                                        DisplayError("Column record has been updated. It would be advisable to " +
+                                                     "restart the application.", mainWindow);
                                     break;
-
-                                switch (notification)
-                                {
-                                    case Glo.SERVER_COLUMN_RECORD_UPDATED:
-                                        if (!PullColumnRecord(mainWindow))
-                                            DisplayError("The column record is out of date, but a new one could not " +
-                                                         "be pulled. Logging out.", mainWindow);
-                                        else
-                                            DisplayError("Column record has been updated. It would be advisable to " +
-                                                         "restart the application.", mainWindow);
-                                        break;
-                                    case Glo.SERVER_RESOURCES_UPDATED:
-                                        PullResourceInformation(mainWindow);
-                                        break;
-                                    case Glo.SERVER_FORCE_LOGOUT:
-                                        forceLogoutQueued = true;
-                                        break;
-                                    case Glo.SERVER_CLIENT_CLOSE:
-                                        Environment.Exit(0);
-                                        break;
-                                    case Glo.SERVER_CONFERENCES_UPDATED:
-                                        try
+                                case Glo.SERVER_RESOURCES_UPDATED:
+                                    PullResourceInformation(mainWindow);
+                                    break;
+                                case Glo.SERVER_FORCE_LOGOUT:
+                                    forceLogoutQueued = true;
+                                    break;
+                                case Glo.SERVER_CLIENT_CLOSE:
+                                    Environment.Exit(0);
+                                    break;
+                                case Glo.SERVER_CONFERENCES_UPDATED:
+                                    try
+                                    {
+                                        foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
                                         {
-                                            foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
-                                            {
-                                                pcv.SearchTimeframe();
-                                                // Set here, just in case some SearchTimeFrame()s completed before one failed.
-                                                recurrenceUpdateQueued = true;
-                                            }
+                                            pcv.SearchTimeframe();
+                                            // Set here, just in case some SearchTimeFrame()s completed before one failed.
+                                            recurrenceUpdateQueued = true;
                                         }
-                                        catch (Exception e)
-                                        {
-                                            Log.LogError("Unable to update conferences following notification request. See error:",
-                                                         e.Message);
-                                        }
-                                        break;
-                                }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.LogError("Unable to update conferences following notification request. See error:",
+                                                     e.Message);
+                                    }
+                                    break;
                             }
-                            return true;
                         }
-
-                        // If the check fails for any reason, invalid session as something's gone wrong.
-                        return SessionInvalidated();
+                        return true;
                     }
-                    else
-                        return false;
+
+                    // If the check fails for any reason, invalid session as something's gone wrong.
+                    return SessionInvalidated();
                 }
                 catch
                 {
@@ -604,7 +602,12 @@ namespace BridgeOpsClient
             return organisationArray;
         }
 
-        public static bool SessionInvalidated()
+        public static bool ConnectionLost()
+        {
+            return SessionInvalidated("Connection to server was lost. Session ended.");
+        }
+        public static bool SessionInvalidated(string message = "Session is no longer valid. Please copy" +
+                                                               "any unsaved work, then log back in.")
         {
             sd.sessionID = ""; // Tells the app that it's no longer logged in.
             if (mainWindow != null)
@@ -612,8 +615,7 @@ namespace BridgeOpsClient
                 mainWindow.ToggleLogInOut(false);
                 if (mainWindow.IsLoaded)
                     // Specify the owner as the main window, otherwise the user might miss it if called from a timer.
-                    DisplayError("Session is no longer valid. Please copy any unsaved work, then log back in.",
-                                 mainWindow);
+                    DisplayError(message, mainWindow);
             }
 
             // Some methods want to invalidate and then go no further, returning false.
