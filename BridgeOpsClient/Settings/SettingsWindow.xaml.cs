@@ -34,9 +34,13 @@ namespace BridgeOpsClient
                 btnUserLogOut.IsEnabled = false;
 
             if (!App.sd.admin)
-                tabDatabaseLayout.IsEnabled = false;
-            else
-                PopulateColumnList();
+            {
+                btnUserAdd.IsEnabled = false;
+                btnColumnAdd.IsEnabled = false;
+                btnColumnRemove.IsEnabled = false;
+                btnReorder.IsEnabled = false;
+            }
+            PopulateColumnList();
 
             dtgColumns.AddSeparator(true);
             MenuItem item = new MenuItem()
@@ -314,6 +318,10 @@ namespace BridgeOpsClient
 
         private void dtgColumns_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            // Only admins should be able to interact with columns.
+            if (!App.sd.admin)
+                return;
+
             string table = dtgColumns.GetCurrentlySelectedCell(0);
             string column = dtgColumns.GetCurrentlySelectedCell(1);
             ColumnRecord.Column? col = ColumnRecord.GetColumnNullable(table, column);
@@ -438,9 +446,10 @@ namespace BridgeOpsClient
 
         private void dtgColumns_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            btnColumnRemove.IsEnabled = Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
+            btnColumnRemove.IsEnabled = App.sd.admin &&
+                                        Glo.Fun.ColumnRemovalAllowed(dtgColumns.GetCurrentlySelectedCell(0),
                                                                      dtgColumns.GetCurrentlySelectedCell(1));
-            ((MenuItem)dtgColumns.mnuData.Items[0]).IsEnabled = btnColumnRemove.IsEnabled;
+            ((MenuItem)dtgColumns.mnuData.Items[0]).IsEnabled = App.sd.admin && btnColumnRemove.IsEnabled;
         }
 
         private void btnReorder_Click(object sender, RoutedEventArgs e)
