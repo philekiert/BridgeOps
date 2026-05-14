@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.EMMA;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
 using System.Security.Policy;
@@ -113,52 +115,39 @@ namespace SendReceiveClasses
             return unicodeEncoding.GetString(bString);
         }
 
-        public NamedPipeServerStream NewServerNamedPipe(string pipeName) // Inbound to server.
+        public NamedPipeServerStream NewServerNamedPipe(string pipeName)
         {
             // timeout not supported on this type of stream.
             return new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1);
         }
-        public NamedPipeClientStream NewClientNamedPipe(string pipeName) // Inbound to server.
+        public NamedPipeClientStream NewClientNamedPipe(string pipeName)
         {
             // timeout not supported on this type of stream.
             return new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.None,
                                                                           TokenImpersonationLevel.Impersonation);
         }
 
-        public Stream? NewClientStream(IPEndPoint ep, bool useSSL, bool fromServer = false)
+        public Stream? NewClientStream(IPEndPoint ep, bool useSSL)
         {
             try
             {
                 TcpClient client = new();
+                client.Connect(ep);
+                Stream stream = client.GetStream();
+                stream.ReadTimeout = 30000;
 
-                if (!useSSL)
+                // Set up an SSL Stream if required.
+                if (useSSL)
                 {
-                    client.Connect(ep);
-                    NetworkStream stream = client.GetStream();
-                    stream.ReadTimeout = 30000;
-                    return stream;
+                    var sslStream = new SslStream(stream, false);
+                    sslStream.AuthenticateAsClient(targetHost: ep.Address.ToString(),
+                                                   clientCertificates: null,
+                                                   enabledSslProtocols: SslProtocols.Tls12 | SslProtocols.Tls13,
+                                                   checkCertificateRevocation: true);
+                    return sslStream;
                 }
-                else if (fromServer)
-                {
-                    using X509Store store = new(StoreName.My, StoreLocation.LocalMachine);
-                    store.Open(OpenFlags.ReadOnly);
-                    // validOnly = false because the cert is self-signed.
-                    var certs = store.Certificates.Find(X509FindType.FindByThumbprint, sslThumbprint, false);
-
-                    SslStream stream = new(client.GetStream(), leaveInnerStreamOpen: false);
-                    stream.AuthenticateAsServer(new SslServerAuthenticationOptions
-                    {
-                        ServerCertificate = certs[0],
-                        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12,
-                        ClientCertificateRequired = false
-                    });
-
-                    return stream;
-                }
-                else
-                {
-                    return null;
-                }
+                // Otherrwise, return the unencrypted stream as is.
+                return stream;
             }
             catch
             {

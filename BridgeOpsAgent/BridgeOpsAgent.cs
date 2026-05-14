@@ -1,27 +1,29 @@
-﻿using System.Diagnostics;
-using System.IO.Pipes;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
+using SendReceiveClasses;
+using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
+using System.Net.Security;
+using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
+using System.Security.Authentication;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using System.Net;
-
-using SendReceiveClasses;
-using System.Windows.Markup;
-using System.Linq.Expressions;
-using System.Net.Sockets;
-using System.IO;
-using System.Security.Cryptography;
-using System.Data;
-using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Channels;
-using System.Reflection.PortableExecutable;
+using System.Windows.Markup;
 using System.Xml.Schema;
-using System.Collections.Specialized;
-using System.Collections;
-using System.ComponentModel;
 
 internal class BridgeOpsAgent
 {
@@ -188,13 +190,15 @@ internal class BridgeOpsAgent
                         }
                     }
                     else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_ON))
+                    {
                         if (bool.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out SendReceive.useSSL))
                             ++valuesSet;
-                        else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_THUMB))
-                        {
-                            SendReceive.sslThumbprint = s.Substring(Glo.NETWORK_SETTINGS_LENGTH);
-                            ++valuesSet;
-                        }
+                    }
+                    else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_THUMB))
+                    {
+                        SendReceive.sslThumbprint = s.Substring(Glo.NETWORK_SETTINGS_LENGTH);
+                        ++valuesSet;
+                    }
             }
         }
         catch (Exception e)
@@ -728,9 +732,6 @@ internal class BridgeOpsAgent
     private static readonly AutoResetEvent autoResetEvent = new(false);
     private static void HandleClientListenAccept(IAsyncResult result)
     {
-        // I believe each thread will need its own dedicated SqlConnection object.
-        SqlConnection sqlConnect = new(ConnectionString);
-
         if (result.AsyncState != null)
         {
             TcpListener listener = (TcpListener)result.AsyncState;
@@ -738,6 +739,46 @@ internal class BridgeOpsAgent
 
             Stream stream = client.GetStream();
             autoResetEvent.Set();
+
+            if (SendReceive.useSSL)
+            {
+                X509Certificate2Collection GetCertCollection(StoreLocation storeLocation)
+                {
+                    var store = new X509Store(StoreName.My, storeLocation);
+                    store.Open(OpenFlags.ReadOnly);
+                    var certificates = store.Certificates.Find(X509FindType.FindByThumbprint,
+                                                               SendReceive.sslThumbprint, true);
+                    return certificates;
+                }
+
+                // Check the local machine cert store, and then the current user's if that yields nothing.
+                X509Certificate2Collection certCollection = GetCertCollection(StoreLocation.LocalMachine);
+                if (certCollection.Count == 0)
+                    certCollection = GetCertCollection(StoreLocation.CurrentUser);
+                if (certCollection.Count == 0)
+                {
+                    LogError("Could not retrieve SSL certificate by thumbprint " +
+                             "from either the local machine or user store.");
+                    return;
+                }
+                var certificate = certCollection[0];
+                if (!certificate.HasPrivateKey)
+                {
+                    LogError("Retrieved SSL certificate by thumbprint, but it has no private key. " +
+                             "If you believe this is incorrect and the certificate is held in the current user's " + 
+                             "store, check to make sure that there isn't a certificate in the local machine store " +
+                             "with the same thumbprint that is missing a private key or has become corrupted.");
+                    return;
+                }
+
+                var sslStream = new SslStream(stream, false);
+                sslStream.AuthenticateAsServer(certificate,
+                                               clientCertificateRequired: false,
+                                               enabledSslProtocols: SslProtocols.Tls12 | SslProtocols.Tls13,
+                                               checkCertificateRevocation: true);
+            }
+
+            SqlConnection sqlConnect = new(ConnectionString);
 
             try
             {
