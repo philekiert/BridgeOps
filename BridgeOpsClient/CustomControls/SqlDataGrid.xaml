@@ -22,7 +22,8 @@
               ColumnReordered="dtg_ColumnReordered"
               KeyDown="dtg_KeyDown" IsTabStop="False" UseLayoutRounding="True"
               CanUserDeleteRows="False" CanUserAddRows="False"
-              LayoutUpdated="dtg_LayoutUpdated">
+              LayoutUpdated="dtg_LayoutUpdated"
+              CopyingRowClipboardContent="dtg_CopyingRowClipboardContent">
         <DataGrid.RowStyle>
             <Style TargetType="DataGridRow">
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>

@@ -149,6 +149,8 @@ namespace BridgeOpsClient.CustomControls
                            List<string?> columnNames, List<List<object?>> rows, HashSet<int> dateCols,
                            params string[] omitColumns)
         {
+            dateOnlyColumns = new();
+
             // Add any columns to omit to a dictionary for fast lookup.
             Dictionary<string, bool> columnstoOmit = new();
             if (omitColumns.Length > 0)
@@ -158,7 +160,7 @@ namespace BridgeOpsClient.CustomControls
             dtg.Columns.Clear();
             dtg.ItemsSource = null;
 
-            int count = 0;
+            int colCount = 0;
 
             if (checkBox)
             {
@@ -201,9 +203,9 @@ namespace BridgeOpsClient.CustomControls
 
                     Type? dataType = null;
                     for (int i = 0; i < rows.Count; ++i)
-                        if (rows[i][count] != null)
+                        if (rows[i][colCount] != null)
                         {
-                            dataType = rows[i][count]!.GetType();
+                            dataType = rows[i][colCount]!.GetType();
                             break;
                         }
 
@@ -211,36 +213,37 @@ namespace BridgeOpsClient.CustomControls
 
                     header.Header = ColumnRecord.GetPrintName(s, col);
                     header.IsReadOnly = true;
-                    if (col.type != null && col.type.ToUpper() == "DATE" || dateCols.Contains(count))
+                    if (col.type != null && col.type.ToUpper() == "DATE" || dateCols.Contains(colCount))
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count));
+                        header.Binding = new Binding(string.Format("items[{0}]", colCount));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy}";
+                        dateOnlyColumns.Add(header);
                     }
                     else if ((col.type != null && col.type.ToUpper() == "DATETIME") ||
                              dataType == typeof(DateTime))
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count));
+                        header.Binding = new Binding(string.Format("items[{0}]", colCount));
                         header.Binding.StringFormat = "{0:dd/MM/yyyy HH:mm}";
                     }
                     else if ((col.type != null &&
                               (col.type.ToUpper() == "TIMESPAN" || col.type.ToUpper() == "TIME")) ||
                              dataType == typeof(TimeSpan))
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count))
+                        header.Binding = new Binding(string.Format("items[{0}]", colCount))
                         { Converter = new TimeSpanToDuration() };
                     }
                     else if ((col.type != null &&
                               (col.type.ToUpper().StartsWith("BOOL") || col.type.ToUpper() == "BIT")) ||
                              dataType == typeof(bool))
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count))
+                        header.Binding = new Binding(string.Format("items[{0}]", colCount))
                         { Converter = new BooleanToYesNoConverter() };
                     }
                     else if ((col.type != null &&
                               col.type.ToUpper() == ("TEXT")) ||
                              dataType == typeof(string))
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count))
+                        header.Binding = new Binding(string.Format("items[{0}]", colCount))
                         { Converter = new StringLineConcatConverter() };
                     }
                     else if ((actualHeadername.EndsWith(Glo.Tab.CONFERENCE_ID) ||
@@ -250,18 +253,18 @@ namespace BridgeOpsClient.CustomControls
                     {
                         if (actualHeadername.EndsWith(Glo.Tab.CONFERENCE_ID))
                         {
-                            header.Binding = new Binding(string.Format("items[{0}]", count))
+                            header.Binding = new Binding(string.Format("items[{0}]", colCount))
                             { Converter = new ConfIdToString() };
                         }
                         else if (actualHeadername.EndsWith(Glo.Tab.RECURRENCE_ID))
                         {
-                            header.Binding = new Binding(string.Format("items[{0}]", count))
+                            header.Binding = new Binding(string.Format("items[{0}]", colCount))
                             { Converter = new RecIDsToString() };
                         }
                     }
                     else
                     {
-                        header.Binding = new Binding(string.Format("items[{0}]", count));
+                        header.Binding = new Binding(string.Format("items[{0}]", colCount));
                     }
                 }
 
@@ -269,7 +272,7 @@ namespace BridgeOpsClient.CustomControls
                     header.Visibility = Visibility.Hidden;
                 else
                     dtg.Columns.Add(header);
-                ++count;
+                ++colCount;
             }
 
             // Data
@@ -809,26 +812,11 @@ namespace BridgeOpsClient.CustomControls
 
         private void dtg_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.C ||
-                e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl ||
-                e.Key == Key.LeftShift || e.Key == Key.RightShift)
-            {
-                if (Keyboard.IsKeyDown(Key.C) &&
-                    (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) &&
-                    (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)))
-                {
-                    dtg.ClipboardCopyMode = DataGridClipboardCopyMode.IncludeHeader;
-                    ApplicationCommands.Copy.Execute(null, dtg);
-                    dtg.ClipboardCopyMode = DataGridClipboardCopyMode.ExcludeHeader;
-                }
-            }
-            else if (e.Key == Key.Escape)
-            {
+            if (e.Key == Key.Escape)
                 if (dtg.SelectionMode == DataGridSelectionMode.Extended)
                     dtg.SelectedItems.Clear();
                 else
                     dtg.SelectedItem = null;
-            }
         }
 
         private void mnuExportSpreadsheet_Click(object sender, RoutedEventArgs e)
@@ -944,6 +932,22 @@ namespace BridgeOpsClient.CustomControls
                 }
 
             return rows;
+        }
+
+        HashSet<DataGridTextColumn> dateOnlyColumns = new(); // Used to track timeless date columns for correct clipboard formatting.
+        private void dtg_CopyingRowClipboardContent(object sender, DataGridRowClipboardEventArgs e)
+        {
+            // Go through the cells for each copied row and if it's a date-only column, make sure the time is excluded.
+            for (int i = 0; i < e.ClipboardRowContent.Count; i++)
+            {
+                var cell = e.ClipboardRowContent[i];
+                if (dateOnlyColumns.Contains(cell.Column) && cell.Content is DateTime dt)
+                    e.ClipboardRowContent[i] =
+                        new DataGridClipboardCellContent(
+                            cell.Item,
+                            cell.Column,
+                            dt.ToString("yyyy-MM-dd"));
+            }
         }
     }
 }
