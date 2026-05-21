@@ -16,6 +16,7 @@
 - Selecting \<New\> from the Report to Templates presets now correctly resets all fields to blank.
 - Fixed a bug where the client wouldn't start listening for server updates if the network settings failed to be read at application load.
 - Text cells in data results now replace line breaks with spaces for visibility of the whole text value on one line. This is a change generally, but a fix in regard to the Change Log tabs.
+- Date-only columns, when copied from a data grid, are now correctly formatted with the "00:00" time field included.
 
 ## 1.2.1
 ### Fixed
