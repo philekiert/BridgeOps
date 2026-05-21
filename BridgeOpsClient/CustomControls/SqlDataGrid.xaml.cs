@@ -1,28 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Intrinsics.X86;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using ClosedXML.Excel;
-using static BridgeOpsClient.CustomControls.SqlDataGrid;
 using System.Collections.Specialized;
 using System.Globalization;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.ComponentModel;
-using static System.Resources.ResXFileRef;
 
 
 namespace BridgeOpsClient.CustomControls
