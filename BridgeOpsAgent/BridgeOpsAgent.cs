@@ -760,10 +760,20 @@ internal class BridgeOpsAgent
                 bool hasPrivateKey = certificate.HasPrivateKey;
 
                 var sslStream = new SslStream(stream, false);
-                sslStream.AuthenticateAsServer(certificate,
-                                               clientCertificateRequired: false,
-                                               enabledSslProtocols: SslProtocols.Tls12 | SslProtocols.Tls13,
-                                               checkCertificateRevocation: true);
+                // The agent will crash and close completely if a client fails to authenticate outside a try block.
+                try
+                {
+                    sslStream.AuthenticateAsServer(certificate,
+                                                   clientCertificateRequired: false,
+                                                   enabledSslProtocols: SslProtocols.Tls12 | SslProtocols.Tls13,
+                                                   checkCertificateRevocation: true);
+                }
+                catch
+                {
+                    if (client.Connected)
+                        client.Close();
+                    return;
+                }
                 stream = sslStream;
             }
 
