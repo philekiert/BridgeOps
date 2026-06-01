@@ -8,14 +8,12 @@
 ### Changed
 - The user is now prevented from selecting template files in the Report to Templates feature that originate in the output folder.
 - Users' view settings are now stored every 10 seconds rather than just at logout. This means that crashes and remote client terminations no longer cause changes to be lost.
-- Adjused the net code to work without static client IPs, enabling usage over the internet. The server IP address must still static.
+- Adjusted the net code to work without static client IPs, enabling usage over the internet. The server IP address must still static.
 - Non-admins are now able to view the database columns tab in the settings window, although they cannot interact with anything.
 ### Fixed
 - Stopped the application from crashing when a search returns one or more Sunday conferences in the data pane.
-- Fixed a major issue preventing admins from remotely closing client sessions in some instances.
 - Fixed another bug with Report to Template value formatting where TimeSpan minute values could appear without their preceding 0, e.g. "13:5".
 - Selecting \<New\> from the Report to Templates presets now correctly resets all fields to blank.
-- Fixed a bug where the client wouldn't start listening for server updates if the network settings failed to be read at application load.
 - Text cells in data results now replace line breaks with spaces for visibility of the whole text value on one line. This is a change generally, but a fix in regard to the Change Log tabs.
 - Date-only columns, when copied from a data grid, are now correctly formatted with the "00:00" time field included.
 
