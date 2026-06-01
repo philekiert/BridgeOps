@@ -18,7 +18,6 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Label x:Name="lblIPAddress" Content="IP Address" Grid.Row ="0" Grid.Column="0"/>
@@ -26,19 +25,14 @@
                  Margin="10 5 10 7" Width="140"/>
         <Button x:Name="btnIPDefault" Margin="0 5 10 7" Grid.Row="0" Grid.Column="2" Content=" Default "
                 Click="btnIPDefault_Click"/>
-        <Label x:Name="lblPortOutbound" Content="Outbound Port" Grid.Row ="1" Grid.Column="0"/>
-        <TextBox x:Name="txtPortOutbound" Grid.Row ="1" Grid.Column="1"
+        <Label x:Name="lblPort" Content="Port" Grid.Row ="1" Grid.Column="0"/>
+        <TextBox x:Name="txtPort" Grid.Row ="1" Grid.Column="1" 
                  Margin="10 5 10 7"/>
-        <Button x:Name="btnOutboundDefault" Margin="0 5 10 7" Grid.Row="1" Grid.Column="2" Content=" Default "
-                Click="btnOutboundDefault_Click"/>
-        <Label x:Name="lblPortInbound" Content="Inbound Port" Grid.Row ="2" Grid.Column="0"/>
-        <TextBox x:Name="txtPortInbound" Grid.Row ="2" Grid.Column="1" 
-                 Margin="10 5 10 7"/>
-        <Button x:Name="btnInboundDefault" Margin="0 5 10 7" Grid.Row="2" Grid.Column="2" Content=" Default "
-                Click="btnInboundDefault_Click"/>
-        <Label Content="Use SSL" Grid.Row="3" Grid.Column="0"/>
-        <CheckBox x:Name="chkUseSSL" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Margin="9 0 0 0"/>
-        <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="4" Grid.ColumnSpan="3" Height="24"
+        <Button x:Name="btnPortDefault" Margin="0 5 10 7" Grid.Row="1" Grid.Column="2" Content=" Default "
+                Click="btnPortDefault_Click"/>
+        <Label Content="Use SSL" Grid.Row="2" Grid.Column="0"/>
+        <CheckBox x:Name="chkUseSSL" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="9 0 0 0"/>
+        <Button x:Name="btnConfirm" Content="Confirm" Grid.Row="3" Grid.ColumnSpan="3" Height="24"
                 Margin="10 10 10 10" Width="70" Click="btnConfirm_Click" Style="{StaticResource primary-button}"/>
     </Grid>
 </local:CustomWindow>

@@ -21,54 +21,40 @@ namespace BridgeOpsClient
             InitializeComponent();
 
             txtIPAddress.Text = App.sd.ServerIP.ToString();
-            txtPortInbound.Text = App.sd.portInbound.ToString();
-            txtPortOutbound.Text = App.sd.portOutbound.ToString();
-            chkUseSSL.IsChecked = App.sd.useSSL;
+            txtPort.Text = App.sd.port.ToString();
+            chkUseSSL.IsChecked = SendReceiveClasses.SendReceive.useSSL;
 
             txtIPAddress.Focus();
         }
 
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
         {
-            int initialInbound = App.sd.portInbound;
+            int initialPort = App.sd.port;
 
-            int outbound;
-            int inbound;
+            int port;
             if (!System.Net.IPAddress.TryParse(txtIPAddress.Text, out _))
             {
                 App.DisplayError("IP address invalid.", this);
                 return;
             }
-            if (!int.TryParse(txtPortOutbound.Text, out outbound) || outbound < 1025 || outbound > 65535)
+            if (!int.TryParse(txtPort.Text, out port) || port < 1025 || port > 65535)
             {
-                App.DisplayError("Outbound port invalid.", this);
-                return;
-            }
-            if (!int.TryParse(txtPortInbound.Text, out inbound) || inbound < 1025 || inbound > 65535)
-            {
-                App.DisplayError("Inbound port invalid.", this);
-                return;
-            }
-            if (inbound == outbound)
-            {
-                App.DisplayError("Inbound and outbound ports cannot be the same.", this);
+                App.DisplayError("Port invalid.", this);
                 return;
             }
 
             bool useSSL = chkUseSSL.IsChecked == true;
 
             System.IO.File.WriteAllText(App.networkConfigFile, txtIPAddress.Text + ";" +
-                                                               inbound.ToString() + ";" +
-                                                               outbound.ToString() + ";" +
+                                                               port.ToString() + ";" +
                                                                useSSL.ToString());
             App.sd.SetServerIP(txtIPAddress.Text);
-            App.sd.portOutbound = outbound;
-            App.sd.portInbound = inbound;
-            App.sd.useSSL = chkUseSSL.IsChecked == true;
+            App.sd.port = port;
+            SendReceiveClasses.SendReceive.useSSL = chkUseSSL.IsChecked == true;
 
-            if (initialInbound != inbound)
-                App.DisplayError("You must restart the application for the change to the inbound port to take effect.",
-                                 "Inbound Port Changed", this);
+            if (initialPort != port)
+                App.DisplayError("You must restart the application for the change to the port to take effect.",
+                                 "Port Changed", this);
 
             Close();
         }
@@ -76,10 +62,8 @@ namespace BridgeOpsClient
         // Field default resets. The way of getting the default values doesn't seem ideal, but it works.
         private void btnIPDefault_Click(object sender, RoutedEventArgs e)
         { txtIPAddress.Text = "127.0.0.1"; }
-        private void btnOutboundDefault_Click(object sender, RoutedEventArgs e)
-        { txtPortOutbound.Text = Glo.PORT_INBOUND_DEFAULT.ToString(); }
-        private void btnInboundDefault_Click(object sender, RoutedEventArgs e)
-        { txtPortInbound.Text = Glo.PORT_OUTBOUND_DEFAULT.ToString(); }
+        private void btnPortDefault_Click(object sender, RoutedEventArgs e)
+        { txtPort.Text = Glo.PORT_DEFAULT.ToString(); }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {

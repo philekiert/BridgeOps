@@ -198,7 +198,7 @@ public class ConsoleController
         // Network
         menu = MENU_NETWORK;
         AddCommand("set network config", ValType.None, menu, SetNetworkSettings,
-                   "Set the desired inbound/output ports and SSL configuration. Make sure to restart the agent once set.");
+                   "Set the desired port and SSL configuration. Make sure to restart the agent once set.");
         AddCommand("parse network config", ValType.None, menu, ParseNetworkSettings,
                    "Check to make sure \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) +
                    "\" is legible for agent. File path is relevent to the path of this executable.");
@@ -529,7 +529,7 @@ public class ConsoleController
 
     private int GenerateTestData()
     {
-        Writer.Message("If Organisations.csv or Assets.csv already exist," +
+        Writer.Message("If Organisations.csv or Assets.csv already exist, " +
                        "this will overwrite them. Continue?");
         if (!Writer.YesNo())
             return 0;
@@ -1277,30 +1277,24 @@ public class ConsoleController
 
     public class NetworkSettings
     {
-        public int inboundPort;
-        public int outboundPort;
+        public int port;
         public bool sslOn;
         public string sslThumbprint;
     }
     private int SetNetworkSettings()
     {
-        string? inbound;
-        string? outbound;
+        string? port;
         string? sslOn;
         string? sslThumbprint;
 
         NetworkSettings settings = new();
 
-        Writer.Message("Inbound port:");
-        inbound = Console.ReadLine();
-        Writer.Message("Outbound port:");
-        outbound = Console.ReadLine();
-        if (!int.TryParse(inbound ?? "", out settings.inboundPort) ||
-            settings.inboundPort < 1025 || settings.inboundPort > 65535 ||
-            !int.TryParse(outbound ?? "", out settings.outboundPort) ||
-            settings.outboundPort < 1025 && settings.outboundPort > 65535)
+        Writer.Message("Port:");
+        port = Console.ReadLine();
+        if (!int.TryParse(port ?? "", out settings.port) ||
+            settings.port < 1025 || settings.port > 65535)
         {
-            Writer.Negative("Inbound and outbound ports must be integers between 1025 and 65535 inclusive.");
+            Writer.Negative("Port must be an integer between 1025 and 65535 inclusive.");
             return 0;
         }
 
@@ -1333,13 +1327,11 @@ public class ConsoleController
     {
         string textSettings;
         if (settings == null)
-            textSettings = Glo.NETWORK_SETTINGS_PORT_INBOUND + Glo.PORT_INBOUND_DEFAULT + Glo.NL +
-                           Glo.NETWORK_SETTINGS_PORT_OUTBOUND + Glo.PORT_OUTBOUND_DEFAULT + Glo.NL +
+            textSettings = Glo.NETWORK_SETTINGS_PORT + Glo.PORT_DEFAULT + Glo.NL +
                            Glo.NETWORK_SETTINGS_SSL_ON + Glo.SSL_ON_DEFAULT + Glo.NL +
                            Glo.NETWORK_SETTINGS_SSL_THUMB + Glo.SSL_THUMB_DEFAULT + Glo.NL;
         else
-            textSettings = Glo.NETWORK_SETTINGS_PORT_INBOUND + settings.inboundPort + Glo.NL +
-                           Glo.NETWORK_SETTINGS_PORT_OUTBOUND + settings.outboundPort + Glo.NL +
+            textSettings = Glo.NETWORK_SETTINGS_PORT + settings.port + Glo.NL +
                            Glo.NETWORK_SETTINGS_SSL_ON + settings.sslOn + Glo.NL +
                            Glo.NETWORK_SETTINGS_SSL_THUMB + settings.sslThumbprint + Glo.NL;
         try
@@ -1375,7 +1367,6 @@ public class ConsoleController
         }
         string[] settings = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK));
 
-        int inboundPort = Glo.PORT_INBOUND_DEFAULT; // Store inboundPort to make sure outboundPort isn't the same.
         int iVal;
         bool bVal;
         int valuesSet = 0;
@@ -1384,35 +1375,17 @@ public class ConsoleController
         {
             if (s.Length > Glo.NETWORK_SETTINGS_LENGTH && !s.StartsWith("# "))
             {
-                if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_INBOUND))
+                if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT))
                 {
                     if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
                         iVal >= 1025 && iVal <= 65535)
                     {
-                        inboundPort = iVal;
                         ++valuesSet;
-                        if (iVal != Glo.PORT_INBOUND_DEFAULT) ++differedFromDefaults;
-                        if (detailed) Writer.Affirmative("Inbound port will be read as " + iVal);
+                        if (iVal != Glo.PORT_DEFAULT) ++differedFromDefaults;
+                        if (detailed) Writer.Affirmative("Port will be read as " + iVal);
                     }
                     else if (detailed)
-                        Writer.Negative("Inbound port must be an integral value between 1025 and 65535.");
-                }
-                else if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_OUTBOUND))
-                {
-                    if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
-                        iVal >= 1025 && iVal <= 65535)
-                    {
-                        if (iVal != inboundPort)
-                        {
-                            ++valuesSet;
-                            if (iVal != Glo.PORT_OUTBOUND_DEFAULT) ++differedFromDefaults;
-                            if (detailed) Writer.Affirmative("Outbound port will be read as " + iVal);
-                        }
-                        else
-                            Writer.Negative("Outbound port cannot be the same as inbound port.");
-                    }
-                    else if (detailed)
-                        Writer.Negative("Outbound port must be an integral value between 1025 and 65535.");
+                        Writer.Negative("Port must be an integral value between 1025 and 65535.");
                 }
                 else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_ON))
                 {

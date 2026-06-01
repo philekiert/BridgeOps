@@ -23,8 +23,7 @@ public static class Glo
 
     // Communication
     public const string PIPE_CONSOLE = "BridgeManagerAgent";
-    public const int PORT_INBOUND_DEFAULT = 61_152;
-    public const int PORT_OUTBOUND_DEFAULT = 61_153;
+    public const int PORT_DEFAULT = 61_152;
     public const bool SSL_ON_DEFAULT = false;
     public const string SSL_THUMB_DEFAULT = "[not set]";
     public const string SQL_SERVER_NAME_DEFAULT = "SQLEXPRESS";
@@ -186,8 +185,7 @@ public static class Glo
 
     // Network Config
     public const int NETWORK_SETTINGS_LENGTH = 16; // Increase if longer settings names are used in network-config.txt
-    public const string NETWORK_SETTINGS_PORT_INBOUND = "inbound port:   ";
-    public const string NETWORK_SETTINGS_PORT_OUTBOUND = "outbound port:  ";
+    public const string NETWORK_SETTINGS_PORT = "port:           ";
     public const string NETWORK_SETTINGS_SSL_ON = "ssl on:         ";
     public const string NETWORK_SETTINGS_SSL_THUMB = "ssl thumbprint: ";
 

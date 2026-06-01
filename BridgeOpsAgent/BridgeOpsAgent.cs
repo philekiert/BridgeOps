@@ -153,8 +153,7 @@ internal class BridgeOpsAgent
     }
 
     // Network Configuration
-    private static int portInbound = Glo.PORT_INBOUND_DEFAULT;
-    private static int portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
+    private static int port = Glo.PORT_DEFAULT;
     private static int LoadNetworkConfig()
     {
         int iVal;
@@ -165,28 +164,15 @@ internal class BridgeOpsAgent
             foreach (string s in networkConfig)
             {
                 if (s.Length > Glo.NETWORK_SETTINGS_LENGTH && !s.StartsWith("# "))
-                    if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_INBOUND))
+                    if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT))
                     {
                         if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
                                                      s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
                             iVal >= 1025 && iVal <= 65535)
                         {
-                            portInbound = iVal;
-                            thisEP.Port = portInbound; // listener only references thisEP, so no need to update.
+                            port = iVal;
+                            thisEP.Port = port; // listener only references thisEP, so no need to update.
                             ++valuesSet;
-                        }
-                    }
-                    else if (s.StartsWith(Glo.NETWORK_SETTINGS_PORT_OUTBOUND))
-                    {
-                        if (int.TryParse(s.Substring(Glo.NETWORK_SETTINGS_LENGTH,
-                                                     s.Length - Glo.NETWORK_SETTINGS_LENGTH), out iVal) &&
-                            iVal >= 1025 && iVal <= 65535)
-                        {
-                            if (iVal != portInbound)
-                            {
-                                portOutbound = iVal;
-                                ++valuesSet;
-                            }
                         }
                     }
                     else if (s.StartsWith(Glo.NETWORK_SETTINGS_SSL_ON))
@@ -209,7 +195,7 @@ internal class BridgeOpsAgent
         return valuesSet;
     }
     private readonly static IPAddress thisIP = new(new byte[] { 0, 0, 0, 0 });
-    private readonly static IPEndPoint thisEP = new(thisIP, portInbound);
+    private readonly static IPEndPoint thisEP = new(thisIP, port);
     private static readonly TcpListener listener = new(thisEP);
 
     static bool updatingColumnRecord = false;
@@ -757,7 +743,7 @@ internal class BridgeOpsAgent
                     certCollection = GetCertCollection(StoreLocation.CurrentUser);
                 if (certCollection.Count == 0)
                 {
-                    LogError("Could not retrieve SSL certificate by thumbprint " +
+                    LogError("Could not retrieve valid SSL certificate by thumbprint " +
                              "from either the local machine or user store.");
                     return;
                 }
@@ -771,11 +757,14 @@ internal class BridgeOpsAgent
                     return;
                 }
 
+                bool hasPrivateKey = certificate.HasPrivateKey;
+
                 var sslStream = new SslStream(stream, false);
                 sslStream.AuthenticateAsServer(certificate,
                                                clientCertificateRequired: false,
                                                enabledSslProtocols: SslProtocols.Tls12 | SslProtocols.Tls13,
                                                checkCertificateRevocation: true);
+                stream = sslStream;
             }
 
             SqlConnection sqlConnect = new(ConnectionString);

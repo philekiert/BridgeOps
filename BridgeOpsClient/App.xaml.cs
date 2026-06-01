@@ -1,18 +1,11 @@
-﻿using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Wordprocessing;
-using SendReceiveClasses;
+﻿using SendReceiveClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -21,7 +14,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using static BridgeOpsClient.PageConferenceView;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using CR = ColumnRecord;
 
 namespace BridgeOpsClient
@@ -32,7 +24,7 @@ namespace BridgeOpsClient
 
         public static Window? GetActiveWindow()
         {
-            foreach (Window w in App.Current.Windows)
+            foreach (Window w in Application.Current.Windows)
                 if (w.IsActive)
                     return w;
             return null;
@@ -226,7 +218,7 @@ namespace BridgeOpsClient
             }
             if (recurrenceUpdateQueued)
             {
-                foreach (object cw in App.Current.Windows)
+                foreach (object cw in Application.Current.Windows)
                     if (cw is EditRecurrence er)
                         er.Refresh();
                 recurrenceUpdateQueued = false;
@@ -275,30 +267,34 @@ namespace BridgeOpsClient
                 Glo.Fun.ExistsOrCreateFolder(Glo.Fun.ApplicationFolder());
                 if (!File.Exists(networkConfigFile))
                     File.WriteAllText(networkConfigFile, "127.0.0.1;" +
-                                                         Glo.PORT_OUTBOUND_DEFAULT.ToString() + ";" +
-                                                         Glo.PORT_INBOUND_DEFAULT.ToString() + ";" +
+                                                         Glo.PORT_DEFAULT.ToString() + ";" +
                                                          Glo.SSL_ON_DEFAULT);
                 string[] networkSettings = File.ReadAllText(networkConfigFile).Split(';');
 
                 if (networkSettings.Length < 3 ||
                     !sd.SetServerIP(networkSettings[0]) ||
-                    !int.TryParse(networkSettings[1], out sd.portInbound) ||
-                    !int.TryParse(networkSettings[2], out sd.portOutbound))
+                    !int.TryParse(networkSettings[1], out sd.port))
                     throw new();
 
-                // Read separately for backwards compatibility.
-                if (networkSettings.Length > 3)
-                    bool.TryParse(networkSettings[3], out SendReceive.useSSL);
+                // Processed separately for backwards compatibility. The third argument may be a port number rather
+                // than an SSL bool.
+                if (int.TryParse(networkSettings[2], out _) ||
+                    !bool.TryParse(networkSettings[2], out SendReceive.useSSL))
+                {
+                    SendReceive.useSSL = Glo.SSL_ON_DEFAULT;
+                    File.WriteAllText(networkConfigFile, networkSettings[0] + ";" +
+                                                         networkSettings[1] + ";" +
+                                                         Glo.SSL_ON_DEFAULT.ToString());
+                }
             }
             catch
             {
                 DisplayError("Something went wrong when applying the network settings. " +
-                             "Using loopback address, ports 52343 (outbound) and 52344 (inbound), no SSL.",
+                             "Using loopback address, port 61152, no SSL.",
                              GetActiveWindow());
                 sd.SetServerIP("127.0.0.1");
-                sd.portInbound = Glo.PORT_INBOUND_DEFAULT;
-                sd.portOutbound = Glo.PORT_OUTBOUND_DEFAULT;
-                sd.useSSL = false;
+                sd.port = Glo.PORT_DEFAULT;
+                SendReceive.useSSL = false;
             }
 
             foreach (Window win in Application.Current.Windows)
@@ -434,7 +430,8 @@ namespace BridgeOpsClient
                         }
                     }
                 }
-                if (Current.MainWindow != null && loginID == sd.loginID && !Current.Windows.OfType<LogIn>().Any())
+                if (Application.Current.MainWindow != null && loginID == sd.loginID &&
+                    !Application.Current.Windows.OfType<LogIn>().Any())
                 {
                     // Thought about making this while (!IsLoggedIn) in case the user closes the login window, but
                     // decided it might be useful for the user to get back to the app if they accidentally clicked
@@ -444,7 +441,7 @@ namespace BridgeOpsClient
                     if (IsLoggedIn && mainWindow != null)
                         mainWindow.ToggleLogInOut(false);
 
-                    LogIn logIn = new((MainWindow)Current.MainWindow);
+                    LogIn logIn = new((MainWindow)Application.Current.MainWindow);
                     logIn.Owner = owner;
                     logIn.ShowDialog();
                 }
@@ -2972,7 +2969,7 @@ namespace BridgeOpsClient
         public static void WindowClosed()
         {
             if (Application.Current.Windows.Count == 0 ||
-                !Current.Windows.OfType<BridgeOpsClient.MainWindow>().Any())
+                !Application.Current.Windows.OfType<BridgeOpsClient.MainWindow>().Any())
             {
                 LogOut(mainWindow);
                 Environment.Exit(0);
@@ -3009,9 +3006,8 @@ namespace BridgeOpsClient
 
         static public byte[] thisIpAddress = new byte[] { 0, 0, 0, 0 };
         public byte[] serverIpAddress = new byte[] { 127, 0, 0, 1 };
-        public int portOutbound = 0; // Outbound to the server.
-        public int portInbound = 0; // Inbound from the server.
-        public bool useSSL { get { return SendReceive.useSSL; } set { SendReceive.useSSL = useSSL; } }
+        public int port = 0;
+        public bool useSSL { get { return SendReceive.useSSL; } }
 
         public TcpListener? listener;
 
@@ -3023,9 +3019,9 @@ namespace BridgeOpsClient
         public bool[] deletePermissions = new bool[6];
 
         public IPAddress ThisIP { get { return new IPAddress(thisIpAddress); } }
-        public IPEndPoint ThisEP { get { return new IPEndPoint(ThisIP, portInbound); } }
+        public IPEndPoint ThisEP { get { return new IPEndPoint(ThisIP, port); } }
         public IPAddress ServerIP { get { return new IPAddress(serverIpAddress); } }
-        public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, portOutbound); } }
+        public IPEndPoint ServerEP { get { return new IPEndPoint(ServerIP, port); } }
 
         public bool SetServerIP(string strIP)
         {
