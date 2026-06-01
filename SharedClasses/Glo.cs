@@ -274,6 +274,7 @@ public static class Glo
         public const string TASK_OPENED = "Task_Opened";
         public const string TASK_CLOSED = "Task_Closed";
 
+
         public const string VISIT_ID = "Visit_ID";
         public const string VISIT_DATE = "Visit_Date";
         public const string VISIT_TYPE = "Visit_Type";
@@ -281,6 +282,9 @@ public static class Glo
         public const string DOCUMENT_ID = "Document_ID";
         public const string DOCUMENT_DATE = "Document_Date";
         public const string DOCUMENT_TYPE = "Document_Type";
+
+        public const string PUBLIC_HOL_ID = "Public_Holiday_ID";
+        public const string PUBLIC_HOL_DATE = "Public_Holiday_Date";
 
         public const string FRIENDLY_TABLE = "TableName";
         public const string FRIENDLY_COLUMN = "ColumnName";
@@ -338,7 +342,7 @@ public static class Glo
             // This isn't super exhaustive and isn't exactly ideal, but I've added to it over time as needs become
             // apparent.
 
-            return column != "Notes" &&
+            return
                 !((table == "Organisation" &&
                     (column == Glo.Tab.ORGANISATION_ID ||
                      column == Glo.Tab.ORGANISATION_REF ||
@@ -403,6 +407,10 @@ public static class Glo
                      column == Glo.Tab.TASK_REFERENCE ||
                      column == Glo.Tab.DOCUMENT_DATE ||
                      column == Glo.Tab.DOCUMENT_TYPE ||
+                     column == Glo.Tab.NOTES)) ||
+                   (table == "PublicHoliday" &&
+                    (column == Glo.Tab.PUBLIC_HOL_ID ||
+                     column == Glo.Tab.PUBLIC_HOL_DATE ||
                      column == Glo.Tab.NOTES))
                  );
         }

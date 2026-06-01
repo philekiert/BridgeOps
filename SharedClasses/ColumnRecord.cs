@@ -106,6 +106,8 @@ public static class ColumnRecord
     public static Dictionary<string, string> visitFriendlyNameReversal = new();
     public static OrderedDictionary document = new();
     public static Dictionary<string, string> documentFriendlyNameReversal = new();
+    public static OrderedDictionary publicHoliday = new();
+    public static Dictionary<string, string> publicHolidayFriendlyNameReversal = new();
     public static OrderedDictionary connection = new();
     public static Dictionary<string, string> connectionFriendlyNameReversal = new();
     public static OrderedDictionary resource = new();
@@ -212,6 +214,8 @@ public static class ColumnRecord
                     return (Column?)visit[column];
                 case "Document":
                     return (Column?)document[column];
+                case "PublicHoliday":
+                    return (Column?)publicHoliday[column];
                 case "Resource":
                     return (Column?)resource[column];
                 case "Login":
@@ -262,6 +266,8 @@ public static class ColumnRecord
         else if (table == "Visit")
             return visit;
         else if (table == "Document")
+            return document;
+        else if (table == "PublicHoliday")
             return document;
         else if (table == "Login")
             return login;
@@ -343,6 +349,8 @@ public static class ColumnRecord
         visitFriendlyNameReversal = new();
         document = new();
         documentFriendlyNameReversal = new();
+        publicHoliday = new();
+        publicHolidayFriendlyNameReversal = new();
         connection = new();
         connectionFriendlyNameReversal = new();
         resource = new();
@@ -470,6 +478,8 @@ public static class ColumnRecord
                     visit.Add(column, col);
                 else if (table == "Document")
                     document.Add(column, col);
+                else if (table == "PublicHoliday")
+                    publicHoliday.Add(column, col);
                 else if (table == "Login")
                     login.Add(column, col);
             }
@@ -524,6 +534,8 @@ public static class ColumnRecord
                     AddFriendlyName(visit);
                 if (friendlySplit[0] == "Document")
                     AddFriendlyName(document);
+                if (friendlySplit[0] == "PublicHoliday")
+                    AddFriendlyName(publicHoliday);
                 if (friendlySplit[0] == "Login")
                     AddFriendlyName(login);
             }
@@ -697,6 +709,8 @@ public static class ColumnRecord
                 visitFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in document)
                 documentFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
+            foreach (DictionaryEntry de in publicHoliday)
+                publicHolidayFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in resource)
                 resourceFriendlyNameReversal.Add(GetPrintName(de), (string)de.Key);
             foreach (DictionaryEntry de in login)

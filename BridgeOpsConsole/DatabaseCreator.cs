@@ -333,11 +333,11 @@ public class DatabaseCreator
         string creation = "CREATE DATABASE " + DATABASE_NAME + " ON PRIMARY (" +
                             "NAME = " + DATABASE_NAME + "_Data, " +
                             "FILENAME = '" + DatabaseFilePath + "', " +
-                            "SIZE = 2GB, MAXSIZE = 10GB, FILEGROWTH = 10%) " +
+                            "SIZE = 20MB, MAXSIZE = 10GB, FILEGROWTH = 10%) " +
                           "LOG ON (" +
                             "NAME = BridgeManager_Log, " +
                             "FILENAME = '" + DatabaseLogPath + "', " +
-                            "SIZE = 1GB, MAXSIZE = 5GB, FILEGROWTH = 10%)";
+                            "SIZE = 10MB, MAXSIZE = 5GB, FILEGROWTH = 10%)";
 
         if (SendCommandSQL(creation))
         {
@@ -378,6 +378,7 @@ public class DatabaseCreator
             string task = "";
             string visit = "";
             string document = "";
+            string publicHoliday = "";
             string organisationChange = "";
             string assetChange = "";
             string junctionOrgContacts = "";
@@ -413,6 +414,8 @@ public class DatabaseCreator
                     AddColumn(ref visit, def);
                 if (fieldDefs.Category(def) == "Document")
                     AddColumn(ref document, def);
+                if (fieldDefs.Category(def) == "Public Holiday")
+                    AddColumn(ref publicHoliday, def);
                 //if (fieldDefs.Category(def) == "Dial No")
                 //    AddColumn(ref dialNo, def);
                 //if (fieldDefs.Category(def) == "Conferences by Day")
@@ -480,6 +483,8 @@ public class DatabaseCreator
                      ", CONSTRAINT chk_VisitVisitType CHECK (Visit_Type IN ('')) );";
             document += ", CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID)" +
                         ", CONSTRAINT chk_DocumentDocumentType CHECK (Document_Type IN ('')) );";
+            publicHoliday += ", CONSTRAINT pk_PublicHolID PRIMARY KEY (Public_Holiday_ID)" +
+                             ", CONSTRAINT u_PublicHolDate UNIQUE (Public_Holiday_Date) );";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
@@ -542,6 +547,8 @@ public class DatabaseCreator
             SendCommandSQL(visit);
             Writer.Message("Creating Document table...");
             SendCommandSQL(document);
+            Writer.Message("Creating Public Holiday table...");
+            SendCommandSQL(publicHoliday);
             Writer.Message("Creating Organisation Change table...");
             SendCommandSQL(organisationChange);
             //Writer.Message("Creating Conferences by Day table...");

@@ -589,6 +589,14 @@ namespace SendReceiveClasses
                             commands.Add("ALTER TABLE Document DROP CONSTRAINT pk_DocumentID;");
                         }
                     }
+                    else if (table == "PublicHoliday")
+                    {
+                        if (column == Glo.Tab.PUBLIC_HOL_ID)
+                        {
+                            reAddKeys = true;
+                            commands.Add("ALTER TABLE PublicHoliday DROP CONSTRAINT pk_PublicHolID;");
+                        }
+                    }
 
                     commands.Add($"ALTER TABLE {table} ALTER COLUMN {column} {columnType};");
 
@@ -677,6 +685,8 @@ namespace SendReceiveClasses
                             commands.Add("ALTER TABLE Visit ADD CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID);");
                         else if (table == "Document" && column == Glo.Tab.DOCUMENT_ID)
                             commands.Add("ALTER TABLE Document ADD CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID);");
+                        else if (table == "PublicHoliday" && column == Glo.Tab.PUBLIC_HOL_ID)
+                            commands.Add("ALTER TABLE PublicHoliday ADD CONSTRAINT pk_publicHolID PRIMARY KEY (Public_Holiday_ID);");
                     }
                 }
                 if (allowed.Count > 0)

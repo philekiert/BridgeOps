@@ -203,9 +203,10 @@ public class FieldDefs
         defs.Add("Connection Row", new Definition(10, Glo.Tab.CONNECTION_ROW, "TINYINT", false, false, false));
         defs.Add("Connection Is Test", new Definition(10, Glo.Tab.CONNECTION_IS_TEST, "BOOLEAN", false, false, false));
 
-        // Conferences by Day
-        //defs.Add("Conferences by Day Date", new Definition(18, "Date", "DATE", false, true, false));
-        //defs.Add("Conferences by Day Conference ID", new Definition(18, "Conference_ID", typeConfID, false, true, false));
+        // Public Holidays
+        defs.Add("Public Holiday ID", new Definition(14, Glo.Tab.PUBLIC_HOL_ID, "INT", false, true, true));
+        defs.Add("Public Holiday Date", new Definition(14, Glo.Tab.PUBLIC_HOL_DATE, "DATE", false, false, false));
+        defs.Add("Public Holiday Notes", new Definition(14, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
         // Organisation Change Snapshot
         defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));

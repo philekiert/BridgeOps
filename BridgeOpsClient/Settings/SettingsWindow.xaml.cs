@@ -302,6 +302,7 @@ namespace BridgeOpsClient
                                                               Glo.Tab.TASK_REFERENCE });
                 AddTable("Document", ColumnRecord.document, new[] { Glo.Tab.DOCUMENT_DATE,
                                                                     Glo.Tab.TASK_REFERENCE });
+                AddTable("PublicHoliday", ColumnRecord.publicHoliday, new[] { Glo.Tab.PUBLIC_HOL_DATE });
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 
