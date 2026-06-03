@@ -79,8 +79,8 @@ namespace BridgeOpsClient
             json["Context"] = Glo.CLIENT_PRESET_CONTEXT_REPORT_TO_TEMPLATES;
             json["AutoOverwrite"] = chkOverwrite.IsChecked == true;
             JsonArray templates = new();
-            foreach (string s in lstFiles.Items)
-                templates.Add(s);
+            foreach (ListViewItem lvi in lstFiles.Items)
+                templates.Add(lvi.Content.ToString());
             json["Templates"] = templates;
             json["ParamsFile"] = txtParams.Text;
             json["OutputFolder"] = txtFolder.Text;
