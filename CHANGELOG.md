@@ -1,15 +1,15 @@
 # Changelog
 
 ## 1.3.0
+### Major
+- Implemented bank holidays.
 ### Added
 - Added an "error log" command to the console's agent submenu as a way to quickly open agent-error-log.txt.
 - The user is now warned and logged out if their connection to the agent is lost.
-- SSL encryption.
-- Support for bank holidays.
 ### Changed
 - The user is now prevented from selecting template files in the Report to Templates feature that originate in the output folder.
 - Users' view settings are now stored every 10 seconds rather than just at logout. This means that crashes and remote client terminations no longer cause changes to be lost.
-- Adjusted the net code to work without static client IPs, enabling usage over the internet. The server IP address must still static.
+- Adjusted the networking code to work without static client IPs, enabling usage over the internet. The server IP address must still be static. SSL capability has also been added.
 - Non-admins are now able to view the database columns tab in the settings window, although they cannot interact with anything.
 ### Fixed
 - Stopped the application from crashing when a search returns one or more Sunday conferences in the data pane.

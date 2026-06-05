@@ -186,7 +186,7 @@ public class ConsoleController
                    "application, and all users will be logged out.");
         AddCommand("status", ValType.None, menu, CheckAgent,
                    "Check to see if agent is running.");
-        AddCommand("error log", ValType.None, menu, OpenErrorLog,
+        AddCommand("open error log", ValType.None, menu, OpenErrorLog,
                    "Open agent-error-log.txt in the system's default text editor.");
         AddCommand("logout", ValType.String, menu, LogoutUser,
                    "End session for specified user.");
@@ -204,6 +204,8 @@ public class ConsoleController
                    "\" is legible for agent. File path is relevent to the path of this executable.");
         AddCommand("create network config", ValType.None, menu, CreateNetworkSettings,
                    "Generate default values and output to \"" + Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK) + "\".");
+        AddCommand("open network config", ValType.None, menu, OpenNetworkSettings,
+                   "Open " + Glo.CONFIG_NETWORK + " in the system's default text editor.");
     }
 
     public int ProcessCommand(string command)
@@ -1300,7 +1302,7 @@ public class ConsoleController
 
         Writer.Message("SSL On (y/n):");
         sslOn = Console.ReadLine();
-        settings.sslOn = sslOn != null && sslOn.ToLower() == "y"; // This is fine, I think. If it's anything but a Y, it's a "no".
+        settings.sslOn = sslOn != null && sslOn.ToLower() == "y" || sslOn.ToLower() == "yes";
 
         Writer.Message("SSL Thumbprint (leave blank if not required):");
         sslThumbprint = Console.ReadLine();
@@ -1344,6 +1346,24 @@ public class ConsoleController
             Writer.Message("Could not create file, see error:", ConsoleColor.Red);
             Writer.Message(e.Message, ConsoleColor.Red);
         }
+    }
+    private int OpenNetworkSettings()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_NETWORK),
+                UseShellExecute = true
+            });
+        }
+        catch (Exception e)
+        {
+            Writer.Negative("Could not open the file. See error:");
+            Writer.Message(e.Message, ConsoleColor.Red);
+        }
+
+        return 0;
     }
 
     private int ParseNetworkSettings() // Used by the command, bypassed by BridgeOpsConsole().
