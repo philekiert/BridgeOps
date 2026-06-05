@@ -4,7 +4,7 @@
 ### Major
 - Implemented bank holidays.
 ### Added
-- Added an "error log" command to the console's agent submenu as a way to quickly open agent-error-log.txt.
+- Added a "open error log" and "open network config" commands to the console as a way to quickly open those .txt files.
 - The user is now warned and logged out if their connection to the agent is lost.
 ### Changed
 - The user is now prevented from selecting template files in the Report to Templates feature that originate in the output folder.
