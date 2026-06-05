@@ -870,9 +870,23 @@ namespace BridgeOpsClient
             runner.ShowDialog();
         }
 
+        private void txtParams_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            btnSettersOpen.IsEnabled = txtParams.Text.Length > 0;
+        }
         private void txtFolder_TextChanged(object sender, TextChangedEventArgs e)
         {
+            btnOutputOpen.IsEnabled = txtFolder.Text.Length > 0;
             ToggleRunButton();
+        }
+
+        private void btnSettersOpen_Click(object sender, RoutedEventArgs e)
+        {
+            FileOpener.OpenFile(txtParams.Text, true, this);
+        }
+        private void btnOutputOpen_Click(object sender, RoutedEventArgs e)
+        {
+            FileOpener.OpenFile(txtFolder.Text, false, this);
         }
     }
 }

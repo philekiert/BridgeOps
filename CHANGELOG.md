@@ -6,6 +6,7 @@
 ### Added
 - Added a "open error log" and "open network config" commands to the console as a way to quickly open those .txt files.
 - The user is now warned and logged out if their connection to the agent is lost.
+- Added buttons to easily open the selected setters file and output location in the Report to Templates window.
 ### Changed
 - The user is now prevented from selecting template files in the Report to Templates feature that originate in the output folder.
 - Users' view settings are now stored every 10 seconds rather than just at logout. This means that crashes and remote client terminations no longer cause changes to be lost.
