@@ -249,14 +249,14 @@ namespace BridgeOpsClient
             else if (identity == (int)UserSettings.TableIndex.Visit)
             {
                 foreach (Window window in Application.Current.Windows)
-                    if (window is NewTask org)
-                        org.PopulateVisits();
+                    if (window is NewTask task)
+                        task.PopulateVisits();
             }
             else if (identity == (int)UserSettings.TableIndex.Document)
             {
                 foreach (Window window in Application.Current.Windows)
-                    if (window is NewTask org)
-                        org.PopulateDocuments();
+                    if (window is NewTask task)
+                        task.PopulateDocuments();
             }
 
             foreach (PageDatabaseView view in views)

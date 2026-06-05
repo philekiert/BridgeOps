@@ -804,7 +804,7 @@ internal class BridgeOpsAgent
                 else if (fncByte == Glo.CLIENT_LOGGEDIN_LIST)
                     ClientLoggedInUserList(stream);
                 else if (fncByte >= Glo.CLIENT_NEW_LOGIN &&
-                         fncByte <= Glo.CLIENT_NEW_DOCUMENT)
+                         fncByte <= Glo.CLIENT_NEW_BANK_HOLIDAY)
                     ClientNewInsert(stream, sqlConnect, fncByte);
                 else if (fncByte == Glo.CLIENT_UPDATE)
                     ClientUpdate(stream, sqlConnect);
@@ -1513,6 +1513,14 @@ internal class BridgeOpsAgent
                         create, out permission))
                         com.CommandText = SqlAssist.Transaction(docs.Select(i => i.SqlInsert()).ToArray());
                 }
+                else if (target == Glo.CLIENT_NEW_BANK_HOLIDAY)
+                {
+                    BankHoliday newRow = sr.Deserialise<BankHoliday>(sr.ReadString(stream));
+                    if (CheckSessionValidity(newRow.sessionID, newRow.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[newRow.sessionID], Glo.PERMISSION_RECORDS,
+                        create, out permission))
+                        com.CommandText = newRow.SqlInsert();
+                }
                 else if (target == Glo.CLIENT_NEW_LOGIN)
                 {
                     Login newRow = sr.Deserialise<Login>(sr.ReadString(stream));
@@ -1852,6 +1860,8 @@ internal class BridgeOpsAgent
                 columns = ColumnRecord.visit;
             else if (req.table == "Document")
                 columns = ColumnRecord.document;
+            else if (req.table == "BankHoliday")
+                columns = ColumnRecord.bankHoliday;
             else
             {
                 stream.WriteByte(Glo.CLIENT_REQUEST_FAILED);
@@ -2061,6 +2071,14 @@ internal class BridgeOpsAgent
                     Document update = sr.Deserialise<Document>(sr.ReadString(stream));
                     if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
                         CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_TASKS, edit,
+                        out permission))
+                        com.CommandText = update.SqlUpdate();
+                }
+                else if (target == Glo.CLIENT_UPDATE_BANK_HOLIDAY)
+                {
+                    BankHoliday update = sr.Deserialise<BankHoliday>(sr.ReadString(stream));
+                    if (CheckSessionValidity(update.sessionID, update.columnRecordID, out sessionValid) &&
+                        CheckSessionPermission(clientSessions[update.sessionID], Glo.PERMISSION_RECORDS, edit,
                         out permission))
                         com.CommandText = update.SqlUpdate();
                 }
@@ -3169,9 +3187,14 @@ internal class BridgeOpsAgent
                                  $"ORDER BY f.{Glo.Tab.CONFERENCE_ID};",
                                  sqlConnect);
 
-            SelectResult result = new(com.ExecuteReader(), false);
+            SelectResult confSearchResult = new(com.ExecuteReader(), false);
+
+            com.CommandText = $"SELECT {Glo.Tab.BANK_HOL_DATE} FROM BankHoliday;";
+            SelectResult bankHolResult = new(com.ExecuteReader(), false);
+
             stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
-            sr.WriteAndFlush(stream, sr.Serialise(result));
+            sr.WriteAndFlush(stream, sr.Serialise(confSearchResult));
+            sr.WriteAndFlush(stream, sr.Serialise(bankHolResult));
         }
         catch (Exception e)
         {

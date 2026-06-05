@@ -138,6 +138,7 @@ namespace BridgeOpsClient
             menuDatabaseNewTask.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
             menuDatabaseNewVisit.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
             menuDatabaseNewDocument.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_TASKS];
+            menuDatabaseNewBankHoliday.IsEnabled = App.sd.createPermissions[Glo.PERMISSION_RECORDS];
 
             if (!App.sd.admin && !App.sd.createPermissions[Glo.PERMISSION_USER_ACC_MGMT] &&
                                  !App.sd.editPermissions[Glo.PERMISSION_USER_ACC_MGMT] &&
@@ -236,6 +237,12 @@ namespace BridgeOpsClient
         {
             NewDocument newTask = new();
             newTask.Show();
+        }
+
+        private void menuDatabaseNewBankHoliday_Click(object sender, RoutedEventArgs e)
+        {
+            NewBankHoliday newBankHoliday = new();
+            newBankHoliday.Show();
         }
 
         private void menuUserLogIn_Click(object sender, RoutedEventArgs e)

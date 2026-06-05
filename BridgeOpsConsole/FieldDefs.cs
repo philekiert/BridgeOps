@@ -98,6 +98,7 @@ public class FieldDefs
     public string typeTaskRef = "VARCHAR(40)";
     public string typeVisitID = "INT UNSIGNED";
     public string typeDocumentID = "INT UNSIGNED";
+    public string typeBankHolID = "INT UNSIGNED";
 
     public void DefineFields()
     {
@@ -186,6 +187,11 @@ public class FieldDefs
         defs.Add("Document Type", new Definition(8, Glo.Tab.DOCUMENT_TYPE, "VARCHAR(50)", true, false, false));
         defs.Add("Document Notes", new Definition(8, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
+        // Bank Holidays
+        defs.Add("Bank Holiday ID", new Definition(12, Glo.Tab.BANK_HOL_ID, typeBankHolID, false, true, true));
+        defs.Add("Bank Holiday Date", new Definition(12, Glo.Tab.BANK_HOL_DATE, "DATE", false, true, false));
+        defs.Add("Bank Holiday Notes", new Definition(12, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
+
 
         // ----- SUPPLEMENTARY TABLES ----- //
 
@@ -202,11 +208,6 @@ public class FieldDefs
         defs.Add("Connection Disconnection Time", new Definition(10, Glo.Tab.CONNECTION_TIME_TO, "DATETIME", false, false, false));
         defs.Add("Connection Row", new Definition(10, Glo.Tab.CONNECTION_ROW, "TINYINT", false, false, false));
         defs.Add("Connection Is Test", new Definition(10, Glo.Tab.CONNECTION_IS_TEST, "BOOLEAN", false, false, false));
-
-        // Public Holidays
-        defs.Add("Public Holiday ID", new Definition(14, Glo.Tab.PUBLIC_HOL_ID, "INT", false, true, true));
-        defs.Add("Public Holiday Date", new Definition(14, Glo.Tab.PUBLIC_HOL_DATE, "DATE", false, false, false));
-        defs.Add("Public Holiday Notes", new Definition(14, Glo.Tab.NOTES, "VARCHAR(MAX)", false, false, false));
 
         // Organisation Change Snapshot
         defs.Add("Organisation Change Organisation ID", new Definition(19, Glo.Tab.ORGANISATION_ID, typeOrgID, false, true, false));
@@ -320,6 +321,7 @@ public class FieldDefs
                $"{Glo.NL}Task Reference:                       Max Length = " + ExtractVARCHARLength(typeTaskRef) +
                $"{Glo.NL}Visit ID:                             Type = " + typeVisitID +
                $"{Glo.NL}Document ID:                          Type = " + typeDocumentID +
+               $"{Glo.NL}Bank Holiday ID:                      Type = " + typeBankHolID +
                $"{Glo.NL}Organisation Change ID:               Type = " + typeOrgChangeID +
                $"{Glo.NL}Asset Change ID:                      Type = " + typeAssetChangeID +
                $"{Glo.NL}" +

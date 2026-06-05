@@ -61,6 +61,9 @@
                               Click="menuDatabaseNewVisit_Click"/>
                     <MenuItem Header="_Document" x:Name="menuDatabaseNewDocument"
                               Click="menuDatabaseNewDocument_Click"/>
+                    <Separator/>
+                    <MenuItem Header="_Bank Holiday" x:Name="menuDatabaseNewBankHoliday"
+                              Click="menuDatabaseNewBankHoliday_Click"/>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="Select _Query Builder" Click="menuSelect_Click">

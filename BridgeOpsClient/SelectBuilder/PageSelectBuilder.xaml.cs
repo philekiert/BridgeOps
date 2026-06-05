@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SendReceiveClasses;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using SendReceiveClasses;
+using static BridgeOpsClient.SelectBuilder;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace BridgeOpsClient
@@ -77,6 +78,10 @@ namespace BridgeOpsClient
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
                 Run(out _, out _, out _, true, true);
+
+                if (relevantTable == RelevantTable.BankHoliday && MainWindow.pageConferenceViews != null)
+                    foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                        view.SearchTimeframe();
             }
         }
 
@@ -703,6 +708,11 @@ namespace BridgeOpsClient
                             relevantTable = SelectBuilder.RelevantTable.Document;
                             permissionRelevancy = Glo.PERMISSION_TASKS;
                         }
+                        else if (selectRequest.columns[0] == $"BankHoliday.{Glo.Tab.BANK_HOL_ID}")
+                        {
+                            relevantTable = SelectBuilder.RelevantTable.BankHoliday;
+                            permissionRelevancy = Glo.PERMISSION_RECORDS;
+                        }
                         btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
                                                       App.sd.deletePermissions[permissionRelevancy];
                         btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
@@ -795,6 +805,8 @@ namespace BridgeOpsClient
                 App.EditVisit(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == SelectBuilder.RelevantTable.Document)
                 App.EditDocument(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
+            else if (relevantTable == SelectBuilder.RelevantTable.BankHoliday)
+                App.EditBankHoliday(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
         }
     }
 }

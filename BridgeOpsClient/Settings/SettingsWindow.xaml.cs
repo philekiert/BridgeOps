@@ -285,7 +285,7 @@ namespace BridgeOpsClient
                                                                                Glo.Tab.CONFERENCE_EDIT_LOGIN,
                                                                                Glo.Tab.CONFERENCE_EDIT_TIME,
                                                                                Glo.Tab.ORGANISATION_REF,
-                                                                               Glo.Tab.RECURRENCE_ID  });
+                                                                               Glo.Tab.RECURRENCE_ID });
 
                 AddTable("Login", ColumnRecord.login, new[] { Glo.Tab.LOGIN_ADMIN,
                                                               Glo.Tab.LOGIN_CREATE_PERMISSIONS,
@@ -302,7 +302,7 @@ namespace BridgeOpsClient
                                                               Glo.Tab.TASK_REFERENCE });
                 AddTable("Document", ColumnRecord.document, new[] { Glo.Tab.DOCUMENT_DATE,
                                                                     Glo.Tab.TASK_REFERENCE });
-                AddTable("PublicHoliday", ColumnRecord.publicHoliday, new[] { Glo.Tab.PUBLIC_HOL_DATE });
+                AddTable("BankHoliday", ColumnRecord.bankHoliday, new[] { Glo.Tab.BANK_HOL_DATE });
 
                 dtgColumns.maxLengthOverrides = new Dictionary<string, int> { { "Allowed", -1 } };
 

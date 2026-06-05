@@ -91,6 +91,7 @@ namespace BridgeOpsClient
         Brush brsOverflow;
         Brush brsOverflowCheck;
         Brush brsWeekend;
+        Brush brsBankHoliday;
         Pen penConferenceBorder;
         Pen penConferenceCancelledBorder;
         Pen penConferenceDegradedBorder;
@@ -153,6 +154,7 @@ namespace BridgeOpsClient
             Color clrOverflow = new();
             Color clrOverflowCheck = new();
             Color clrWeekend = new();
+            Color clrBankHoliday = new();
             try
             {
                 clrBackground = (Color)Application.Current.Resources.MergedDictionaries[0]["colorBackgroundSchedule"];
@@ -166,6 +168,7 @@ namespace BridgeOpsClient
                 clrOverflow = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWarning"];
                 clrOverflowCheck = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceCheck"];
                 clrWeekend = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceWeekend"];
+                clrBankHoliday = (Color)Application.Current.Resources.MergedDictionaries[0]["colorConferenceBankHoliday"];
             }
             catch
             { }
@@ -251,6 +254,7 @@ namespace BridgeOpsClient
             brsOverflow = new SolidColorBrush(clrOverflow);
             brsOverflowCheck = new SolidColorBrush(clrOverflowCheck);
             brsWeekend = new SolidColorBrush(clrWeekend);
+            brsBankHoliday = new SolidColorBrush(clrBankHoliday);
             penStylus = new Pen(brsStylus, 1);
             penStylusFade = new Pen(brsStylusFade, 1.5);
             penCursor.Freeze();
@@ -301,6 +305,7 @@ namespace BridgeOpsClient
 
             brsOverflow.Freeze();
             brsWeekend.Freeze();
+            brsBankHoliday.Freeze();
 
             scheduleTime = DateTime.Now;
             lastScheduleTime = scheduleTime;
@@ -433,51 +438,54 @@ namespace BridgeOpsClient
                                   (conferenceView.drag == PageConferenceView.Drag.None ||
                                    conferenceView.drag == PageConferenceView.Drag.Scroll);
 
-                // Draw any weekend or other grey warnings beneath the grid lines.
-                DateTime offDayCheck = new(start.Year, start.Month, start.Day);
-                DateTime offDayCheckEnd = new DateTime(end.Year, end.Month, end.Day).AddDays(1);
-                List<DateTime> offDayOnOff = new();
-                bool offDayOn = false;
-                while (offDayCheck < offDayCheckEnd || offDayOn)
+                // Draw any shades beneath the grid lines for weekends or bank holidays.
+                void DrawDayShades(ShadeType type, Brush brush)
                 {
-                    // Have to check days by day rather than < or > Saturday, because Microsoft erroneously thinks
-                    // the week starts on Sunday -_-
-                    if (!offDayOn && (offDayCheck.DayOfWeek == DayOfWeek.Saturday ||
-                                     offDayCheck.DayOfWeek == DayOfWeek.Sunday))
+                    DateTime dsCheck = new(start.Year, start.Month, start.Day);
+                    DateTime dsCheckEnd = new DateTime(end.Year, end.Month, end.Day).AddDays(1);
+                    List<DateTime> dsOnOff = new();
+                    bool dsOn = false;
+                    while (dsCheck < dsCheckEnd || dsOn)
                     {
-                        offDayOnOff.Add(offDayCheck);
-                        offDayOn = true;
+                        // Have to check days by day rather than < or > Saturday, because Microsoft erroneously thinks
+                        // the week starts on Sunday -_-
+                        if (!dsOn && ((type == ShadeType.Weekend && (dsCheck.DayOfWeek == DayOfWeek.Saturday || dsCheck.DayOfWeek == DayOfWeek.Sunday)) ||
+                                      (type == ShadeType.BankHoliday && bankHolidays.Contains(dsCheck))))
+                        {
+                            dsOnOff.Add(dsCheck);
+                            dsOn = true;
+                        }
+                        else if (dsOn && ((type == ShadeType.Weekend && (dsCheck.DayOfWeek != DayOfWeek.Saturday && dsCheck.DayOfWeek != DayOfWeek.Sunday)) ||
+                                          (type == ShadeType.BankHoliday && !bankHolidays.Contains(dsCheck))))
+                        {
+                            dsOnOff.Add(dsCheck);
+                            dsOn = false;
+                        }
+                        dsCheck = dsCheck.AddDays(1);
                     }
-                    else if (offDayOn && (offDayCheck.DayOfWeek != DayOfWeek.Saturday &&
-                                          offDayCheck.DayOfWeek != DayOfWeek.Sunday))
+                    for (int i = 0; i < dsOnOff.Count; i += 2)
                     {
-                        offDayOnOff.Add(offDayCheck);
-                        offDayOn = false;
+                        DateTime s = dsOnOff[i];
+                        DateTime e = dsOnOff[i + 1];
+
+                        // Skip if out of frame.
+                        if (e > start && s < end)
+                        {
+                            // Only draw as far as necessary.
+                            if (s < start)
+                                s = start;
+                            if (e > end)
+                                e = end;
+
+                            double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
+                            double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
+                            Rect r = new(startPoint, 0, endPoint - startPoint, ActualHeight);
+                            dc.DrawRectangle(brush, null, r);
+                        }
                     }
-                    offDayCheck = offDayCheck.AddDays(1);
                 }
-                for (int i = 0; i < offDayOnOff.Count; i += 2)
-                {
-                    DateTime s = offDayOnOff[i];
-                    DateTime e = offDayOnOff[i + 1];
-
-                    // Skip if out of frame.
-                    if (e > start && s < end)
-                    {
-                        // Only draw as far as necessary.
-                        if (s < start)
-                            s = start;
-                        if (e > end)
-                            e = end;
-
-                        double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
-                        double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
-                        Rect r = new(startPoint, 0, endPoint - startPoint, ActualHeight);
-                        dc.DrawRectangle(brsWeekend, null, r);
-                    }
-                }
-
-
+                DrawDayShades(ShadeType.Weekend, brsWeekend);
+                DrawDayShades(ShadeType.BankHoliday, brsBankHoliday);
 
                 // Draw any conference overflow warnings beneath the grid lines.
 
@@ -513,7 +521,7 @@ namespace BridgeOpsClient
                                         s = start;
                                     if (e > end)
                                         e = end;
-
+                                    
                                     double startPoint = GetXfromDateTime(s, zoomTimeDisplay);
                                     double endPoint = GetXfromDateTime(e, zoomTimeDisplay);
                                     Rect r = new(startPoint, startY, endPoint - startPoint, endY - startY);

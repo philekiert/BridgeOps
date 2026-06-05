@@ -378,7 +378,7 @@ public class DatabaseCreator
             string task = "";
             string visit = "";
             string document = "";
-            string publicHoliday = "";
+            string bankHoliday = "";
             string organisationChange = "";
             string assetChange = "";
             string junctionOrgContacts = "";
@@ -414,8 +414,8 @@ public class DatabaseCreator
                     AddColumn(ref visit, def);
                 if (fieldDefs.Category(def) == "Document")
                     AddColumn(ref document, def);
-                if (fieldDefs.Category(def) == "Public Holiday")
-                    AddColumn(ref publicHoliday, def);
+                if (fieldDefs.Category(def) == "Bank Holiday")
+                    AddColumn(ref bankHoliday, def);
                 //if (fieldDefs.Category(def) == "Dial No")
                 //    AddColumn(ref dialNo, def);
                 //if (fieldDefs.Category(def) == "Conferences by Day")
@@ -483,8 +483,8 @@ public class DatabaseCreator
                      ", CONSTRAINT chk_VisitVisitType CHECK (Visit_Type IN ('')) );";
             document += ", CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID)" +
                         ", CONSTRAINT chk_DocumentDocumentType CHECK (Document_Type IN ('')) );";
-            publicHoliday += ", CONSTRAINT pk_PublicHolID PRIMARY KEY (Public_Holiday_ID)" +
-                             ", CONSTRAINT u_PublicHolDate UNIQUE (Public_Holiday_Date) );";
+            bankHoliday += ", CONSTRAINT pk_BankHolID PRIMARY KEY (Bank_Holiday_ID)" +
+                             ", CONSTRAINT u_PublicHolDate UNIQUE (Bank_Holiday_Date) );";
 
             // Supplemental Tables Strings
             //dialNo += ", CONSTRAINT pk_DialNo PRIMARY KEY (Dial_No)" +
@@ -547,8 +547,8 @@ public class DatabaseCreator
             SendCommandSQL(visit);
             Writer.Message("Creating Document table...");
             SendCommandSQL(document);
-            Writer.Message("Creating Public Holiday table...");
-            SendCommandSQL(publicHoliday);
+            Writer.Message("Creating Bank Holiday table...");
+            SendCommandSQL(bankHoliday);
             Writer.Message("Creating Organisation Change table...");
             SendCommandSQL(organisationChange);
             //Writer.Message("Creating Conferences by Day table...");

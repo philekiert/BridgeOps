@@ -131,10 +131,17 @@ namespace BridgeOpsClient
                 btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RESOURCES];
                 btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RESOURCES];
             }
-            else if (dtgResults.identity >= (int)UserSettings.TableIndex.Task)
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.Task ||
+                     dtgResults.identity == (int)UserSettings.TableIndex.Document ||
+                     dtgResults.identity == (int)UserSettings.TableIndex.Visit)
             {
                 btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_TASKS];
                 btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_TASKS];
+            }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday)
+            {
+                btnUpdate.IsEnabled = App.sd.editPermissions[Glo.PERMISSION_RECORDS];
+                btnDelete.IsEnabled = App.sd.deletePermissions[Glo.PERMISSION_RECORDS];
             }
         }
 
@@ -164,13 +171,16 @@ namespace BridgeOpsClient
                 table = ColumnRecord.recurrence;
             else if (cmbTable.SelectedIndex == 5)
                 table = ColumnRecord.resource;
-            // 6 is the seperator.
+            // 6 is a seperator.
             else if (cmbTable.SelectedIndex == 7)
                 table = ColumnRecord.task;
             else if (cmbTable.SelectedIndex == 8)
                 table = ColumnRecord.visit;
             else if (cmbTable.SelectedIndex == 9)
                 table = ColumnRecord.document;
+            // 10 is another separator.
+            else if (cmbTable.SelectedIndex == 11)
+                table = ColumnRecord.bankHoliday;
             else
             {
                 App.Abort("Unable to populate column list.", App.mainWindow);
@@ -276,6 +286,8 @@ namespace BridgeOpsClient
                 table = "Visit";
             else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
                 table = "Document";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday)
+                table = "BankHoliday";
 
             if (dtgResults.identity == 7 && conferenceSelectRequest != null)
             {
@@ -433,8 +445,10 @@ namespace BridgeOpsClient
 
         private void cmbTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            string tableName = ((ComboBoxItem)cmbTable.Items[cmbTable.SelectedIndex]).Content.ToString()!;
+
             // Show/hide the conference dates panel
-            grdDates.Visibility = cmbTable.SelectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
+            grdDates.Visibility = tableName == "Conference" ? Visibility.Visible : Visibility.Collapsed;
             if (cmbTable.SelectedIndex < 2)
                 cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns",
                                                                  "Search All (historical)",
@@ -443,6 +457,8 @@ namespace BridgeOpsClient
                 cmbSearchType.ItemsSource = new List<string>() { "Search All", "Search Columns" };
             if (cmbSearchType.SelectedIndex == -1)
                 cmbSearchType.SelectedIndex = 0;
+
+            cmbSearchType.Visibility = tableName == "Bank Holiday" ? Visibility.Collapsed : Visibility.Visible;
 
             PopulateColumnComboBox();
         }
@@ -459,7 +475,9 @@ namespace BridgeOpsClient
                 // This is because some identities aren't used in the table select and only for column layouts.
                 if (identity > 2)
                     identity += 4; // Nudge past the organisation and settings identities.
-                // No need to nudge further past the recurrence conference list identity, since the separator adds one anyway.
+                // Nudge again if we're looking at bank holidays, since there's another separator in the list.
+                if (identity == 15)
+                    ++identity;
 
                 // SelectedIndex of 2 is a historical wide search (historical narrow is not currently possible).
                 WideSearch(identity, cmbSearchType.SelectedIndex == 2);
@@ -520,11 +538,17 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.visit;
                 nameReversals = ColumnRecord.visitFriendlyNameReversal;
             }
-            else // if Document
+            else if (cmbTable.Text == "Document")
             {
                 identity = (int)UserSettings.TableIndex.Document;
                 tableColDefs = ColumnRecord.document;
                 nameReversals = ColumnRecord.documentFriendlyNameReversal;
+            }
+            else // if Bank Holiday
+            {
+                identity = (int)UserSettings.TableIndex.BankHoliday;
+                tableColDefs = ColumnRecord.bankHoliday;
+                nameReversals = ColumnRecord.bankHolidayFriendlyNameReversal;
             }
 
             if (identity != 7 && identity != 8) // Conference and recurrence searches are a tad more complicated.
@@ -557,7 +581,7 @@ namespace BridgeOpsClient
                 // Error message is displayed by App.SelectAll() if something goes wrong.
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (App.Select(cmbTable.Text, // Needs changing in RepeatSearch() as well if adjusted.
+                if (App.Select(cmbTable.Text.Replace(" ", ""), // Needs changing in RepeatSearch() as well if adjusted.
                                new List<string> { "*" },
                                selectColumns, selectValues, conditionals,
                                out columnNames, out rows, true, historical, App.mainWindow))
@@ -913,10 +937,15 @@ namespace BridgeOpsClient
                 tableColDefs = ColumnRecord.visit;
                 nameReversals = ColumnRecord.visitFriendlyNameReversal;
             }
-            else // if Document
+            else if (identity == (int)UserSettings.TableIndex.Document)
             {
                 tableColDefs = ColumnRecord.document;
                 nameReversals = ColumnRecord.documentFriendlyNameReversal;
+            }
+            else // if Bank Holiday
+            {
+                tableColDefs = ColumnRecord.bankHoliday;
+                nameReversals = ColumnRecord.bankHolidayFriendlyNameReversal;
             }
 
             if (identity != 7 && identity != 8) // Conference and recurrence searches are a tad more complicated.
@@ -924,7 +953,7 @@ namespace BridgeOpsClient
                 // Error message is displayed by App.SelectAll() if something goes wrong.
                 List<string?> columnNames;
                 List<List<object?>> rows;
-                if (App.SelectWide(cmbTable.Text, txtSearch.Text, // Also needs changing in RepeatSearch() if adjusted.
+                if (App.SelectWide(cmbTable.Text.Replace(" ", ""), txtSearch.Text, // Also needs changing in RepeatSearch() if adjusted.
                                    out columnNames, out rows, historical, App.mainWindow))
                 {
                     lastSearchWide = true;
@@ -988,11 +1017,13 @@ namespace BridgeOpsClient
             else if (dtgResults.identity == 9)
                 tableSearched = "Resources";
             else if (dtgResults.identity == (int)UserSettings.TableIndex.Task)
-                tableSearched = "Task";
+                tableSearched = "Tasks";
             else if (dtgResults.identity == (int)UserSettings.TableIndex.Visit)
-                tableSearched = "Visit";
+                tableSearched = "Visits";
             else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
-                tableSearched = "Document";
+                tableSearched = "Documents";
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday)
+                tableSearched = "Bank Holidays";
             lblTable.Content = tableSearched;
 
             // Highlight searches where more than one field was searched in case the user was not aware.
@@ -1108,6 +1139,12 @@ namespace BridgeOpsClient
                 table = "Document";
                 idColumn = Glo.Tab.DOCUMENT_ID;
             }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday)
+            {
+                needsQuotes = false;
+                table = "BankHoliday";
+                idColumn = Glo.Tab.BANK_HOL_ID;
+            }
 
             var columns = ColumnRecord.GetDictionary(table, true);
             if (columns == null)
@@ -1180,10 +1217,22 @@ namespace BridgeOpsClient
                 table = "Document";
                 column = Glo.Tab.DOCUMENT_ID;
             }
+            else if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday)
+            {
+                needsQuotes = false;
+                table = "BankHoliday";
+                column = Glo.Tab.BANK_HOL_ID;
+            }
 
             if (App.SendDelete(table, column, dtgResults.GetCurrentlySelectedIDs(), needsQuotes, App.mainWindow) &&
                 MainWindow.pageDatabase != null)
+            {
                 MainWindow.pageDatabase.RepeatSearches(dtgResults.identity);
+                if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday &&
+                    MainWindow.pageConferenceViews != null)
+                    foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                        view.SearchTimeframe();
+            }
         }
 
         // Bring up selected organisation on double-click.
@@ -1221,6 +1270,8 @@ namespace BridgeOpsClient
                     App.EditVisit(currentID.ToString(), App.mainWindow);
                 else if (dtgResults.identity == (int)UserSettings.TableIndex.Document)
                     App.EditDocument(currentID.ToString(), App.mainWindow);
+                else if (dtgResults.identity == (int)UserSettings.TableIndex.BankHoliday)
+                    App.EditBankHoliday(currentID.ToString(), App.mainWindow);
             }
         }
 

@@ -83,6 +83,9 @@ namespace BridgeOpsClient
             {
                 MainWindow.pageDatabase.RepeatSearches(identity);
                 Run(out _, out _, out _);
+                if (relevantTable == RelevantTable.BankHoliday && MainWindow.pageConferenceViews != null)
+                    foreach (PageConferenceView view in MainWindow.pageConferenceViews)
+                        view.SearchTimeframe();
             }
         }
 
@@ -446,6 +449,11 @@ namespace BridgeOpsClient
                     relevantTable = RelevantTable.Document;
                     permissionRelevancy = Glo.PERMISSION_TASKS;
                 }
+                else if (cmbRelevancy.Text == "BankHoliday")
+                {
+                    relevantTable = RelevantTable.BankHoliday;
+                    permissionRelevancy = Glo.PERMISSION_RECORDS;
+                }
                 btnDeleteSelected.IsEnabled = permissionRelevancy > -1 &&
                                               App.sd.deletePermissions[permissionRelevancy];
                 btnUpdateSelected.IsEnabled = permissionRelevancy > -1 &&
@@ -527,6 +535,8 @@ namespace BridgeOpsClient
                 App.EditVisit(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
             else if (relevantTable == RelevantTable.Document)
                 App.EditDocument(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
+            else if (relevantTable == RelevantTable.BankHoliday)
+                App.EditBankHoliday(dtgOutput.GetCurrentlySelectedID(), App.mainWindow);
         }
     }
 }

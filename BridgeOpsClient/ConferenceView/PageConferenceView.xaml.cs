@@ -418,6 +418,8 @@ namespace BridgeOpsClient
         public static object conferenceListLock = new();
         public static Dictionary<int, Conference> conferences = new();
         public static Dictionary<int, Conference> conferencesUpdate = new();
+        public static HashSet<DateTime> bankHolidays = new();
+        public enum ShadeType { Weekend, BankHoliday }; // Assists the day-shading for weekends and bank holidays..
 
         object conferenceSearchLock = new();
         object conferenceSearchThreadLock = new();

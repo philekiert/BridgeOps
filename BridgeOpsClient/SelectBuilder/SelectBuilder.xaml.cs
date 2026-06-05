@@ -104,7 +104,7 @@ namespace BridgeOpsClient
         public enum RelevantTable
         {
             None, Organisation, Asset, Contact, Conference, Recurrence, Resource,
-            Task, Visit, Document
+            Task, Visit, Document, BankHoliday
         }
         public static bool GetRelevancy(RelevantTable relevantTable,
                                         out string table, out string idColumn, out int identity)
@@ -162,6 +162,12 @@ namespace BridgeOpsClient
                 table = "Document";
                 idColumn = Glo.Tab.DOCUMENT_ID;
                 identity = (int)UserSettings.TableIndex.Document;
+            }
+            else if (relevantTable == RelevantTable.BankHoliday)
+            {
+                table = "BankHoliday";
+                idColumn = Glo.Tab.BANK_HOL_ID;
+                identity = (int)UserSettings.TableIndex.BankHoliday;
             }
             else
             {

@@ -129,14 +129,16 @@
                 <ComboBoxItem Content="Task"/>
                 <ComboBoxItem Content="Visit"/>
                 <ComboBoxItem Content="Document"/>
+                <Separator/>
+                <ComboBoxItem Content="Bank Holiday"/>
             </ComboBox>
-            <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 10 10" Width="171"
+            <ComboBox x:Name="cmbSearchType" Grid.Column="2" Margin="-1 10 0 10" Width="171"
                       SelectionChanged="cmbSearchType_SelectionChanged"/>
-            <ComboBox x:Name="cmbColumn" Grid.Column="3" Margin="10 10 0 10" Width="155"
+            <ComboBox x:Name="cmbColumn" Grid.Column="3" Margin="-1 10 0 10" Width="155"
                       SelectionChanged="cmbColumn_SelectionChanged"/>
-            <Button x:Name="btnClear" Grid.Column="4" Margin="-1 10 10 10" Width="71"
+            <Button x:Name="btnClear" Grid.Column="4" Margin="-1 10 0 10" Width="71"
                     Content="Clear Fields" Click="btnClear_Click" Padding=" 2 0 0 0"/>
-            <TextBox x:Name="txtSearch" Grid.Column="5" Width="Auto" Padding="0 3 0 0" Margin="10 10 10 10"
+            <TextBox x:Name="txtSearch" Grid.Column="5" Width="Auto" Padding="0 3 0 0" Margin="20 10 10 10"
                      KeyDown="txtSearch_KeyDown" TextChanged="txtSearch_TextChanged"/>
             <Button x:Name="btnSearch" Grid.Column="6" Margin="10 10 7 10" Width="50"
                     Content="Search" Click="btnSearch_Click" Style="{StaticResource primary-button}"/>

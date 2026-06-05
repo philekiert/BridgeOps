@@ -84,6 +84,7 @@
     <Color x:Key="colorConferenceCheck">#32646464</Color>
     <Color x:Key="colorConferenceWarning">#32C04155</Color>
     <Color x:Key="colorConferenceWeekend">#dddedf</Color>
+    <Color x:Key="colorConferenceBankHoliday">#ccebde</Color>
     <SolidColorBrush x:Key="brushBackgroundSchedule" Color="{StaticResource colorBackgroundSchedule}"/>
     <SolidColorBrush x:Key="brushConference" Color="{StaticResource colorConference}"/>
     <SolidColorBrush x:Key="brushConferenceCancelled" Color="{StaticResource colorConference}"/>
@@ -95,6 +96,7 @@
     <SolidColorBrush x:Key="brushConferenceCheck" Color="{StaticResource colorConferenceCheck}"/>
     <SolidColorBrush x:Key="brushConferenceWarning" Color="{StaticResource colorConferenceWarning}"/>
     <SolidColorBrush x:Key="brushConferenceWeekend" Color="{StaticResource colorConferenceWeekend}"/>
+    <SolidColorBrush x:Key="brushConferenceBankHoliday" Color="{StaticResource colorConferenceBankHoliday}"/>
 
     <!-- This isn't theme stuff, and should be moved to App.xaml. Need to figure out how to make it less verbose -->
 

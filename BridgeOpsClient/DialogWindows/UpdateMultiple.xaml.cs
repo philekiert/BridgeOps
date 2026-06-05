@@ -234,7 +234,7 @@ namespace BridgeOpsClient
                     if (MainWindow.pageDatabase != null)
                     {
                         MainWindow.pageDatabase.RepeatSearches(identity);
-                        if (identity == 7 || identity == 8)
+                        if (identity == 7 || identity == 8 || identity == (int)UserSettings.TableIndex.BankHoliday)
                             foreach (PageConferenceView view in MainWindow.pageConferenceViews)
                                 view.SearchTimeframe();
                     }

@@ -912,6 +912,37 @@ namespace BridgeOpsClient
             return true;
         }
 
+        public static bool EditBankHoliday(string id, Window? owner)
+        {
+            List<string?> columnNames;
+            List<List<object?>> rows;
+            if (App.Select("BankHoliday",
+                           new List<string> { "*" },
+                           new List<string> { Glo.Tab.BANK_HOL_ID },
+                           new List<string> { id },
+                           new List<Conditional> { Conditional.Equals },
+                           out columnNames, out rows, true, false, owner))
+            {
+                if (rows.Count > 0)
+                {
+                    // We expect data for every field. If the count is different, the operation must have failed.
+                    if (rows[0].Count == ColumnRecord.bankHoliday.Count)
+                    {
+                        NewBankHoliday doc = new(id);
+                        doc.Populate(rows[0]);
+                        doc.Show();
+                    }
+                    else
+                    {
+                        DisplayError("Incorrect number of fields received.", owner);
+                    }
+                }
+                else
+                    DisplayError("Could no longer retrieve record.", owner);
+            }
+            return true;
+        }
+
 
         static bool columnRecordPulInProgress = false;
         public static bool PullColumnRecord(Window? owner)
@@ -1767,17 +1798,11 @@ namespace BridgeOpsClient
                         if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             return true;
                         else if (response == Glo.CLIENT_SESSION_INVALID)
-                        {
                             return SessionInvalidated();
-                        }
                         else if (response == Glo.CLIENT_INSUFFICIENT_PERMISSIONS)
-                        {
                             DisplayError(PERMISSION_DENIED, owner);
-                        }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_RECORD_DELETED)
-                        {
                             DisplayError("The record could no longer be found.", owner);
-                        }
                         else if (response == Glo.CLIENT_REQUEST_FAILED_MORE_TO_FOLLOW)
                         {
                             string error = sr.ReadString(stream);
@@ -2414,11 +2439,15 @@ namespace BridgeOpsClient
                             int response = stream.ReadByte();
                             if (response == Glo.CLIENT_REQUEST_SUCCESS)
                             {
-                                SelectResult result = sr.Deserialise<SelectResult>(sr.ReadString(stream));
-                                ConvertUnknownJsonObjectsToRespectiveTypes(result.columnTypes, result.rows);
+                                SelectResult confSearchResult = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                SelectResult bankHolResult = sr.Deserialise<SelectResult>(sr.ReadString(stream));
+                                ConvertUnknownJsonObjectsToRespectiveTypes(confSearchResult.columnTypes,
+                                                                           confSearchResult.rows);
+                                ConvertUnknownJsonObjectsToRespectiveTypes(bankHolResult.columnTypes,
+                                                                           bankHolResult.rows);
                                 confs.Clear();
                                 PageConferenceView.Conference? c = null;
-                                foreach (List<object?> row in result.rows)
+                                foreach (List<object?> row in confSearchResult.rows)
                                 {
                                     if (c == null || (int)row[0]! != c.id)
                                     {
@@ -2446,6 +2475,11 @@ namespace BridgeOpsClient
                                             ++c.closedConnections;
                                     }
                                 }
+                                // Add the list of bank holidays.
+                                PageConferenceView.bankHolidays.Clear();
+                                foreach (List<object?> row in bankHolResult.rows)
+                                    if (row[0] is DateTime dt)
+                                        bankHolidays.Add(dt);
                                 return true;
                             }
                             if (response == Glo.CLIENT_SESSION_INVALID)
@@ -3058,11 +3092,12 @@ namespace BridgeOpsClient
         {
             Organisation, Asset, Contact, OrgAsset, OrgContact,
             User, Column, Conference, Recurrence, Resource, RecConference,
-            Task, Visit, Document, TaskVisit, TaskDocument
+            Task, Visit, Document, TaskVisit, TaskDocument,
+            BankHoliday
         }
-        public List<string>[] dataOrder = new List<string>[16];
-        public List<bool>[] dataHidden = new List<bool>[16];
-        public List<double>[] dataWidths = new List<double>[16];
+        public List<string>[] dataOrder = new List<string>[17];
+        public List<bool>[] dataHidden = new List<bool>[17];
+        public List<double>[] dataWidths = new List<double>[17];
 
         public bool settingsPulled = false;
 

@@ -88,6 +88,7 @@ public static class Glo
     public const int CLIENT_NEW_TASK = 18;
     public const int CLIENT_NEW_VISIT = 19;
     public const int CLIENT_NEW_DOCUMENT = 20;
+    public const int CLIENT_NEW_BANK_HOLIDAY = 21;
     public const int CLIENT_UPDATE = 30;
     public const int CLIENT_UPDATE_LOGIN = 31;
     public const int CLIENT_UPDATE_ORGANISATION = 32;
@@ -100,7 +101,8 @@ public static class Glo
     public const int CLIENT_UPDATE_TASK = 39;
     public const int CLIENT_UPDATE_VISIT = 40;
     public const int CLIENT_UPDATE_DOCUMENT = 41;
-    public const int CLIENT_UPDATE_CHANGE_REASON = 42;
+    public const int CLIENT_UPDATE_BANK_HOLIDAY = 42;
+    public const int CLIENT_UPDATE_CHANGE_REASON = 43;
     public const int CLIENT_SELECT_COLUMN_PRIMARY = 50;
     public const int CLIENT_SELECT_QUICK = 51;
     public const int CLIENT_SELECT = 52;
@@ -283,8 +285,8 @@ public static class Glo
         public const string DOCUMENT_DATE = "Document_Date";
         public const string DOCUMENT_TYPE = "Document_Type";
 
-        public const string PUBLIC_HOL_ID = "Public_Holiday_ID";
-        public const string PUBLIC_HOL_DATE = "Public_Holiday_Date";
+        public const string BANK_HOL_ID = "Bank_Holiday_ID";
+        public const string BANK_HOL_DATE = "Bank_Holiday_Date";
 
         public const string FRIENDLY_TABLE = "TableName";
         public const string FRIENDLY_COLUMN = "ColumnName";
@@ -332,8 +334,8 @@ public static class Glo
                 return PERMISSION_TASKS;
             else if (table == "Login")
                 return PERMISSION_USER_ACC_MGMT;
-            else if (table == "Task" || table == "Visit" || table == "Document")
-                return PERMISSION_TASKS;
+            else if (table == "BankHoliday")
+                return PERMISSION_RECORDS;
             else return -1;
         }
 
@@ -408,9 +410,8 @@ public static class Glo
                      column == Glo.Tab.DOCUMENT_DATE ||
                      column == Glo.Tab.DOCUMENT_TYPE ||
                      column == Glo.Tab.NOTES)) ||
-                   (table == "PublicHoliday" &&
-                    (column == Glo.Tab.PUBLIC_HOL_ID ||
-                     column == Glo.Tab.PUBLIC_HOL_DATE ||
+                   (table == "BankHoliday" &&
+                    (column == Glo.Tab.BANK_HOL_DATE ||
                      column == Glo.Tab.NOTES))
                  );
         }

@@ -589,12 +589,12 @@ namespace SendReceiveClasses
                             commands.Add("ALTER TABLE Document DROP CONSTRAINT pk_DocumentID;");
                         }
                     }
-                    else if (table == "PublicHoliday")
+                    else if (table == "BankHoliday")
                     {
-                        if (column == Glo.Tab.PUBLIC_HOL_ID)
+                        if (column == Glo.Tab.BANK_HOL_DATE)
                         {
                             reAddKeys = true;
-                            commands.Add("ALTER TABLE PublicHoliday DROP CONSTRAINT pk_PublicHolID;");
+                            commands.Add("ALTER TABLE BankHoliday DROP CONSTRAINT pk_BankHolID;");
                         }
                     }
 
@@ -685,8 +685,8 @@ namespace SendReceiveClasses
                             commands.Add("ALTER TABLE Visit ADD CONSTRAINT pk_VisitID PRIMARY KEY (Visit_ID);");
                         else if (table == "Document" && column == Glo.Tab.DOCUMENT_ID)
                             commands.Add("ALTER TABLE Document ADD CONSTRAINT pk_DocumentID PRIMARY KEY (Document_ID);");
-                        else if (table == "PublicHoliday" && column == Glo.Tab.PUBLIC_HOL_ID)
-                            commands.Add("ALTER TABLE PublicHoliday ADD CONSTRAINT pk_publicHolID PRIMARY KEY (Public_Holiday_ID);");
+                        else if (table == "BankHoliday" && column == Glo.Tab.BANK_HOL_DATE)
+                            commands.Add("ALTER TABLE BankHoliday ADD CONSTRAINT pk_BankHolID PRIMARY KEY (Bank_Holiday_Date);");
                     }
                 }
                 if (allowed.Count > 0)
@@ -2657,6 +2657,52 @@ ON Connection.{Glo.Tab.CONNECTION_ID} = OrderedConnections.{Glo.Tab.CONNECTION_I
 
             return SqlAssist.Update("Document", string.Join(", ", setters),
                                     Glo.Tab.DOCUMENT_ID, documentID);
+        }
+    }
+
+    struct BankHoliday
+    {
+        public string sessionID;
+        public int columnRecordID;
+        public int id;
+        public DateTime date;
+        public string? notes;
+
+        public BankHoliday(string sessionID, int columnRecordID, int bankHolID, DateTime date, string? notes)
+        {
+            this.sessionID = sessionID;
+            this.columnRecordID = columnRecordID;
+            this.id = bankHolID;
+            this.date = date;
+            this.notes = notes;
+        }
+
+        private void Prepare()
+        {
+            // Make sure the columns and values are safe, then add quotes where needed.
+            if (notes != null)
+                notes = SqlAssist.AddQuotes(SqlAssist.SecureValue(notes));
+        }
+
+        public string SqlInsert()
+        {
+            Prepare();
+            return SqlAssist.InsertInto("BankHoliday",
+                                        SqlAssist.ColConcat(Glo.Tab.BANK_HOL_DATE,
+                                                            Glo.Tab.NOTES),
+                                        SqlAssist.ValConcat(SqlAssist.DateTimeToSQL(date, true, true),
+                                                            notes));
+        }
+
+        public string SqlUpdate()
+        {
+            Prepare();
+
+            List<string> setters = new();
+            setters.Add(SqlAssist.Setter(Glo.Tab.BANK_HOL_DATE, SqlAssist.DateTimeToSQL(date, true, true)));
+            setters.Add(SqlAssist.Setter(Glo.Tab.NOTES, notes));
+
+            return SqlAssist.Update("BankHoliday", string.Join(", ", setters), Glo.Tab.BANK_HOL_ID, id);
         }
     }
 
