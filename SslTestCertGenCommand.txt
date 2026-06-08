@@ -1,0 +1,40 @@
+# Create the certificate
+
+New-SelfSignedCertificate `
+    -Type Custom `
+    -Subject "CN=BridgeManager" `
+    -TextExtension @(
+        "2.5.29.17={text}IPAddress=127.0.0.1",
+        "2.5.29.19={text}cA=TRUE"
+    ) `
+    -KeyUsage DigitalSignature,KeyEncipherment,CertSign `
+    -KeyAlgorithm RSA `
+    -KeyLength 2048 `
+    -HashAlgorithm SHA256 `
+    -CertStoreLocation "Cert:\LocalMachine\My"
+
+
+# Make the private key readable by the current user.
+
+$thumbprint = "PLACE THUMBPRINT HERE"
+$cert = Get-ChildItem "Cert:\LocalMachine\My\$thumbprint"
+$rsaKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+$uniqueName = $rsaKey.Key.UniqueName
+
+$keyPath = Get-ChildItem "C:\ProgramData\Microsoft\Crypto" -Recurse -ErrorAction SilentlyContinue |
+           Where-Object { $_.Name -eq $uniqueName } |
+           Select-Object -First 1 -ExpandProperty FullName
+
+$acl = Get-Acl $keyPath
+$rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+    "$env:USERDOMAIN\$env:USERNAME",
+    "Read",
+    "Allow"
+)
+$acl.AddAccessRule($rule)
+Set-Acl $keyPath $acl
+
+
+# Verify
+
+(Get-Acl $keyPath).Access | Format-Table IdentityReference, FileSystemRights, AccessControlType
