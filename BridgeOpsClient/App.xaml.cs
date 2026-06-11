@@ -603,7 +603,7 @@ namespace BridgeOpsClient
         {
             return SessionInvalidated("Connection to server was lost. Session ended.");
         }
-        public static bool SessionInvalidated(string message = "Session is no longer valid. Please copy" +
+        public static bool SessionInvalidated(string message = "Session is no longer valid. Please copy " +
                                                                "any unsaved work, then log back in.")
         {
             sd.sessionID = ""; // Tells the app that it's no longer logged in.
