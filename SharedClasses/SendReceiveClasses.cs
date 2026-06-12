@@ -2052,13 +2052,13 @@ END
         {
             if (additions != null)
                 foreach (Connection c in additions)
-                    c.dialNo = SqlAssist.SecureValue(c.dialNo);
+                    c.dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(c.dialNo));
             if (removals != null)
                 foreach (Connection c in removals)
-                    c.dialNo = SqlAssist.SecureValue(c.dialNo);
+                    c.dialNo = SqlAssist.AddQuotes(SqlAssist.SecureValue(c.dialNo));
 
             if (dialHost != null)
-                dialHost = SqlAssist.SecureValue(dialHost);
+                dialHost = SqlAssist.AddQuotes(SqlAssist.SecureValue(dialHost));
         }
 
         public string SqlUdpate()

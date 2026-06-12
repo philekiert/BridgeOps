@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1
+- Fixed a bug that could cause conference adjustments to fail when running a large number of updates in one go.
+
 ## 1.3.0
 ### Major
 - Implemented bank holidays.
