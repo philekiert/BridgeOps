@@ -2158,7 +2158,7 @@ END
                         commands.Add(@$"
 DELETE FROM Connection
 WHERE {Glo.Tab.CONFERENCE_ID} IN ({idCat})
-AND {Glo.Tab.DIAL_NO} = '{c.dialNo}'
+AND {Glo.Tab.DIAL_NO} = {c.dialNo}
 AND {Glo.Tab.CONNECTION_IS_MANAGED} = {(c.isManaged ? "1" : "0")}
 AND {Glo.Tab.CONNECTION_IS_TEST} = {(c.isTest ? "1" : "0")};
 ");
