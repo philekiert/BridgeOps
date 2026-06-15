@@ -533,15 +533,17 @@ internal class BridgeOpsAgent
             // Get the name of the SQL server instance.
             if (File.Exists(serverReaderFile))
             {
-                string[] credentials = File.ReadAllLines(serverReaderFile);
-                if (credentials.Length != 2 || credentials[0].Length < 1 || credentials[1].Length < 1)
-                    LogError($"Information in \"BridgeManager/{Glo.CONFIG_SQL_SERVER_READER}\" is invalid. " +
-                             $"Using defaults of 'reader' for username and password.");
-                else
+                try
                 {
+                    string[] credentials = File.ReadAllLines(serverReaderFile);
                     credentials[0] = Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(credentials[0]), null, DataProtectionScope.CurrentUser));
                     credentials[1] = Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(credentials[1]), null, DataProtectionScope.CurrentUser));
                     sqlServerReader = credentials;
+                }
+                catch
+                {
+                    LogError($"Information in \"BridgeManager/{Glo.CONFIG_SQL_SERVER_READER}\" is invalid. " +
+                             $"Using defaults of 'reader' for username and password.");
                 }
             }
             else
@@ -751,7 +753,7 @@ internal class BridgeOpsAgent
                 if (!certificate.HasPrivateKey)
                 {
                     LogError("Retrieved SSL certificate by thumbprint, but it has no private key. " +
-                             "If you believe this is incorrect and the certificate is held in the current user's " + 
+                             "If you believe this is incorrect and the certificate is held in the current user's " +
                              "store, check to make sure that there isn't a certificate in the local machine store " +
                              "with the same thumbprint that is missing a private key or has become corrupted.");
                     return;
