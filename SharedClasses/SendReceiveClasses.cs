@@ -2209,7 +2209,7 @@ VALUES (source.{Glo.Tab.CONFERENCE_ID}, source.{Glo.Tab.DIAL_NO}, source.{Glo.Ta
                 // Set the row of the desired host to 0.
                 commands.Add($"UPDATE Connection SET {Glo.Tab.CONNECTION_ROW} = 0 " +
                              $"WHERE {Glo.Tab.CONFERENCE_ID} IN ({string.Join(", ", idStr)}) " +
-                               $"AND {Glo.Tab.DIAL_NO} = '{dialHost}';");
+                               $"AND {Glo.Tab.DIAL_NO} = {dialHost};");
 
                 commands.Add($"UPDATE Conference SET " +
                              $"{Glo.Tab.CONFERENCE_EDIT_LOGIN} = {editLoginID}, " +
