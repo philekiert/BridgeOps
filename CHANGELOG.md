@@ -2,6 +2,7 @@
 
 ## 1.3.2
 - Made the agent's reading of the reader credentials a bit more robust so that it doesn't cause the program to exit on launch in some rare situations.
+- Fixed a bug preventing the user from adjusting the host of multiple conferences.
 
 ## 1.3.1
 - Fixed a bug that could cause conference adjustments to fail when running a large number of updates in one go.
