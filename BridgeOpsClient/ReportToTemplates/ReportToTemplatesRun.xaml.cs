@@ -335,7 +335,6 @@ namespace BridgeOpsClient
                                     continue;
                                 var topRow = sheet.Row(tag.y);
                                 topRow.Cell(tag.x).SetValue(""); // Wipe the tag (don't .Clear(), that wipes the formatting).
-                                // Store the 
 
                                 // Insert rows as needed.
                                 if (data.Count > 1)
@@ -354,10 +353,29 @@ namespace BridgeOpsClient
                                 }
                                 // else do nothing
 
+                                // Record any formula locations.
+                                HashSet<int> formulaColumnNumbers = new(); // Also stored 1-indexed values.
+                                for (int i = 1; i <= tag.lastColNumber; ++i)
+                                    if (topRow.Cell(i).HasFormula)
+                                        formulaColumnNumbers.Add(i);
+
                                 for (int y = 0; y < data.Count; ++y)
+                                {
+                                    int yAdj = tag.y + y;
+                                    IXLRow r = sheet.Row(tag.y + y);
+
+                                    // First, copy in any formulae. The below for loop will skip these columns.
+                                    foreach (int xForm in formulaColumnNumbers)
+                                        topRow.Cell(xForm).CopyTo(r.Cell(xForm));
+
+                                    // Then copy each cell in from the data.
                                     for (int x = 0; x < data[y].Count; ++x)
                                     {
-                                        var c = sheet.Row(tag.y + y).Cell(tag.x + x);
+                                        int xAdj = tag.x + x;
+                                        if (formulaColumnNumbers.Contains(xAdj))
+                                            continue;
+
+                                        var c = sheet.Row(tag.y + y).Cell(xAdj);
 
                                         // The desired behaviour here is to set the appropriate number format if the
                                         // source cell was set to General, but if it was manually set to something else
@@ -408,6 +426,8 @@ namespace BridgeOpsClient
                                                 c.Style = oldStyle;
                                         }
                                     }
+                                }
+
                                 successMessage += " └  Tag processed: " + tag.descriptor + "\n";
                             }
                         }
@@ -512,7 +532,7 @@ namespace BridgeOpsClient
                             // else do nothing
 
                             var rows = table.Elements<TableRow>().ToList();
-                                
+
                             if (data.Count == 0) // If nothing, just clear the tag's cell.
                                 SetWordTableCell(topRow.Elements<TableCell>().ToList()[tag.x]);
                             else

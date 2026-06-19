@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3
+- Added formula replication to data insertion via the Report to Templates feature.
+
 ## 1.3.2
 - Made the agent's reading of the reader credentials a bit more robust so that it doesn't cause the program to exit on launch in some rare situations.
 - Fixed a bug preventing the user from adjusting the host of multiple conferences.

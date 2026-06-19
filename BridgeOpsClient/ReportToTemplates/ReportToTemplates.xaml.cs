@@ -562,6 +562,7 @@ namespace BridgeOpsClient
         public class ReportTagExcel : ReportTag
         {
             public string sheetName = "";  // Name of the tab in the Excel file.
+            public int lastColNumber = 0;
             public string xLetter = "";    // Column letter.
         }
         public class ReportTagWord : ReportTag
@@ -717,6 +718,9 @@ namespace BridgeOpsClient
                         using (XLWorkbook file = new(filepath))
                         {
                             foreach (var sheet in file.Worksheets)
+                            {
+                                IXLColumn? lastCol = sheet.LastColumnUsed();
+                                int lastColNum = lastCol == null ? 0 : lastCol.ColumnNumber();
                                 foreach (var cell in sheet.CellsUsed())
                                     try
                                     {
@@ -729,6 +733,7 @@ namespace BridgeOpsClient
                                             filepath = filepath,
                                             filename = filename,
                                             sheetName = sheet.Name,
+                                            lastColNumber = lastColNum,
                                             x = cell.Address.ColumnNumber,
                                             xLetter = cell.Address.ColumnLetter,
                                             y = cell.Address.RowNumber,
@@ -744,6 +749,7 @@ namespace BridgeOpsClient
                                         // Do nothing. Sometimes cell.GetText() hits a type cast error, so this is
                                         // just to mitigate that.
                                     }
+                            }
                         }
                     // Word files.
                     else if (filename.EndsWith(".docx"))
