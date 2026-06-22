@@ -2,6 +2,7 @@
 
 ## 1.3.3
 - Added formula replication to data insertion via the Report to Templates feature.
+- Fixed a bug preventing the agent from closing clients remotely. It still relies on the client having an active session at the time of closure.
 
 ## 1.3.2
 - Made the agent's reading of the reader credentials a bit more robust so that it doesn't cause the program to exit on launch in some rare situations.

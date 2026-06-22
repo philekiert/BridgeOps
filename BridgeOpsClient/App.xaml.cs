@@ -1,4 +1,5 @@
-﻿using SendReceiveClasses;
+﻿using DocumentFormat.OpenXml.Drawing.Charts;
+using SendReceiveClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -454,6 +455,26 @@ namespace BridgeOpsClient
                 return false;
             }
         }
+        public static void LogOutFromForceClose()
+        {
+            try
+            {
+                if (IsLoggedIn)
+                {
+                    lock (streamLock)
+                    {
+                        Stream? stream = sr.NewClientStream(sd.ServerEP, App.sd.useSSL);
+                        if (stream != null)
+                        {
+                            stream.WriteByte(Glo.CLIENT_LOGOUT);
+                            sr.WriteAndFlush(stream, sr.Serialise(new LogoutRequest(sd.sessionID, sd.loginID, us.GetSettingsString())));
+                            sr.ReadString(stream); // Empty the pipe.
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
         public static bool CloseClient(string username, Window? owner) // Used for logging out either self or others.
         {
             try
@@ -543,6 +564,7 @@ namespace BridgeOpsClient
                                     forceLogoutQueued = true;
                                     break;
                                 case Glo.SERVER_CLIENT_CLOSE:
+                                    LogOutFromForceClose();
                                     Environment.Exit(0);
                                     break;
                                 case Glo.SERVER_CONFERENCES_UPDATED:

@@ -35,7 +35,7 @@ internal class BridgeOpsAgent
     static string columnRecord = "";
     static bool columnRecordIntact = false;
 
-    const int clientLastCheckinLimit = 100_000;
+    const int clientLastCheckinLimit = 5_000;
 
     class ClientSession
     {
@@ -936,7 +936,6 @@ internal class BridgeOpsAgent
             if (sessionId.Length > 0 && clientSessions.ContainsKey(sessionId))
             {
                 QueueNotification(sessionId, Glo.SERVER_CLIENT_CLOSE);
-                clientSessions.Remove(sessionId);
                 server.WriteByte(0);
                 server.Flush();
                 return;
@@ -1399,7 +1398,6 @@ internal class BridgeOpsAgent
                               Glo.CLIENT_CLOSE_SESSION_NOT_FOUND);
 
                 QueueNotification(idToAttack, Glo.SERVER_CLIENT_CLOSE);
-                clientSessions.Remove(idToAttack);
                 stream.WriteByte(Glo.CLIENT_REQUEST_SUCCESS);
             }
         }
