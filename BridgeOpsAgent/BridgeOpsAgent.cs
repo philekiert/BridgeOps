@@ -35,7 +35,7 @@ internal class BridgeOpsAgent
     static string columnRecord = "";
     static bool columnRecordIntact = false;
 
-    const int clientLastCheckinLimit = 5_000;
+    const int clientLastCheckinLimit = 10_000;
 
     class ClientSession
     {
