@@ -682,7 +682,7 @@ namespace BridgeOpsClient
         }
 
         private int validTagCount = 0;
-        private void btnCheck_Click(object sender, RoutedEventArgs e)
+        private async void btnCheck_Click(object sender, RoutedEventArgs e)
         {
             reportTags.Clear();
             lstSummary.Items.Clear();
@@ -800,6 +800,8 @@ namespace BridgeOpsClient
                 {
                     App.DisplayError($"Unable to process {filepath}, see error: {except.Message}", this);
                 }
+
+                await System.Threading.Tasks.Task.Yield();
             }
 
             PresetCheckRequest pcr;
@@ -838,6 +840,9 @@ namespace BridgeOpsClient
                                                                tag.descriptor, Brushes.Red);
                     LinkFile(listViewItem, tag.filepath);
                     lstSummary.Items.Add(listViewItem);
+
+
+                    await System.Threading.Tasks.Task.Yield();
                 }
             }
 

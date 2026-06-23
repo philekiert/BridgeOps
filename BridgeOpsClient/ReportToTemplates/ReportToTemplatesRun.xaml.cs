@@ -92,8 +92,12 @@ namespace BridgeOpsClient
         Dictionary<string, JsonObject?> presetJsonObjects = new();
         Dictionary<string, Dictionary<string, string?>> selectStatements = new();
 
-        private void CustomWindow_ContentRendered(object sender, EventArgs e)
+        private async void CustomWindow_ContentRendered(object sender, EventArgs e)
         {
+            // Super un-ideal solution to this feature blocking the main thread and causing the user's session to time
+            // out is Task.Yield() at the end of each loop. That gives WPF a second to catch its breath and run timer
+            // and UI events. This is in place due to time constraints and the application being fully synchornous.
+
             // Build a dictionary of presets and tabs to load.
             Dictionary<string, HashSet<string>> presetsAndTabs = new();
             foreach (ReportToTemplates.ReportTag tag in reportTags)
@@ -102,6 +106,7 @@ namespace BridgeOpsClient
                     continue;
                 presetsAndTabs.TryAdd(tag.presetName, new());
                 presetsAndTabs[tag.presetName].Add(tag.tabName);
+                await Task.Yield();
             }
 
             // Build a dictionary of all loaded presets.
@@ -123,12 +128,14 @@ namespace BridgeOpsClient
                     }
                     selectStatements.Add(presetName, new());
                 }
+                await Task.Yield();
             }
 
             int totalStatementsToGather = 0;
             foreach (var tabs in presetsAndTabs.Values)
                 totalStatementsToGather += tabs.Count;
             float p = 0;
+            await Task.Yield();
 
             // Build a dictionary of select statements by tab name inside an enclosing dictionary of preset names.
             foreach (string presetName in presetsAndTabs.Keys)
@@ -179,6 +186,7 @@ namespace BridgeOpsClient
                     {
                         presetStatements.Add(tabName, null);
                     }
+                    await Task.Yield();
                 }
             }
 
@@ -225,6 +233,8 @@ namespace BridgeOpsClient
                 SetProgress(p++ / stepCount);
                 InsertDataExcel(tagList.OfType<ReportTagExcel>().ToList());
                 InsertDataWord(tagList.OfType<ReportTagWord>().ToList());
+
+                await Task.Yield();
             }
 
             SetProgress(1); // Done :)
