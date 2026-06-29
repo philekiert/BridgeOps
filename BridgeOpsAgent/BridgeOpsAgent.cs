@@ -587,21 +587,21 @@ internal class BridgeOpsAgent
         // Read network configuraiton.
         LoadNetworkConfig();
 
-        // Start the thread responsible for nudging SQL Server. Remove this at some point.
+        // Start the thread responsible for nudging SQL Server.
         Thread sqlNudgeThr = new(SqlServerNudge);
         sqlNudgeThr.Start();
 
         // Start the thread responsible for nudging clients to see if they're still there.
-        Thread clientNudgeThr = new(CullExpiredSessions);
-        clientNudgeThr.Start();
+        Thread cullSessionsThr = new(CullExpiredSessions);
+        cullSessionsThr.Start();
 
         // Start the thread responsible for handling requests from the server console.
         Thread bridgeOpsConsoleRequestsThr = new(BridgeOpsConsoleRequests);
         bridgeOpsConsoleRequestsThr.Start();
 
         // Start the thread responsible for handling requests from the clients.
-        Thread bridgeOpsLocalClientRequestsThr = new(BridgeOpsClientRequests);
-        bridgeOpsLocalClientRequestsThr.Start();
+        Thread bridgeOpsClientRequestsThr = new(BridgeOpsClientRequests);
+        bridgeOpsClientRequestsThr.Start();
     }
 
 
@@ -657,35 +657,44 @@ internal class BridgeOpsAgent
 
     private static void BridgeOpsConsoleRequests()
     {
-        NamedPipeServerStream server = sr.NewServerNamedPipe(Glo.PIPE_CONSOLE);
-        while (true)
+        try
         {
-            server.WaitForConnection();
+            NamedPipeServerStream server = sr.NewServerNamedPipe(Glo.PIPE_CONSOLE);
+            while (true)
+            {
+                server.WaitForConnection();
 
-            try
-            {
-                int fncByte = server.ReadByte();
-                if (fncByte == Glo.CONSOLE_GET_AGENT_VERSION)
-                    ConsoleGetVersion(server);
-                else if (fncByte == Glo.CONSOLE_CLIENT_LIST)
-                    ConsoleClientList(server);
-                else if (fncByte == Glo.CONSOLE_LOGOUT_USER)
-                    ConsoleLogoutUser(server);
-                else if (fncByte == Glo.CONSOLE_CLOSE_CLIENT)
-                    ConsoleCloseClient(server);
+                try
+                {
+                    int fncByte = server.ReadByte();
+                    if (fncByte == Glo.CONSOLE_GET_AGENT_VERSION)
+                        ConsoleGetVersion(server);
+                    else if (fncByte == Glo.CONSOLE_CLIENT_LIST)
+                        ConsoleClientList(server);
+                    else if (fncByte == Glo.CONSOLE_LOGOUT_USER)
+                        ConsoleLogoutUser(server);
+                    else if (fncByte == Glo.CONSOLE_CLOSE_CLIENT)
+                        ConsoleCloseClient(server);
 
-                else
-                    throw new Exception("Received int " + fncByte + " does not correspond to a function.");
+                    else
+                        throw new Exception("Received int " + fncByte + " does not correspond to a function.");
+                }
+                catch (Exception e)
+                {
+                    LogError(e);
+                }
+                finally
+                {
+                    if (server.IsConnected)
+                        server.Disconnect();
+                }
             }
-            catch (Exception e)
-            {
-                LogError(e);
-            }
-            finally
-            {
-                if (server.IsConnected)
-                    server.Disconnect();
-            }
+        }
+        catch
+        {
+            LogError("Unable to set up named pipe. " +
+                     "Check Task Manager to make sure BridgeManagerAgent.exe isn't already running.");
+            throw new();
         }
     }
 
@@ -698,6 +707,7 @@ internal class BridgeOpsAgent
         catch (Exception e)
         {
             LogError("TcpListener could not start, see error:", e);
+            throw new();
         }
 
         while (true)
@@ -783,13 +793,10 @@ internal class BridgeOpsAgent
 
             try
             {
-                // Would be more performant as a switch statement, but some signals resolve to the same method, so for
-                // maintainability it's an if else. Enjoy!
-
                 int fncByte = stream.ReadByte();
                 if (fncByte == Glo.CLIENT_CHECK_NOTIFICATIONS)
                     ClientCheckNotifications(stream); // 255, but it's first here due to the frequency of the request.
-                if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
+                else if (fncByte == Glo.CLIENT_PULL_COLUMN_RECORD)
                     ClientPullColumnRecord(stream);
                 else if (fncByte == Glo.CLIENT_PULL_USER_SETTINGS)
                     ClientPullUserSettings(stream, sqlConnect);
@@ -1172,12 +1179,13 @@ internal class BridgeOpsAgent
                     }
                     while (clientSessions.ContainsKey(key));
 
+                    string username = (string)reader.GetValue(1);
                     bool admin = (bool)reader.GetValue(3);
                     byte createPermissions = (byte)reader.GetValue(4);
                     byte editPermissions = (byte)reader.GetValue(5);
                     byte deletePermissions = (byte)reader.GetValue(6);
 
-                    clientSessions.Add(key, new ClientSession(loginReq.username, loginID, ipStr, key, admin,
+                    clientSessions.Add(key, new ClientSession(username, loginID, ipStr, key, admin,
                                                               createPermissions,
                                                               editPermissions,
                                                               deletePermissions));
@@ -1191,7 +1199,6 @@ internal class BridgeOpsAgent
                     stream.WriteByte(editPermissions);
                     stream.WriteByte(deletePermissions);
                     sr.WriteAndFlush(stream, loginID.ToString());
-
                 }
                 else // Username or password incorrect.
                     sr.WriteAndFlush(stream, Glo.CLIENT_LOGIN_REJECT_USER_INVALID);
