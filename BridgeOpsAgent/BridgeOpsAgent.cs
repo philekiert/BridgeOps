@@ -878,7 +878,10 @@ internal class BridgeOpsAgent
             }
             catch (Exception e)
             {
-                LogError(e);
+                if (e.Message.Contains("inner exception") && e.InnerException != null)
+                    LogError(e.InnerException);
+                else
+                    LogError(e);
             }
             finally
             {
