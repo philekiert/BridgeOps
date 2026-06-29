@@ -1,10 +1,13 @@
 # Changelog
 
+## 1.3.4
+- Improved agent error handling.
+- Made the template reporting feature less prone to the user's session timing out due to inactivity during heavy workloads.
+
 ## 1.3.3
 - Added formula replication to data insertion via the Report to Templates feature.
 - Fixed a bug preventing the agent from closing clients remotely. It still relies on the client having an active session at the time of closure.
 - Reduced client check-in timeout to 10 seconds.
-- Made the template reporting feature less prone to the user's session timing out due to inactivity during heavy workloads.
 
 ## 1.3.2
 - Made the agent's reading of the reader credentials a bit more robust so that it doesn't cause the program to exit on launch in some rare situations.
