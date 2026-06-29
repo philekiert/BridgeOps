@@ -18,6 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace BridgeOpsClient
 {
@@ -801,7 +802,7 @@ namespace BridgeOpsClient
                     App.DisplayError($"Unable to process {filepath}, see error: {except.Message}", this);
                 }
 
-                await System.Threading.Tasks.Task.Yield();
+                await Dispatcher.Yield(DispatcherPriority.Background);
             }
 
             PresetCheckRequest pcr;
@@ -842,7 +843,7 @@ namespace BridgeOpsClient
                     lstSummary.Items.Add(listViewItem);
 
 
-                    await System.Threading.Tasks.Task.Yield();
+                    await Dispatcher.Yield(DispatcherPriority.Background);
                 }
             }
 

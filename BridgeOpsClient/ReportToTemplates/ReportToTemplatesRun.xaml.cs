@@ -21,6 +21,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using static BridgeOpsClient.CustomControls.SqlDataGrid;
 using static BridgeOpsClient.ReportToTemplates;
 
@@ -106,7 +107,7 @@ namespace BridgeOpsClient
                     continue;
                 presetsAndTabs.TryAdd(tag.presetName, new());
                 presetsAndTabs[tag.presetName].Add(tag.tabName);
-                await Task.Yield();
+                await Dispatcher.Yield(DispatcherPriority.Background);
             }
 
             // Build a dictionary of all loaded presets.
@@ -128,14 +129,14 @@ namespace BridgeOpsClient
                     }
                     selectStatements.Add(presetName, new());
                 }
-                await Task.Yield();
+                await Dispatcher.Yield(DispatcherPriority.Background);
             }
 
             int totalStatementsToGather = 0;
             foreach (var tabs in presetsAndTabs.Values)
                 totalStatementsToGather += tabs.Count;
             float p = 0;
-            await Task.Yield();
+            await Dispatcher.Yield(DispatcherPriority.Background);
 
             // Build a dictionary of select statements by tab name inside an enclosing dictionary of preset names.
             foreach (string presetName in presetsAndTabs.Keys)
@@ -186,7 +187,7 @@ namespace BridgeOpsClient
                     {
                         presetStatements.Add(tabName, null);
                     }
-                    await Task.Yield();
+                    await Dispatcher.Yield(DispatcherPriority.Background);
                 }
             }
 
@@ -206,38 +207,53 @@ namespace BridgeOpsClient
                     SetProgress(p++ / stepCount);
                     continue;
                 }
+                int dataFilled = 0;
                 foreach (ReportTag tag in tagList)
                 {
                     SetProgress(p++ / stepCount);
                     if (!tag.valid)
-                        continue;
+                        break;
 
                     string failPre = $"Failed to run: {tag.filename} > {tag.presetName} > {tag.tabName}. ";
 
                     string? sqlStatement = selectStatements[tag.presetName][tag.tabName];
                     if (sqlStatement == null)
-                        continue;
+                        break;
                     else if (!PageSelectStatement.InsertParameters(sqlStatement!,
                                                              out sqlStatement,
                                                              $"{tag.filename} > {tag.presetName} > {tag.tabName}",
                                                              this, new(),
                                                              tag.paramSetters))
+                    {
                         LogError(failPre + "User opted not to set parameters.");
+                        break;
+                    }
                     else if (!App.SendSelectStatement(sqlStatement,
-                            out _, out tag.data, out tag.types, this))
+                             out _, out tag.data, out tag.types, this))
+                    {
                         LogError(failPre + "Data could not be retrieved.");
+                        break;
+                    }
+                    else
+                        ++dataFilled;
                     // We don't want to reference old set params with templates in subsequent iterations.
                     SelectBuilder.storedVariables.Clear();
                 }
 
                 SetProgress(p++ / stepCount);
-                InsertDataExcel(tagList.OfType<ReportTagExcel>().ToList());
-                InsertDataWord(tagList.OfType<ReportTagWord>().ToList());
 
-                await Task.Yield();
+                if (dataFilled != tagList.Count)
+                    LogError($" ✘  Unable to process one or more tags in file: \"{tagList[0].filepath}\"");
+                else
+                {
+                    InsertDataExcel(tagList.OfType<ReportTagExcel>().ToList());
+                    InsertDataWord(tagList.OfType<ReportTagWord>().ToList());
+                }
+
+                await Dispatcher.Yield(DispatcherPriority.Background);
             }
 
-            SetProgress(1); // Done :)
+            SetProgress(1f); // Done :)
         }
 
         private bool PresetLoad(string presetName, out string presetJSON)
