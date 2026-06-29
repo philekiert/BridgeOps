@@ -735,7 +735,7 @@ internal class BridgeOpsAgent
                     var store = new X509Store(StoreName.My, storeLocation);
                     store.Open(OpenFlags.ReadOnly);
                     var certificates = store.Certificates.Find(X509FindType.FindByThumbprint,
-                                                               SendReceive.sslThumbprint, true);
+                                                               SendReceive.sslThumbprint, false);
                     return certificates;
                 }
 
@@ -871,7 +871,10 @@ internal class BridgeOpsAgent
             }
             catch (Exception e)
             {
-                LogError(e);
+                if (e.Message.Contains("inner exception") && e.InnerException != null)
+                    LogError(e.InnerException);
+                else
+                    LogError(e);
             }
             finally
             {
