@@ -3177,7 +3177,7 @@ internal class BridgeOpsAgent
                                         $"f.{Glo.Tab.CONFERENCE_CLOSURE}, " +
                                         $"n.{Glo.Tab.DIAL_NO}, " +
                                         $"n.{Glo.Tab.CONNECTION_IS_TEST}, " +
-                                        // If a connection has been start and closed or neither:
+                                        // If a connection has been started and closed, or neither:
                                         $"CASE WHEN (n.{Glo.Tab.CONNECTION_TIME_FROM} IS NULL " +
                                                $"AND n.{Glo.Tab.CONNECTION_TIME_TO} IS NULL) " +
                                                $"OR (n.{Glo.Tab.CONNECTION_TIME_FROM} IS NOT NULL " +
