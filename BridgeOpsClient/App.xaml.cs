@@ -522,13 +522,6 @@ namespace BridgeOpsClient
             if (checkingForNotifications || !IsLoggedIn)
                 return false;
 
-            foreach (PageConferenceView pcv in BridgeOpsClient.MainWindow.pageConferenceViews)
-            {
-                pcv.SearchTimeframe();
-                // Set here, just in case some SearchTimeFrame()s completed before one failed.
-                recurrenceUpdateQueued = true;
-            }
-
             lock (streamLock)
             {
                 checkingForNotifications = true;
