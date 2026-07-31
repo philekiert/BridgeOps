@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.5
+- Fixed a bug causing erroneous conference view lookups 
+
 ## 1.3.4
 - Improved agent error handling.
 - Made the template reporting feature less prone to the user's session timing out due to inactivity during heavy workloads.
