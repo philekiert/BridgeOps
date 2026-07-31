@@ -429,6 +429,10 @@ namespace BridgeOpsClient
         public void SearchTimeframe() { SearchTimeframe(searchStart, searchEnd); }
         public void SearchTimeframe(DateTime start, DateTime end)
         {
+            // If a user logs in with the schedule view invisible, searchStart will return DateTime.MinValue.
+            if (start == DateTime.MinValue)
+                return;
+
             // We never need more than one search queued, so cancel if one is already pending after the current thread.
             // Occasionally one might sneak through, but it's not the end of the world.
             // Also, if the user is currently dragging a conference around, don't pull the rug out from under them
