@@ -568,7 +568,7 @@ namespace BridgeOpsClient
                                     for (int x = 0; x < data[y].Count && x + tag.x < cells.Count; ++x)
                                     {
                                         var cell = cells[tag.x + x];
-                                        SetWordTableCell(cell, Glo.Fun.UnknownObjectToString(data[y][x]));
+                                        SetWordTableCell(cell, Glo.Fun.UnknownObjectToString(data[y][x], true));
                                     }
                                 }
 

@@ -493,7 +493,7 @@ public static class Glo
         }
 
 
-        public static string UnknownObjectToString(object? val)
+        public static string UnknownObjectToString(object? val, bool ddmmyyyy = false)
         {
             if (val == null)
                 return "";
@@ -507,14 +507,14 @@ public static class Glo
             {
                 DateTime valCast = (DateTime)val;
                 if (valCast.Ticks % 864_000_000_000 == 0) // On the day
-                    return valCast.ToString("yyyy/MM/dd");
+                    return ddmmyyyy ? valCast.ToString("dd/MM/yyyy") : valCast.ToString("yyyy/MM/dd");
                 else
-                    return valCast.ToString("yyyy/MM/dd HH:mm");
+                    return ddmmyyyy ? valCast.ToString("dd/MM/yyyy HH:mm") : valCast.ToString("yyyy/MM/dd HH:mm");
             }
             else
                 return "";
         }
-        public static string UnknownObjectToString(object val, string type)
+        public static string UnknownObjectToString(object val, string type, bool ddmmyyyy = false)
         {
             type = type.ToLower();
             if (type == "string")
@@ -527,9 +527,9 @@ public static class Glo
             {
                 DateTime valCast = (DateTime)val;
                 if (valCast.Ticks % 864_000_000_000 == 0) // On the day
-                    return valCast.ToString("yyyy/MM/dd");
+                    return ddmmyyyy ? valCast.ToString("dd/MM/yyyy") : valCast.ToString("yyyy/MM/dd");
                 else
-                    return valCast.ToString("yyyy/MM/dd HH:mm");
+                    return ddmmyyyy ? valCast.ToString("dd/MM/yyyy HH:mm") : valCast.ToString("yyyy/MM/dd HH:mm");
             }
             else
                 return "";
