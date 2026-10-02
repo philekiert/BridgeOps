@@ -53,10 +53,6 @@ internal class BridgeOpsAgent
 
         // Updated whenever the client asks for notifications.
         public long lastCheckin;
-        public void UpdateCheckin()
-        {
-            lastCheckin = DateTime.Now.Ticks;
-        }
 
         // This will count up each time SqlServerNudge() gets no response. If it exceeds maxMissedNudges, the session
         // is terminated.
