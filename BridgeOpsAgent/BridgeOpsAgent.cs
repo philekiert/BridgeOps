@@ -35,8 +35,6 @@ internal class BridgeOpsAgent
     static string columnRecord = "";
     static bool columnRecordIntact = false;
 
-    const int clientLastCheckinLimit = 10_000;
-
     class ClientSession
     {
         public string username;
@@ -189,6 +187,25 @@ internal class BridgeOpsAgent
         }
 
         return valuesSet;
+    }
+
+    static int clientLastCheckinLimit = 10_000;
+    private static void LoadAgentConfig()
+    {
+        int iVal;
+        try
+        {
+            string[] networkConfig = File.ReadAllLines(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_AGENT));
+            // Currently we're only reading one value and it should be an int.
+            if (int.TryParse(networkConfig[0], out iVal) && (iVal == 0 || iVal >= 10))
+                clientLastCheckinLimit = iVal * 1000; // Value is in ms, but the setting is in seconds.
+            else
+                throw new Exception("File contained an illegal value.");
+        }
+        catch (Exception e)
+        {
+            LogError("Could not read agent config from \"" + Glo.CONFIG_AGENT + "\". See error:", e);
+        }
     }
     private readonly static IPAddress thisIP = new(new byte[] { 0, 0, 0, 0 });
     private readonly static IPEndPoint thisEP = new(thisIP, port);
@@ -583,6 +600,9 @@ internal class BridgeOpsAgent
         // Read network configuraiton.
         LoadNetworkConfig();
 
+        // Read agent configuration.
+        LoadAgentConfig();
+
         // Start the thread responsible for nudging SQL Server.
         Thread sqlNudgeThr = new(SqlServerNudge);
         sqlNudgeThr.Start();
@@ -631,6 +651,9 @@ internal class BridgeOpsAgent
     }
     private static void CullExpiredSessions()
     {
+        if (clientLastCheckinLimit == 0)
+            return;
+
         while (true)
         {
             Thread.Sleep(clientLastCheckinLimit);

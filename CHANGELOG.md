@@ -1,7 +1,9 @@
 # Changelog
 
 ## 1.3.5
-- Fixed a bug causing erroneous conference view lookups 
+- Fixed a bug causing erroneous conference view lookups to appear in the logs.
+- Added a setting for the timeout before a session is culled by the agent, disabled by default as this has been causing issues for some users.
+- Changed the format of dates added to Word documents by the Report to Templates feature to dd/mm/yyyy from yyyy/mm/dd.
 
 ## 1.3.4
 - Improved agent error handling.

@@ -26,6 +26,7 @@ public static class Glo
     public const int PORT_DEFAULT = 61_152;
     public const bool SSL_ON_DEFAULT = false;
     public const string SSL_THUMB_DEFAULT = "[not set]";
+    public const int CULL_SESSIONS_DEFAULT = 0;
     public const string SQL_SERVER_NAME_DEFAULT = "SQLEXPRESS";
 
     public static string NL = Environment.NewLine;
@@ -61,6 +62,7 @@ public static class Glo
     public const string CONFIG_NETWORK_CLIENT = "server";
     public const string CONFIG_SQL_SERVER_NAME = "sql-server-name.txt";
     public const string CONFIG_SQL_SERVER_READER = "sql-reader.txt";
+    public const string CONFIG_AGENT = "agent-config.txt";
     public const string CONFIG_COLUMN_RECORD = "column-record";
     public const string CONFIG_FRIENDLY_NAMES = "friendly-names.txt";
     public const string CONFIG_HEADERS = "section-headers";

@@ -33,7 +33,7 @@ public class ConsoleController
     public enum ValType
     {
         None,
-        Int, // Not yet implemented.
+        Int,
         String
     }
     string commandValString = "";
@@ -194,6 +194,8 @@ public class ConsoleController
                    "Attempt to terminate the application on the specified user's machine.");
         AddCommand("reset admin password", ValType.None, menu, ResetAdminPassword,
                    "Reset the admin password to 'admin'.");
+        AddCommand("set session cull timeout", ValType.Int, menu, SetSessionCull,
+                   "Set the session cull timeout in seconds. Minimum value of 10, or 0 to disable.");
 
         // Network
         menu = MENU_NETWORK;
@@ -1311,6 +1313,26 @@ public class ConsoleController
             settings.sslThumbprint = Glo.SSL_THUMB_DEFAULT;
 
         CreateNetworkSettings(settings);
+
+        return 0;
+    }
+    private int SetSessionCull()
+    {
+        if (commandValInt != 0 && commandValInt < 10)
+        {
+            Writer.Negative("Value must be 0 or greater than 10.");
+            return 0;
+        }
+        try
+        {
+            File.WriteAllText(Path.Combine(Glo.PathConfigFiles, Glo.CONFIG_AGENT), commandValInt.ToString());
+            Writer.Affirmative("Session cull timeout stored successfully.");
+        }
+        catch (Exception e)
+        {
+            Writer.Message("Could not create file, see error:", ConsoleColor.Red);
+            Writer.Message(e.Message, ConsoleColor.Red);
+        }
 
         return 0;
     }
